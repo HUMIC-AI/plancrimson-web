@@ -8,15 +8,63 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "axios": "^0.24.0",
     "next": "12.0.7",
+    "qs": "^6.10.2",
     "react": "17.0.2",
-    "react-dom": "17.0.2"
+    "react-dom": "17.0.2",
+    "react-icons": "^4.3.1",
+    "tailwindcss": "^2.2.19"
   },
   "devDependencies": {
     "@types/node": "16.11.12",
+    "@types/qs": "^6.9.7",
     "@types/react": "17.0.37",
-    "eslint": "8.4.1",
+    "@typescript-eslint/eslint-plugin": "^5.6.0",
+    "@typescript-eslint/parser": "^5.6.0",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^8.4.1",
+    "eslint-config-airbnb": "^19.0.2",
+    "eslint-config-airbnb-typescript": "^16.1.0",
     "eslint-config-next": "12.0.7",
+    "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-jsx-a11y": "^6.5.1",
+    "eslint-plugin-react": "^7.27.1",
+    "eslint-plugin-react-hooks": "^4.3.0",
+    "postcss": "^8.4.4",
     "typescript": "4.5.2"
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "es2021": true,
+      "node": true
+    },
+    "extends": [
+      "next/core-web-vitals",
+      "plugin:react/recommended",
+      "airbnb",
+      "airbnb-typescript"
+    ],
+    "globals": {
+      "React": "readonly"
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaFeatures": {
+        "jsx": true
+      },
+      "ecmaVersion": 13,
+      "sourceType": "module",
+      "project": "tsconfig.json"
+    },
+    "plugins": [
+      "react",
+      "@typescript-eslint"
+    ],
+    "rules": {
+      "max-len": "off",
+      "react/require-default-props": "off"
+    }
   }
 }
