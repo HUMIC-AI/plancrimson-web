@@ -8,6 +8,8 @@
 - eventual flexibility for adding "custom courses" to simulate study abroad
 - search for a given course, e.g. my.harvard
 - more convenient interface than my.harvard
+- more detailed prerequisite or related courses chart
+    - "students also took:"
 
 This project is mostly reverse engineered from the `my.harvard` portal via analyzing requests through the `Network` tab in Chrome Dev Tools and filtering by Fetch/XHR
 

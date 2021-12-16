@@ -1,5 +1,5 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiHandler } from 'next';
 import qs from 'qs';
 import axios from 'axios';
 import advancedFields from '../../src/advancedFields.json';
@@ -8,10 +8,7 @@ type ResponseData = {
   error: string
 };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<ResponseData>,
-) {
+const handler: NextApiHandler<ResponseData> = async (req, res) => {
   const { search, pageNumber, searchQuery } = req.query;
 
   if (typeof search !== 'string') res.json({ error: 'Must specify a search via query parameters' });
@@ -52,7 +49,7 @@ export default async function handler(
     data: formData,
   });
 
-  console.log(formData);
-
   res.json(data);
-}
+};
+
+export default handler;

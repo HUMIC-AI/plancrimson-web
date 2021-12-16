@@ -2,10 +2,15 @@ import type { NextPage } from 'next';
 import Head from 'next/head';
 // import Image from 'next/image';
 import axios from 'axios';
-import { FaSearch } from 'react-icons/fa';
-import { useState } from 'react';
+import {
+  FaAngleLeft, FaAngleRight, FaSearch,
+} from 'react-icons/fa';
+import React, { useState } from 'react';
 import courseData from '../src/courseData.json';
-import { Course, MyHarvardResponse } from '../src/types';
+import { Course as CourseType, MyHarvardResponse } from '../src/types';
+import SemesterSchedule from '../components/SemesterSchedule';
+import Course from '../components/Course';
+import YearSchedule from '../components/YearSchedule';
 
 type SearchResults = {
   status: 'none' | 'loading' | 'error';
@@ -13,95 +18,133 @@ type SearchResults = {
 } | {
   status: 'success',
   data: MyHarvardResponse;
+  search: string;
+  pageNumber: number;
+  totalPages: number;
 };
 
-const ResultsSection = function ({ status, data }: SearchResults) {
-  switch (status) {
-    case 'none':
-      return null;
-    case 'loading': return <p>Loading...</p>;
-    case 'error':
-      return (
-        <p>
-          An error occurred fetching data:
-          {' '}
-          {data}
-        </p>
-      );
-    case 'success': {
-      if (!Array.isArray(data) || (data as any[]).length === 0) {
-        return 'An unexpected error occurred';
-      }
-      const courses = (data as MyHarvardResponse)[0].ResultsCollection;
-      return (
-        <section className="space-y-4">
-          <h2 className="text-2xl">Results</h2>
-          {/* <pre>{JSON.stringify(data, null, 2)}</pre> */}
-          {courses.map(({
-            Key: key,
-            IS_SCL_DESCR100: course,
-            IS_SCL_DESCR: rawDescription,
-            IS_SCL_DESCR_IS_SCL_DESCRH: term,
-            IS_SCL_DESCR_IS_SCL_DESCRL: instructors,
-            HU_REC_PREP: prereqs,
-            HU_SUBJ_CATLG_NBR: catalogNumber,
-            IS_SCL_TIME_START: startTime,
-            IS_SCL_TIME_END: endTime,
-            IS_SCL_MEETING_PAT: meetingPattern,
-            SSR_COMPONENTDESCR: componentDescription,
-            IS_SCL_DESCR100_HU_SCL_GRADE_BASIS: gradingBasis,
-          }) => {
-            const description = rawDescription.replaceAll(/<\/?.>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/, ' ').trim();
-            return (
-              <div key={key} className="border-black border-2 rounded-md p-2 space-y-2">
-                <h3 className="text-xl">{course}</h3>
-                <hr className="border-black" />
-                <div className="flex justify-between items-center">
-                  <span>{catalogNumber}</span>
-                  <span className="border-l border-r border-black sm:border-none text-center px-2">
-                    {term}
-                    <br className="sm:hidden" />
-                    <span className="hidden sm:inline">, </span>
-                    {meetingPattern === 'TBA' ? 'Time TBA' : `${meetingPattern} ${startTime}–${endTime}`}
-                  </span>
-                  <span className="text-right">{componentDescription}</span>
-                </div>
-                <hr className="border-black" />
-                <div className="flex justify-between items-center">
-                  <span>
-                    {Array.isArray(instructors) ? instructors.join(', ') : instructors}
-                  </span>
-                  <span>{gradingBasis}</span>
-                </div>
-                {(description || prereqs) && <hr className="border-black" />}
-                {description && <p>{description}</p>}
-                {prereqs && (
-                <p>
-                  <span className="font-bold">Recommended Prep:</span>
-                  {' '}
-                  {prereqs}
-                </p>
-                )}
-              </div>
-            );
-          })}
-        </section>
-      ); }
-    default:
-      return <p>An unexpected error occurred. Please check the ResultsSection component.</p>;
-  }
+type CourseFetcher = (_: { search: string; pageNumber: number; }) => Promise<void>;
+
+const CategorySelect = function ({ fetchCourses }: { fetchCourses: CourseFetcher }) {
+  return (
+    <details className="max-w-2xl space-y-2" style={{ minWidth: '16rem' }}>
+      <summary className="cursor-pointer text-center rounded bg-gray-300 py-2">Find courses</summary>
+      {courseData.map(({ HU_SB_ACAD_CAREER: acronym, DESCR: title, HU_SB_CFG_CT_VW: categories }) => (
+        <details key={title} className="border-black border-2 py-2 px-4 rounded-lg">
+          <summary className="text-xl cursor-pointer">
+            {`${title} (${acronym})`}
+          </summary>
+          <hr className="border-black my-2" />
+          <div className="space-y-2 px-2">
+            {categories.map(({ HU_SB_CAT_DESCR: categoryTitle, HU_SB_CFG_SC_VW: subcategories }) => (
+              <details key={categoryTitle}>
+                <summary className="text-xl cursor-pointer">
+                  {categoryTitle}
+                </summary>
+                <hr className="border-black mt-2" />
+                <ul className="p-4 rounded-b bg-gray-300 grid gap-y-1" style={{ gridTemplateColumns: 'auto auto' }}>
+                  {subcategories.map(({ HU_SB_SUBCAT_DESCR: subcategoryTitle, HU_SB_SRCH_DEFN: search, HU_SB_DEPT_URL: url }) => (
+                    <li key={subcategoryTitle} className="contents">
+                      <span>
+                        {subcategoryTitle}
+                      </span>
+                      <span className="flex items-center gap-4">
+                        <button type="button" onClick={() => fetchCourses({ search, pageNumber: 1 })}>
+                          <FaSearch />
+                        </button>
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">Link</a>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ))}
+          </div>
+        </details>
+      ))}
+    </details>
+  );
 };
+
+const ResultsTab = function ({
+  searchResults, fetchCourses, mySchedule, setMySchedule,
+}: {
+  searchResults: SearchResults;
+  fetchCourses: CourseFetcher;
+  mySchedule: CourseType[];
+  setMySchedule: React.Dispatch<React.SetStateAction<CourseType[]>>;
+}) {
+  return (
+    <div>
+      {searchResults.status === 'loading' && <p>Loading...</p>}
+
+      {searchResults.status === 'error' && (
+      <p>
+        An error occurred fetching data:
+        {' '}
+        {searchResults.data}
+      </p>
+      )}
+
+      {searchResults.status === 'success' && (
+      <section>
+        {' '}
+        <h2 className="text-2xl flex justify-between items-center mb-2">
+          Results
+          <span className="flex items-center">
+            {searchResults.pageNumber > 1 && (
+            <button type="button" onClick={() => fetchCourses({ search: searchResults.search, pageNumber: searchResults.pageNumber - 1 })}>
+              <FaAngleLeft />
+            </button>
+            )}
+            <a
+              href={`data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(searchResults.data[0].ResultsCollection))}`}
+              download="courses.json"
+            >
+              Download
+            </a>
+            {searchResults.pageNumber < searchResults.totalPages && (
+            <button type="button" onClick={() => fetchCourses({ search: searchResults.search, pageNumber: searchResults.pageNumber + 1 })}>
+              <FaAngleRight />
+            </button>
+            )}
+          </span>
+        </h2>
+
+        <div className="space-y-4">
+          {searchResults.data[0].ResultsCollection.map((course) => (
+            <Course
+              key={course.Key}
+              course={course}
+              mySchedule={mySchedule}
+              setMySchedule={setMySchedule}
+            />
+          ))}
+        </div>
+      </section>
+      )}
+    </div>
+  );
+};
+
+const tabs = {
+  results: { title: 'Results', component: ResultsTab },
+  semesterSchedule: { title: 'Semester Schedule', component: SemesterSchedule },
+  yearSchedule: { title: 'Year Schedule', component: YearSchedule },
+} as const;
 
 const Home: NextPage = function () {
   const [searchResults, setSearchResults] = useState<SearchResults>({
     status: 'none',
   });
+  const [mySchedule, setMySchedule] = useState<CourseType[]>([]);
+  const [tabState, setTabState] = useState<keyof typeof tabs>('results');
 
-  const handleClick = async (search: string) => {
+  const fetchCourses: CourseFetcher = async ({ search, pageNumber }) => {
     setSearchResults({ status: 'loading' });
 
     const result = await axios.get('/api/search', {
-      params: { search: `( ${search} ) ( )` },
+      params: { search, pageNumber },
     });
 
     if (result.status !== 200) {
@@ -109,64 +152,59 @@ const Home: NextPage = function () {
         status: 'error',
         data: result.data?.error || result.statusText,
       });
+    } else if (!Array.isArray(result.data) || result.data.length === 0) {
+      setSearchResults({
+        status: 'error',
+        data: 'An unexpected error occurred when fetching data from my.harvard',
+      });
     } else {
+      const data = result.data as MyHarvardResponse;
       setSearchResults({
         status: 'success',
-        data: result.data,
+        data,
+        search,
+        pageNumber,
+        totalPages: data[2].TotalPages,
       });
     }
   };
+
+  const BodyComponent = tabs[tabState].component;
 
   return (
     <div>
       <Head>
         <title>Harvard Concentration Planner</title>
       </Head>
-      <main className="p-8 mx-auto max-w-2xl flex flex-col items-stretch space-y-4">
+
+      <main className="p-8 mx-auto flex flex-col items-stretch space-y-4">
         <h1 className="text-4xl text-center">Harvard Concentration Planner</h1>
 
-        <details className="">
-          <summary className="cursor-pointer text-center">Find courses</summary>
-          {courseData.map(({ HU_SB_ACAD_CAREER: acronym, DESCR: title, HU_SB_CFG_CT_VW: categories }) => (
-            <details key={title} className="border-black border-2 p-4 rounded-lg">
-              <summary className="text-2xl cursor-pointer">
-                {title}
-                {' '}
-                (
-                {acronym}
-                )
-              </summary>
-              <hr className="border-black my-2" />
-              <div className="space-y-2 px-2">
-                {categories.map(({ HU_SB_CAT_DESCR: categoryTitle, HU_SB_CFG_SC_VW: subcategories }) => (
-                  <details key={categoryTitle}>
-                    <summary className="text-xl cursor-pointer">
-                      {categoryTitle}
-                    </summary>
-                    <hr className="border-black mt-2" />
-                    <ul className="p-4 rounded-b bg-gray-300 grid gap-y-1" style={{ gridTemplateColumns: 'auto auto' }}>
-                      {subcategories.map(({ HU_SB_SUBCAT_DESCR: subcategoryTitle, HU_SB_SRCH_DEFN: search, HU_SB_DEPT_URL: url }) => (
-                        <li key={subcategoryTitle} className="contents">
-                          <span>
-                            {subcategoryTitle}
-                          </span>
-                          <span className="flex items-center gap-4">
-                            <button type="button" onClick={() => handleClick(search)}>
-                              <FaSearch />
-                            </button>
-                            <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">Link</a>
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                ))}
-              </div>
-            </details>
-          ))}
-        </details>
+        <div className="flex min-h-screen gap-2 items-stretch">
+          <CategorySelect fetchCourses={fetchCourses} />
 
-        <ResultsSection status={searchResults.status} data={searchResults.data} />
+          <div className="container">
+            <nav className="flex justify-between p-2 bg-gray-300 rounded w-full">
+              {(Object.keys(tabs) as (keyof typeof tabs)[]).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`cursor-pointer border-b-2 border-gray-700 hover:border-black ${tabState === key && 'bg-gray-500'}`}
+                  onClick={() => setTabState(key)}
+                >
+                  {tabs[key].title}
+                </button>
+              ))}
+            </nav>
+
+            <BodyComponent
+              fetchCourses={fetchCourses}
+              searchResults={searchResults}
+              mySchedule={mySchedule}
+              setMySchedule={setMySchedule}
+            />
+          </div>
+        </div>
       </main>
     </div>
   );
