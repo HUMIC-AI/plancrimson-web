@@ -172,3 +172,62 @@ export type MyHarvardResponse = [
     BoostExcludeNonBoosted: string;
   },
 ];
+
+export interface EvaluationResponse {
+  url: string;
+  term: number;
+  season: string;
+  'Course Response Rate': CourseResponseRate;
+  'Course General Questions': CourseGeneralQuestions;
+  'General Instructor Questions': GeneralInstructorQuestions;
+  'On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.': OnAverageHowManyHoursPerWeekDidYouSpendOnCourseworkOutsideOfClassEnterAWholeNumberBetween0And168;
+  'How strongly would you recommend this course to your peers?': HowStronglyWouldYouRecommendThisCourseToYourPeers;
+}
+
+export interface CourseGeneralQuestions {
+  'Evaluate the course overall.': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
+  'Course materials (readings, audio-visual materials, textbooks, lab manuals, website, etc.)': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
+  'Assignments (exams, essays, problem sets, language homework, etc.)': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
+  'Feedback you received on work you produced in this course': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
+  'Section component of the course': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
+}
+
+export interface AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc {
+  count: string;
+  votes: number[];
+  courseMean: number;
+  fasMean: number;
+}
+
+export interface CourseResponseRate {
+  responded: number;
+  invited: number;
+}
+
+export interface GeneralInstructorQuestions {
+  'Evaluate your Instructor overall.': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
+  'Gives effective lectures or presentations, if applicable': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
+  'Is accessible outside of class (including after class, office hours, e-mail, etc.)': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
+  'Generates enthusiasm for the subject matter': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
+  'Facilitates discussion and encourages participation': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
+  'Gives useful feedback on assignments': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
+  'Returns assignments in a timely fashion': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
+}
+
+export interface HowStronglyWouldYouRecommendThisCourseToYourPeers {
+  recommendations: number[];
+  total: number;
+  ratio: number;
+  mean: number;
+  median: number;
+  stdev: number;
+}
+
+export interface OnAverageHowManyHoursPerWeekDidYouSpendOnCourseworkOutsideOfClassEnterAWholeNumberBetween0And168 {
+  count: number;
+  ratio: number;
+  mean: number;
+  median: number;
+  mode: number;
+  stdev: number;
+}

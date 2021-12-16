@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import cheerio, { BasicAcceptedElems, CheerioAPI, Node } from 'cheerio';
 import axios from 'axios';
+import { EvaluationResponse } from './types';
 
 type Scraper = ($: CheerioAPI, el: BasicAcceptedElems<Node>) => any;
 
@@ -14,7 +15,7 @@ export default async function getAllEvaluations(school: string, course: string) 
     },
     headers: {
       Origin: 'https://portal.my.harvard.edu',
-      Cookie: process.env.MY_HARVARD_COOKIE as string,
+      Cookie: process.env.QREPORTS_COOKIE as string,
     },
   });
 
@@ -46,7 +47,7 @@ export default async function getAllEvaluations(school: string, course: string) 
   return results.filter((el) => el !== null);
 }
 
-async function getEvaluation(url: string) {
+async function getEvaluation(url: string): Promise<EvaluationResponse> {
   const response = await axios({
     method: 'GET',
     url,
@@ -55,6 +56,13 @@ async function getEvaluation(url: string) {
     },
   });
   const $ = cheerio.load(response.data);
+  const toc = $('.TOC h2').text().trim().split(' ');
+  const initial = {
+    url,
+    term: parseInt(toc[4], 10),
+    season: toc[5],
+  } as EvaluationResponse;
+
   return $('.report-block').toArray().reduce((acc, el) => {
     const title = $(el).find('h3, h4').text().trim();
 
@@ -73,14 +81,12 @@ async function getEvaluation(url: string) {
     } else if (title === 'How strongly would you recommend this course to your peers?') {
       data = getRecommendations($, el);
     }
-
-    console.error('unexpected case:', title);
-
+    if (data === null) return acc;
     return {
       ...acc,
       [title]: data,
     };
-  }, {});
+  }, initial);
 }
 
 const getResponseRate: Scraper = ($, el) => {
@@ -106,22 +112,19 @@ const getGeneralQuestions: Scraper = ($, el) => $(el)
     if (row.length !== 9) {
       throw new Error('Could not read course feedback');
     }
-    const [
-      title,
-      count,
-      excellent,
-      veryGood,
-      good,
-      fair,
-      unsatisfactory,
-      courseMean,
-      fasMean,
-    ] = row;
+
+    const title = row[0];
+    const count = parseInt(row[1], 10);
+    const votes = row.slice(2, 7).map((v) => parseInt(v, 10));
+    const courseMean = parseFloat(row[7]);
+    const fasMean = parseFloat(row[8]);
     return {
       ...acc,
       [title]: {
-        courseMean: parseFloat(courseMean),
-        fasMean: parseFloat(fasMean),
+        count,
+        votes,
+        courseMean,
+        fasMean,
       },
     };
   }, {});
@@ -145,6 +148,7 @@ const getRecommendations: Scraper = ($, el) => {
       return parseInt(row[2], 10);
     })
     .reverse();
+  const total = recommendations.reduce((acc, val) => acc + val, 0);
 
   const stats = tables
     .last()
@@ -157,6 +161,7 @@ const getRecommendations: Scraper = ($, el) => {
   const [ratio, mean, median, stdev] = stats;
   return {
     recommendations,
+    total,
     ratio,
     mean,
     median,
