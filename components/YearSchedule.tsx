@@ -1,25 +1,17 @@
-import gsap from 'gsap';
-import { createRef, useEffect, useState } from 'react';
+/* eslint-disable no-param-reassign */
+import React, { createRef, useState } from 'react';
 import { Course } from '../src/types';
-
-const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-const dayLetters = 'MTWRFSU';
+import { filterBySemester, getSemesters, ScheduleEntry } from './Course';
 
 const CourseCard = function ({ course }: { course: Course }) {
-  const { SUBJECT: subject, CATALOG_NBR: rawCatalogNumber, IS_SCL_DESCR100: title } = course;
+  const {
+    SUBJECT: subject,
+    CATALOG_NBR: catalogNumber,
+    IS_SCL_DESCR100: title,
+    IS_SCL_MEETING_PAT: schedule,
+  } = course;
   const [open, setOpen] = useState(false);
-  const catalogNumber = parseInt(rawCatalogNumber.trim(), 10);
   const cardRef = createRef<HTMLButtonElement>();
-
-  // useEffect(() => {
-  //   gsap.to(cardRef.current, { rotateY: 90, duration: 0.25 });
-  //   gsap.to(cardRef.current, {
-  //     onStart: () => setSide((prev) => !prev),
-  //     rotateY: open ? 180 : 0,
-  //     duration: 0.25,
-  //     delay: 0.25,
-  //   });
-  // }, [open]);
 
   return (
     <button
@@ -30,6 +22,11 @@ const CourseCard = function ({ course }: { course: Course }) {
         perspective: '100rem',
       }}
       ref={cardRef}
+      draggable
+      onDragStart={(ev) => {
+        ev.dataTransfer.setData('text/plain', course.Key);
+        ev.dataTransfer.dropEffect = 'move';
+      }}
     >
       <div
         className="relative w-full h-full transition-transform"
@@ -39,45 +36,69 @@ const CourseCard = function ({ course }: { course: Course }) {
         }}
       >
         <div className="bg-green-500 rounded absolute w-full h-full flex flex-col items-center justify-center" style={{ backfaceVisibility: 'hidden' }}>
-          <p>{`${subject} ${catalogNumber}`}</p>
-          <p>
-            {title}
-          </p>
+          <p>{`${subject}${catalogNumber}`}</p>
+          <div>
+            <p>
+              {title}
+            </p>
+            <p>
+              {schedule}
+            </p>
+          </div>
         </div>
         <div className="bg-blue-500 rounded absolute w-full h-full flex flex-col items-center justify-center" style={{ transform: 'rotateY(0.5turn)', backfaceVisibility: 'hidden' }}>
-          {catalogNumber}
+          {`${subject}${catalogNumber}`}
         </div>
       </div>
     </button>
   );
 };
 
-const YearSchedule = function ({ mySchedule }: { mySchedule: Course[] }) {
+const YearSchedule = function ({ mySchedule, setMySchedule }: {
+  mySchedule: Array<ScheduleEntry>,
+  setMySchedule: React.Dispatch<React.SetStateAction<Array<ScheduleEntry>>>
+}) {
   const startYear = 2021;
   return (
-    <div className="h-full relative border-black border-2 w-full overflow-x-scroll">
-      <div className="grid grid-cols-8 min-w-max h-full">
-        {[...new Array(5)].flatMap((_, i) => [
-          { year: startYear + i, season: 'Spring' },
-          { year: startYear + i, season: 'Fall' },
-        ])
-          .slice(1, -1) // get rid of first and last since of mismatch
-          .map(({ year, season }, i) => (
-            <div key={year + season} className={`${i % 2 === 0 ? 'bg-gray-300' : 'bg-gray-100'} h-full p-2 text-center w-48`}>
+    <div className="overflow-y-scroll w-full border-black border-2">
+      <div className="p-4">
+        Total courses:
+        {' '}
+        {mySchedule.length}
+        /32
+      </div>
+      <div className="relative w-full overflow-x-scroll">
+        <div className="grid grid-cols-8 min-w-max h-full">
+          {getSemesters(startYear).map(({ year, season }, i) => (
+            <div
+              key={year + season}
+              className={`${i % 2 === 0 ? 'bg-gray-300' : 'bg-gray-100'} h-full p-2 text-center w-48`}
+              onDragOver={(ev) => {
+                ev.preventDefault();
+                ev.dataTransfer.dropEffect = 'move';
+              }}
+              onDrop={(ev) => {
+                ev.preventDefault();
+                setMySchedule((prev) => {
+                  const courseKey = ev.dataTransfer.getData('text/plain');
+                  const idx = prev.findIndex(({ course }) => course.Key === courseKey);
+                  const ret = prev.slice();
+                  const [{ course }] = ret.splice(idx, 1);
+                  ret.push({ year, season, course });
+                  return ret;
+                });
+              }}
+            >
               <h1 className="mb-2 text-lg border-black border-b-2">
                 {`${year} ${season}`}
               </h1>
               <div className="flex flex-col gap-4">
-                {/* courses */}
-                {mySchedule.filter((course) => {
-                  const courseSeason = /Fall/i.test(course.IS_SCL_DESCR_IS_SCL_DESCRH) ? 'Fall' : 'Spring' as const;
-                  const academicYear = parseInt(course.ACAD_YEAR, 10);
-                  const courseYear = courseSeason === 'Fall' ? academicYear - 1 : academicYear;
-                  return courseYear === year && courseSeason === season;
-                }).map((course) => <CourseCard course={course} />)}
+                {filterBySemester(mySchedule, year, season)
+                  .map(({ course }) => <CourseCard key={course.Key} course={course} />)}
               </div>
             </div>
           ))}
+        </div>
       </div>
     </div>
   );

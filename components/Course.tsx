@@ -4,6 +4,30 @@ import cheerio from 'cheerio';
 import axios from 'axios';
 import { Course as CourseType, EvaluationResponse } from '../src/types';
 
+export type ScheduleEntry = {
+  season: string;
+  year: number;
+  course: CourseType;
+};
+
+export function getYearAndSeason(course: CourseType) {
+  const season = /Fall/i.test(course.IS_SCL_DESCR_IS_SCL_DESCRH) ? 'Fall' : 'Spring' as const;
+  const academicYear = parseInt(course.ACAD_YEAR, 10);
+  const year = season === 'Fall' ? academicYear - 1 : academicYear;
+  return { year, season };
+}
+
+export function getSemesters(startYear: number) {
+  return [...new Array(5)].flatMap((_, i) => [
+    { year: startYear + i, season: 'Spring' },
+    { year: startYear + i, season: 'Fall' },
+  ]).slice(1, -1); // get rid of first and last since of mismatch
+}
+
+export function filterBySemester(schedule: Array<ScheduleEntry>, year: number, season: string) {
+  return schedule.filter(({ year: courseYear, season: courseSeason }) => courseYear === year && courseSeason === season);
+}
+
 const colors = ['bg-blue-300', 'bg-yellow-300', 'bg-green-300', 'bg-gray-300', 'bg-red-300'];
 
 const Percentages = function ({ categories }: { categories: Array<number> }) {
@@ -60,8 +84,8 @@ const Evaluation = function ({ report }: { report: EvaluationResponse }) {
 
 const Course = function ({ course, mySchedule, setMySchedule }: {
   course: CourseType;
-  mySchedule: CourseType[];
-  setMySchedule: React.Dispatch<React.SetStateAction<CourseType[]>>;
+  mySchedule: Array<ScheduleEntry>;
+  setMySchedule: React.Dispatch<React.SetStateAction<Array<ScheduleEntry>>>;
 }) {
   const [feedback, setFeedback] = useState<EvaluationResponse[] | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
@@ -108,14 +132,14 @@ const Course = function ({ course, mySchedule, setMySchedule }: {
     <div className="border-black border-2 rounded-md p-2 space-y-2">
       <h3 className="flex items-center justify-between text-xl">
         {title}
-        {typeof mySchedule.find((c) => c.Key === key) === 'undefined'
+        {typeof mySchedule.find((c) => c.course.Key === key) === 'undefined'
           ? (
-            <button type="button" onClick={() => setMySchedule((prev) => [...prev, course])}>
+            <button type="button" onClick={() => setMySchedule((prev) => [...prev, { ...getYearAndSeason(course), course }])}>
               <FaPlusCircle />
             </button>
           )
           : (
-            <button type="button" onClick={() => setMySchedule((prev) => prev.filter((c) => c.Key !== key))}>
+            <button type="button" onClick={() => setMySchedule((prev) => prev.filter((c) => c.course.Key !== key))}>
               <FaMinusCircle />
             </button>
           )}
@@ -147,10 +171,19 @@ const Course = function ({ course, mySchedule, setMySchedule }: {
         {prereqs}
       </p>
       )}
-      <button type="button" onClick={handleClick}>
-        Load course feedback
-      </button>
-      {requestError && `Error loading course feedback: ${requestError}`}
+      <div>
+        <button type="button" onClick={handleClick} className="text-blue-300 hover:text-blue-500 transition-colors">
+          Load course feedback
+        </button>
+      </div>
+      {requestError
+      && (
+      <p>
+        Error loading course feedback:
+        {' '}
+        {requestError}
+      </p>
+      )}
 
       {/* Evaluations */}
       <div className="">

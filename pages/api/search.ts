@@ -9,9 +9,18 @@ type ResponseData = {
 };
 
 const handler: NextApiHandler<ResponseData> = async (req, res) => {
-  const { search, pageNumber, searchQuery } = req.query;
+  const {
+    search, facets, pageNumber, searchQuery,
+  } = req.body;
 
-  if (typeof search !== 'string') res.json({ error: 'Must specify a search via query parameters' });
+  if (typeof search !== 'string') {
+    res.json({ error: 'Must specify a search via query parameters' });
+    return;
+  }
+  if (typeof facets !== 'undefined' && !Array.isArray(facets)) {
+    res.json({ error: 'Facets must be an array' });
+    return;
+  }
 
   const searchText = Object.keys(advancedFields).reduce(
     (acc, key) => acc.replaceAll(
@@ -24,7 +33,7 @@ const handler: NextApiHandler<ResponseData> = async (req, res) => {
   const formData = qs.stringify({
     SearchReqJSON: JSON.stringify({
       SaveRecent: false,
-      Facets: [],
+      Facets: facets || [],
       PageNumber: pageNumber || 1,
       SortOrder: ['SCORE'],
       TopN: '',

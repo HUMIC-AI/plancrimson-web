@@ -130,18 +130,25 @@ export interface Course {
 
 export interface Facet {
   Key: string;
+
   FacetName: string;
   FacetLabel: string;
-  Path: string;
-  PreviousPath: string;
-  ParentFacetName: string;
-  ParentFacetPath: string;
   FacetValue: string;
   DisplayValue: string;
+
+  Path: string;
+  PreviousPath: string;
+
+  ParentFacetName: string;
+  ParentFacetPath: string;
+
   HasChildren: boolean;
+  FacetChildCollection?: Facet[];
+
   Count: number;
   Level: number;
-  FacetChildCollection?: Facet[];
+  open: 'open';
+  Selected: 'Selected';
 }
 
 export type MyHarvardResponse = [
@@ -153,25 +160,27 @@ export type MyHarvardResponse = [
     Key: 'Facets';
     Facets: Facet[];
   },
-  {
-    Key: 'SearchProperties';
-    HitCount: number;
-    DocumentCount: number;
-    PageSize: number;
-    PageNumber: number;
-    TotalPages: number;
-    ResultStart: number;
-    ResultEnd: number;
-    SearchText: string;
-    FacetsCount: number;
-    SearchQuery: string;
-    SearchTextOriginal: string;
-    BoostEnabled: boolean;
-    BoostMode: string;
-    BoostScoreMode: string;
-    BoostExcludeNonBoosted: string;
-  },
+  SearchProperties,
 ];
+
+export type SearchProperties = {
+  Key: 'SearchProperties';
+  HitCount: number;
+  DocumentCount: number;
+  PageSize: number;
+  PageNumber: number;
+  TotalPages: number;
+  ResultStart: number;
+  ResultEnd: number;
+  SearchText: string;
+  FacetsCount: number;
+  SearchQuery: string;
+  SearchTextOriginal: string;
+  BoostEnabled: boolean;
+  BoostMode: string;
+  BoostScoreMode: string;
+  BoostExcludeNonBoosted: string;
+};
 
 export interface EvaluationResponse {
   url: string;

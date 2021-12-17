@@ -38,10 +38,6 @@ export default async function getAllEvaluations(school: string, course: string) 
     })
     .toArray();
 
-  if (promises.length === 0) {
-    return null;
-  }
-
   const results = await Promise.all(promises);
 
   return results.filter((el) => el !== null);
