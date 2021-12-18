@@ -1,14 +1,9 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { FaMinusCircle, FaPlusCircle } from 'react-icons/fa';
 import cheerio from 'cheerio';
 import axios from 'axios';
 import { Course as CourseType, EvaluationResponse } from '../src/types';
-
-export type ScheduleEntry = {
-  season: string;
-  year: number;
-  course: CourseType;
-};
+import { ScheduleEntry, UserContext } from '../src/userContext';
 
 export function getYearAndSeason(course: CourseType) {
   const season = /Fall/i.test(course.IS_SCL_DESCR_IS_SCL_DESCRH) ? 'Fall' : 'Spring' as const;
@@ -47,7 +42,7 @@ const Percentages = function ({ categories }: { categories: Array<number> }) {
   );
 };
 
-const Evaluation = function ({ report }: { report: EvaluationResponse }) {
+const Evaluation: React.FC<{ report: EvaluationResponse }> = function ({ report }) {
   const {
     mean, median, mode, stdev,
   } = report['On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.'];
@@ -82,13 +77,16 @@ const Evaluation = function ({ report }: { report: EvaluationResponse }) {
   );
 };
 
-const Course = function ({ course, mySchedule, setMySchedule }: {
+const Course: React.FC<{
   course: CourseType;
-  mySchedule: Array<ScheduleEntry>;
-  setMySchedule: React.Dispatch<React.SetStateAction<Array<ScheduleEntry>>>;
-}) {
+}> = function ({ course }) {
   const [feedback, setFeedback] = useState<EvaluationResponse[] | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const {
+    schedule, addCourses, removeCourses,
+  } = useContext(UserContext);
+
+  console.log('rerendering');
 
   const {
     Key: key,
@@ -107,7 +105,7 @@ const Course = function ({ course, mySchedule, setMySchedule }: {
     IS_SCL_DESCR100_HU_SCL_GRADE_BASIS: gradingBasis,
   } = course;
 
-  const courseLabel = `${subject} ${parseInt(catalogNumber.trim(), 10)}`;
+  const courseLabel = subject + catalogNumber;
 
   const handleClick = async () => {
     try {
@@ -122,7 +120,6 @@ const Course = function ({ course, mySchedule, setMySchedule }: {
       if (response.status !== 200) throw new Error(`Error ${response.status}: ${response.data}`);
       setFeedback(response.data);
     } catch (err: any) {
-      console.error(err);
       setRequestError(err.message);
     }
   };
@@ -132,14 +129,14 @@ const Course = function ({ course, mySchedule, setMySchedule }: {
     <div className="border-black border-2 rounded-md p-2 space-y-2">
       <h3 className="flex items-center justify-between text-xl">
         {title}
-        {typeof mySchedule.find((c) => c.course.Key === key) === 'undefined'
+        {typeof schedule.find((c) => c.course === key) === 'undefined'
           ? (
-            <button type="button" onClick={() => setMySchedule((prev) => [...prev, { ...getYearAndSeason(course), course }])}>
+            <button type="button" onClick={() => addCourses({ course, ...getYearAndSeason(course) })}>
               <FaPlusCircle />
             </button>
           )
           : (
-            <button type="button" onClick={() => setMySchedule((prev) => prev.filter((c) => c.course.Key !== key))}>
+            <button type="button" onClick={() => removeCourses({ course, ...getYearAndSeason(course) })}>
               <FaMinusCircle />
             </button>
           )}

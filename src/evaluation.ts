@@ -6,6 +6,10 @@ import { EvaluationResponse } from './types';
 type Scraper = ($: CheerioAPI, el: BasicAcceptedElems<Node>) => any;
 
 export default async function getAllEvaluations(school: string, course: string) {
+  if (!process.env.QREPORTS_COOKIE) {
+    throw new Error('Must provide authentication to access QReports.');
+  }
+
   const response = await axios({
     method: 'GET',
     url: 'https://qreports.fas.harvard.edu/home/courses',
@@ -15,74 +19,87 @@ export default async function getAllEvaluations(school: string, course: string) 
     },
     headers: {
       Origin: 'https://portal.my.harvard.edu',
-      Cookie: process.env.QREPORTS_COOKIE as string,
+      Cookie: process.env.QREPORTS_COOKIE,
     },
   });
 
-  const html = response.data;
-  const $ = cheerio.load(html);
-  if ($('title').text() === 'HarvardKey - Harvard University Authentication Service') {
-    throw new Error('Must reauthenticate');
+  try {
+    const html = response.data;
+    const $ = cheerio.load(html);
+    if ($('title').text() === 'HarvardKey - Harvard University Authentication Service') {
+      throw new Error('Must provide authentication to access QReports.');
+    }
+
+    const promises = $('#dtCourses > tbody > tr a')
+      .map((_, a) => {
+        const url = $(a).attr('href');
+        if (!url) return null;
+        try {
+          return getEvaluation(url);
+        } catch (err: any) {
+          console.error(err.message);
+          return null;
+        }
+      })
+      .toArray();
+
+    const results = await Promise.all(promises);
+
+    return results.filter((el) => el !== null);
+  } catch (err) {
+    console.log(err);
+    return [];
   }
-
-  const promises = $('#dtCourses > tbody > tr a')
-    .map((_, a) => {
-      const url = $(a).attr('href');
-      if (!url) return null;
-      try {
-        return getEvaluation(url);
-      } catch (err: any) {
-        console.error(err.message);
-        return null;
-      }
-    })
-    .toArray();
-
-  const results = await Promise.all(promises);
-
-  return results.filter((el) => el !== null);
 }
 
-async function getEvaluation(url: string): Promise<EvaluationResponse> {
-  const response = await axios({
-    method: 'GET',
-    url,
-    headers: {
-      Cookie: process.env.BLUERA_COOKIE as string,
-    },
-  });
-  const $ = cheerio.load(response.data);
-  const toc = $('.TOC h2').text().trim().split(' ');
-  const initial = {
-    url,
-    term: parseInt(toc[4], 10),
-    season: toc[5],
-  } as EvaluationResponse;
+async function getEvaluation(url: string): Promise<EvaluationResponse | { url: string, error: string }> {
+  if (!process.env.BLUERA_COOKIE) {
+    throw new Error('Must provide authentication for bluera.');
+  }
 
-  return $('.report-block').toArray().reduce((acc, el) => {
-    const title = $(el).find('h3, h4').text().trim();
+  try {
+    const response = await axios({
+      method: 'GET',
+      url,
+      headers: {
+        Cookie: process.env.BLUERA_COOKIE,
+      },
+    });
+    const $ = cheerio.load(response.data);
+    const toc = $('.TOC h2').text().trim().split(' ');
+    const initial = {
+      url,
+      term: parseInt(toc[4], 10),
+      season: toc[5],
+    } as EvaluationResponse;
 
-    let data = null;
-    if (title === 'Course Response Rate') {
-      data = getResponseRate($, el);
-    } else if (title === 'Course General Questions') {
-      data = getGeneralQuestions($, el);
-    } else if (title === 'General Instructor Questions') {
-      data = getGeneralQuestions($, el);
-    } else if (
-      title
+    return $('.report-block').toArray().reduce((acc, el) => {
+      const title = $(el).find('h3, h4').text().trim();
+
+      let data = null;
+      if (title === 'Course Response Rate') {
+        data = getResponseRate($, el);
+      } else if (title === 'Course General Questions') {
+        data = getGeneralQuestions($, el);
+      } else if (title === 'General Instructor Questions') {
+        data = getGeneralQuestions($, el);
+      } else if (
+        title
     === 'On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.'
-    ) {
-      data = getHours($, el);
-    } else if (title === 'How strongly would you recommend this course to your peers?') {
-      data = getRecommendations($, el);
-    }
-    if (data === null) return acc;
-    return {
-      ...acc,
-      [title]: data,
-    };
-  }, initial);
+      ) {
+        data = getHours($, el);
+      } else if (title === 'How strongly would you recommend this course to your peers?') {
+        data = getRecommendations($, el);
+      }
+      if (data === null) return acc;
+      return {
+        ...acc,
+        [title]: data,
+      };
+    }, initial);
+  } catch (err: any) {
+    return { url, error: err.message };
+  }
 }
 
 const getResponseRate: Scraper = ($, el) => {
@@ -97,6 +114,8 @@ const getResponseRate: Scraper = ($, el) => {
   return { responded, invited };
 };
 
+// gets the votes in descending order, i.e. excellent, then very good, etc., down to unsatisfactory
+// same way it shows up in the q guide
 const getGeneralQuestions: Scraper = ($, el) => $(el)
   .find('tbody tr')
   .toArray()

@@ -1,198 +1,18 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
+// import dynamic from 'next/dynamic';
 import axios from 'axios';
-import {
-  FaAngleLeft, FaAngleRight,
-} from 'react-icons/fa';
-import React, { useEffect, useState } from 'react';
-import courseData from '../src/courseData.json';
-import { Facet, MyHarvardResponse } from '../src/types';
+import React, {
+  useEffect, useState,
+} from 'react';
+import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
+import { getAuth, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { MyHarvardResponse } from '../src/types';
 import SemesterSchedule from '../components/SemesterSchedule';
-import Course, { ScheduleEntry } from '../components/Course';
 import YearSchedule from '../components/YearSchedule';
-
-type SearchResultsPayload = {
-  data: MyHarvardResponse;
-  search: string;
-  pageNumber: number;
-  totalPages: number;
-};
-
-type SearchResults =
-  | {
-    status: 'none' | 'error';
-    data?: string | object;
-  }
-  | ({ status: 'success' } & SearchResultsPayload)
-  | ({ status: 'loading' } & Partial<SearchResultsPayload>); // when loading, the entries store the past data
-
-type SearchParams = {
-  search: string;
-  pageNumber: number;
-  facets?: Array<string>;
-};
-
-const CategorySelect = function ({ currentSearch, setSearchParams, allFacets }: {
-  currentSearch?: string;
-  setSearchParams: React.Dispatch<React.SetStateAction<SearchParams | null>>;
-  allFacets: Array<Facet>;
-}) {
-  return (
-    <details className="max-w-2xl space-y-2" style={{ minWidth: '16rem' }}>
-      <summary className="cursor-pointer text-center rounded bg-gray-300 py-2">Find courses</summary>
-
-      {allFacets.length > 0 && (
-      <details className="border-black border-2 py-2 px-4 rounded-lg">
-        <summary className="text-xl cursor-pointer">Filters</summary>
-        <hr className="border-black my-2" />
-        {allFacets
-          .map(({
-            FacetLabel: title, FacetChildCollection: filters, Selected: selected, ...rest
-          }) => ({
-            title, filters, selected, ...rest,
-          }))
-          .filter(({ title, filters, selected }) => title !== 'Category' && ((filters && filters.length > 0) || selected))
-          .map(({
-            title, filters, selected, FacetName, FacetValue, DisplayValue,
-          }) => (
-            <div key={title}>
-              <h3>{title}</h3>
-              {selected
-                ? (
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => setSearchParams((prev) => ({
-                        ...prev!,
-                        facets: prev!.facets ? prev!.facets.filter((facet) => facet !== `${FacetName}:${FacetValue}:${title}`) : [],
-                      }))}
-                      className="bg-blue-300 hover:bg-red-300 transition-colors"
-                    >
-                      {DisplayValue}
-                    </button>
-                  </li>
-                )
-                : filters!.map(({
-                  DisplayValue: childTitle, FacetName: childFacetName, FacetValue: childFacetValue, FacetLabel: childFacetLabel, Count,
-                }) => (
-                  <li key={childTitle}>
-                    <button
-                      type="button"
-                      onClick={() => setSearchParams((prev) => ({
-                        ...prev!,
-                        facets: [...(prev!.facets || []), `${childFacetName}:${childFacetValue}:${childFacetLabel}`],
-                      }))}
-                      className={`text-left rounded transition-colors ${filters!.length === 1 ? 'line-through cursor-not-allowed' : 'hover:bg-gray-500'}`}
-                      disabled={filters!.length === 1}
-                    >
-                      {`${childTitle} (${Count})`}
-                    </button>
-                  </li>
-                ))}
-            </div>
-          ))}
-      </details>
-      )}
-
-      {courseData.map(({ HU_SB_ACAD_CAREER: acronym, DESCR: title, HU_SB_CFG_CT_VW: categories }) => (
-        <details key={title} className="border-black border-2 py-2 px-4 rounded-lg">
-          <summary className="text-xl cursor-pointer">
-            {`${title} (${acronym})`}
-          </summary>
-          <hr className="border-black my-2" />
-          <div className="space-y-2 px-2">
-            {categories.map(({ HU_SB_CAT_DESCR: categoryTitle, HU_SB_CFG_SC_VW: subcategories }) => (
-              <details key={categoryTitle}>
-                <summary className="text-xl cursor-pointer">
-                  {categoryTitle}
-                </summary>
-                <hr className="border-black mt-2" />
-                <ul className="p-2 rounded-b bg-gray-300 grid gap-x-2" style={{ gridTemplateColumns: 'auto auto' }}>
-                  {subcategories.map(({ HU_SB_SUBCAT_DESCR: subcategoryTitle, HU_SB_SRCH_DEFN: search, HU_SB_DEPT_URL: url }) => (
-                    <li key={subcategoryTitle} className="contents">
-                      <button
-                        type="button"
-                        onClick={() => setSearchParams((prev) => ({ ...prev, search, pageNumber: 1 }))}
-                        className={`text-left pl-1 rounded transition-colors ${search === currentSearch ? 'bg-blue-300 hover:bg-red-300' : 'hover:bg-gray-500'}`}
-                      >
-                        {subcategoryTitle}
-                      </button>
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">Link</a>
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            ))}
-          </div>
-        </details>
-      ))}
-    </details>
-  );
-};
-
-const ResultsTab = function ({
-  searchResults, setSearchParams, mySchedule, setMySchedule,
-}: {
-  searchResults: SearchResults;
-  setSearchParams: React.Dispatch<React.SetStateAction<SearchParams | null>>;
-  mySchedule: Array<ScheduleEntry>;
-  setMySchedule: React.Dispatch<React.SetStateAction<Array<ScheduleEntry>>>;
-}) {
-  return (
-    <div>
-      {searchResults.status === 'loading' && <p>Loading...</p>}
-
-      {searchResults.status === 'error' && (
-      <p>
-        An error occurred fetching data:
-        {' '}
-        {searchResults.data}
-      </p>
-      )}
-
-      {searchResults.status === 'success' && (
-      <section>
-        {' '}
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="text-xl">
-            Results
-          </h2>
-          {`${searchResults.data[2].HitCount} total`}
-          <span className="flex items-center">
-            {searchResults.pageNumber > 1 && (
-            <button type="button" onClick={() => setSearchParams((prev) => ({ ...prev, search: searchResults.search, pageNumber: searchResults.pageNumber - 1 }))}>
-              <FaAngleLeft />
-            </button>
-            )}
-            <a
-              href={`data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(searchResults.data[0].ResultsCollection))}`}
-              download="courses.json"
-            >
-              Download
-            </a>
-            {searchResults.pageNumber < searchResults.totalPages && (
-            <button type="button" onClick={() => setSearchParams((prev) => ({ ...prev, search: searchResults.search, pageNumber: searchResults.pageNumber + 1 }))}>
-              <FaAngleRight />
-            </button>
-            )}
-          </span>
-        </div>
-
-        <div className="space-y-4">
-          {searchResults.data[0].ResultsCollection.map((course) => (
-            <Course
-              key={course.Key}
-              course={course}
-              mySchedule={mySchedule}
-              setMySchedule={setMySchedule}
-            />
-          ))}
-        </div>
-      </section>
-      )}
-    </div>
-  );
-};
+import CategorySelect, { SearchParams } from '../components/CategorySelect';
+import ResultsTab, { SearchResults } from '../components/ResultsTab';
+import { useUser } from '../src/userContext';
 
 const tabs = {
   results: { title: 'Results', component: ResultsTab },
@@ -200,12 +20,16 @@ const tabs = {
   yearSchedule: { title: 'Year Schedule', component: YearSchedule },
 } as const;
 
+// const FirebaseAuth = dynamic()
+
 const Home: NextPage = function () {
+  const {
+    user, dataError, schedule, error,
+  } = useUser();
   const [searchParams, setSearchParams] = useState<SearchParams | null>(null);
   const [searchResults, setSearchResults] = useState<SearchResults>({
     status: 'none',
   });
-  const [mySchedule, setMySchedule] = useState<Array<ScheduleEntry>>([]);
   const [tabState, setTabState] = useState<keyof typeof tabs>('results');
 
   useEffect(() => {
@@ -251,9 +75,37 @@ const Home: NextPage = function () {
       <Head>
         <title>Harvard Concentration Planner</title>
       </Head>
+      <pre>{JSON.stringify(schedule, null, 2)}</pre>
 
       <main className="p-8 mx-auto flex flex-col items-stretch space-y-4">
         <h1 className="text-4xl text-center">Harvard Concentration Planner</h1>
+
+        {dataError?.message}
+        {error}
+
+        {user
+          ? (
+            <button
+              type="button"
+              className="bg-blue-300 rounded hover:bg-blue-500 transition-colors"
+              onClick={() => {
+                signOut(getAuth());
+              }}
+            >
+              Sign out
+            </button>
+          )
+          : (
+            <StyledFirebaseAuth
+              uiConfig={{
+                signInOptions: [GoogleAuthProvider.PROVIDER_ID],
+                callbacks: {
+                  signInSuccessWithAuthResult: () => false,
+                },
+              }}
+              firebaseAuth={getAuth()}
+            />
+          )}
 
         <div className="flex min-h-screen gap-2 items-stretch">
           <CategorySelect
@@ -281,8 +133,6 @@ const Home: NextPage = function () {
             <BodyComponent
               searchResults={searchResults}
               setSearchParams={setSearchParams}
-              mySchedule={mySchedule}
-              setMySchedule={setMySchedule}
             />
           </div>
         </div>

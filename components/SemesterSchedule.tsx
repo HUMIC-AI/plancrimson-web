@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { filterBySemester, getSemesters, ScheduleEntry } from './Course';
+import { useUser } from '../src/userContext';
+import { filterBySemester, getSemesters } from './Course';
 
 const days = ['MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT'] as const;
 // const dayLetters = 'MTWRFSU';
@@ -9,7 +10,8 @@ function toPercent(time: string) {
   return ((((hours % 12) + (/pm$/i.test(time) ? 12 : 0)) * 60 + minutes) / (60 * 24)) * 100;
 }
 
-const SemesterSchedule = function ({ mySchedule }: { mySchedule: Array<ScheduleEntry> }) {
+const SemesterSchedule: React.FC = function () {
+  const { schedule, courseCache } = useUser();
   const [semester, setSemester] = useState<{ season: string; year: number } | null>(null);
   return (
     <div style={{ height: '108rem' }}>
@@ -26,7 +28,7 @@ const SemesterSchedule = function ({ mySchedule }: { mySchedule: Array<ScheduleE
                 ? 'bg-green-300 hover:bg-green-500' : 'bg-blue-300 hover:bg-blue-500'} p-2`}
               onClick={() => setSemester({ season, year })}
             >
-              {`${season} ${year} (${filterBySemester(mySchedule, year, season).length})`}
+              {`${season} ${year} (${filterBySemester(schedule, year, season).length})`}
             </button>
           ))}
         </div>
@@ -60,22 +62,25 @@ const SemesterSchedule = function ({ mySchedule }: { mySchedule: Array<ScheduleE
                   {day}
                 </h1>
                 {/* courses */}
-                {semester && filterBySemester(mySchedule, semester.year, semester.season).filter(({ course }) => course[day] === 'Y').map(({
-                  course: {
+                {semester && filterBySemester(schedule, semester.year, semester.season).filter(({ course }) => courseCache[course][day] === 'Y').map(({
+                  course,
+                }) => {
+                  const {
                     Key, IS_SCL_DESCR100: title, IS_SCL_TIME_START: startTime, IS_SCL_TIME_END: endTime,
-                  },
-                }) => (
-                  <div
-                    key={Key}
-                    className="bg-blue-300 p-2 absolute w-full z-10"
-                    style={{
-                      top: `${toPercent(startTime)}%`,
-                      bottom: `${100 - toPercent(endTime)}%`,
-                    }}
-                  >
-                    {title}
-                  </div>
-                ))}
+                  } = courseCache[course];
+                  return (
+                    <div
+                      key={Key}
+                      className="bg-blue-300 p-2 absolute w-full z-10"
+                      style={{
+                        top: `${toPercent(startTime)}%`,
+                        bottom: `${100 - toPercent(endTime)}%`,
+                      }}
+                    >
+                      {title}
+                    </div>
+                  );
+                })}
               </div>
             ))}
 
