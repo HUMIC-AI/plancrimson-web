@@ -74,7 +74,7 @@ async function getEvaluation(url: string): Promise<EvaluationResponse | { url: s
     } as EvaluationResponse;
 
     return $('.report-block').toArray().reduce((acc, el) => {
-      const title = $(el).find('h3, h4').text().trim();
+      const title = $(el).find('h3, h4').text().trim() as keyof EvaluationResponse;
 
       let data = null;
       if (title === 'Course Response Rate') {
@@ -90,8 +90,14 @@ async function getEvaluation(url: string): Promise<EvaluationResponse | { url: s
         data = getHours($, el);
       } else if (title === 'How strongly would you recommend this course to your peers?') {
         data = getRecommendations($, el);
+      } else if (title === 'What was/were your reason(s) for enrolling in this course? (Please check all that apply)') {
+        data = getReasons($, el);
       }
+
+      // skip if parsing fails for some reason
       if (data === null) return acc;
+
+      // otherwise send the results back keyed by the question title
       return {
         ...acc,
         [title]: data,
@@ -195,5 +201,30 @@ const getHours: Scraper = ($, el) => {
   const [count, ratio, mean, median, mode, stdev] = nums;
   return {
     count, ratio, mean, median, mode, stdev,
+  };
+};
+
+const getReasons: Scraper = ($, el) => {
+  const nums = $(el)
+    .find('tbody td')
+    .map((_, td) => parseInt($(td).text().trim(), 10))
+    .toArray();
+
+  if (nums.length !== 9) {
+    throw new Error('Could not read reasons for enrolling');
+  }
+  const [
+    elective,
+    concentration,
+    secondary,
+    gened,
+    expos,
+    language,
+    premed,
+    distribution,
+    qrd,
+  ] = nums;
+  return {
+    elective, concentration, secondary, gened, expos, language, premed, distribution, qrd,
   };
 };

@@ -191,6 +191,7 @@ export interface EvaluationResponse {
   'General Instructor Questions': GeneralInstructorQuestions;
   'On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.': OnAverageHowManyHoursPerWeekDidYouSpendOnCourseworkOutsideOfClassEnterAWholeNumberBetween0And168;
   'How strongly would you recommend this course to your peers?': HowStronglyWouldYouRecommendThisCourseToYourPeers;
+  'What was/were your reason(s) for enrolling in this course? (Please check all that apply)': ReasonsForEnrolling;
 }
 
 export interface CourseGeneralQuestions {
@@ -239,4 +240,16 @@ export interface OnAverageHowManyHoursPerWeekDidYouSpendOnCourseworkOutsideOfCla
   median: number;
   mode: number;
   stdev: number;
+}
+
+export interface ReasonsForEnrolling {
+  elective: number;
+  concentration: number;
+  secondary: number;
+  gened: number;
+  expos: number;
+  language: number;
+  premed: number;
+  distribution: number;
+  qrd: number;
 }
