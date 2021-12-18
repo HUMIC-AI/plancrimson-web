@@ -1,11 +1,26 @@
-import React from 'react';
-import { Facet } from '../src/types';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { Facet, MyHarvardResponse } from '../src/types';
 import courseData from '../src/courseData.json';
 
 export type SearchParams = {
-  search: string;
+  search?: string;
   pageNumber?: number;
   facets?: Array<string>;
+};
+
+export type SearchResults = {
+  error: null;
+  data: null;
+} | {
+  error: string;
+  data: null;
+} | {
+  error: null;
+  data: MyHarvardResponse;
+  search: string;
+  pageNumber: number;
+  totalPages: number
 };
 
 type Props = {
@@ -14,6 +29,53 @@ type Props = {
   allFacets: Array<Facet>;
 };
 
+export function useSearch({ searchOnChange } : { searchOnChange: boolean }) {
+  const [searchParams, setSearchParams] = useState<SearchParams | null>(null);
+  const [searchResults, setSearchResults] = useState<SearchResults>({ error: null, data: null });
+  const [loading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!searchOnChange || searchParams === null || loading) return;
+
+    setLoading(true);
+
+    axios.post('/api/search', searchParams).then((result) => {
+      if (result.status !== 200) {
+        setSearchResults({
+          error: JSON.stringify(result.data?.error) || result.statusText,
+          data: null,
+        });
+      } else if (!Array.isArray(result.data) || result.data.length === 0) {
+        setSearchResults({
+          error: `An unexpected error occurred when fetching data from my.harvard. Did not receive nonempty array, instead received: ${result.data}`,
+          data: null,
+        });
+      } else {
+        const data = result.data as MyHarvardResponse;
+        setSearchResults({
+          data,
+          search: searchParams.search || '',
+          pageNumber: searchParams.pageNumber || 1,
+          totalPages: data[2].TotalPages,
+          error: null,
+        });
+      }
+      setLoading(false);
+    }).catch((err) => {
+      setSearchResults({ error: err.message, data: null });
+      setLoading(false);
+    });
+  }, [searchOnChange, searchParams, loading]);
+
+  return {
+    searchParams, setSearchParams, searchResults, setSearchResults,
+  };
+}
+
+export function getFacets(searchResults: SearchResults) {
+  return searchResults.data ? searchResults.data[1].Facets : [];
+}
+
 const CategorySelect: React.FC<Props> = function ({ currentSearch, setSearchParams, allFacets }) {
   return (
     <details className="max-w-2xl space-y-2" style={{ minWidth: '16rem' }}>
@@ -21,6 +83,7 @@ const CategorySelect: React.FC<Props> = function ({ currentSearch, setSearchPara
 
       <button type="button" onClick={() => setSearchParams(({ search: '' }))}>Search all</button>
 
+      {/* filters */}
       {allFacets.length > 0 && (
         <details className="border-black border-2 py-2 px-4 rounded-lg">
           <summary className="text-xl cursor-pointer">Filters</summary>

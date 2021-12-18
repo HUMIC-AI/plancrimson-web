@@ -5,11 +5,23 @@ import { EvaluationResponse } from './types';
 
 type Scraper = ($: CheerioAPI, el: BasicAcceptedElems<Node>) => any;
 
-export default async function getAllEvaluations(school: string, course: string) {
-  if (!process.env.QREPORTS_COOKIE) {
-    throw new Error('Must provide authentication to access QReports.');
+function assertQReportsCookie() {
+  const cookie = process.env.Q_REPORTS_COOKIE;
+  if (!cookie) {
+    throw new Error('Must provide authentication to access Q Reports. Visit https://qreports.fas.harvard.edu/browse/index, check the network request to "index", and copy the Cookie header into the Q_REPORTS_COOKIE variable in .env.local.');
   }
+  return cookie;
+}
 
+function assertExploranceCookie() {
+  const cookie = process.env.EXPLORANCE_COOKIE;
+  if (!cookie) {
+    throw new Error('Must provide authentication to access QReports. Visit any Q Report page, e.g. https://harvard.bluera.com/harvard/rpvf-eng.aspx?lang=eng&redi=1&SelectedIDforPrint=2df896f38db7a3b95e9d749eecad2e77c1a9b3f2adfee3771214d92e63fcf7aea9cc1c51a29ba537e44683b279e4e65b&ReportType=2&regl=en-US, check the network request to "the main page", and copy the Cookie header into the EXPLORANCE_COOKIE variable in .env.local.');
+  }
+  return cookie;
+}
+
+export default async function getAllEvaluations(school: string, course: string) {
   const response = await axios({
     method: 'GET',
     url: 'https://qreports.fas.harvard.edu/home/courses',
@@ -19,7 +31,7 @@ export default async function getAllEvaluations(school: string, course: string) 
     },
     headers: {
       Origin: 'https://portal.my.harvard.edu',
-      Cookie: process.env.QREPORTS_COOKIE,
+      Cookie: assertQReportsCookie(),
     },
   });
 
@@ -53,16 +65,12 @@ export default async function getAllEvaluations(school: string, course: string) 
 }
 
 async function getEvaluation(url: string): Promise<EvaluationResponse | { url: string, error: string }> {
-  if (!process.env.BLUERA_COOKIE) {
-    throw new Error('Must provide authentication for bluera.');
-  }
-
   try {
     const response = await axios({
       method: 'GET',
       url,
       headers: {
-        Cookie: process.env.BLUERA_COOKIE,
+        Cookie: assertExploranceCookie(),
       },
     });
     const $ = cheerio.load(response.data);

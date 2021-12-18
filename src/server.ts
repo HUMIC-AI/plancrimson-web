@@ -11,9 +11,11 @@ if (getApps().length === 0) {
   });
 }
 
+type Props = { search: string; searchQuery: string; facets: Array<string>; pageNumber: number };
+
 export default async function searchMyHarvard({
   search, searchQuery, facets, pageNumber,
-}: Partial<{ search: string; searchQuery: string; facets: Array<string>; pageNumber: number }> = {}): Promise<MyHarvardResponse> {
+}: Partial<Props> = {}): Promise<MyHarvardResponse> {
   const searchText = Object.keys(advancedFields).reduce(
     (acc, key) => acc.replaceAll(
       `${advancedFields[key as keyof typeof advancedFields]}:`,

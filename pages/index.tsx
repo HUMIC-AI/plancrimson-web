@@ -1,17 +1,15 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 // import dynamic from 'next/dynamic';
-import axios from 'axios';
 import React, {
-  useEffect, useState,
+  useState,
 } from 'react';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import { getAuth, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { MyHarvardResponse } from '../src/types';
 import SemesterSchedule from '../components/SemesterSchedule';
 import YearSchedule from '../components/YearSchedule';
-import CategorySelect, { SearchParams } from '../components/CategorySelect';
-import ResultsTab, { SearchResults } from '../components/ResultsTab';
+import CategorySelect, { getFacets, useSearch } from '../components/CategorySelect';
+import ResultsTab from '../components/ResultsTab';
 import { useUser } from '../src/userContext';
 
 const tabs = {
@@ -24,48 +22,12 @@ const tabs = {
 
 const Home: NextPage = function () {
   const {
-    user, dataError, schedule, error,
+    user, dataError, schedule, authError,
   } = useUser();
-  const [searchParams, setSearchParams] = useState<SearchParams | null>(null);
-  const [searchResults, setSearchResults] = useState<SearchResults>({
-    status: 'none',
-  });
   const [tabState, setTabState] = useState<keyof typeof tabs>('results');
-
-  useEffect(() => {
-    if (searchParams === null || searchResults.status === 'loading') return;
-
-    setSearchResults((prev) => ({
-      ...prev,
-      data: prev.status === 'success' || prev.status === 'loading' ? prev.data : undefined,
-      status: 'loading',
-    }));
-
-    axios.post('/api/search', searchParams).then((result) => {
-      if (result.status !== 200) {
-        setSearchResults((prev) => ({
-          ...prev,
-          status: 'error',
-          data: result.data?.error || result.statusText,
-        }));
-      } else if (!Array.isArray(result.data) || result.data.length === 0) {
-        setSearchResults((prev) => ({
-          ...prev,
-          status: 'error',
-          data: 'An unexpected error occurred when fetching data from my.harvard',
-        }));
-      } else {
-        const data = result.data as MyHarvardResponse;
-        setSearchResults({
-          status: 'success',
-          data,
-          search: searchParams.search,
-          pageNumber: searchParams.pageNumber,
-          totalPages: data[2].TotalPages,
-        });
-      }
-    }).catch((err) => setSearchResults({ status: 'error', data: err.message }));
-  }, [searchParams]);
+  const {
+    searchParams, setSearchParams, searchResults,
+  } = useSearch({ searchOnChange: true });
 
   const BodyComponent = tabs[tabState].component;
   const tabNames = Object.keys(tabs) as Array<keyof typeof tabs>;
@@ -81,7 +43,7 @@ const Home: NextPage = function () {
         <h1 className="text-4xl text-center">Harvard Concentration Planner</h1>
 
         {dataError?.message}
-        {error}
+        {authError}
 
         {user
           ? (
@@ -111,8 +73,7 @@ const Home: NextPage = function () {
           <CategorySelect
             currentSearch={searchParams?.search}
             setSearchParams={setSearchParams}
-            allFacets={(searchResults.status === 'success' || searchResults.status === 'loading') && searchResults.data
-              ? searchResults.data[1].Facets : []}
+            allFacets={getFacets(searchResults)}
           />
 
           <div className="container">
