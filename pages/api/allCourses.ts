@@ -2,7 +2,7 @@
 import { NextApiHandler } from 'next';
 import searchMyHarvard from 'src/server';
 import { getAuth } from 'firebase-admin/auth';
-import getAllEvaluations from '../../src/evaluation';
+import getAllEvaluations, { getDescriptionText } from '../../src/evaluation';
 
 const handler: NextApiHandler = async (req, res) => {
   const authToken = req.headers.authorization;
@@ -28,7 +28,7 @@ const handler: NextApiHandler = async (req, res) => {
     });
     const results = await Promise.all(data[0].ResultsCollection.map(async (course) => {
       const evals = await getAllEvaluations(course.ACAD_CAREER, course.SUBJECT + course.CATALOG_NBR);
-      return { ...course, evals };
+      return { ...course, textDescription: getDescriptionText(course), evals };
     }));
     allResults.push(...results);
     if (data[2].HitCount === data[2].ResultEnd) break;

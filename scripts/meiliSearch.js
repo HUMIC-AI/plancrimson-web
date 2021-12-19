@@ -1,5 +1,6 @@
 const { MeiliSearch } = require('meilisearch');
 const inquirer = require('inquirer');
+const cheerio = require('cheerio');
 
 const client = new MeiliSearch({
   host: 'http://127.0.0.1:7700',
@@ -16,7 +17,7 @@ const deleteIndex = () => {
 const searchableAttributes = [
   'Title', // eg "Abstraction and Design in Computation"
   'SUBJECT', // eg "COMPSCI"
-  'HU_CAT_NBR_NL', // eg "51"
+  'CATALOG_NBR', // eg "51"
   'HU_SBJCT_CATNBR_NL', // eg "COMPSCI51"
   'HU_ALIAS_CATNBR_NS', // eg "CS51"
   'IS_SCL_DESCR', // eg "<p>Fundamental concepts in the design of computer programs..."
@@ -95,12 +96,17 @@ const loadDocuments = async () => {
   }
 };
 
+const createAPIKey = () => {
+  return client.getKeys();
+};
+
 const methods = {
   'create index': createIndex,
   'delete index': deleteIndex,
   'set attributes': setAttributes,
   'get all updates': getAllUpdateStatus,
   'load documents': loadDocuments,
+  'get api keys': createAPIKey,
 };
 
 async function main() {

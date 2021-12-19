@@ -3,7 +3,6 @@ import { initializeApp, getApps, applicationDefault } from 'firebase-admin/app';
 import qs from 'qs';
 import advancedFields from './advancedFields.json';
 import { MyHarvardResponse } from './types';
-// import serviceAccountKey from '../serviceAccountKey.json';
 
 if (getApps().length === 0) {
   initializeApp({
@@ -52,5 +51,9 @@ export default async function searchMyHarvard({
     data: formData,
   });
 
-  return data;
+  if (!Array.isArray(data)) {
+    throw new Error('my.harvard returned a nonarray response. Ensure that the MY_HARVARD_COOKIE variable in .env.local is up to date.');
+  }
+
+  return data as MyHarvardResponse;
 }

@@ -21,11 +21,14 @@ const handler: NextApiHandler<ResponseData> = async (req, res) => {
     return;
   }
 
-  const data = await searchMyHarvard({
-    search, searchQuery, facets, pageNumber,
-  });
-
-  res.json(data);
+  try {
+    const data = await searchMyHarvard({
+      search, searchQuery, facets, pageNumber,
+    });
+    res.json(data);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
 };
 
 export default handler;

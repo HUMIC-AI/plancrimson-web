@@ -1,9 +1,10 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { FaMinusCircle, FaPlusCircle } from 'react-icons/fa';
 import cheerio from 'cheerio';
-import axios from 'axios';
+import useSWR from 'swr';
 import { Course as CourseType, EvaluationResponse } from '../src/types';
-import { ScheduleEntry, UserContext } from '../src/userContext';
+import { ScheduleEntry, useUser } from '../src/userContext';
+import { fetcher } from '../src/hooks';
 
 export function getYearAndSeason(course: CourseType) {
   const season = /Fall/i.test(course.IS_SCL_DESCR_IS_SCL_DESCRH) ? 'Fall' : 'Spring' as const;
@@ -80,14 +81,6 @@ const Evaluation: React.FC<{ report: EvaluationResponse }> = function ({ report 
 const Course: React.FC<{
   course: CourseType;
 }> = function ({ course }) {
-  const [feedback, setFeedback] = useState<EvaluationResponse[] | null>(null);
-  const [requestError, setRequestError] = useState<string | null>(null);
-  const {
-    schedule, addCourses, removeCourses,
-  } = useContext(UserContext);
-
-  console.log('rerendering');
-
   const {
     Key: key,
     ACAD_CAREER: school,
@@ -104,25 +97,21 @@ const Course: React.FC<{
     SSR_COMPONENTDESCR: componentDescription,
     IS_SCL_DESCR100_HU_SCL_GRADE_BASIS: gradingBasis,
   } = course;
-
   const courseLabel = subject + catalogNumber;
 
-  const handleClick = async () => {
-    try {
-      const response = await axios({
-        method: 'get',
-        url: '/api/feedback',
-        params: {
-          school,
-          course: courseLabel,
-        },
-      });
-      if (response.status !== 200) throw new Error(`Error ${response.status}: ${response.data}`);
-      setFeedback(response.data);
-    } catch (err: any) {
-      setRequestError(err.message);
-    }
-  };
+  const {
+    schedule, addCourses, removeCourses,
+  } = useUser();
+  const [loadFeedback, setLoadFeedback] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const { data: feedback, error } = useSWR(loadFeedback ? {
+    method: 'GET',
+    url: '/api/feedback',
+    params: {
+      school,
+      course: courseLabel,
+    },
+  } : null, fetcher);
 
   const description = cheerio(rawDescription).text();
   return (
@@ -169,25 +158,36 @@ const Course: React.FC<{
       </p>
       )}
       <div>
-        <button type="button" onClick={handleClick} className="text-blue-300 hover:text-blue-500 transition-colors">
-          Load course feedback
+        <button
+          type="button"
+          onClick={() => {
+            setShowFeedback((val) => !val);
+            if (!loadFeedback) setLoadFeedback(true);
+          }}
+          className="text-blue-300 hover:text-blue-500 transition-colors"
+        >
+          {/* eslint-disable-next-line no-nested-ternary */}
+          {showFeedback ? 'Hide course feedback' : (loadFeedback ? 'Show course feedback' : 'Load course feedback')}
         </button>
       </div>
-      {requestError
+      {error
       && (
       <p>
         Error loading course feedback:
         {' '}
-        {requestError}
+        {JSON.stringify(error)}
       </p>
       )}
 
       {/* Evaluations */}
+      {showFeedback && (
       <div className="">
-        {Array.isArray(feedback) && (feedback.length === 0
+        {feedback ? (Array.isArray(feedback) && (feedback.length === 0
           ? 'No evaluations found'
-          : feedback.map((report) => <Evaluation report={report} />))}
+          : feedback.map((report) => <Evaluation report={report} />)))
+          : 'Loading feedback...'}
       </div>
+      )}
     </div>
   );
 };

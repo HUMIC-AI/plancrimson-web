@@ -1,14 +1,16 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import cheerio, { BasicAcceptedElems, CheerioAPI, Node } from 'cheerio';
 import axios from 'axios';
-import { EvaluationResponse } from './types';
+import { Course, EvaluationResponse } from './types';
 
 type Scraper = ($: CheerioAPI, el: BasicAcceptedElems<Node>) => any;
+
+const QReportMsg = 'Must provide authentication to access Q Reports. Visit https://qreports.fas.harvard.edu/browse/index, check the network request to "index", and copy the Cookie header into the Q_REPORTS_COOKIE variable in .env.local.';
 
 function assertQReportsCookie() {
   const cookie = process.env.Q_REPORTS_COOKIE;
   if (!cookie) {
-    throw new Error('Must provide authentication to access Q Reports. Visit https://qreports.fas.harvard.edu/browse/index, check the network request to "index", and copy the Cookie header into the Q_REPORTS_COOKIE variable in .env.local.');
+    throw new Error(QReportMsg);
   }
   return cookie;
 }
@@ -19,6 +21,15 @@ function assertExploranceCookie() {
     throw new Error('Must provide authentication to access QReports. Visit any Q Report page, e.g. https://harvard.bluera.com/harvard/rpvf-eng.aspx?lang=eng&redi=1&SelectedIDforPrint=2df896f38db7a3b95e9d749eecad2e77c1a9b3f2adfee3771214d92e63fcf7aea9cc1c51a29ba537e44683b279e4e65b&ReportType=2&regl=en-US, check the network request to "the main page", and copy the Cookie header into the EXPLORANCE_COOKIE variable in .env.local.');
   }
   return cookie;
+}
+
+export function getDescriptionText(course: Course) {
+  try {
+    const $ = cheerio.load(course.IS_SCL_DESCR);
+    return $.text();
+  } catch (err) {
+    return course.IS_SCL_DESCR;
+  }
 }
 
 export default async function getAllEvaluations(school: string, course: string) {
@@ -35,33 +46,27 @@ export default async function getAllEvaluations(school: string, course: string) 
     },
   });
 
-  try {
-    const html = response.data;
-    const $ = cheerio.load(html);
-    if ($('title').text() === 'HarvardKey - Harvard University Authentication Service') {
-      throw new Error('Must provide authentication to access QReports.');
-    }
-
-    const promises = $('#dtCourses > tbody > tr a')
-      .map((_, a) => {
-        const url = $(a).attr('href');
-        if (!url) return null;
-        try {
-          return getEvaluation(url);
-        } catch (err: any) {
-          console.error(err.message);
-          return null;
-        }
-      })
-      .toArray();
-
-    const results = await Promise.all(promises);
-
-    return results.filter((el) => el !== null);
-  } catch (err) {
-    console.log(err);
-    return [];
+  const html = response.data;
+  const $ = cheerio.load(html);
+  if ($('title').text() === 'HarvardKey - Harvard University Authentication Service') {
+    throw new Error(QReportMsg);
   }
+
+  const promises = $('#dtCourses > tbody > tr a')
+    .map((_, a) => {
+      const url = $(a).attr('href');
+      if (!url) return null;
+      try {
+        return getEvaluation(url);
+      } catch (err: any) {
+        return null;
+      }
+    })
+    .toArray();
+
+  const results = await Promise.all(promises);
+
+  return results.filter((el) => el !== null);
 }
 
 async function getEvaluation(url: string): Promise<EvaluationResponse | { url: string, error: string }> {
@@ -112,6 +117,9 @@ async function getEvaluation(url: string): Promise<EvaluationResponse | { url: s
       };
     }, initial);
   } catch (err: any) {
+    if (err.message === 'Maximum number of redirects exceeded') {
+      throw new Error('Maximum number of redirects exceeded. Check the explorance cookie.');
+    }
     return { url, error: err.message };
   }
 }

@@ -2,7 +2,7 @@ import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import {
   arrayRemove,
   arrayUnion,
-  doc, DocumentData, DocumentSnapshot, FirestoreError, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc,
+  doc, FirestoreError, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc,
 } from 'firebase/firestore';
 import React, {
   createContext, useCallback, useContext, useEffect, useMemo, useState,
@@ -135,8 +135,6 @@ export const UserContextProvider: React.FC = function ({ children }) {
     setSchedule: setScheduleWrapper,
     courseCache,
   } as UserResponse), [user, authError, dataError, schedule, addCourses, removeCourses, setScheduleWrapper, courseCache]);
-
-  console.log('reloading context,', value);
 
   return (
     <UserContext.Provider value={value}>

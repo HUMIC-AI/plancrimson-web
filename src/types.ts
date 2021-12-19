@@ -32,6 +32,7 @@ export interface Course {
   Description: string; // has strange characters, eg "?p?Practicum emphasizing an active but reflective approach to teaching applied sciences and engineering; designed for graduate students in any <b>SEAS</b> area, not specifically Engineering Sciences.&nbsp; Topics: presentation and communication; in-class teaching and interaction; developing, grading",
   IS_SCL_DESCR: string; // course description with html, eg "<p>Practicum emphasizing an active but reflective approach to teaching applied sciences and engineering...</p>"
   IS_SCL_DESCR_HU_SCL_DESCRNOHTML: string; // description (still with html), eg "<p>Cryptography is as old as human communication itself...</p>"
+  textDescription?: string; // MANUALLY ADDED
 
   // ==================== TIME RELATED FIELDS ====================
 

@@ -1,16 +1,14 @@
 import type { NextPage } from 'next';
-import Head from 'next/head';
-// import dynamic from 'next/dynamic';
-import React, {
-  useState,
-} from 'react';
+import React, { useState } from 'react';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import { getAuth, GoogleAuthProvider, signOut } from 'firebase/auth';
 import SemesterSchedule from '../components/SemesterSchedule';
 import YearSchedule from '../components/YearSchedule';
-import CategorySelect, { getFacets, useSearch } from '../components/CategorySelect';
+import CategorySelect, { getFacets } from '../components/CategorySelect';
 import ResultsTab from '../components/ResultsTab';
 import { useUser } from '../src/userContext';
+import { useSearch } from '../src/hooks';
+import Layout from '../components/Layout';
 
 const tabs = {
   results: { title: 'Results', component: ResultsTab },
@@ -22,26 +20,19 @@ const tabs = {
 
 const Home: NextPage = function () {
   const {
-    user, dataError, schedule, authError,
+    user, dataError, authError,
   } = useUser();
   const [tabState, setTabState] = useState<keyof typeof tabs>('results');
   const {
-    searchParams, setSearchParams, searchResults,
-  } = useSearch({ searchOnChange: true });
+    searchParams, setSearchParams, searchResults, error, loading,
+  } = useSearch();
 
   const BodyComponent = tabs[tabState].component;
   const tabNames = Object.keys(tabs) as Array<keyof typeof tabs>;
 
   return (
-    <div>
-      <Head>
-        <title>Harvard Concentration Planner</title>
-      </Head>
-      <pre>{JSON.stringify(schedule, null, 2)}</pre>
-
-      <main className="p-8 mx-auto flex flex-col items-stretch space-y-4">
-        <h1 className="text-4xl text-center">Harvard Concentration Planner</h1>
-
+    <Layout>
+      <div className="w-full flex flex-col items-stretch space-y-4">
         {dataError?.message}
         {authError}
 
@@ -71,9 +62,9 @@ const Home: NextPage = function () {
 
         <div className="flex min-h-screen gap-2 items-stretch">
           <CategorySelect
-            currentSearch={searchParams?.search}
+            currentSearch={searchParams.search}
             setSearchParams={setSearchParams}
-            allFacets={getFacets(searchResults)}
+            allFacets={searchResults ? getFacets(searchResults) : []}
           />
 
           <div className="container">
@@ -91,14 +82,20 @@ const Home: NextPage = function () {
               ))}
             </nav>
 
+            {loading && <p>Loading...</p>}
+
+            {searchResults && (
             <BodyComponent
               searchResults={searchResults}
               setSearchParams={setSearchParams}
             />
+            )}
+
+            {error && <pre>{JSON.stringify(error)}</pre>}
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </Layout>
   );
 };
 
