@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import cheerio, { BasicAcceptedElems, CheerioAPI, Node } from 'cheerio';
 import axios from 'axios';
-import { Course, EvaluationResponse } from './types';
+import { Class, EvaluationResponse } from './types';
 
 type Scraper = ($: CheerioAPI, el: BasicAcceptedElems<Node>) => any;
 
@@ -23,7 +23,7 @@ function assertExploranceCookie() {
   return cookie;
 }
 
-export function getDescriptionText(course: Course) {
+export function getDescriptionText(course: Class) {
   try {
     const $ = cheerio.load(course.IS_SCL_DESCR);
     return $.text();

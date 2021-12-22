@@ -1,21 +1,25 @@
 /* eslint-disable no-param-reassign */
-import React, { createRef, useState } from 'react';
-import { Course } from '../src/types';
-import { useUser } from '../src/userContext';
+import React, { createRef, useMemo, useState } from 'react';
+import { Season, useClassCache } from '../src/schedules';
+import { Class } from '../src/types';
 import {
-  filterBySemester, getSemesters, getYearAndSeason,
-} from './Course';
+  getAllSemesters, useUserData, getClassId, getAllClassIds, getSchedulesBySemester,
+} from '../src/userContext';
+import ScheduleSelector from './ScheduleSelector';
 
 type DragStatus = {
   dragging: false;
 } | {
   dragging: true;
-  data: { key: string; year: number; season: string; }
+  data: {
+    classId: string;
+    originScheduleId: string;
+  };
 };
 
 const CourseCard: React.FC<{
-  course: Course, setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>
-}> = function ({ course, setDragStatus }) {
+  course: Class, setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>, scheduleId: string
+}> = function ({ course, setDragStatus, scheduleId }) {
   const {
     SUBJECT: subject,
     CATALOG_NBR: catalogNumber,
@@ -39,7 +43,10 @@ const CourseCard: React.FC<{
       draggable
       onDragStart={(ev) => {
         ev.dataTransfer.dropEffect = 'move';
-        setDragStatus({ dragging: true, data: { key: course.Key, ...getYearAndSeason(course) } });
+        setDragStatus({
+          dragging: true,
+          data: { classId: getClassId(course), originScheduleId: scheduleId },
+        });
       }}
     >
       <div
@@ -68,57 +75,102 @@ const CourseCard: React.FC<{
   );
 };
 
+type SelectedSchedules = Record<string, string>;
+
+type Props = { selectedSchedules: SelectedSchedules;
+  setSelectedSchedules: React.Dispatch<React.SetStateAction<SelectedSchedules>> ;
+  year: number;
+  season: Season;
+  dragStatus: DragStatus;
+  setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>;
+};
+
+const SemesterDisplay: React.FC<Props> = function ({
+  selectedSchedules, setSelectedSchedules, year, season, dragStatus, setDragStatus,
+}) {
+  const { data, addCourses, removeCourses } = useUserData();
+  const classIds = useMemo(() => getAllClassIds(data), [data]);
+  const { classCache } = useClassCache(classIds);
+
+  const selectedScheduleId = selectedSchedules[year + season]
+  || Object.values(data.schedules).find((schedule) => schedule.year === year && schedule.season === season)!.id;
+  const selectedSchedule = data.schedules[selectedScheduleId];
+
+  return (
+    <div
+      // eslint-disable-next-line no-nested-ternary
+      className={`${dragStatus.dragging ? (dragStatus.data.originScheduleId === selectedScheduleId
+        ? 'bg-blue-300'
+        : 'bg-gray-300 cursor-not-allowed')
+        : 'even:bg-gray-300 odd:bg-gray-100 h-full p-2 text-center w-48'}`}
+      onDragOver={(ev) => {
+        ev.preventDefault();
+        ev.dataTransfer.dropEffect = 'move';
+      }}
+      onDrop={(ev) => {
+        ev.preventDefault();
+        if (dragStatus.dragging) {
+          const { classId, originScheduleId } = dragStatus.data;
+          addCourses({ classId, scheduleId: selectedScheduleId });
+          removeCourses({ classId, scheduleId: originScheduleId });
+        }
+        setDragStatus({ dragging: false });
+      }}
+    >
+      <h1 className="mb-2 text-lg border-black border-b-2">
+        {`${year} ${season}`}
+      </h1>
+
+      <ScheduleSelector
+        schedules={getSchedulesBySemester(data, year, season).map((schedule) => schedule.id)}
+        selectedSchedule={selectedSchedule.id}
+        selectSchedule={(val) => setSelectedSchedules((prev) => ({ ...prev, [year + season]: val }))}
+      />
+
+      <div className="flex flex-col gap-4">
+        {selectedSchedule.classes.map(({ id }) => (
+          <CourseCard
+            key={id}
+            course={classCache[id]}
+            scheduleId={selectedScheduleId}
+            setDragStatus={setDragStatus}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const YearSchedule: React.FC = function () {
-  const startYear = 2021;
   const [dragStatus, setDragStatus] = useState<DragStatus>({
     dragging: false,
   });
-  const { schedule, setSchedule, courseCache } = useUser();
+  // selectedSchedules maps year + season to scheduleId
+  const [selectedSchedules, setSelectedSchedules] = useState<SelectedSchedules>({});
+  const { data } = useUserData();
+
+  console.log(selectedSchedules);
 
   return (
     <div className="overflow-y-scroll w-full border-black border-2">
       <div className="p-4">
         Total courses:
         {' '}
-        {schedule.length}
+        {Object.values(selectedSchedules).reduce((acc, schedule) => acc + data.schedules[schedule].classes.length, 0)}
         /32
       </div>
       <div className="relative w-full overflow-x-scroll">
         <div className="grid grid-cols-8 min-w-max h-full">
-          {getSemesters(startYear).map(({ year, season }, i) => (
-            <div
+          {getAllSemesters(data).map(({ year, season }) => (
+            <SemesterDisplay
               key={year + season}
-              // eslint-disable-next-line no-nested-ternary
-              className={`${dragStatus.dragging ? (dragStatus.data.season === season
-                ? 'bg-blue-300'
-                : 'bg-gray-300 cursor-not-allowed')
-                : (i % 2 === 0 ? 'bg-gray-300' : 'bg-gray-100')} h-full p-2 text-center w-48`}
-              onDragOver={(ev) => {
-                ev.preventDefault();
-                ev.dataTransfer.dropEffect = 'move';
-              }}
-              onDrop={(ev) => {
-                ev.preventDefault();
-                setDragStatus({ dragging: false });
-                if (dragStatus.dragging && dragStatus.data.season === season) {
-                  setSchedule((prev) => {
-                    const idx = prev.findIndex(({ course }) => course === dragStatus.data.key);
-                    const ret = prev.slice();
-                    const [{ course }] = ret.splice(idx, 1);
-                    ret.push({ year, season, course });
-                    return ret;
-                  });
-                }
-              }}
-            >
-              <h1 className="mb-2 text-lg border-black border-b-2">
-                {`${year} ${season}`}
-              </h1>
-              <div className="flex flex-col gap-4">
-                {filterBySemester(schedule, year, season)
-                  .map(({ course }) => <CourseCard key={course} course={courseCache[course]} setDragStatus={setDragStatus} />)}
-              </div>
-            </div>
+              selectedSchedules={selectedSchedules}
+              setSelectedSchedules={setSelectedSchedules}
+              year={year}
+              season={season}
+              dragStatus={dragStatus}
+              setDragStatus={setDragStatus}
+            />
           ))}
         </div>
       </div>

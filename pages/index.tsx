@@ -2,11 +2,11 @@ import type { NextPage } from 'next';
 import React, { useState } from 'react';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import { getAuth, GoogleAuthProvider, signOut } from 'firebase/auth';
-import SemesterSchedule from '../components/SemesterSchedule';
+import SemesterSchedule from '../components/SemesterSchedule/SemesterSchedule';
 import YearSchedule from '../components/YearSchedule';
-import CategorySelect, { getFacets } from '../components/CategorySelect';
-import ResultsTab from '../components/ResultsTab';
-import { useUser } from '../src/userContext';
+import CategorySelect from '../components/CategorySelect';
+import ResultsTab from '../components/ResultsTab/ResultsTab';
+import { UserDataProvider, useUser } from '../src/userContext';
 import { useSearch } from '../src/hooks';
 import Layout from '../components/Layout';
 
@@ -20,11 +20,12 @@ const tabs = {
 
 const Home: NextPage = function () {
   const {
-    user, dataError, authError,
+    user, error: authError,
   } = useUser();
   const [tabState, setTabState] = useState<keyof typeof tabs>('results');
+  const [selectedSchedule, selectSchedule] = useState<string | undefined>();
   const {
-    searchParams, setSearchParams, searchResults, error, loading,
+    searchParams, search, searchResults, error, loading,
   } = useSearch();
 
   const BodyComponent = tabs[tabState].component;
@@ -33,7 +34,6 @@ const Home: NextPage = function () {
   return (
     <Layout>
       <div className="w-full flex flex-col items-stretch space-y-4">
-        {dataError?.message}
         {authError}
 
         {user
@@ -60,14 +60,14 @@ const Home: NextPage = function () {
             />
           )}
 
-        <div className="flex min-h-screen gap-2 items-stretch">
+        <div className="flex flex-col min-h-screen gap-2 items-stretch">
           <CategorySelect
             currentSearch={searchParams.search}
-            setSearchParams={setSearchParams}
-            allFacets={searchResults ? getFacets(searchResults) : []}
+            search={search}
+            allFacets={searchResults ? searchResults.facets : []}
           />
 
-          <div className="container">
+          <div>
             {/* header */}
             <nav className="flex justify-between p-2 bg-gray-300 rounded w-full">
               {tabNames.map((key) => (
@@ -84,14 +84,16 @@ const Home: NextPage = function () {
 
             {loading && <p>Loading...</p>}
 
-            {searchResults && (
-            <BodyComponent
-              searchResults={searchResults}
-              setSearchParams={setSearchParams}
-            />
-            )}
+            <UserDataProvider user={user}>
+              <BodyComponent
+                searchResults={searchResults}
+                search={search}
+                selectedSchedule={selectedSchedule}
+                selectSchedule={selectSchedule}
+              />
+            </UserDataProvider>
 
-            {error && <pre>{JSON.stringify(error)}</pre>}
+            {error && <code>{JSON.stringify(error)}</code>}
           </div>
         </div>
       </div>

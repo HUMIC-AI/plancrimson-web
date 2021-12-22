@@ -4,13 +4,13 @@ import {
 } from 'react-instantsearch-dom';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
 import { connectHits, connectSearchBox } from 'react-instantsearch-core';
-import { Course } from '../src/types';
+import { Class } from '../src/types';
 
 const searchClient = instantMeiliSearch(
   'http://127.0.0.1:7700',
 );
 
-const Hits = connectHits<Course>(({ hits }) => (
+const Hits = connectHits<Class>(({ hits }) => (
   <div className="w-full flex flex-col gap-4">
     {hits.map((hit) => (
       <div className="bg-gray-300 rounded p-2 shadow">

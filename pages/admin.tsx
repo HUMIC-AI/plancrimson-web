@@ -1,10 +1,9 @@
 import axios from 'axios';
-import {} from 'firebase/auth';
 import { useState } from 'react';
-import CategorySelect, { getFacets } from '../components/CategorySelect';
+import CategorySelect from '../components/CategorySelect';
 import DownloadLink from '../components/DownloadLink';
 import Layout from '../components/Layout';
-import ResultsTab from '../components/ResultsTab';
+import ResultsTab from '../components/ResultsTab/ResultsTab';
 import { useSearch } from '../src/hooks';
 import { useUser } from '../src/userContext';
 
@@ -12,7 +11,7 @@ const AdminPage: React.FC = function () {
   const { user } = useUser();
   const [filesResult, setFilesResult] = useState(null);
   const {
-    searchParams, setSearchParams, searchResults, error,
+    searchParams, search, searchResults, error,
   } = useSearch();
 
   const handleClick = async () => {
@@ -50,8 +49,8 @@ const AdminPage: React.FC = function () {
       </div>
       <div className="flex">
         <CategorySelect
-          allFacets={searchResults ? getFacets(searchResults) : []}
-          setSearchParams={setSearchParams}
+          allFacets={searchResults ? searchResults.facets : []}
+          search={search}
           currentSearch={searchParams?.search}
         />
         <details>
@@ -63,7 +62,7 @@ const AdminPage: React.FC = function () {
             {error.message}
           </p>
           )}
-          {searchResults && <ResultsTab searchResults={searchResults} setSearchParams={setSearchParams} />}
+          {searchResults && <ResultsTab searchResults={searchResults} search={search} />}
         </details>
       </div>
     </Layout>

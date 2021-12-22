@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import { NextApiHandler } from 'next';
-import searchMyHarvard from 'src/server';
+import searchMyHarvard from 'server/server';
 import { getAuth } from 'firebase-admin/auth';
 import getAllEvaluations, { getDescriptionText } from '../../src/evaluation';
 

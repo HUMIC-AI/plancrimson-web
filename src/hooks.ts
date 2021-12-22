@@ -1,13 +1,7 @@
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import { useState } from 'react';
 import useSWR from 'swr';
-import { MyHarvardResponse } from './types';
-
-export type SearchParams = {
-  search?: string;
-  pageNumber?: number;
-  facets?: Array<string>;
-};
+import { SearchParams, SearchResults } from './types';
 
 export class FetchError extends Error {
   constructor(message: string, public status: number, public info?: any) {
@@ -31,9 +25,13 @@ export const fetcher = async (config: AxiosRequestConfig) => {
   }
 };
 
+/**
+ * a hook to enable searching for classes on my.harvard.
+ * will send a new request whenever searchParams changes
+ */
 export function useSearch() {
-  const [searchParams, setSearchParams] = useState<SearchParams>({});
-  const { data, error } = useSWR<MyHarvardResponse, FetchError, AxiosRequestConfig>(typeof searchParams.search === 'undefined'
+  const [searchParams, search] = useState<SearchParams>({});
+  const { data, error } = useSWR<SearchResults, FetchError, AxiosRequestConfig>(typeof searchParams.search === 'undefined'
     ? null as unknown as AxiosRequestConfig
     : {
       url: '/api/search',
@@ -42,6 +40,10 @@ export function useSearch() {
     }, fetcher);
 
   return {
-    searchParams, setSearchParams, searchResults: data, error, loading: searchParams.search && !data && !error,
+    searchResults: data,
+    searchParams,
+    search,
+    error,
+    loading: searchParams.search && !data && !error,
   };
 }

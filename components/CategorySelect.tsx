@@ -1,24 +1,20 @@
 import React from 'react';
-import { Facet, MyHarvardResponse } from '../src/types';
+import { Facet } from '../src/types';
 import courseData from '../src/courseData.json';
-import { SearchParams } from '../src/hooks';
+import { useSearch } from '../src/hooks';
 
 type Props = {
   currentSearch?: string;
-  setSearchParams: React.Dispatch<React.SetStateAction<SearchParams>>;
+  search: ReturnType<typeof useSearch>['search']
   allFacets: Array<Facet>;
 };
 
-export function getFacets(searchResults: MyHarvardResponse) {
-  return searchResults ? searchResults[1].Facets : [];
-}
-
-const CategorySelect: React.FC<Props> = function ({ currentSearch, setSearchParams, allFacets }) {
+const CategorySelect: React.FC<Props> = function ({ currentSearch, search, allFacets }) {
   return (
     <details className="space-y-2" style={{ minWidth: '16rem' }}>
       <summary className="cursor-pointer text-center rounded bg-gray-300 py-2">Find courses</summary>
 
-      <button type="button" onClick={() => setSearchParams(({ search: '' }))}>Search all</button>
+      <button type="button" onClick={() => search(({ search: '' }))}>Search all</button>
 
       {/* filters */}
       {allFacets.length > 0 && (
@@ -42,7 +38,7 @@ const CategorySelect: React.FC<Props> = function ({ currentSearch, setSearchPara
                     <li>
                       <button
                         type="button"
-                        onClick={() => setSearchParams((prev) => ({
+                        onClick={() => search((prev) => ({
                           ...prev!,
                           facets: prev!.facets ? prev!.facets.filter((facet) => facet !== `${FacetName}:${FacetValue}:${title}`) : [],
                         }))}
@@ -58,7 +54,7 @@ const CategorySelect: React.FC<Props> = function ({ currentSearch, setSearchPara
                     <li key={childTitle}>
                       <button
                         type="button"
-                        onClick={() => setSearchParams((prev) => ({
+                        onClick={() => search((prev) => ({
                           ...prev!,
                           facets: [...(prev!.facets || []), `${childFacetName}:${childFacetValue}:${childFacetLabel}`],
                         }))}
@@ -88,12 +84,13 @@ const CategorySelect: React.FC<Props> = function ({ currentSearch, setSearchPara
                 </summary>
                 <hr className="border-black mt-2" />
                 <ul className="p-2 rounded-b bg-gray-300 grid gap-x-2" style={{ gridTemplateColumns: 'auto auto' }}>
-                  {subcategories.map(({ HU_SB_SUBCAT_DESCR: subcategoryTitle, HU_SB_SRCH_DEFN: search, HU_SB_DEPT_URL: url }) => (
+                  {subcategories.map(({ HU_SB_SUBCAT_DESCR: subcategoryTitle, HU_SB_SRCH_DEFN: searchText, HU_SB_DEPT_URL: url }) => (
                     <li key={subcategoryTitle} className="contents">
                       <button
                         type="button"
-                        onClick={() => setSearchParams((prev) => ({ ...prev, search, pageNumber: 1 }))}
-                        className={`text-left pl-1 rounded transition-colors ${search === currentSearch ? 'bg-blue-300 hover:bg-red-300' : 'hover:bg-gray-500'}`}
+                        onClick={() => search((prev) => ({ ...prev, search: searchText, pageNumber: 1 }))}
+                        className={`text-left pl-1 rounded transition-colors
+                                    ${searchText === currentSearch ? 'bg-blue-300 hover:bg-red-300' : 'hover:bg-gray-500'}`}
                       >
                         {subcategoryTitle}
                       </button>

@@ -13,6 +13,10 @@
 
 This project is mostly reverse engineered from the `my.harvard` portal via analyzing requests through the `Network` tab in Chrome Dev Tools and filtering by Fetch/XHR
 
+Inspired by:
+
+- https://www.coursicle.com/harvard/
+
 The way it was reverse engineered:
 
 - if you open the "Course Search" page, the request to https://portal.my.harvard.edu/psc/hrvihprd/EMPLOYEE/EMPL/s/WEBLIB_HU_SB.ISCRIPT1.FieldFormula.IScript_BuildSearchBrowser gives responses with the different schools, different categories within each school, and subcategories within each category
@@ -25,3 +29,13 @@ The way it was reverse engineered:
 - runs IS.SCL.Search(el) which is defined in IS_SCL_JS_MIN_1.js
 - this calls IS.S2.SES.Search(el, searchObj (which is undefined), IS.SCL)
 - which is a really big function defined in `https://portal.my.harvard.edu/cs/hrvihprd/cache_85811/IS_S2_SES_BASE_JS_MIN_10.js`, but using IS.SCL gets the values for IS.SCL.Config.AdvancedFields
+
+upcoming features:
+
+- on the search page, if the user is logged in as admin, there should be a button saying "upload documents to search database"
+- on click, this should:
+    - send a single request to `/api/search`
+    - on the response, check the number of pages
+    - for each page
+        - send a new request
+        - when the request is received, add the documents to meili search via MeiliClient

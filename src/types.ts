@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
-export interface Course {
+
+export interface Class {
   URL_URLNAME: string; // course website, eg "https://locator.tlt.harvard.edu/course/colgsas-125374/2021/spring/14433"
 
   // identical
@@ -186,7 +187,7 @@ export interface Facet {
 export type MyHarvardResponse = [
   {
     Key: 'Results';
-    ResultsCollection: Course[];
+    ResultsCollection: Class[];
   },
   {
     Key: 'Facets';
@@ -225,6 +226,8 @@ export interface EvaluationResponse {
   'How strongly would you recommend this course to your peers?': HowStronglyWouldYouRecommendThisCourseToYourPeers;
   'What was/were your reason(s) for enrolling in this course? (Please check all that apply)': ReasonsForEnrolling;
 }
+
+export type PossibleEvaluationResponse = EvaluationResponse | { url: string; error: string };
 
 export interface CourseGeneralQuestions {
   'Evaluate the course overall.': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
@@ -285,3 +288,17 @@ export interface ReasonsForEnrolling {
   distribution: number;
   qrd: number;
 }
+
+export type SearchParams = {
+  search?: string;
+  pageNumber?: number;
+  facets?: Array<string>;
+};
+
+export type ExtendedClass = Class & { textDescription: string; evals?: PossibleEvaluationResponse[] };
+
+export type SearchResults = {
+  classes: ExtendedClass[];
+  facets: Facet[];
+  searchProperties: SearchProperties
+};

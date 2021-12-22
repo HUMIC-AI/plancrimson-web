@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { FaMinusCircle, FaPlusCircle } from 'react-icons/fa';
+import { FaMinusCircle } from 'react-icons/fa';
 import cheerio from 'cheerio';
 import useSWR from 'swr';
-import { Course as CourseType, EvaluationResponse } from '../src/types';
-import { ScheduleEntry, useUser } from '../src/userContext';
-import { fetcher } from '../src/hooks';
+import { Class as CourseType, EvaluationResponse } from '../../src/types';
+import { getClassId, Schedule, useUserData } from '../../src/userContext';
+import { fetcher } from '../../src/hooks';
 
 export function getYearAndSeason(course: CourseType) {
   const season = /Fall/i.test(course.IS_SCL_DESCR_IS_SCL_DESCRH) ? 'Fall' : 'Spring' as const;
@@ -18,10 +18,6 @@ export function getSemesters(startYear: number) {
     { year: startYear + i, season: 'Spring' },
     { year: startYear + i, season: 'Fall' },
   ]).slice(1, -1); // get rid of first and last since of mismatch
-}
-
-export function filterBySemester(schedule: Array<ScheduleEntry>, year: number, season: string) {
-  return schedule.filter(({ year: courseYear, season: courseSeason }) => courseYear === year && courseSeason === season);
 }
 
 const colors = ['bg-blue-300', 'bg-yellow-300', 'bg-green-300', 'bg-gray-300', 'bg-red-300'];
@@ -80,9 +76,9 @@ const Evaluation: React.FC<{ report: EvaluationResponse }> = function ({ report 
 
 const Course: React.FC<{
   course: CourseType;
-}> = function ({ course }) {
+  schedule?: Schedule;
+}> = function ({ course, schedule }) {
   const {
-    Key: key,
     ACAD_CAREER: school,
     IS_SCL_DESCR100: title,
     IS_SCL_DESCR_IS_SCL_DESCRH: term,
@@ -100,8 +96,8 @@ const Course: React.FC<{
   const courseLabel = subject + catalogNumber;
 
   const {
-    schedule, addCourses, removeCourses,
-  } = useUser();
+    addCourses, removeCourses,
+  } = useUserData();
   const [loadFeedback, setLoadFeedback] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const { data: feedback, error } = useSWR(loadFeedback ? {
@@ -113,22 +109,31 @@ const Course: React.FC<{
     },
   } : null, fetcher);
 
+  // when user clicks "add" button,
+  // should show a dropdown containing:
+  // for each semester this course is available in,
+  // all of the user's schedules for that semester
+
+  // if this course is in any of the user's schedules,
+  // should show the name of the semester along with an `x` to remove the course
+
+  const classId = getClassId(course);
   const description = cheerio(rawDescription).text();
   return (
     <div className="border-black border-2 rounded-md p-2 space-y-2">
       <h3 className="flex items-center justify-between text-xl">
         {title}
-        {typeof schedule.find((c) => c.course === key) === 'undefined'
+        {schedule && (schedule.classes.find(({ id }) => id === classId)
           ? (
-            <button type="button" onClick={() => addCourses({ course, ...getYearAndSeason(course) })}>
-              <FaPlusCircle />
+            <button type="button" onClick={() => addCourses({ classId, scheduleId: schedule.id })}>
+              {schedule.id}
             </button>
           )
           : (
-            <button type="button" onClick={() => removeCourses({ course, ...getYearAndSeason(course) })}>
+            <button type="button" onClick={() => removeCourses({ classId })}>
               <FaMinusCircle />
             </button>
-          )}
+          ))}
       </h3>
       <hr className="border-black" />
       <div className="flex justify-between items-center">

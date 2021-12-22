@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { initializeApp, getApps, applicationDefault } from 'firebase-admin/app';
 import qs from 'qs';
-import advancedFields from './advancedFields.json';
-import { MyHarvardResponse } from './types';
+import advancedFields from '../src/advancedFields.json';
+import { MyHarvardResponse } from '../src/types';
 
 if (getApps().length === 0) {
   initializeApp({
