@@ -1,11 +1,13 @@
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import {
-  doc, DocumentReference, FirestoreError, getFirestore, onSnapshot, serverTimestamp, setDoc,
+  doc, DocumentReference, FirestoreError, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc,
 } from 'firebase/firestore';
 import React, {
   createContext, useCallback, useContext, useEffect, useMemo, useState,
 } from 'react';
-import { Season, UserClassData } from './schedules';
+import {
+  Season, seasonOrder, UserClassData,
+} from './schedules';
 import { Class } from './types';
 
 type UserContextType = {
@@ -54,7 +56,7 @@ const UserDataContext = createContext<UserDataContextType>({
   createSchedule: () => null,
 });
 
-export function getClassId(course: Class) { return course.Key; }
+export function getClassId(course: Class) { return course.HU_STRM_CLASSNBR; }
 
 export function getUserRef({ uid }: User) { return doc(getFirestore(), `users/${uid}`) as DocumentReference<UserData>; }
 
@@ -66,7 +68,11 @@ export function getAllSemesters(data: UserData) {
       semesters.push({ year, season });
     }
   });
-  return semesters;
+  return semesters.sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    const seasonDiff = seasonOrder[a.season] - seasonOrder[b.season];
+    return seasonDiff;
+  });
 }
 
 export function getSchedulesBySemester(data: UserData, targetYear: number, targetSeason: Season) {
@@ -91,15 +97,12 @@ export const UserDataProvider: React.FC<{ user?: User | null }> = function ({ ch
 
   const createSchedule: UserDataContextType['createSchedule'] = useCallback(async (scheduleId, year, season) => {
     setUserData((prev) => {
-      console.log('setting user to ', typeof prev.schedules, prev.schedules);
-
       if (scheduleId in prev.schedules) return prev;
       // eslint-disable-next-line no-param-reassign
       prev.schedules[`${scheduleId}`] = {
         id: scheduleId, season, year, classes: [],
       };
       if (user) {
-        console.log('setting user to ', typeof prev.schedules, prev.schedules);
         setDoc(getUserRef(user), { schedules: prev.schedules }, { merge: true })
           .then(() => console.log('user updated'))
           .catch((err) => setError(err));
@@ -119,8 +122,7 @@ export const UserDataProvider: React.FC<{ user?: User | null }> = function ({ ch
         }
       });
       if (user) {
-        console.log('setting firebase to', firestoreUpdate);
-        // updateDoc(getUserRef(user), firestoreUpdate as any);
+        updateDoc(getUserRef(user), firestoreUpdate as any);
       }
       return prev;
     });
@@ -148,10 +150,9 @@ export const UserDataProvider: React.FC<{ user?: User | null }> = function ({ ch
         }
       });
       if (user) {
-        console.log(firestoreUpdate);
-        // updateDoc(getUserRef(user), firestoreUpdate as any)
-        //   .then(() => console.log('doc updated'))
-        //   .catch((err) => console.error('error removing courses', err));
+        updateDoc(getUserRef(user), firestoreUpdate as any)
+          .then(() => console.log('doc updated'))
+          .catch((err) => console.error('error removing courses', err));
       }
       return prev;
     });
@@ -169,10 +170,34 @@ export const UserDataProvider: React.FC<{ user?: User | null }> = function ({ ch
       });
     }, (err) => setError(err));
 
-    // create a document if one doesn't exist. this also triggers the listener below
-    setDoc(getUserRef(user), { lastLoggedIn: serverTimestamp() }, { merge: true })
-      .then(() => console.log('new document created'))
-      .catch((err) => setError(err));
+    getDoc(getUserRef(user)).then((snap) => {
+      // create a document if one doesn't exist. this also triggers the listener below
+      if (!snap.exists()) {
+        const now = new Date();
+        const classYear = now.getFullYear() + (now.getMonth() > 5 ? 4 : 3);
+        setDoc(getUserRef(user), {
+          lastLoggedIn: serverTimestamp(),
+          classYear,
+          schedules: Object.assign({}, ...[...new Array(5)].flatMap((_, i) => {
+            const year = classYear - 4 + i;
+            return [{
+              [`Spring ${year}`]: {
+                id: `Spring ${year}`, classes: [], season: 'Spring', year,
+              },
+            },
+            {
+              [`Fall ${year}`]: {
+                id: `Fall ${year}`, classes: [], season: 'Fall', year,
+              },
+            }] as Record<string, Schedule>[];
+          }).slice(1, -1)),
+        }, { merge: true })
+          .then(() => console.log('new document created'))
+          .catch((err) => setError(err));
+      } else {
+        setUserData(snap.data());
+      }
+    });
 
     // eslint-disable-next-line consistent-return
     return unsub;

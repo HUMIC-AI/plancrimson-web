@@ -1,6 +1,6 @@
-import axios from 'axios';
 import { initializeApp, getApps, applicationDefault } from 'firebase-admin/app';
 import qs from 'qs';
+import fetcher from '../shared/fetcher';
 import advancedFields from '../src/advancedFields.json';
 import { MyHarvardResponse } from '../src/types';
 
@@ -39,7 +39,7 @@ export default async function searchMyHarvard({
   // to refresh the cookie,
   // open the Network tab in dev tools, filter by Fetch/XHR, login to my.harvard, search for some courses, copy the value of the "cookie" header
 
-  const { data } = await axios({
+  const data = await fetcher({
     method: 'post',
     // comes from IS.SCL.Config.GetSearchResultsUrl()
     url: 'https://portal.my.harvard.edu/psc/hrvihprd/EMPLOYEE/EMPL/s/WEBLIB_IS_SCL.ISCRIPT1.FieldFormula.IScript_Search',

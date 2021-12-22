@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react';
-import ClassIndex from 'shared/meilisearch';
+import fetcher from '../shared/fetcher';
 import { Class } from './types';
 
 // want to query for all people planning to take this class at a certain time
 // user
 
-export type Season = 'Winter' | 'Spring' | 'Summer' | 'Fall';
+export const seasonOrder = {
+  Winter: 0,
+  Spring: 1,
+  Summer: 2,
+  Fall: 3,
+} as const;
+
+export type Season = keyof typeof seasonOrder;
 
 // see https://infoforfaculty.fas.harvard.edu/book/grading-system
 const grade = {
@@ -36,7 +43,11 @@ export type UserClassData = {
 };
 
 export function fetchClass(classKey: string) {
-  return ClassIndex.getDocument(classKey);
+  return fetcher({
+    url: '/api/getClass',
+    method: 'get',
+    params: { classKey, updateDb: true },
+  });
 }
 
 export function useClassCache(classNumbers: Array<string>) {

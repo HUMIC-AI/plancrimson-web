@@ -1,7 +1,7 @@
 import React from 'react';
 import { Facet } from '../src/types';
 import courseData from '../src/courseData.json';
-import { useSearch } from '../src/hooks';
+import useSearch from '../src/hooks';
 
 type Props = {
   currentSearch?: string;

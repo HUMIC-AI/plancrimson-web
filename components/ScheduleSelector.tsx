@@ -21,7 +21,7 @@ const ScheduleSelector: React.FC<Props> = function ({ schedules, selectedSchedul
           {' '}
           <FaAngleDown className="ml-4" />
         </Listbox.Button>
-        <Listbox.Options className="absolute p-2 rounded mt-2 bg-white bg-opacity-70 shadow">
+        <Listbox.Options className="absolute p-2 rounded mt-2 bg-white bg-opacity-70 shadow z-20">
           {schedules.map((schedule) => (
             <Listbox.Option
               key={schedule}

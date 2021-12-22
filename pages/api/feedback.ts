@@ -1,5 +1,5 @@
 import { NextApiHandler } from 'next';
-import getAllEvaluations from '../../src/evaluation';
+import getAllEvaluations from '../../server/evaluation';
 
 const handler: NextApiHandler = async (req, res) => {
   const { school, course } = req.query;

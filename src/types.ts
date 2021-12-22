@@ -289,11 +289,14 @@ export interface ReasonsForEnrolling {
   qrd: number;
 }
 
-export type SearchParams = {
-  search?: string;
-  pageNumber?: number;
-  facets?: Array<string>;
-};
+export type SearchParams = Partial<{
+  search: string;
+  pageNumber: number;
+  facets: Array<string>;
+  searchQuery: string;
+  includeEvals: boolean;
+  updateDb: boolean
+}>;
 
 export type ExtendedClass = Class & { textDescription: string; evals?: PossibleEvaluationResponse[] };
 

@@ -48,7 +48,9 @@ const SemesterSchedule: React.FC<ScheduleSelectorProps> = function ({ selectedSc
         </form>
 
         <Calendar
-          classes={selectedSchedule ? selectedSchedule.classes.map(({ id }) => classCache[id]) : []}
+          classes={selectedSchedule
+            ? data.schedules[selectedSchedule].classes.map(({ id }) => classCache[id])
+            : []}
         />
       </div>
     </div>

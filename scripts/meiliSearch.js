@@ -7,7 +7,7 @@ const client = new MeiliSearch({
 });
 
 const createIndex = () => {
-  return client.createIndex('courses', { primaryKey: 'Key' });
+  return client.createIndex('courses', { primaryKey: 'HU_STRM_CLASSNBR' });
 };
 
 const deleteIndex = () => {

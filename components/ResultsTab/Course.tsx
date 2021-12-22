@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaMinusCircle } from 'react-icons/fa';
+import { FaMinusCircle, FaPlusCircle } from 'react-icons/fa';
 import cheerio from 'cheerio';
 import useSWR from 'swr';
 import { Class as CourseType, EvaluationResponse } from '../../src/types';
@@ -125,13 +125,13 @@ const Course: React.FC<{
         {title}
         {schedule && (schedule.classes.find(({ id }) => id === classId)
           ? (
-            <button type="button" onClick={() => addCourses({ classId, scheduleId: schedule.id })}>
-              {schedule.id}
+            <button type="button" onClick={() => removeCourses({ classId })}>
+              <FaMinusCircle />
             </button>
           )
           : (
-            <button type="button" onClick={() => removeCourses({ classId })}>
-              <FaMinusCircle />
+            <button type="button" onClick={() => addCourses({ classId, scheduleId: schedule.id })}>
+              <FaPlusCircle />
             </button>
           ))}
       </h3>

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import cheerio, { BasicAcceptedElems, CheerioAPI, Node } from 'cheerio';
-import axios from 'axios';
-import { Class, EvaluationResponse } from './types';
+import { Class, EvaluationResponse, ExtendedClass } from '../src/types';
+import fetcher, { FetchError } from '../shared/fetcher';
 
 type Scraper = ($: CheerioAPI, el: BasicAcceptedElems<Node>) => any;
 
@@ -23,6 +23,20 @@ function assertExploranceCookie() {
   return cookie;
 }
 
+export async function extendClass(cls: Class, withEvals = true) {
+  const ret = { ...cls, textDescription: getDescriptionText(cls) } as ExtendedClass;
+  if (withEvals) {
+    try {
+      const evals = await getAllEvaluations(cls.ACAD_CAREER, cls.SUBJECT + cls.CATALOG_NBR);
+      ret.evals = evals;
+    } catch (err) {
+      const { message } = err as Error;
+      throw new Error(`error fetching evaluations for class ${cls}: ${message}`);
+    }
+  }
+  return ret;
+}
+
 export function getDescriptionText(course: Class) {
   try {
     const $ = cheerio.load(course.IS_SCL_DESCR);
@@ -33,21 +47,33 @@ export function getDescriptionText(course: Class) {
 }
 
 export default async function getAllEvaluations(school: string, course: string) {
-  const response = await axios({
-    method: 'GET',
-    url: 'https://qreports.fas.harvard.edu/home/courses',
-    params: {
-      school,
-      search: course,
-    },
-    headers: {
-      Origin: 'https://portal.my.harvard.edu',
-      Cookie: assertQReportsCookie(),
-    },
-  });
+  let response;
 
-  const html = response.data;
-  const $ = cheerio.load(html);
+  try {
+    response = await fetcher({
+      method: 'GET',
+      url: 'https://qreports.fas.harvard.edu/home/courses',
+      params: {
+        school,
+        search: course,
+      },
+      headers: {
+        Origin: 'https://portal.my.harvard.edu',
+        Cookie: assertQReportsCookie(),
+      },
+    });
+  } catch (err) {
+    const { message, info } = err as FetchError;
+    throw new Error(`error getting evaluations from ${school} ${course}: ${message} ${info}`);
+  }
+
+  let $: CheerioAPI;
+  try {
+    $ = cheerio.load(response);
+  } catch (err: any) {
+    throw new Error(`error parsing result from ${school} ${course}: ${err.message}`);
+  }
+
   if ($('title').text() === 'HarvardKey - Harvard University Authentication Service') {
     throw new Error(QReportMsg);
   }
@@ -64,21 +90,33 @@ export default async function getAllEvaluations(school: string, course: string) 
     })
     .toArray();
 
-  const results = await Promise.all(promises);
+  const results = await Promise.allSettled(promises);
 
-  return results.filter((el) => el !== null);
+  return results
+    .map((result) => (result.status === 'fulfilled' ? result.value : null))
+    .filter((el) => el !== null) as EvaluationResponse[];
 }
 
-async function getEvaluation(url: string): Promise<EvaluationResponse | { url: string, error: string }> {
+async function getEvaluation(url: string): Promise<EvaluationResponse> {
+  let response = null;
   try {
-    const response = await axios({
+    response = await fetcher({
       method: 'GET',
       url,
       headers: {
         Cookie: assertExploranceCookie(),
       },
     });
-    const $ = cheerio.load(response.data);
+  } catch (err) {
+    const { message } = err as FetchError;
+    if (message === 'Maximum number of redirects exceeded') {
+      throw new Error('Maximum number of redirects exceeded. Check the explorance cookie.');
+    }
+    throw new Error(`Error fetching from ${url}: ${message}`);
+  }
+
+  try {
+    const $ = cheerio.load(response);
     const toc = $('.TOC h2').text().trim().split(' ');
     const initial = {
       url,
@@ -116,11 +154,9 @@ async function getEvaluation(url: string): Promise<EvaluationResponse | { url: s
         [title]: data,
       };
     }, initial);
-  } catch (err: any) {
-    if (err.message === 'Maximum number of redirects exceeded') {
-      throw new Error('Maximum number of redirects exceeded. Check the explorance cookie.');
-    }
-    return { url, error: err.message };
+  } catch (err) {
+    const { message } = err as Error;
+    throw new Error(`couldn't parse html from ${url}: ${message}`);
   }
 }
 

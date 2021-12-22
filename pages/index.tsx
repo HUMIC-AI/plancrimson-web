@@ -7,7 +7,7 @@ import YearSchedule from '../components/YearSchedule';
 import CategorySelect from '../components/CategorySelect';
 import ResultsTab from '../components/ResultsTab/ResultsTab';
 import { UserDataProvider, useUser } from '../src/userContext';
-import { useSearch } from '../src/hooks';
+import useSearch from '../src/hooks';
 import Layout from '../components/Layout';
 
 const tabs = {
@@ -60,14 +60,14 @@ const Home: NextPage = function () {
             />
           )}
 
-        <div className="flex flex-col min-h-screen gap-2 items-stretch">
+        <div className="flex flex-col sm:flex-row min-h-screen max-w-full gap-2 items-stretch">
           <CategorySelect
             currentSearch={searchParams.search}
             search={search}
             allFacets={searchResults ? searchResults.facets : []}
           />
 
-          <div>
+          <div className="flex-1">
             {/* header */}
             <nav className="flex justify-between p-2 bg-gray-300 rounded w-full">
               {tabNames.map((key) => (
@@ -86,6 +86,7 @@ const Home: NextPage = function () {
 
             <UserDataProvider user={user}>
               <BodyComponent
+                searchParams={searchParams}
                 searchResults={searchResults}
                 search={search}
                 selectedSchedule={selectedSchedule}

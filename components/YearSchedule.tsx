@@ -27,6 +27,7 @@ const CourseCard: React.FC<{
     IS_SCL_MEETING_PAT: schedule,
     IS_SCL_TIME_START: startTime,
     IS_SCL_TIME_END: endTime,
+    HU_STRM_CLASSNBR: classKey,
   } = course;
   const [open, setOpen] = useState(false);
   const cardRef = createRef<HTMLButtonElement>();
@@ -69,6 +70,8 @@ const CourseCard: React.FC<{
         </div>
         <div className="bg-blue-500 rounded absolute w-full h-full flex flex-col items-center justify-center" style={{ transform: 'rotateY(0.5turn)', backfaceVisibility: 'hidden' }}>
           {`${subject}${catalogNumber}`}
+          <br />
+          {classKey}
         </div>
       </div>
     </button>
@@ -96,13 +99,20 @@ const SemesterDisplay: React.FC<Props> = function ({
   || Object.values(data.schedules).find((schedule) => schedule.year === year && schedule.season === season)!.id;
   const selectedSchedule = data.schedules[selectedScheduleId];
 
+  console.log({ classCache });
+
+  let containerStyles = 'h-full p-2 text-center flex-1 max-w-xs ';
+  if (dragStatus.dragging) {
+    containerStyles += (dragStatus.data.originScheduleId === selectedScheduleId
+      ? 'bg-blue-300'
+      : 'bg-gray-300 cursor-not-allowed');
+  } else {
+    containerStyles += 'even:bg-gray-300 odd:bg-gray-100';
+  }
+
   return (
     <div
-      // eslint-disable-next-line no-nested-ternary
-      className={`${dragStatus.dragging ? (dragStatus.data.originScheduleId === selectedScheduleId
-        ? 'bg-blue-300'
-        : 'bg-gray-300 cursor-not-allowed')
-        : 'even:bg-gray-300 odd:bg-gray-100 h-full p-2 text-center w-48'}`}
+      className={containerStyles}
       onDragOver={(ev) => {
         ev.preventDefault();
         ev.dataTransfer.dropEffect = 'move';
@@ -117,7 +127,7 @@ const SemesterDisplay: React.FC<Props> = function ({
         setDragStatus({ dragging: false });
       }}
     >
-      <h1 className="mb-2 text-lg border-black border-b-2">
+      <h1 className="mb-2 py-2 text-lg border-black border-b-2">
         {`${year} ${season}`}
       </h1>
 
@@ -127,8 +137,8 @@ const SemesterDisplay: React.FC<Props> = function ({
         selectSchedule={(val) => setSelectedSchedules((prev) => ({ ...prev, [year + season]: val }))}
       />
 
-      <div className="flex flex-col gap-4">
-        {selectedSchedule.classes.map(({ id }) => (
+      <div className="flex flex-col gap-4 mt-2">
+        {selectedSchedule.classes.map(({ id }) => classCache[id] && (
           <CourseCard
             key={id}
             course={classCache[id]}
@@ -149,10 +159,8 @@ const YearSchedule: React.FC = function () {
   const [selectedSchedules, setSelectedSchedules] = useState<SelectedSchedules>({});
   const { data } = useUserData();
 
-  console.log(selectedSchedules);
-
   return (
-    <div className="overflow-y-scroll w-full border-black border-2">
+    <div className="overflow-scroll w-full border-black border-2">
       <div className="p-4">
         Total courses:
         {' '}
@@ -160,7 +168,7 @@ const YearSchedule: React.FC = function () {
         /32
       </div>
       <div className="relative w-full overflow-x-scroll">
-        <div className="grid grid-cols-8 min-w-max h-full">
+        <div className="flex justify-center">
           {getAllSemesters(data).map(({ year, season }) => (
             <SemesterDisplay
               key={year + season}
