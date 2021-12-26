@@ -1,7 +1,5 @@
 import type { NextPage } from 'next';
 import React, { useState } from 'react';
-import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
-import { getAuth, GoogleAuthProvider, signOut } from 'firebase/auth';
 import SemesterSchedule from '../components/SemesterSchedule/SemesterSchedule';
 import YearSchedule from '../components/YearSchedule';
 import CategorySelect from '../components/CategorySelect';
@@ -19,9 +17,7 @@ const tabs = {
 // const FirebaseAuth = dynamic()
 
 const Home: NextPage = function () {
-  const {
-    user, error: authError,
-  } = useUser();
+  const { user } = useUser();
   const [tabState, setTabState] = useState<keyof typeof tabs>('results');
   const [selectedSchedule, selectSchedule] = useState<string | undefined>();
   const {
@@ -33,33 +29,7 @@ const Home: NextPage = function () {
 
   return (
     <Layout>
-      <div className="w-full flex flex-col items-stretch space-y-4">
-        {authError}
-
-        {user
-          ? (
-            <button
-              type="button"
-              className="bg-blue-300 rounded hover:bg-blue-500 transition-colors"
-              onClick={() => {
-                signOut(getAuth());
-              }}
-            >
-              Sign out
-            </button>
-          )
-          : (
-            <StyledFirebaseAuth
-              uiConfig={{
-                signInOptions: [GoogleAuthProvider.PROVIDER_ID],
-                callbacks: {
-                  signInSuccessWithAuthResult: () => false,
-                },
-              }}
-              firebaseAuth={getAuth()}
-            />
-          )}
-
+      <div className="w-full flex flex-col items-center gap-y-4">
         <div className="flex flex-col sm:flex-row min-h-screen max-w-full gap-2 items-stretch">
           <CategorySelect
             currentSearch={searchParams.search}

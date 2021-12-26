@@ -1,4 +1,27 @@
-/* eslint-disable max-len */
+export type SearchResults = {
+  classes: ExtendedClass[];
+  facets: Facet[];
+  searchProperties: SearchProperties
+};
+
+export type ExtendedClass = Class & {
+  textDescription: string;
+  evals?: PossibleEvaluationResponse[]
+};
+
+// ==================== MY.HARVARD AND EVALUATION TYPES BELOW ====================
+
+export type MyHarvardResponse = [
+  {
+    Key: 'Results';
+    ResultsCollection: Class[];
+  },
+  {
+    Key: 'Facets';
+    Facets: Facet[];
+  },
+  SearchProperties,
+];
 
 export interface Class {
   URL_URLNAME: string; // course website, eg "https://locator.tlt.harvard.edu/course/colgsas-125374/2021/spring/14433"
@@ -30,7 +53,6 @@ export interface Class {
   HU_ALIAS_CATNBR_NL: string; // aliased subject and catalog number, eg "CS171"
 
   SearchKey: string; // dunno, eg "QGJHBZSZQ7qzz8utcC2y2dKDIYk="
-  Description: string; // has strange characters, eg "?p?Practicum emphasizing an active but reflective approach to teaching applied sciences and engineering; designed for graduate students in any <b>SEAS</b> area, not specifically Engineering Sciences.&nbsp; Topics: presentation and communication; in-class teaching and interaction; developing, grading",
   IS_SCL_DESCR: string; // course description with html, eg "<p>Practicum emphasizing an active but reflective approach to teaching applied sciences and engineering...</p>"
   IS_SCL_DESCR_HU_SCL_DESCRNOHTML: string; // description (still with html), eg "<p>Cryptography is as old as human communication itself...</p>"
   textDescription?: string; // MANUALLY ADDED
@@ -81,7 +103,13 @@ export interface Class {
 
   // ==================== OTHER COURSE INFO ====================
 
-  SSR_COMPONENTDESCR: string; // course component, eg "Thesis Research" or "Lecture" or "Seminar"
+  SSR_COMPONENTDESCR: // course component, eg "Thesis Research" or "Lecture" or "Seminar"
+  | 'Seminar'
+  | 'Thesis Research'
+  | 'Lecture'
+  | 'Tutorial'
+  | 'Reading and Research'
+  | 'Project';
 
   IS_SCL_DESCR_IS_SCL_DESCRL: string; // instructor name, eg "Ariel Procaccia"
   LAST_NAME: string | string[]; // last name of instructor or array of them, eg ["Protopapas", "Glickman"]
@@ -99,12 +127,29 @@ export interface Class {
   ENRL_CAP: string; // enrolment cap, eg "999"
   ENRL_TOT: string; // total enrolled, eg "0"
 
-  IS_SCL_DESCR100_HU_SCL_GRADE_BASIS: string; // eg "FAS Letter Graded" or "FAS Satisfactory/Unsatisfactory" etc
+  IS_SCL_DESCR100_HU_SCL_GRADE_BASIS:
+  | 'FAS Letter Graded'
+  | 'FAS Satisfactory/Unsatisfactory';
 
   IS_SCL_DESCR100_HU_SCL_ATTR_LEVL: string; // eg "Graduate Course" or "Primarily for Graduate Students" or "For Undergraduate and Graduate Students"
-  CRSE_ATTR_VALUE_HU_LEVL_ATTR: string; // eg "GRADCOURSE" | "UGRDGRAD" | "PRIMGRAD"
-
-  CRSE_ATTR_VALUE_HU_LDD_ATTR: string; // divisional distribution, eg "NONE" | "SCI"
+  CRSE_ATTR_VALUE_HU_LEVL_ATTR: string; // see above eg "GRADCOURSE" | "UGRDGRAD" | "PRIMGRAD"
+  IS_SCL_DESCR100_HU_SCL_ATTR_GE: // general education requirements
+  | 'Aesthetics and Culture'
+  | 'Science and Technology in Society'
+  | 'Histories, Societies, Individuals'
+  | 'Ethics and Civics';
+  CRSE_ATTR_VALUE_HU_GE_ATTR: // see above
+  | 'A&C'
+  | 'STS'
+  | 'HSI'
+  | 'E&C';
+  IS_SCL_DESCR100_HU_SCL_ATTR_LDD: // divisional distribution
+  | 'Science & Engineering & Applied Science'
+  | 'Arts and Humanities'
+  | 'None';
+  CRSE_ATTR_VALUE_HU_LDD_ATTR: string; // see above, eg "NONE" | "SCI"
+  IS_SCL_DESCR100_HU_SCL_ATTR_XREG: string; // harvard cross registration, eg "Available for Harvard Cross Registration"
+  CRSE_ATTR_VALUE_HU_XREG_ATTR: string; // see above, eg "YESXREG" | "NOXREG"
 
   HU_COURSE_PREQ: string; // other details, eg "This course will be offered in both an undergraduate and graduate versions. The graduate version will involve an additional project."
 
@@ -114,9 +159,6 @@ export interface Class {
   HU_UNITS_MIN: string; // minimum number of units, eg "4"
   HU_UNITS_MAX: string; // maximum number of units, eg "4"
 
-  IS_SCL_DESCR100_HU_SCL_ATTR_XREG: string; // harvard cross registration, eg "Available for Harvard Cross Registration"
-  CRSE_ATTR_VALUE_HU_XREG_ATTR: string; // cross registration, eg "YESXREG" | "NOXREG"
-
   // ==================== UNUSED OR UNKNOWN FIELDS ====================
 
   // identical
@@ -125,6 +167,8 @@ export interface Class {
   Key: string;
   LinkURL: string;
   OriginalURL: string;
+
+  Description: string; // has strange characters, eg "?p?Practicum emphasizing an active but reflective approach to teaching applied sciences and engineering; designed for graduate students in any <b>SEAS</b> area, not specifically Engineering Sciences.&nbsp; Topics: presentation and communication; in-class teaching and interaction; developing, grading",
 
   SESSION_CODE: string; // usually "1"
   PROFILEBUTTON: string; // dunno, eg "X|*|Jelani Nelson|*||*||*||*|X"
@@ -156,7 +200,6 @@ export interface Class {
   HU_LONGITUDE: string; // usually "0"
 
   IS_SCL_DESCR_HU_SCL_SEC_COMP: string; // dunno, eg "DIS|***|DIS|***|Discussion|***|DIS|*||*||*||*||*||*||*||*||*||*||*||*|0"
-  IS_SCL_DESCR100_HU_SCL_ATTR_LDD: string; // dunno, eg "Science & Engineering & Applied Science"
   IS_SCL_DESCR100_HU_SCL_ATTR_AREC: string; // dunno, eg "MDE approved SEAS 100 level course"
   CRSE_ATTR_VALUE_HU_AREC_ATTR: string; // eg "E-MDE-SEAS"
 }
@@ -184,18 +227,6 @@ export interface Facet {
   Selected: 'Selected';
 }
 
-export type MyHarvardResponse = [
-  {
-    Key: 'Results';
-    ResultsCollection: Class[];
-  },
-  {
-    Key: 'Facets';
-    Facets: Facet[];
-  },
-  SearchProperties,
-];
-
 export type SearchProperties = {
   Key: 'SearchProperties';
   HitCount: number;
@@ -222,12 +253,15 @@ export interface EvaluationResponse {
   'Course Response Rate': CourseResponseRate;
   'Course General Questions': CourseGeneralQuestions;
   'General Instructor Questions': GeneralInstructorQuestions;
-  'On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.': OnAverageHowManyHoursPerWeekDidYouSpendOnCourseworkOutsideOfClassEnterAWholeNumberBetween0And168;
-  'How strongly would you recommend this course to your peers?': HowStronglyWouldYouRecommendThisCourseToYourPeers;
+  'On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.': HoursStats;
+  'How strongly would you recommend this course to your peers?': RecommendationsStats;
   'What was/were your reason(s) for enrolling in this course? (Please check all that apply)': ReasonsForEnrolling;
 }
 
-export type PossibleEvaluationResponse = EvaluationResponse | { url: string; error: string };
+export type PossibleEvaluationResponse = EvaluationResponse | {
+  url: string;
+  error: string
+};
 
 export interface CourseGeneralQuestions {
   'Evaluate the course overall.': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
@@ -259,7 +293,7 @@ export interface GeneralInstructorQuestions {
   'Returns assignments in a timely fashion': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
 }
 
-export interface HowStronglyWouldYouRecommendThisCourseToYourPeers {
+export interface RecommendationsStats {
   recommendations: number[];
   total: number;
   ratio: number;
@@ -268,7 +302,7 @@ export interface HowStronglyWouldYouRecommendThisCourseToYourPeers {
   stdev: number;
 }
 
-export interface OnAverageHowManyHoursPerWeekDidYouSpendOnCourseworkOutsideOfClassEnterAWholeNumberBetween0And168 {
+export interface HoursStats {
   count: number;
   ratio: number;
   mean: number;
@@ -297,11 +331,3 @@ export type SearchParams = Partial<{
   includeEvals: boolean;
   updateDb: boolean
 }>;
-
-export type ExtendedClass = Class & { textDescription: string; evals?: PossibleEvaluationResponse[] };
-
-export type SearchResults = {
-  classes: ExtendedClass[];
-  facets: Facet[];
-  searchProperties: SearchProperties
-};

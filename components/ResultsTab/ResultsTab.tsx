@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { FaAngleLeft, FaAngleRight } from 'react-icons/fa';
-import { SearchParams, SearchResults } from '../../src/types';
 import Course from './Course';
 import DownloadLink from '../DownloadLink';
 import { getClassId, useUser, useUserData } from '../../src/userContext';
 import ScheduleSelector, { ScheduleSelectorProps } from '../ScheduleSelector';
 import fetcher, { FetchError } from '../../shared/fetcher';
+import { ExtendedClass, SearchParams, SearchResults } from '../../shared/apiTypes';
+
+type DownloadStatus = {
+  status: 'loading' | 'success' | 'error';
+  data?: ExtendedClass[];
+  error?: string;
+};
 
 const ResultsTab: React.FC<{
   searchParams?: SearchParams;
@@ -17,11 +23,15 @@ const ResultsTab: React.FC<{
   const { user } = useUser();
   const { data } = useUserData();
   const [adminToken, setAdminToken] = useState<string | undefined>();
-  const [queries, setQueries] = useState<Record<string, 'loading' | 'success' | 'error'>>({});
+  const [queries, setQueries] = useState<Record<string, DownloadStatus>>({});
 
   useEffect(() => {
     user?.getIdTokenResult().then((token) => token.claims.admin && setAdminToken(token.token));
   }, [user]);
+
+  useEffect(() => {
+    setQueries({});
+  }, [searchParams]);
 
   if (!searchParams) {
     return <p>Search for a class to get started!</p>;
@@ -33,6 +43,48 @@ const ResultsTab: React.FC<{
 
   const { classes, searchProperties } = searchResults;
   const pageNumber = searchProperties.PageNumber;
+
+  const handleDownload = () => {
+    setQueries({});
+    [...new Array(searchProperties.TotalPages)].forEach(async (_, i) => {
+      const taskNumber = i + 1;
+      try {
+        setQueries((prev) => ({
+          ...prev,
+          [taskNumber]: {
+            status: 'loading',
+          },
+        }));
+        const results = await fetcher({
+          url: '/api/search',
+          method: 'post',
+          data: {
+            ...searchParams, pageNumber: taskNumber, includeEvals: true, updateDb: true,
+          } as SearchParams,
+          headers: {
+            Authorization: `Bearer ${adminToken}`,
+          },
+        });
+        setQueries((prev) => ({
+          ...prev,
+          [taskNumber]: {
+            status: 'success',
+            data: results,
+          },
+        }));
+      } catch (err) {
+        const { message, info } = err as FetchError;
+        setQueries((prev) => ({
+          ...prev,
+          [taskNumber]: {
+            status: 'error',
+            error: `${message} ${JSON.stringify(info)}`,
+          },
+        }));
+      }
+    });
+  };
+
   return (
     <div className="space-y-2 mt-2">
       <ScheduleSelector
@@ -46,38 +98,28 @@ const ResultsTab: React.FC<{
         <h2 className="font-semibold">Admin controls</h2>
         <button
           type="button"
-          onClick={() => {
-            setQueries({});
-            [...new Array(searchProperties.TotalPages)].forEach(async (_, i) => {
-              const taskNumber = i + 1;
-              try {
-                setQueries((prev) => ({ ...prev, [taskNumber]: 'loading' }));
-                const results = await fetcher({
-                  url: '/api/search',
-                  method: 'post',
-                  data: {
-                    ...searchParams, pageNumber: taskNumber, includeEvals: true, updateDb: true,
-                  } as SearchParams,
-                  headers: {
-                    Authorization: `Bearer ${adminToken}`,
-                  },
-                });
-                console.log(i, results);
-                setQueries((prev) => ({ ...prev, [taskNumber]: 'success' }));
-              } catch (err) {
-                const { message, info } = err as FetchError;
-                setQueries((prev) => ({ ...prev, [taskNumber]: `error: ${message} ${JSON.stringify(info)}` }));
-              }
-            });
-          }}
+          onClick={handleDownload}
           className="bg-blue-300 rounded py-2 px-3"
         >
           Download all
         </button>
         <ul>
-          {Object.entries(queries).map(([i, status]) => (
-            <li key={i}>
-              {`${i}: ${status}`}
+          {Object.entries(queries).map(([taskNumber, status]) => (
+            <li key={taskNumber}>
+              {taskNumber}
+              :
+              {' '}
+              {status.status === 'success'
+                && (
+                  <DownloadLink obj={status.data} filename={`download${taskNumber}`}>
+                    Success! Download
+                  </DownloadLink>
+                )}
+              {status.status === 'error' && (
+              <span className="truncate text-red-500">
+                {status.error}
+              </span>
+              )}
             </li>
           ))}
         </ul>

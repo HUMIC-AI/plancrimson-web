@@ -49,7 +49,7 @@ const SemesterSchedule: React.FC<ScheduleSelectorProps> = function ({ selectedSc
 
         <Calendar
           classes={selectedSchedule
-            ? data.schedules[selectedSchedule].classes.map(({ id }) => classCache[id])
+            ? data.schedules[selectedSchedule].classes.map(({ classId: id }) => classCache[id])
             : []}
         />
       </div>

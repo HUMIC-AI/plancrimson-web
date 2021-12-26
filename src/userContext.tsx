@@ -5,31 +5,15 @@ import {
 import React, {
   createContext, useCallback, useContext, useEffect, useMemo, useState,
 } from 'react';
+import { Class } from '../shared/apiTypes';
 import {
-  Season, seasonOrder, UserClassData,
-} from './schedules';
-import { Class } from './types';
+  Schedule, Season, seasonOrder, UserClassData, UserData,
+} from './firestoreTypes';
 
 type UserContextType = {
   user?: User | null;
   error?: Error,
 };
-
-export interface Schedule {
-  id: string;
-  year: number;
-  season: Season;
-  classes: UserClassData[];
-}
-
-// firestore user schema
-export interface UserData {
-  classYear: number;
-  lastLoggedIn: Date;
-  schedules: {
-    [semesterId: string]: Schedule;
-  };
-}
 
 type ClassAndSchedule = { classId: string; scheduleId: string };
 
@@ -80,7 +64,7 @@ export function getSchedulesBySemester(data: UserData, targetYear: number, targe
 }
 
 export function getAllClassIds(data: UserData) {
-  return Object.values(data.schedules).flatMap((schedule) => schedule.classes.map((cls) => cls.id));
+  return Object.values(data.schedules).flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
 }
 
 /**
@@ -116,8 +100,8 @@ export const UserDataProvider: React.FC<{ user?: User | null }> = function ({ ch
       const firestoreUpdate = {} as Record<string, UserClassData[]>;
       classesToAdd.forEach(({ classId, scheduleId }) => {
         const { classes } = prev.schedules[scheduleId];
-        if (!classes.find(({ id }) => id === classId)) {
-          classes.push({ id: classId });
+        if (!classes.find(({ classId: id }) => id === classId)) {
+          classes.push({ classId });
           firestoreUpdate[`schedules.${scheduleId}.classes`] = classes;
         }
       });
@@ -134,13 +118,13 @@ export const UserDataProvider: React.FC<{ user?: User | null }> = function ({ ch
       const firestoreUpdate = {} as Record<string, UserClassData[]>;
       classesToRemove.forEach(({ classId, scheduleId: targetScheduleId }) => {
         if (targetScheduleId) {
-          const updatedClasses = prev.schedules[targetScheduleId].classes.filter(({ id }) => id !== classId);
+          const updatedClasses = prev.schedules[targetScheduleId].classes.filter(({ classId: id }) => id !== classId);
           // eslint-disable-next-line no-param-reassign
           prev.schedules[targetScheduleId].classes = updatedClasses;
           firestoreUpdate[`schedules.${targetScheduleId}.classes`] = updatedClasses;
         } else {
           Object.entries(prev.schedules).forEach(([scheduleId, schedule]) => {
-            const updatedClasses = schedule.classes.filter(({ id }) => id !== classId);
+            const updatedClasses = schedule.classes.filter(({ classId: id }) => id !== classId);
             if (updatedClasses.length !== schedule.classes.length) {
               // eslint-disable-next-line no-param-reassign
               prev.schedules[scheduleId].classes = updatedClasses;

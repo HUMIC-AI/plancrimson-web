@@ -1,7 +1,8 @@
 /* eslint-disable no-param-reassign */
 import React, { createRef, useMemo, useState } from 'react';
-import { Season, useClassCache } from '../src/schedules';
-import { Class } from '../src/types';
+import { Class } from '../shared/apiTypes';
+import { Season } from '../src/firestoreTypes';
+import { useClassCache } from '../src/schedules';
 import {
   getAllSemesters, useUserData, getClassId, getAllClassIds, getSchedulesBySemester,
 } from '../src/userContext';
@@ -138,7 +139,7 @@ const SemesterDisplay: React.FC<Props> = function ({
       />
 
       <div className="flex flex-col gap-4 mt-2">
-        {selectedSchedule.classes.map(({ id }) => classCache[id] && (
+        {selectedSchedule.classes.map(({ classId: id }) => classCache[id] && (
           <CourseCard
             key={id}
             course={classCache[id]}

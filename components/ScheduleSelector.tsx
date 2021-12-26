@@ -1,6 +1,7 @@
 import { Listbox } from '@headlessui/react';
 import React from 'react';
 import { FaAngleDown } from 'react-icons/fa';
+import FadeTransition from './FadeTransition';
 
 export interface ScheduleSelectorProps {
   selectedSchedule?: string;
@@ -21,17 +22,19 @@ const ScheduleSelector: React.FC<Props> = function ({ schedules, selectedSchedul
           {' '}
           <FaAngleDown className="ml-4" />
         </Listbox.Button>
-        <Listbox.Options className="absolute p-2 rounded mt-2 bg-white bg-opacity-70 shadow z-20">
-          {schedules.map((schedule) => (
-            <Listbox.Option
-              key={schedule}
-              value={schedule}
-              className="even:bg-white odd:bg-gray-300 bg-opacity-50 py-1 px-2 first:rounded-t last:rounded-b focus:ring-blue-700 focus:ring-2"
-            >
-              {schedule}
-            </Listbox.Option>
-          ))}
-        </Listbox.Options>
+        <FadeTransition>
+          <Listbox.Options className="absolute p-2 rounded mt-2 bg-white bg-opacity-70 shadow z-20">
+            {schedules.map((schedule) => (
+              <Listbox.Option
+                key={schedule}
+                value={schedule}
+                className="even:bg-white odd:bg-gray-300 bg-opacity-50 py-1 px-2 first:rounded-t last:rounded-b focus:ring-blue-700 focus:ring-2"
+              >
+                {schedule}
+              </Listbox.Option>
+            ))}
+          </Listbox.Options>
+        </FadeTransition>
       </Listbox>
     </div>
   );

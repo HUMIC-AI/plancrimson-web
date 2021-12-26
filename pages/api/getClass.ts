@@ -1,8 +1,8 @@
 import { NextApiHandler } from 'next';
 import { extendClass } from '../../server/evaluation';
 import searchMyHarvard from '../../server/server';
+import { ExtendedClass } from '../../shared/apiTypes';
 import ClassIndex from '../../shared/meilisearch';
-import { ExtendedClass } from '../../src/types';
 
 const handler: NextApiHandler<ExtendedClass | { error: string }> = async (req, res) => {
   const { classKey, updateDb } = req.query;

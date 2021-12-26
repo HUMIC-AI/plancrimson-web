@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Listbox } from '@headlessui/react';
+import { FaCaretDown } from 'react-icons/fa';
 import { Facet } from '../src/types';
 import courseData from '../src/courseData.json';
 import useSearch from '../src/hooks';
+import FadeTransition from './FadeTransition';
 
 type Props = {
   currentSearch?: string;
@@ -10,14 +13,55 @@ type Props = {
 };
 
 const CategorySelect: React.FC<Props> = function ({ currentSearch, search, allFacets }) {
+  const [school, setSchool] = useState('FAS');
+
+  // HU_SB_CFG_CT_VW: categories
+
   return (
-    <details className="space-y-2" style={{ minWidth: '16rem' }}>
-      <summary className="cursor-pointer text-center rounded bg-gray-300 py-2">Find courses</summary>
+    <div>
+      <Listbox value={school} onChange={setSchool} as="div" className="relative">
+        <Listbox.Button className={`relative w-full py-2 pl-3 pr-10 text-left bg-white rounded-lg
+                                    shadow-md hover:shadow-lg cursor-default focus:outline-none
+                                    focus-visible:ring-2 focus-visible:ring-opacity-75
+                                    focus-visible:ring-white focus-visible:ring-offset-orange-300
+                                    focus-visible:ring-offset-2 focus-visible:border-indigo-500
+                                    sm:text-sm transition-shadow`}
+        >
+          <span className="block truncate">
+            {school}
+          </span>
+          <span className="absolute inset-y-0 right-0 flex items-center pointer-events-none">
+            <FaCaretDown />
+          </span>
+        </Listbox.Button>
+        <FadeTransition>
+          <Listbox.Options className={`absolute w-full py-1 mt-1 overflow-auto text-base bg-white
+                                       rounded-md shadow-lg max-h-60 ring-1 ring-black ring-opacity-5
+                                       focus:outline-none sm:text-sm`}
+          >
+            {courseData.map(({ HU_SB_ACAD_CAREER: acronym, DESCR: title }) => (
+              <Listbox.Option
+                key={acronym}
+                value={acronym}
+                className={({ active }) => `${active ? 'text-amber-900 bg-amber-100' : 'text-gray-900'}
+                        cursor-default select-none relative py-2 pl-10 pr-4`}
+              >
+                {`${title} (${acronym})`}
+              </Listbox.Option>
+            ))}
+          </Listbox.Options>
+        </FadeTransition>
+      </Listbox>
 
-      <button type="button" onClick={() => search(({ search: '' }))}>Search all</button>
+      <details className="space-y-2 mt-2" style={{ minWidth: '16rem' }}>
+        <summary className="cursor-pointer text-center rounded bg-gray-300 py-2">Find courses</summary>
 
-      {/* filters */}
-      {allFacets.length > 0 && (
+        <button type="button" onClick={() => search(({ search: '' }))}>
+          Search all
+        </button>
+
+        {/* filters */}
+        {allFacets.length > 0 && (
         <details className="border-black border-2 py-2 px-4 rounded-lg">
           <summary className="text-xl cursor-pointer">Filters</summary>
           <hr className="border-black my-2" />
@@ -68,19 +112,15 @@ const CategorySelect: React.FC<Props> = function ({ currentSearch, search, allFa
               </div>
             ))}
         </details>
-      )}
+        )}
 
-      {courseData.map(({ HU_SB_ACAD_CAREER: acronym, DESCR: title, HU_SB_CFG_CT_VW: categories }) => (
-        <details key={title} className="border-gray-300 shadow border-2 py-1 px-2 rounded-lg">
-          <summary className="text-xl cursor-pointer">
-            {`${title} (${acronym})`}
-          </summary>
-          <hr className="border-black my-2" />
-          <div className="space-y-2 px-2">
-            {categories.map(({ HU_SB_CAT_DESCR: categoryTitle, HU_SB_CFG_SC_VW: subcategories }) => (
+        <div className="space-y-2 px-2">
+          {courseData
+            .find(({ HU_SB_ACAD_CAREER: acronym }) => acronym === school)?.HU_SB_CFG_CT_VW
+            .map(({ HU_SB_CAT_DESCR: categoryTitle, HU_SB_CFG_SC_VW: subcategories }) => (
               <details key={categoryTitle}>
                 <summary className="text-lg cursor-pointer">
-                  {categoryTitle}
+                  {categoryTitle.replace('John A. Paulson School of Engineering and Applied Sciences', 'SEAS')}
                 </summary>
                 <hr className="border-black mt-2" />
                 <ul className="p-2 rounded-b bg-gray-300 grid gap-x-2" style={{ gridTemplateColumns: 'auto auto' }}>
@@ -99,11 +139,10 @@ const CategorySelect: React.FC<Props> = function ({ currentSearch, search, allFa
                   ))}
                 </ul>
               </details>
-            ))}
-          </div>
-        </details>
-      ))}
-    </details>
+            )) || <p>Choose a school to begin.</p>}
+        </div>
+      </details>
+    </div>
   );
 };
 
