@@ -4,7 +4,8 @@ import {
 } from 'react-instantsearch-dom';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
 import { connectHits, connectSearchBox } from 'react-instantsearch-core';
-import { Class } from '../src/types';
+import { Class } from '../shared/apiTypes';
+import Layout from '../components/Layout/Layout';
 
 const searchClient = instantMeiliSearch(
   'http://127.0.0.1:7700',
@@ -47,15 +48,17 @@ const CustomSearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, 
 
 const Search = function () {
   return (
-    <InstantSearch
-      indexName="courses"
-      searchClient={searchClient}
-    >
-      <div className="mx-auto max-w-lg p-4 shadow-lg border-2 border-gray-300 rounded-lg space-y-4">
-        <CustomSearchBox />
-        <Hits />
-      </div>
-    </InstantSearch>
+    <Layout>
+      <InstantSearch
+        indexName="courses"
+        searchClient={searchClient}
+      >
+        <div className="mx-auto max-w-lg p-4 shadow-lg border-2 border-gray-300 rounded-lg space-y-4">
+          <CustomSearchBox />
+          <Hits />
+        </div>
+      </InstantSearch>
+    </Layout>
   );
 };
 

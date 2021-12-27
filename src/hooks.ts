@@ -1,8 +1,9 @@
 import { AxiosRequestConfig } from 'axios';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import useSWR from 'swr';
+import { Class, SearchParams, SearchResults } from '../shared/apiTypes';
 import fetcher, { FetchError } from '../shared/fetcher';
-import { SearchParams, SearchResults } from './types';
+import { fetchClass } from './util';
 
 /**
  * a hook to enable searching for classes on my.harvard.
@@ -25,4 +26,29 @@ export default function useSearch() {
     error,
     loading: searchParams.search && !data && !error,
   };
+}
+
+export type ClassCache = Record<string, Class>;
+
+export function useClassCache(classNumbers: Array<string>) {
+  const [classCache, setClassCache] = useState<ClassCache>({});
+  const [fetchClassError, setFetchClassError] = useState<any[] | undefined>();
+
+  useEffect(() => {
+    Promise.allSettled(classNumbers.map(async (number) => {
+      if (classCache[number]) {
+        return { [number]: classCache[number] };
+      }
+      return { [number]: await fetchClass(number) };
+    }))
+      .then((results) => {
+        const fulfilled = results.filter((result) => result.status === 'fulfilled');
+        setClassCache(Object.assign({}, ...fulfilled.map((result) => result.status === 'fulfilled' && result.value)));
+        const rejected = results.filter((result) => result.status === 'rejected');
+        setFetchClassError(rejected.map((result) => result.status === 'rejected' && result.reason));
+      })
+      .catch((err) => setFetchClassError(err));
+  }, [classNumbers]);
+
+  return { classCache, fetchClassError };
 }

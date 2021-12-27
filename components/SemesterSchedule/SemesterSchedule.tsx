@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import { useClassCache } from '../../src/schedules';
-import { getAllClassIds, useUserData } from '../../src/userContext';
+import useUserData from '../../src/context/userData';
+import { useClassCache } from '../../src/hooks';
+import { getAllClassIds } from '../../src/util';
 import ScheduleSelector, { ScheduleSelectorProps } from '../ScheduleSelector';
 import Calendar from './Calendar';
 
@@ -12,6 +13,7 @@ const SemesterSchedule: React.FC<ScheduleSelectorProps> = function ({ selectedSc
   const newSemester: React.FormEventHandler<HTMLFormElement> = (ev) => {
     ev.preventDefault();
     const fields = ev.currentTarget.elements as any;
+    console.log(fields);
     createSchedule(fields.semesterId.value, fields.year.value, fields.season.value);
   };
 

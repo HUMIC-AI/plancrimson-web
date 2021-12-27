@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Listbox } from '@headlessui/react';
 import { FaCaretDown } from 'react-icons/fa';
-import { Facet } from '../src/types';
 import courseData from '../src/courseData.json';
 import useSearch from '../src/hooks';
 import FadeTransition from './FadeTransition';
+import { Facet } from '../shared/apiTypes';
 
 type Props = {
   currentSearch?: string;
@@ -53,15 +53,12 @@ const CategorySelect: React.FC<Props> = function ({ currentSearch, search, allFa
         </FadeTransition>
       </Listbox>
 
-      <details className="space-y-2 mt-2" style={{ minWidth: '16rem' }}>
-        <summary className="cursor-pointer text-center rounded bg-gray-300 py-2">Find courses</summary>
+      <button type="button" onClick={() => search(({ search: '' }))}>
+        Search all
+      </button>
 
-        <button type="button" onClick={() => search(({ search: '' }))}>
-          Search all
-        </button>
-
-        {/* filters */}
-        {allFacets.length > 0 && (
+      {/* filters */}
+      {allFacets.length > 0 && (
         <details className="border-black border-2 py-2 px-4 rounded-lg">
           <summary className="text-xl cursor-pointer">Filters</summary>
           <hr className="border-black my-2" />
@@ -112,36 +109,35 @@ const CategorySelect: React.FC<Props> = function ({ currentSearch, search, allFa
               </div>
             ))}
         </details>
-        )}
+      )}
 
-        <div className="space-y-2 px-2">
-          {courseData
-            .find(({ HU_SB_ACAD_CAREER: acronym }) => acronym === school)?.HU_SB_CFG_CT_VW
-            .map(({ HU_SB_CAT_DESCR: categoryTitle, HU_SB_CFG_SC_VW: subcategories }) => (
-              <details key={categoryTitle}>
-                <summary className="text-lg cursor-pointer">
-                  {categoryTitle.replace('John A. Paulson School of Engineering and Applied Sciences', 'SEAS')}
-                </summary>
-                <hr className="border-black mt-2" />
-                <ul className="p-2 rounded-b bg-gray-300 grid gap-x-2" style={{ gridTemplateColumns: 'auto auto' }}>
-                  {subcategories.map(({ HU_SB_SUBCAT_DESCR: subcategoryTitle, HU_SB_SRCH_DEFN: searchText, HU_SB_DEPT_URL: url }) => (
-                    <li key={subcategoryTitle} className="contents">
-                      <button
-                        type="button"
-                        onClick={() => search((prev) => ({ ...prev, search: searchText, pageNumber: 1 }))}
-                        className={`text-left pl-1 rounded transition-colors
+      <div className="space-y-2 px-2">
+        {courseData
+          .find(({ HU_SB_ACAD_CAREER: acronym }) => acronym === school)?.HU_SB_CFG_CT_VW
+          .map(({ HU_SB_CAT_DESCR: categoryTitle, HU_SB_CFG_SC_VW: subcategories }) => (
+            <details key={categoryTitle}>
+              <summary className="text-lg cursor-pointer">
+                {categoryTitle.replace('John A. Paulson School of Engineering and Applied Sciences', 'SEAS')}
+              </summary>
+              <hr className="border-black mt-2" />
+              <ul className="p-2 rounded-b bg-gray-300 grid gap-x-2" style={{ gridTemplateColumns: 'auto auto' }}>
+                {subcategories.map(({ HU_SB_SUBCAT_DESCR: subcategoryTitle, HU_SB_SRCH_DEFN: searchText, HU_SB_DEPT_URL: url }) => (
+                  <li key={subcategoryTitle} className="contents">
+                    <button
+                      type="button"
+                      onClick={() => search((prev) => ({ ...prev, search: searchText, pageNumber: 1 }))}
+                      className={`text-left pl-1 rounded transition-colors
                                     ${searchText === currentSearch ? 'bg-blue-300 hover:bg-red-300' : 'hover:bg-gray-500'}`}
-                      >
-                        {subcategoryTitle}
-                      </button>
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">Link</a>
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            )) || <p>Choose a school to begin.</p>}
-        </div>
-      </details>
+                    >
+                      {subcategoryTitle}
+                    </button>
+                    <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">Link</a>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )) || <p>Choose a school to begin.</p>}
+      </div>
     </div>
   );
 };

@@ -1,19 +1,14 @@
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { User } from 'firebase/auth';
 import {
-  doc, DocumentReference, FirestoreError, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc,
+  FirestoreError, setDoc, updateDoc, onSnapshot, getDoc, serverTimestamp,
 } from 'firebase/firestore';
 import React, {
-  createContext, useCallback, useContext, useEffect, useMemo, useState,
+  createContext, useState, useCallback, useEffect, useMemo, useContext,
 } from 'react';
-import { Class } from '../shared/apiTypes';
 import {
-  Schedule, Season, seasonOrder, UserClassData, UserData,
-} from './firestoreTypes';
-
-type UserContextType = {
-  user?: User | null;
-  error?: Error,
-};
+  UserData, Season, UserClassData, Schedule,
+} from '../firestoreTypes';
+import { getUserRef } from '../util';
 
 type ClassAndSchedule = { classId: string; scheduleId: string };
 
@@ -27,8 +22,6 @@ type UserDataContextType = {
   error?: FirestoreError;
 };
 
-const UserContext = createContext<UserContextType>({});
-
 const UserDataContext = createContext<UserDataContextType>({
   data: {
     lastLoggedIn: new Date(),
@@ -40,32 +33,24 @@ const UserDataContext = createContext<UserDataContextType>({
   createSchedule: () => null,
 });
 
-export function getClassId(course: Class) { return course.HU_STRM_CLASSNBR; }
+const generateSchedules = (classYear: number) => {
+  const schedules: Record<string, Schedule> = {};
 
-export function getUserRef({ uid }: User) { return doc(getFirestore(), `users/${uid}`) as DocumentReference<UserData>; }
-
-export function getAllSemesters(data: UserData) {
-  const semesters = [] as { year: number, season: Season }[];
-  Object.values(data.schedules).forEach(({ year, season }) => {
-    // if this semester has not yet been added
-    if (!semesters.find(({ year: y, season: s }) => year === y && season === s)) {
-      semesters.push({ year, season });
+  for (let year = classYear - 4; year <= classYear; year += 1) {
+    if (year > classYear - 4) {
+      schedules[`Spring ${year}`] = {
+        id: `Spring ${year}`, classes: [], season: 'Spring', year,
+      };
     }
-  });
-  return semesters.sort((a, b) => {
-    if (a.year !== b.year) return a.year - b.year;
-    const seasonDiff = seasonOrder[a.season] - seasonOrder[b.season];
-    return seasonDiff;
-  });
-}
+    if (year < classYear) {
+      schedules[`Fall ${year}`] = {
+        id: `Fall ${year}`, classes: [], season: 'Fall', year,
+      };
+    }
+  }
 
-export function getSchedulesBySemester(data: UserData, targetYear: number, targetSeason: Season) {
-  return Object.values(data.schedules).filter(({ year, season }) => year === targetYear && season === targetSeason);
-}
-
-export function getAllClassIds(data: UserData) {
-  return Object.values(data.schedules).flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
-}
+  return schedules;
+};
 
 /**
  * We put this in a separate context than the user to avoid unnecessary rerenders.
@@ -75,12 +60,14 @@ export function getAllClassIds(data: UserData) {
  * The context also contains functions to simplify modifying the schedule.
  * If the user is logged in, userData will be an up-to-date view of their Firestore document.
  */
-export const UserDataProvider: React.FC<{ user?: User | null }> = function ({ children, user }) {
+export const UserDataProvider: React.FC<{ user: User | null | undefined }> = function ({ children, user }) {
   const [userData, setUserData] = useState<UserData>({ classYear: 2025, schedules: {}, lastLoggedIn: new Date() });
   const [error, setError] = useState<FirestoreError | undefined>();
 
   const createSchedule: UserDataContextType['createSchedule'] = useCallback(async (scheduleId, year, season) => {
     setUserData((prev) => {
+      console.log({ prev });
+
       if (scheduleId in prev.schedules) return prev;
       // eslint-disable-next-line no-param-reassign
       prev.schedules[`${scheduleId}`] = {
@@ -91,7 +78,7 @@ export const UserDataProvider: React.FC<{ user?: User | null }> = function ({ ch
           .then(() => console.log('user updated'))
           .catch((err) => setError(err));
       }
-      return prev;
+      return { ...prev };
     });
   }, [user]);
 
@@ -108,7 +95,7 @@ export const UserDataProvider: React.FC<{ user?: User | null }> = function ({ ch
       if (user) {
         updateDoc(getUserRef(user), firestoreUpdate as any);
       }
-      return prev;
+      return { ...prev };
     });
     // setCourseCache((prev) => Object.assign({}, prev, ...courses.map(({ course }) => ({ [course.Key]: course }))));
   }, [user]);
@@ -116,29 +103,32 @@ export const UserDataProvider: React.FC<{ user?: User | null }> = function ({ ch
   const removeCourses: RemoveCourses = useCallback((...classesToRemove) => {
     setUserData((prev) => {
       const firestoreUpdate = {} as Record<string, UserClassData[]>;
-      classesToRemove.forEach(({ classId, scheduleId: targetScheduleId }) => {
-        if (targetScheduleId) {
-          const updatedClasses = prev.schedules[targetScheduleId].classes.filter(({ classId: id }) => id !== classId);
-          // eslint-disable-next-line no-param-reassign
-          prev.schedules[targetScheduleId].classes = updatedClasses;
-          firestoreUpdate[`schedules.${targetScheduleId}.classes`] = updatedClasses;
+      const newState = { ...prev };
+
+      classesToRemove.forEach(({ classId, scheduleId: fromScheduleId }) => {
+        if (fromScheduleId) {
+          const updatedClasses = prev.schedules[fromScheduleId].classes.filter(({ classId: id }) => id !== classId);
+          newState.schedules[fromScheduleId].classes = updatedClasses;
+          firestoreUpdate[`schedules.${fromScheduleId}.classes`] = updatedClasses;
         } else {
+          // remove from all schedules
           Object.entries(prev.schedules).forEach(([scheduleId, schedule]) => {
             const updatedClasses = schedule.classes.filter(({ classId: id }) => id !== classId);
             if (updatedClasses.length !== schedule.classes.length) {
-              // eslint-disable-next-line no-param-reassign
-              prev.schedules[scheduleId].classes = updatedClasses;
+              newState.schedules[scheduleId].classes = updatedClasses;
               firestoreUpdate[`schedules.${scheduleId}.classes`] = updatedClasses;
             }
           });
         }
       });
+
       if (user) {
         updateDoc(getUserRef(user), firestoreUpdate as any)
           .then(() => console.log('doc updated'))
           .catch((err) => console.error('error removing courses', err));
       }
-      return prev;
+
+      return newState;
     });
   }, [user]);
 
@@ -162,19 +152,7 @@ export const UserDataProvider: React.FC<{ user?: User | null }> = function ({ ch
         setDoc(getUserRef(user), {
           lastLoggedIn: serverTimestamp(),
           classYear,
-          schedules: Object.assign({}, ...[...new Array(5)].flatMap((_, i) => {
-            const year = classYear - 4 + i;
-            return [{
-              [`Spring ${year}`]: {
-                id: `Spring ${year}`, classes: [], season: 'Spring', year,
-              },
-            },
-            {
-              [`Fall ${year}`]: {
-                id: `Fall ${year}`, classes: [], season: 'Fall', year,
-              },
-            }] as Record<string, Schedule>[];
-          }).slice(1, -1)),
+          schedules: generateSchedules(classYear),
         }, { merge: true })
           .then(() => console.log('new document created'))
           .catch((err) => setError(err));
@@ -195,6 +173,7 @@ export const UserDataProvider: React.FC<{ user?: User | null }> = function ({ ch
     error,
   }), [userData, addCourses, removeCourses, createSchedule, error]);
 
+  console.log({ value });
   return (
     <UserDataContext.Provider value={value}>
       {children}
@@ -202,30 +181,6 @@ export const UserDataProvider: React.FC<{ user?: User | null }> = function ({ ch
   );
 };
 
-export const UserContextProvider: React.FC = function ({ children }) {
-  const [user, setUser] = useState<User | null | undefined>();
-  const [authError, setAuthError] = useState<Error | undefined>();
+const useUserData = () => useContext(UserDataContext);
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(getAuth(), (u) => {
-      setUser(u);
-    }, (err) => {
-      setAuthError(err);
-    });
-    return unsub;
-  }, []);
-
-  const value = useMemo<UserContextType>(() => ({
-    user,
-    error: authError,
-  } as UserContextType), [user, authError]);
-
-  return (
-    <UserContext.Provider value={value}>
-      {children}
-    </UserContext.Provider>
-  );
-};
-
-export const useUser = () => useContext(UserContext);
-export const useUserData = () => useContext(UserDataContext);
+export default useUserData;

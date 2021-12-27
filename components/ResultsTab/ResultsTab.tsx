@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { FaAngleLeft, FaAngleRight } from 'react-icons/fa';
 import Course from './Course';
 import DownloadLink from '../DownloadLink';
-import { getClassId, useUser, useUserData } from '../../src/userContext';
-import ScheduleSelector, { ScheduleSelectorProps } from '../ScheduleSelector';
+import ScheduleSelector from '../ScheduleSelector';
 import fetcher, { FetchError } from '../../shared/fetcher';
 import { ExtendedClass, SearchParams, SearchResults } from '../../shared/apiTypes';
+import useUser from '../../src/context/user';
+import useUserData from '../../src/context/userData';
+import { getClassId } from '../../src/util';
 
 type DownloadStatus = {
   status: 'loading' | 'success' | 'error';
@@ -14,16 +16,17 @@ type DownloadStatus = {
 };
 
 const ResultsTab: React.FC<{
-  searchParams?: SearchParams;
+  searchParams: SearchParams;
   searchResults?: SearchResults;
   search: React.Dispatch<React.SetStateAction<SearchParams>>;
-} & ScheduleSelectorProps> = function ({
-  searchParams, searchResults, search: setSearchParams, selectSchedule, selectedSchedule,
+}> = function ({
+  searchParams, searchResults, search: setSearchParams,
 }) {
   const { user } = useUser();
   const { data } = useUserData();
   const [adminToken, setAdminToken] = useState<string | undefined>();
   const [queries, setQueries] = useState<Record<string, DownloadStatus>>({});
+  const [selectedSchedule, selectSchedule] = useState<string | undefined>();
 
   useEffect(() => {
     user?.getIdTokenResult().then((token) => token.claims.admin && setAdminToken(token.token));
@@ -33,7 +36,7 @@ const ResultsTab: React.FC<{
     setQueries({});
   }, [searchParams]);
 
-  if (!searchParams) {
+  if (Object.keys(searchParams).length === 0) {
     return <p>Search for a class to get started!</p>;
   }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Class } from '../../src/types';
+import { Class } from '../../shared/apiTypes';
 
 const days = ['MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT'] as const;
 

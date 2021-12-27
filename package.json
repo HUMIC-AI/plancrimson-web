@@ -10,6 +10,7 @@
   "dependencies": {
     "@headlessui/react": "^1.4.2",
     "@meilisearch/instant-meilisearch": "^0.5.10",
+    "@tailwindcss/line-clamp": "^0.3.0",
     "axios": "^0.24.0",
     "cheerio": "^1.0.0-rc.10",
     "deepmerge": "^4.2.2",

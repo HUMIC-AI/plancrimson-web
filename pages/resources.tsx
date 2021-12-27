@@ -1,9 +1,10 @@
-import Layout from '../components/Layout';
+import Layout from '../components/Layout/Layout';
 
 const links = [
   ['CS Advising Site', 'https://csadvising.seas.harvard.edu/'],
   ['Vericlass', 'https://vericlass.net/'],
   ['WhatClass', 'https://www.whatclass.net/'],
+  ['Curricle', 'https://curricle.berkman.harvard.edu/#/home']
 ];
 
 const ResourcesPage: React.FC = function () {

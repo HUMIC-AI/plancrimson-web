@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { FaMinusCircle, FaPlusCircle } from 'react-icons/fa';
 import cheerio from 'cheerio';
 import useSWR from 'swr';
-import { Class as CourseType, EvaluationResponse } from '../../src/types';
-import { getClassId, Schedule, useUserData } from '../../src/userContext';
-import { fetcher } from '../../src/hooks';
+import { Class, EvaluationResponse } from '../../shared/apiTypes';
+import fetcher from '../../shared/fetcher';
+import useUserData from '../../src/context/userData';
+import { Schedule } from '../../src/firestoreTypes';
+import { getClassId } from '../../src/util';
 
-export function getYearAndSeason(course: CourseType) {
+export function getYearAndSeason(course: Class) {
   const season = /Fall/i.test(course.IS_SCL_DESCR_IS_SCL_DESCRH) ? 'Fall' : 'Spring' as const;
   const academicYear = parseInt(course.ACAD_YEAR, 10);
   const year = season === 'Fall' ? academicYear - 1 : academicYear;
@@ -75,7 +77,7 @@ const Evaluation: React.FC<{ report: EvaluationResponse }> = function ({ report 
 };
 
 const Course: React.FC<{
-  course: CourseType;
+  course: Class;
   schedule?: Schedule;
 }> = function ({ course, schedule }) {
   const {
@@ -123,7 +125,7 @@ const Course: React.FC<{
     <div className="border-black border-2 rounded-md p-2 space-y-2">
       <h3 className="flex items-center justify-between text-xl">
         {title}
-        {schedule && (schedule.classes.find(({ id }) => id === classId)
+        {schedule && (schedule.classes.find(({ classId: id }) => id === classId)
           ? (
             <button type="button" onClick={() => removeCourses({ classId })}>
               <FaMinusCircle />
@@ -153,8 +155,15 @@ const Course: React.FC<{
         </span>
         <span>{gradingBasis}</span>
       </div>
+
       {(description || prereqs) && <hr className="border-black" />}
-      {description && <p>{description}</p>}
+
+      {description && (
+      <div className="line-clamp-3">
+        <p>{description}</p>
+      </div>
+      )}
+
       {prereqs && (
       <p>
         <span className="font-bold">Recommended Prep:</span>

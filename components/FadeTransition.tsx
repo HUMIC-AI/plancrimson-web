@@ -1,5 +1,5 @@
 import { Transition } from '@headlessui/react';
-import React from 'react';
+import React, { Fragment } from 'react';
 
 const FadeTransition: React.FC = function ({ children }) {
   return (
@@ -10,6 +10,7 @@ const FadeTransition: React.FC = function ({ children }) {
       leave="transition-opacity duration-100 ease-in"
       leaveFrom="opacity-100"
       leaveTo="opacity-0"
+      as={Fragment}
     >
       {children}
     </Transition>

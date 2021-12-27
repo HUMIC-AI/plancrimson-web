@@ -1,6 +1,7 @@
 import { Listbox } from '@headlessui/react';
 import React from 'react';
 import { FaAngleDown } from 'react-icons/fa';
+import { classNames } from '../src/util';
 import FadeTransition from './FadeTransition';
 
 export interface ScheduleSelectorProps {
@@ -12,29 +13,35 @@ type Props = ScheduleSelectorProps & { schedules: string[]; };
 
 const ScheduleSelector: React.FC<Props> = function ({ schedules, selectedSchedule, selectSchedule }) {
   return (
-    <div className="relative">
+    <div className="relative inline-block">
       <Listbox
         value={selectedSchedule}
         onChange={selectSchedule}
       >
-        <Listbox.Button className="shadow rounded flex items-center py-2 px-3">
+        <Listbox.Button className={classNames(
+          schedules.length === 0 && 'cursor-not-allowed text-gray-700 bg-gray-300',
+          'shadow rounded flex items-center py-2 px-3',
+        )}
+        >
           {selectedSchedule || 'Select a schedule'}
           {' '}
           <FaAngleDown className="ml-4" />
         </Listbox.Button>
+        {schedules.length > 0 && (
         <FadeTransition>
-          <Listbox.Options className="absolute p-2 rounded mt-2 bg-white bg-opacity-70 shadow z-20">
+          <Listbox.Options className="absolute mt-2 w-full shadow z-20">
             {schedules.map((schedule) => (
               <Listbox.Option
                 key={schedule}
                 value={schedule}
-                className="even:bg-white odd:bg-gray-300 bg-opacity-50 py-1 px-2 first:rounded-t last:rounded-b focus:ring-blue-700 focus:ring-2"
+                className="even:bg-white w-full cursor-default odd:bg-gray-300 bg-opacity-50 py-2 px-3 first:rounded-t last:rounded-b focus:ring-blue-700 focus:ring-2"
               >
                 {schedule}
               </Listbox.Option>
             ))}
           </Listbox.Options>
         </FadeTransition>
+        )}
       </Listbox>
     </div>
   );

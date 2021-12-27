@@ -1,12 +1,12 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiHandler } from 'next';
-import {
-  Class, ExtendedClass, Facet, SearchProperties, SearchResults,
-} from 'src/types';
 import searchMyHarvard from 'server/server';
 import { extendClass } from 'server/evaluation';
 import { getAuth } from 'firebase-admin/auth';
 import ClassIndex from '../../shared/meilisearch';
+import {
+  Class, ExtendedClass, Facet, SearchProperties, SearchResults,
+} from '../../shared/apiTypes';
 
 type ResponseData = SearchResults | {
   error?: string

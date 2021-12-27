@@ -1,66 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Class } from '../shared/apiTypes';
-import fetcher from '../shared/fetcher';
-import { FAILING_GRADES, Schedule, UserData } from './firestoreTypes';
-import { getClassId } from './userContext';
-
-// want to query for all people planning to take this class at a certain time
-// user
-
-export function fetchClass(classKey: string) {
-  return fetcher({
-    url: '/api/getClass',
-    method: 'get',
-    params: { classKey, updateDb: true },
-  });
-}
-
-type ClassCache = Record<string, Class>;
-
-export function useClassCache(classNumbers: Array<string>) {
-  const [classCache, setClassCache] = useState<ClassCache>({});
-  const [fetchClassError, setFetchClassError] = useState<any[] | undefined>();
-
-  useEffect(() => {
-    Promise.allSettled(classNumbers.map(async (number) => {
-      if (classCache[number]) {
-        return { [number]: classCache[number] };
-      }
-      return { [number]: await fetchClass(number) };
-    }))
-      .then((results) => {
-        const fulfilled = results.filter((result) => result.status === 'fulfilled');
-        setClassCache(Object.assign({}, ...fulfilled.map((result) => result.status === 'fulfilled' && result.value)));
-        const rejected = results.filter((result) => result.status === 'rejected');
-        setFetchClassError(rejected.map((result) => result.status === 'rejected' && result.reason));
-      })
-      .catch((err) => setFetchClassError(err));
-  }, [classNumbers]);
-
-  return { classCache, fetchClassError };
-}
-
-/**
- * Only works for users on a typical four-year schedule.
- * @param schedule the schedule to see which school year it is part of
- * @param classYear the user's graduation year
- * @returns school year, e.g. 1 for freshman, ..., 4 for senior
- */
-function getSchoolYear(schedule: Schedule, classYear: number) {
-  let ret = schedule.year;
-  if (schedule.season === 'Fall') ret += 1;
-  return ret - classYear + 4;
-}
-
-type Requirement<Accumulator = number> = {
-  id: string;
-  description: string;
-  validate: (value: Accumulator) => boolean;
-  initialValue?: Accumulator
-
-  // should return null to indicate no change
-  reducer: (prev: Accumulator, cls: Class, schedule: Schedule, userData: UserData) => Accumulator | null;
-};
+import { Class } from '../../shared/apiTypes';
+import { FAILING_GRADES } from '../firestoreTypes';
+import { getClassId } from '../context/user';
+import { getSchoolYear, Requirement } from './util';
 
 const genedRequirement = (id: string, targetType: Class['IS_SCL_DESCR100_HU_SCL_ATTR_GE']) => ({
   id,
@@ -104,12 +45,12 @@ const scheduleRequirements = [
   {
     id: 'grades',
     description: `...and receive letter grades of C– or higher in at least 84 of those credits... The only non-letter grade that counts toward the requirement
-    of 84 satisfactory letter-graded credits is Satisfactory (SAT); only one (8-credit) senior tutorial
-    course graded Satisfactory may be so counted',
-    Credits taken either by cross-registration or
-    out of residence for degree credit will not be counted toward the letter-graded credit requirement
-    unless they are applied toward concentration requirements or the requirements for the
-    Undergraduate Teacher Education Program (UTEP) (9)`,
+      of 84 satisfactory letter-graded credits is Satisfactory (SAT); only one (8-credit) senior tutorial
+      course graded Satisfactory may be so counted',
+      Credits taken either by cross-registration or
+      out of residence for degree credit will not be counted toward the letter-graded credit requirement
+      unless they are applied toward concentration requirements or the requirements for the
+      Undergraduate Teacher Education Program (UTEP) (9)`,
     validate: (count) => count >= 84,
     reducer: (prev, cls) => {
       const numCredits = parseInt(cls.HU_UNITS_MIN, 10);
@@ -196,41 +137,4 @@ const scheduleRequirements = [
   divisionalDistribution('distributionSEAS', 'Science & Engineering & Applied Science'),
 ] as Array<Requirement>;
 
-// const honoursRequirements = [
-//   {
-//     id: 'credits',
-//     description: `...and receive letter grades of C– or higher in at least 84 of those credits (at
-//                       least 96 credits to be eligible for a degree with honors).`,
-//     verify(schedule) {
-//       return { valid: false };
-//     },
-//   },
-// ] as Array<Requirement>;
-
-// export default [scheduleRequirements, honoursRequirements];
-
-export const validateSchedule = (schedule: Schedule, userData: UserData, classCache: ClassCache) => {
-  const requirementsMet = {} as Record<string, any>;
-  const classesUsed = {} as Record<string, string[]>;
-
-  scheduleRequirements.forEach((req) => {
-    requirementsMet[req.id] = req.initialValue;
-    classesUsed[req.id] = [];
-  });
-
-  schedule.classes.reduce((acc, cls) => {
-    const next = {} as Record<string, any>;
-    scheduleRequirements.forEach((req) => {
-      const newValue = req.reducer(Object.freeze(acc[req.id]), classCache[cls.classId], schedule, userData);
-      if (newValue !== null) {
-        next[req.id] = newValue;
-        classesUsed[req.id].push(cls.classId);
-      } else {
-        next[req.id] = acc[req.id];
-      }
-    });
-    return next;
-  }, requirementsMet);
-
-  return [requirementsMet, classesUsed];
-};
+export default scheduleRequirements;
