@@ -23,17 +23,6 @@ export default async function searchMyHarvard({
     `( ${search || ''} ) ( ${searchQuery || ''} )`,
   );
 
-  console.log({
-    SaveRecent: false,
-    Facets: facets || [],
-    PageNumber: pageNumber || 1,
-    SortOrder: ['SCORE'],
-    TopN: '',
-    PageSize: '',
-    ExcludeBracketed: true,
-    SearchText: searchText,
-  });
-
   const formData = qs.stringify({
     SearchReqJSON: JSON.stringify({
       SaveRecent: false,

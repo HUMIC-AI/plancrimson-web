@@ -13,11 +13,13 @@ const Layout: React.FC<{ title?: string; } > = function ({ children, title }) {
         </title>
       </Head>
 
-      <Navbar />
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
 
-      <main className="p-8 container mx-auto">
-        {children}
-      </main>
+        <main className="p-8 container mx-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
 };

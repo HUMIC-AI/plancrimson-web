@@ -13,10 +13,7 @@ const Home: NextPage = function () {
   return (
     <Layout>
       <div
-        className="grid gap-4"
-        style={{
-          gridTemplateColumns: '1fr 3fr',
-        }}
+        className="grid gap-4 sm:grid-cols-[1fr_3fr]"
       >
         <CategorySelect
           currentSearch={searchParams.search}
@@ -24,7 +21,7 @@ const Home: NextPage = function () {
           allFacets={searchResults ? searchResults.facets : []}
         />
 
-        <div className="flex flex-col w-full">
+        <div className="flex flex-col w-full border-2 border-gray-700 border-dashed p-4 rounded-xl">
           {searchError
             ? (
               <p>

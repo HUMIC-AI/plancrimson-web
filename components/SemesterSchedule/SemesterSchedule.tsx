@@ -13,7 +13,6 @@ const SemesterSchedule: React.FC<ScheduleSelectorProps> = function ({ selectedSc
   const newSemester: React.FormEventHandler<HTMLFormElement> = (ev) => {
     ev.preventDefault();
     const fields = ev.currentTarget.elements as any;
-    console.log(fields);
     createSchedule(fields.semesterId.value, fields.year.value, fields.season.value);
   };
 

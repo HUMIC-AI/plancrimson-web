@@ -37,8 +37,6 @@ const SemesterDisplay: React.FC<Props> = function ({
     containerStyles += 'even:bg-gray-300 odd:bg-gray-100';
   }
 
-  console.log({ classes: selectedSchedule.classes.length });
-
   return (
     <div
       className={containerStyles}

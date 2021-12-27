@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import cheerio, { BasicAcceptedElems, CheerioAPI, Node } from 'cheerio';
-import { Class, EvaluationResponse, ExtendedClass } from '../src/types';
+import { Class, ExtendedClass, EvaluationResponse } from '../shared/apiTypes';
 import fetcher, { FetchError } from '../shared/fetcher';
 
 type Scraper = ($: CheerioAPI, el: BasicAcceptedElems<Node>) => any;
@@ -31,7 +31,7 @@ export async function extendClass(cls: Class, withEvals = true) {
       ret.evals = evals;
     } catch (err) {
       const { message } = err as Error;
-      throw new Error(`error fetching evaluations for class ${cls}: ${message}`);
+      throw new FetchError(`error fetching evaluations for class ${cls.SUBJECT + cls.CATALOG_NBR}`, 0, message);
     }
   }
   return ret;
