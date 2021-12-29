@@ -4,6 +4,7 @@ import TAGS from './tags.json';
 
 export function hasTag(cls: Class, tag: CSCourseTag) {
   const courseData = TAGS.find(({ courseNumber }) => new RegExp(cls.HU_ALIAS_CATNBR_NS, 'i').test(courseNumber));
+  console.log(cls.HU_ALIAS_CATNBR_NS, '?', courseData);
   if (!courseData) return false;
   return courseData.tags.includes(tag);
 }
@@ -50,6 +51,7 @@ const programmingOneAndTwo: Requirement<ProgrammingOneAndTwoAccumulator> = {
       change = true;
     }
     if (change) {
+      console.log('CHANGING to', next);
       return next;
     }
     return null;

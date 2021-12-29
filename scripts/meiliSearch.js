@@ -57,7 +57,7 @@ const setAttributes = () => {
     ],
     sortableAttributes: ['CATALOG_NBR', 'IS_SCL_STRT_TM_DEC'],
     searchableAttributes,
-    displayedAttributes: [...searchableAttributes, 'HU_STRM_CLASSNBR'],
+    displayedAttributes: ['*'], // return all attributes through the api
   });
 };
 

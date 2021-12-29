@@ -1,7 +1,7 @@
 import { Class } from '../../shared/apiTypes';
 import { FAILING_GRADES } from '../firestoreTypes';
 import { getClassId } from '../util';
-import { getSchoolYear, Requirement } from './util';
+import { getSchoolYear, Requirement, RequirementGroup } from './util';
 
 const genedRequirement = (id: string, targetType: Class['IS_SCL_DESCR100_HU_SCL_ATTR_GE']) => ({
   id,
@@ -29,7 +29,7 @@ const divisionalDistribution = (id: string, targetType: Class['IS_SCL_DESCR100_H
   },
 }) as Requirement;
 
-const scheduleRequirements = [
+const allFasRequirements = [
   {
     id: 'totalCredits',
     description: 'All candidates for the A.B. or the S.B. degree must pass 128 credits (the equivalent of 32 4-credit courses) (9)',
@@ -139,4 +139,10 @@ const scheduleRequirements = [
   divisionalDistribution('distributionSEAS', 'Science & Engineering & Applied Science'),
 ] as Array<Requirement>;
 
-export default scheduleRequirements;
+const fasRequirements: RequirementGroup = {
+  groupId: 'Requirements for the A.B. or S.B. Degrees',
+  requirements: allFasRequirements,
+  sourcePage: 8,
+};
+
+export default fasRequirements;

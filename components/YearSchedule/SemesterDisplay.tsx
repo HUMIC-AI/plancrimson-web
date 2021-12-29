@@ -10,7 +10,8 @@ export type SelectedSchedules = Record<string, string>;
 
 type Props = {
   selectedSchedules: SelectedSchedules;
-  setSelectedSchedules: React.Dispatch<React.SetStateAction<SelectedSchedules>> ;
+  setSelectedSchedules: React.Dispatch<React.SetStateAction<SelectedSchedules>>;
+  highlightedClasses: string[];
   year: number;
   season: Season;
   dragStatus: DragStatus;
@@ -18,7 +19,7 @@ type Props = {
 };
 
 const SemesterDisplay: React.FC<Props> = function ({
-  selectedSchedules, setSelectedSchedules, year, season, dragStatus, setDragStatus,
+  selectedSchedules, setSelectedSchedules, highlightedClasses, year, season, dragStatus, setDragStatus,
 }) {
   const { data, addCourses, removeCourses } = useUserData();
   const classIds = useMemo(() => getAllClassIds(data), [data]);
@@ -28,7 +29,7 @@ const SemesterDisplay: React.FC<Props> = function ({
   || Object.values(data.schedules).find((schedule) => schedule.year === year && schedule.season === season)!.id;
   const selectedSchedule = data.schedules[selectedScheduleId];
 
-  let containerStyles = 'p-2 text-center flex-1 rounded-xl shadow-lg ';
+  let containerStyles = 'p-4 text-center flex-1 rounded-xl shadow-lg w-48 ';
   if (dragStatus.dragging) {
     containerStyles += (dragStatus.data.originScheduleId === selectedScheduleId
       ? 'bg-blue-300'
@@ -62,24 +63,30 @@ const SemesterDisplay: React.FC<Props> = function ({
       <ScheduleSelector
         schedules={getSchedulesBySemester(data, year, season).map((schedule) => schedule.id)}
         selectedSchedule={selectedSchedule.id}
-        selectSchedule={(val) => setSelectedSchedules((prev) => ({ ...prev, [year + season]: val }))}
+        selectSchedule={(val) => setSelectedSchedules(
+          (prev) => ({ ...prev, [year + season]: val! }),
+        )}
       />
 
-      <div className="flex flex-col gap-4 mt-2">
-        {selectedSchedule.classes.map(({ classId: id }) => (classCache[id] ? (
-          <CourseCard
-            key={id}
-            course={classCache[id]}
-            scheduleId={selectedScheduleId}
-            setDragStatus={setDragStatus}
-          />
-        ) : (
-          <div>
-            Could not load data for
-            {' '}
-            {id}
-          </div>
-        )))}
+      <div className="flex flex-col items-center gap-4 mt-2">
+        {selectedSchedule.classes.map(({ classId: id }) => (
+          id && classCache[id]
+            ? (
+              <CourseCard
+                key={id}
+                course={classCache[id]}
+                highlight={highlightedClasses.includes(id)}
+                scheduleId={selectedScheduleId}
+                setDragStatus={setDragStatus}
+              />
+            )
+            : (
+              <div key={id}>
+                Could not load data for
+                {' '}
+                {id}
+              </div>
+            )))}
       </div>
     </div>
   );
