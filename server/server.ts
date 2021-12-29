@@ -11,10 +11,16 @@ if (getApps().length === 0) {
   });
 }
 
-type Props = { search: string; searchQuery: string; facets: Array<string>; pageNumber: number };
+type Props = {
+  search: string;
+  searchQuery: string;
+  facets: Array<string>;
+  pageNumber: number;
+  auth?: string;
+};
 
 export default async function searchMyHarvard({
-  search, searchQuery, facets, pageNumber,
+  search, searchQuery, facets, pageNumber, auth,
 }: Partial<Props> = {}): Promise<MyHarvardResponse> {
   const searchText = Object.keys(advancedFields).reduce(
     (acc, key) => acc.replaceAll(
@@ -46,7 +52,7 @@ export default async function searchMyHarvard({
     url: 'https://portal.my.harvard.edu/psc/hrvihprd/EMPLOYEE/EMPL/s/WEBLIB_IS_SCL.ISCRIPT1.FieldFormula.IScript_Search',
     headers: {
       Origin: 'https://portal.my.harvard.edu',
-      Cookie: process.env.MY_HARVARD_COOKIE!,
+      Cookie: auth || process.env.MY_HARVARD_COOKIE!,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     data: formData,

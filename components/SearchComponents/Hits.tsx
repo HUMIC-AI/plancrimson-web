@@ -1,4 +1,4 @@
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaTimes } from 'react-icons/fa';
 import { connectHits } from 'react-instantsearch-core';
 import React from 'react';
 import type { Class } from '../../shared/apiTypes';
@@ -8,7 +8,7 @@ import { getClassId } from '../../src/util';
 import useSearchPageContext from '../../src/context/searchPage';
 
 const Hits = connectHits<Class>(({ hits }) => {
-  const { addCourses } = useUserData();
+  const { addCourses, removeCourses } = useUserData();
   const { selectedSchedule } = useSearchPageContext();
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -17,17 +17,29 @@ const Hits = connectHits<Class>(({ hits }) => {
           <h3 className="font-bold flex">
             <Highlight attribute="Title" hit={hit} />
             {selectedSchedule && (
-            <button
-              type="button"
-              onClick={() => {
-                const data = { classId: getClassId(hit), scheduleId: selectedSchedule };
-                console.log({ data, hit });
-                addCourses(data);
-              }}
-            >
-              <FaPlus className="absolute top-2 right-2" />
-            </button>
-            )}
+              selectedSchedule.classes.find((cls) => cls.classId === getClassId(hit))
+                ? (
+                  <button
+                    type="button"
+                    onClick={() => removeCourses({
+                      classId: getClassId(hit),
+                      scheduleId: selectedSchedule.id,
+                    })}
+                  >
+                    <FaTimes className="absolute top-2 right-2" />
+                  </button>
+                )
+                : (
+                  <button
+                    type="button"
+                    onClick={() => addCourses({
+                      classId: getClassId(hit),
+                      scheduleId: selectedSchedule.id,
+                    })}
+                  >
+                    <FaPlus className="absolute top-2 right-2" />
+                  </button>
+                ))}
           </h3>
           <p className="text-blue-700">
             <Highlight attribute="SUBJECT" hit={hit} />

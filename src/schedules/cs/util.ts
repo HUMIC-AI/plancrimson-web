@@ -3,20 +3,15 @@ import { Requirement } from '../util';
 import TAGS from './tags.json';
 
 export function hasTag(cls: Class, tag: CSCourseTag) {
-  const courseData = TAGS.find(({ courseNumber }) => new RegExp(cls.HU_ALIAS_CATNBR_NS, 'i').test(courseNumber));
-  console.log(cls.HU_ALIAS_CATNBR_NS, '?', courseData);
+  const possibleNames = [cls.HU_SUBJ_CATLG_NBR, cls.HU_ALIAS_CATNBR_NL].filter(Boolean).join('|');
+  const courseData = TAGS.find(({ courseNumber }) => new RegExp(possibleNames, 'i').test(courseNumber));
   if (!courseData) return false;
   return courseData.tags.includes(tag);
 }
 
 export function countTag(tag: CSCourseTag, required = 1): Pick<Requirement, 'reducer' | 'validate'> {
   return {
-    reducer: (prev: number, cls: Class) => {
-      if (hasTag(cls, tag)) {
-        return prev + 1;
-      }
-      return null;
-    },
+    reducer: (prev: number, cls: Class) => (hasTag(cls, tag) ? prev + 1 : null),
     validate: (total) => total >= required,
   };
 }
@@ -50,13 +45,11 @@ const programmingOneAndTwo: Requirement<ProgrammingOneAndTwoAccumulator> = {
       next.programming2 += 1;
       change = true;
     }
-    if (change) {
-      console.log('CHANGING to', next);
-      return next;
-    }
+    if (change) return next;
     return null;
   },
   validate: ({ programming1, programming2 }) => {
+    console.log('VALIDATING', programming1, programming2);
     if (programming2 >= 2) return true;
     if (programming2 >= 1 && programming1 >= 1) return true;
     return false;

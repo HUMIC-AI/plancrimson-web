@@ -1,37 +1,35 @@
+import Link from 'next/link';
 import React, { useMemo } from 'react';
 import useUserData from '../../src/context/userData';
-import { Season } from '../../src/firestoreTypes';
+import { Schedule } from '../../src/firestoreTypes';
 import { useClassCache } from '../../src/hooks';
-import { getAllClassIds, getSchedulesBySemester } from '../../src/util';
+import { getAllClassIds } from '../../src/util';
 import ScheduleSelector from '../ScheduleSelector';
 import CourseCard, { DragStatus } from './CourseCard';
 
-export type SelectedSchedules = Record<string, string>;
+export type SelectedSchedules = Record<string, Schedule>;
 
 type Props = {
-  selectedSchedules: SelectedSchedules;
-  setSelectedSchedules: React.Dispatch<React.SetStateAction<SelectedSchedules>>;
+  title: string;
+  schedules: Schedule[];
+  selectedSchedule: Schedule;
+  selectSchedule: React.Dispatch<Schedule>;
+
   highlightedClasses: string[];
-  year: number;
-  season: Season;
   dragStatus: DragStatus;
   setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>;
 };
 
 const SemesterDisplay: React.FC<Props> = function ({
-  selectedSchedules, setSelectedSchedules, highlightedClasses, year, season, dragStatus, setDragStatus,
+  title, schedules, selectedSchedule, selectSchedule, highlightedClasses, dragStatus, setDragStatus,
 }) {
   const { data, addCourses, removeCourses } = useUserData();
   const classIds = useMemo(() => getAllClassIds(data), [data]);
   const { classCache } = useClassCache(classIds);
 
-  const selectedScheduleId = selectedSchedules[year + season]
-  || Object.values(data.schedules).find((schedule) => schedule.year === year && schedule.season === season)!.id;
-  const selectedSchedule = data.schedules[selectedScheduleId];
-
   let containerStyles = 'p-4 text-center flex-1 rounded-xl shadow-lg w-48 ';
   if (dragStatus.dragging) {
-    containerStyles += (dragStatus.data.originScheduleId === selectedScheduleId
+    containerStyles += (dragStatus.data.originScheduleId === selectedSchedule.id
       ? 'bg-blue-300'
       : 'bg-gray-300 cursor-not-allowed');
   } else {
@@ -50,23 +48,28 @@ const SemesterDisplay: React.FC<Props> = function ({
         ev.preventDefault();
         if (dragStatus.dragging) {
           const { classId, originScheduleId } = dragStatus.data;
-          addCourses({ classId, scheduleId: selectedScheduleId });
+          addCourses({ classId, scheduleId: selectedSchedule.id });
           removeCourses({ classId, scheduleId: originScheduleId });
         }
         setDragStatus({ dragging: false });
       }}
     >
       <h1 className="mb-2 py-2 text-lg border-black border-b-2">
-        {`${year} ${season}`}
+        {title}
       </h1>
 
       <ScheduleSelector
-        schedules={getSchedulesBySemester(data, year, season).map((schedule) => schedule.id)}
-        selectedSchedule={selectedSchedule.id}
-        selectSchedule={(val) => setSelectedSchedules(
-          (prev) => ({ ...prev, [year + season]: val! }),
-        )}
+        schedules={schedules}
+        selectedSchedule={selectedSchedule}
+        selectSchedule={selectSchedule}
       />
+
+      {selectedSchedule && (
+      <Link href={`/semester?selected=${encodeURIComponent(selectedSchedule.id)}`}>
+        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+        <a className="inline-block text-sm py-2 px-3 rounded mt-2 bg-blue-300 hover:bg-blue-700">Show in semester view</a>
+      </Link>
+      )}
 
       <div className="flex flex-col items-center gap-4 mt-2">
         {selectedSchedule.classes.map(({ classId: id }) => (
@@ -76,7 +79,7 @@ const SemesterDisplay: React.FC<Props> = function ({
                 key={id}
                 course={classCache[id]}
                 highlight={highlightedClasses.includes(id)}
-                scheduleId={selectedScheduleId}
+                scheduleId={selectedSchedule.id}
                 setDragStatus={setDragStatus}
               />
             )

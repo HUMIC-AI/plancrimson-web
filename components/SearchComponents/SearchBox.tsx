@@ -76,7 +76,7 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
               </Disclosure.Button>
               <Disclosure.Panel
                 unmount={false}
-                className="absolute mt-2 right-0 w-48 p-2 flex flex-col gap-2 bg-gray-800 rounded-md"
+                className="absolute z-20 mt-2 right-0 w-48 p-2 flex flex-col gap-2 bg-gray-800 rounded-md"
               >
                 {Object.entries(MeiliAttributes.filterableAttributes).map(([attr, label]) => (
                   <Attribute attribute={attr} key={attr} label={label} />

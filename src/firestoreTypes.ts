@@ -30,6 +30,8 @@ export const seasonOrder = {
   Fall: 3,
 } as const;
 
+export type Semester = { year: number, season: Season };
+
 export type Season = keyof typeof seasonOrder;
 
 // firestore user schema
@@ -37,7 +39,7 @@ export interface UserData {
   classYear: number;
   lastLoggedIn: Date;
   schedules: {
-    [semesterId: string]: Schedule;
+    [scheduleId: string]: Schedule;
   };
 }
 

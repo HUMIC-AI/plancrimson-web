@@ -78,7 +78,7 @@ const Evaluation: React.FC<{ report: EvaluationResponse }> = function ({ report 
 
 const Course: React.FC<{
   course: Class;
-  schedule?: Schedule;
+  schedule: Schedule | null;
 }> = function ({ course, schedule }) {
   const {
     ACAD_CAREER: school,

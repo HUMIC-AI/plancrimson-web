@@ -2,7 +2,9 @@ import { User } from 'firebase/auth';
 import { doc, getFirestore, DocumentReference } from 'firebase/firestore';
 import { Class } from '../shared/apiTypes';
 import fetcher from '../shared/fetcher';
-import { Season, seasonOrder, UserData } from './firestoreTypes';
+import {
+  Season, seasonOrder, Semester, UserData,
+} from './firestoreTypes';
 
 export function classNames(...classes: (string | boolean)[]) {
   return classes.filter(Boolean).join(' ');
@@ -14,6 +16,12 @@ export function getUserRef({ uid }: User) {
   return doc(getFirestore(), `users/${uid}`) as DocumentReference<UserData>;
 }
 
+export function compareSemesters(a: Semester, b: Semester) {
+  if (a.year !== b.year) return a.year - b.year;
+  const seasonDiff = seasonOrder[a.season] - seasonOrder[b.season];
+  return seasonDiff;
+}
+
 export function getAllSemesters(data: UserData) {
   const semesters = [] as { year: number, season: Season }[];
   Object.values(data.schedules).forEach(({ year, season }) => {
@@ -22,11 +30,7 @@ export function getAllSemesters(data: UserData) {
       semesters.push({ year, season });
     }
   });
-  return semesters.sort((a, b) => {
-    if (a.year !== b.year) return a.year - b.year;
-    const seasonDiff = seasonOrder[a.season] - seasonOrder[b.season];
-    return seasonDiff;
-  });
+  return semesters.sort(compareSemesters);
 }
 
 export function getSchedulesBySemester(data: UserData, targetYear: number, targetSeason: Season) {

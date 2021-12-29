@@ -2,34 +2,25 @@ import React, {
   createContext, useContext, useMemo, useState,
 } from 'react';
 import { ScheduleSelectorProps } from '../../components/ScheduleSelector';
+import { Schedule } from '../firestoreTypes';
 import useUserData from './userData';
 
-type SearchPageContextType = ScheduleSelectorProps & {
-  highlightEnabled: boolean;
-  setHighlightEnabled: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-export const SearchPageContext = createContext<SearchPageContextType>({
+export const SearchPageContext = createContext<ScheduleSelectorProps>({
   schedules: [],
   selectSchedule: () => null,
   selectedSchedule: null,
-  highlightEnabled: true,
-  setHighlightEnabled: () => null,
 });
 
 export const SearchPageContextProvider: React.FC = function ({ children }) {
   const { data } = useUserData();
-  const [selectedSchedule, selectSchedule] = useState<string | null>(null);
-  const [highlightEnabled, setHighlightEnabled] = useState(true);
+  const [selectedSchedule, selectSchedule] = useState<Schedule | null>(null);
 
-  const context = useMemo<SearchPageContextType>(() => ({
+  const context = useMemo<ScheduleSelectorProps>(() => ({
     selectedSchedule,
     selectSchedule,
-    schedules: Object.keys(data.schedules),
-    highlightEnabled,
-    setHighlightEnabled,
+    schedules: Object.values(data.schedules),
   }), [
-    selectedSchedule, selectSchedule, data.schedules, highlightEnabled, setHighlightEnabled,
+    selectedSchedule, selectSchedule, data.schedules,
   ]);
 
   return (

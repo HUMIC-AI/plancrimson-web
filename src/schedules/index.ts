@@ -47,12 +47,11 @@ const validateSchedules = (
   const reducerResults = schedules.reduce(
     (prev, schedule) => schedule.classes.reduce(
       (acc, cls) => {
+        if (!classCache[cls.classId]) return acc;
         const next = {} as Record<string, any>;
         requirements.forEach((req) => {
           const newValue = req.reducer(acc[req.id], classCache[cls.classId], schedule, userData);
-          console.log(`${JSON.stringify(newValue)}: validating ${cls.classId} against ${req.id}`);
           if (newValue !== null) {
-            console.log('INCREMENTED');
             next[req.id] = newValue;
             classesUsed[req.id].push(cls.classId);
           } else {

@@ -8,6 +8,7 @@ import useUser from '../../src/context/user';
 import useUserData from '../../src/context/userData';
 import { getClassId } from '../../src/util';
 import AdminControls from './AdminControls';
+import { Schedule } from '../../src/firestoreTypes';
 
 const ResultsTab: React.FC<{
   searchParams: SearchParams;
@@ -19,7 +20,7 @@ const ResultsTab: React.FC<{
   const { user } = useUser();
   const { data } = useUserData();
   const [adminToken, setAdminToken] = useState<string | undefined>();
-  const [selectedSchedule, selectSchedule] = useState<string | undefined>();
+  const [selectedSchedule, selectSchedule] = useState<Schedule | null>(null);
 
   useEffect(() => {
     user?.getIdTokenResult().then((token) => token.claims.admin && setAdminToken(token.token));
@@ -46,10 +47,12 @@ const ResultsTab: React.FC<{
   const { classes, searchProperties } = searchResults;
   const pageNumber = searchProperties.PageNumber;
 
+  console.log('SCHEDULES', data.schedules);
+
   return (
     <div className="space-y-2 mt-2">
       <ScheduleSelector
-        schedules={Object.keys(data.schedules)}
+        schedules={Object.values(data.schedules)}
         selectSchedule={selectSchedule}
         selectedSchedule={selectedSchedule}
       />
@@ -105,7 +108,7 @@ const ResultsTab: React.FC<{
           <Course
             key={getClassId(course)}
             course={course}
-            schedule={selectedSchedule ? data.schedules[selectedSchedule] : undefined}
+            schedule={selectedSchedule}
           />
         ))}
       </div>
