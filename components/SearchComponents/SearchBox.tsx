@@ -6,6 +6,7 @@ import MeiliAttributes from '../../shared/meiliAttributes.json';
 import Attribute from './Attribute';
 import useSearchPageContext from '../../src/context/searchPage';
 import ScheduleSelector from '../ScheduleSelector';
+import SortBy from './SortBy';
 
 const Stats = connectStats(({
   nbHits, processingTimeMS,
@@ -28,7 +29,7 @@ const Stats = connectStats(({
 
 const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine }) => {
   const {
-    schedules, selectSchedule, selectedSchedule, highlightEnabled, setHighlightEnabled,
+    schedules, selectSchedule, selectedSchedule,
   } = useSearchPageContext();
 
   return (
@@ -50,7 +51,7 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
             'focus:outline-none focus:shadow-lg shadow transition-shadow',
           )}
         />
-        <label htmlFor="enableHighlight">
+        {/* <label htmlFor="enableHighlight">
           <input
             type="checkbox"
             name="enableHighlight"
@@ -59,7 +60,7 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
             onClick={({ currentTarget }) => setHighlightEnabled(currentTarget.checked)}
           />
           <span className="ml-2">Highlight</span>
-        </label>
+        </label> */}
         <ScheduleSelector
           schedules={schedules}
           selectSchedule={selectSchedule}
@@ -86,6 +87,10 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
         </Disclosure>
       </div>
       <Stats />
+      {/* <SortBy items={[
+        { value: 'courses:CATALOG_NBR:asc', label: 'ascending catalog number' },
+      ]}
+      /> */}
       {isSearchStalled && <p className="mt-2">Loading...</p>}
     </div>
   );

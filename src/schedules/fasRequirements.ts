@@ -1,11 +1,12 @@
 import { Class } from '../../shared/apiTypes';
 import { FAILING_GRADES } from '../firestoreTypes';
-import { getClassId } from '../context/user';
+import { getClassId } from '../util';
 import { getSchoolYear, Requirement } from './util';
 
 const genedRequirement = (id: string, targetType: Class['IS_SCL_DESCR100_HU_SCL_ATTR_GE']) => ({
   id,
   description: `${targetType} General Education Requirement`,
+  sourcePage: 56,
   validate: (count) => count > 0,
   reducer: (prev, cls) => {
     // TODO check pass/fail case
@@ -18,6 +19,7 @@ const genedRequirement = (id: string, targetType: Class['IS_SCL_DESCR100_HU_SCL_
 const divisionalDistribution = (id: string, targetType: Class['IS_SCL_DESCR100_HU_SCL_ATTR_LDD']) => ({
   id,
   description: `${targetType} Divisional Distribution Requirement`,
+  sourcePage: 58,
   validate: (count) => count > 0,
   reducer: (prev, cls) => {
     // TODO check pass/fail case
