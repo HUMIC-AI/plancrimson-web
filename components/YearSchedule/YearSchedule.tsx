@@ -17,7 +17,9 @@ const RequirementsDisplay: React.FC<{ requirements: RequirementGroup }> = functi
       <h1>
         {requirements.groupId}
       </h1>
+
       {requirements.description && <p>{requirements.description}</p>}
+
       <ul className="list-decimal space-y-2">
         {requirements.requirements.map((req) => (
           ('groupId' in req)
@@ -58,28 +60,28 @@ const YearSchedule: React.FC = function () {
   }, [selectedSchedules]);
 
   return (
-    <div className="overflow-scroll w-full">
+    <div className="w-full">
       <div className="p-4">
         Total courses:
         {' '}
         {Object.values(selectedSchedules).reduce((acc, schedule) => acc + data.schedules[schedule].classes.length, 0)}
         /32
       </div>
-      <div className="relative w-full overflow-x-scroll">
-        <div className="flex justify-center">
-          {getAllSemesters(data).map(({ year, season }) => (
-            <SemesterDisplay
-              key={year + season}
-              selectedSchedules={selectedSchedules}
-              setSelectedSchedules={setSelectedSchedules}
-              year={year}
-              season={season}
-              dragStatus={dragStatus}
-              setDragStatus={setDragStatus}
-            />
-          ))}
-        </div>
+
+      <div className="flex overflow-x-scroll">
+        {getAllSemesters(data).map(({ year, season }) => (
+          <SemesterDisplay
+            key={year + season}
+            selectedSchedules={selectedSchedules}
+            setSelectedSchedules={setSelectedSchedules}
+            year={year}
+            season={season}
+            dragStatus={dragStatus}
+            setDragStatus={setDragStatus}
+          />
+        ))}
       </div>
+
       <RequirementsDisplay requirements={basicRequirements} />
     </div>
   );

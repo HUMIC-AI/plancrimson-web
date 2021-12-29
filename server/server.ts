@@ -1,4 +1,5 @@
 import { initializeApp, getApps, applicationDefault } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import qs from 'qs';
 import { MyHarvardResponse } from '../shared/apiTypes';
 import fetcher from '../shared/fetcher';
@@ -56,4 +57,14 @@ export default async function searchMyHarvard({
   }
 
   return data as MyHarvardResponse;
+}
+
+export async function verifyIdToken(token: string | undefined) {
+  if (!token || !token.startsWith('Bearer')) {
+    return false;
+  }
+  const verify = await getAuth().verifyIdToken(token.split(' ')[1]);
+  const user = await getAuth().getUser(verify.uid);
+  if (user.customClaims?.admin) return true;
+  return false;
 }

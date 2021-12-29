@@ -13,10 +13,6 @@
 
 This project is mostly reverse engineered from the `my.harvard` portal via analyzing requests through the `Network` tab in Chrome Dev Tools and filtering by Fetch/XHR
 
-Inspired by:
-
-- https://www.coursicle.com/harvard/
-
 The way it was reverse engineered:
 
 - if you open the "Course Search" page, the request to https://portal.my.harvard.edu/psc/hrvihprd/EMPLOYEE/EMPL/s/WEBLIB_HU_SB.ISCRIPT1.FieldFormula.IScript_BuildSearchBrowser gives responses with the different schools, different categories within each school, and subcategories within each category
@@ -39,3 +35,5 @@ upcoming features:
     - for each page
         - send a new request
         - when the request is received, add the documents to meili search via MeiliClient
+
+

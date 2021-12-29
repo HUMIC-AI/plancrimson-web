@@ -18,7 +18,7 @@ const Home: NextPage = function () {
         <CategorySelect
           currentSearch={searchParams.search}
           search={search}
-          allFacets={searchResults ? searchResults.facets : []}
+          allFacets={searchResults && !('error' in searchResults) ? searchResults.facets : []}
         />
 
         <div className="flex flex-col w-full border-2 border-gray-700 border-dashed p-4 rounded-xl">

@@ -12,6 +12,12 @@ type Props = {
   allFacets: Array<Facet>;
 };
 
+function getSchoolFacet(school: string) {
+  const course = courseData.find(({ HU_SB_ACAD_CAREER: acronym }) => acronym === school);
+  if (!course) return null;
+  return `IS_SCL_DESCR_IS_SCL_DESCRI:${course.DESCR}:School`;
+}
+
 const CategorySelect: React.FC<Props> = function ({ currentSearch, search, allFacets }) {
   const [school, setSchool] = useState('FAS');
 
@@ -19,43 +25,62 @@ const CategorySelect: React.FC<Props> = function ({ currentSearch, search, allFa
 
   return (
     <div>
-      <Listbox value={school} onChange={setSchool} as="div" className="relative">
-        <Listbox.Button className={`relative w-full py-2 pl-3 pr-10 text-left bg-white rounded-lg
+      <div className="flex">
+        <Listbox value={school} onChange={setSchool} as="div" className="relative flex-1">
+          <Listbox.Button className={`relative w-full py-2 pl-3 pr-10 text-left bg-white rounded-lg
                                     shadow-md hover:shadow-lg cursor-default focus:outline-none
                                     focus-visible:ring-2 focus-visible:ring-opacity-75
                                     focus-visible:ring-white focus-visible:ring-offset-orange-300
                                     focus-visible:ring-offset-2 focus-visible:border-indigo-500
                                     sm:text-sm transition-shadow`}
-        >
-          <span className="block truncate">
-            {school}
-          </span>
-          <span className="absolute inset-y-0 right-0 flex items-center pointer-events-none">
-            <FaCaretDown />
-          </span>
-        </Listbox.Button>
-        <FadeTransition>
-          <Listbox.Options className={`absolute w-full py-1 mt-1 overflow-auto text-base bg-white
+          >
+            <span className="block truncate">
+              {school}
+            </span>
+            <span className="absolute inset-y-0 right-0 flex items-center pointer-events-none">
+              <FaCaretDown />
+            </span>
+          </Listbox.Button>
+          <FadeTransition>
+            <Listbox.Options className={`absolute w-full py-1 mt-1 overflow-auto text-base bg-white
                                        rounded-md shadow-lg max-h-60 ring-1 ring-black ring-opacity-5
                                        focus:outline-none sm:text-sm`}
-          >
-            {courseData.map(({ HU_SB_ACAD_CAREER: acronym, DESCR: title }) => (
-              <Listbox.Option
-                key={acronym}
-                value={acronym}
-                className={({ active }) => `${active ? 'text-amber-900 bg-amber-100' : 'text-gray-900'}
+            >
+              {courseData.map(({ HU_SB_ACAD_CAREER: acronym, DESCR: title }) => (
+                <Listbox.Option
+                  key={acronym}
+                  value={acronym}
+                  className={({ active }) => `${active ? 'text-amber-900 bg-amber-100' : 'text-gray-900'}
                         cursor-default select-none relative py-2 pl-10 pr-4`}
-              >
-                {`${title} (${acronym})`}
-              </Listbox.Option>
-            ))}
-          </Listbox.Options>
-        </FadeTransition>
-      </Listbox>
+                >
+                  {`${title} (${acronym})`}
+                </Listbox.Option>
+              ))}
+            </Listbox.Options>
+          </FadeTransition>
+        </Listbox>
 
-      <button type="button" onClick={() => search(({ search: '' }))}>
-        Search all
-      </button>
+        {/* 342, 207, 116, 34 */}
+        {school && (
+        <button
+          type="button"
+          onClick={() => {
+            const facet = getSchoolFacet(school);
+            if (facet) {
+              search(({
+                facets: [],
+                search: '',
+              }));
+            } else {
+              alert(`No option found for ${school}.`);
+            }
+          }}
+          className="py-2 px-3 bg-blue-300 rounded shadow sm:text-sm ml-2"
+        >
+          Search all
+        </button>
+        )}
+      </div>
 
       {/* filters */}
       {allFacets.length > 0 && (
@@ -97,7 +122,10 @@ const CategorySelect: React.FC<Props> = function ({ currentSearch, search, allFa
                         type="button"
                         onClick={() => search((prev) => ({
                           ...prev!,
-                          facets: [...(prev!.facets || []), `${childFacetName}:${childFacetValue}:${childFacetLabel}`],
+                          facets: [
+                            ...(prev!.facets || []),
+                            `${childFacetName}:${childFacetValue}:${childFacetLabel}`,
+                          ],
                         }))}
                         className={`text-left rounded transition-colors ${filters!.length === 1 ? 'line-through cursor-not-allowed' : 'hover:bg-gray-500'}`}
                         disabled={filters!.length === 1}

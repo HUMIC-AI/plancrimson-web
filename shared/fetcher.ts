@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig } from 'axios';
 
-export class FetchError extends Error {
-  constructor(message: string, public status: number, public info: any) {
+export class FetchError<Info = any> extends Error {
+  constructor(message: string, public status: number, public info: Info) {
     super(message);
     this.name = 'FetchError';
   }

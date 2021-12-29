@@ -34,7 +34,7 @@ const CourseCard: React.FC<Props> = function ({ course, setDragStatus, scheduleI
   return (
     <button
       type="button"
-      className="h-36 bg-transparent outline-none"
+      className="h-40 w-40 bg-transparent outline-none"
       onClick={() => setOpen(!open)}
       style={{
         perspective: '100rem',
@@ -57,7 +57,7 @@ const CourseCard: React.FC<Props> = function ({ course, setDragStatus, scheduleI
           transformStyle: 'preserve-3d',
         }}
       >
-        <div className="bg-green-500 rounded absolute w-full h-full flex flex-col items-center justify-center" style={{ backfaceVisibility: 'hidden' }}>
+        <div className="bg-green-500 text-sm rounded absolute inset-0 flex flex-col items-center justify-center" style={{ backfaceVisibility: 'hidden' }}>
           <p>{`${subject}${catalogNumber}`}</p>
           <div>
             <p>

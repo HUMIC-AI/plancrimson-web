@@ -1,7 +1,23 @@
+export type SearchParams = Partial<{
+  search: string;
+  pageNumber: number;
+  facets: Array<string>;
+  searchQuery: string;
+  includeEvals: boolean;
+  updateDb: boolean
+}>;
+
+export type FailedClasses = Record<string, {
+  error: string;
+}>;
+
 export type SearchResults = {
   classes: ExtendedClass[];
   facets: Facet[];
-  searchProperties: SearchProperties
+  searchProperties: SearchProperties;
+  failedClasses?: FailedClasses;
+} | {
+  error: string;
 };
 
 export type ExtendedClass = Class & {
@@ -9,7 +25,7 @@ export type ExtendedClass = Class & {
   evals?: PossibleEvaluationResponse[]
 };
 
-// ==================== MY.HARVARD AND EVALUATION TYPES BELOW ====================
+// ==================== MY.HARVARD AND COURSE EVALUATION TYPES BELOW ====================
 
 export type MyHarvardResponse = [
   {
@@ -322,12 +338,3 @@ export interface ReasonsForEnrolling {
   distribution: number;
   qrd: number;
 }
-
-export type SearchParams = Partial<{
-  search: string;
-  pageNumber: number;
-  facets: Array<string>;
-  searchQuery: string;
-  includeEvals: boolean;
-  updateDb: boolean
-}>;

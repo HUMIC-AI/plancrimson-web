@@ -23,15 +23,28 @@ function assertExploranceCookie() {
   return cookie;
 }
 
+/**
+ * @param cls the class to get evaluations for
+ * @param withEvals whether to include evaluations. If this is set to true and the evaluations can't
+ * be fetched, will throw a FetchError containing the error message and the data
+ * @returns the class object with the added textDescirption and evals properties
+ */
 export async function extendClass(cls: Class, withEvals = true) {
-  const ret = { ...cls, textDescription: getDescriptionText(cls) } as ExtendedClass;
+  const ret: ExtendedClass = { ...cls, textDescription: getDescriptionText(cls) };
   if (withEvals) {
     try {
       const evals = await getAllEvaluations(cls.ACAD_CAREER, cls.SUBJECT + cls.CATALOG_NBR);
       ret.evals = evals;
     } catch (err) {
       const { message } = err as Error;
-      throw new FetchError(`error fetching evaluations for class ${cls.SUBJECT + cls.CATALOG_NBR}`, 0, message);
+      throw new FetchError(
+        `error fetching evaluations for class ${cls.SUBJECT + cls.CATALOG_NBR}`,
+        0,
+        {
+          error: message,
+          data: ret,
+        },
+      );
     }
   }
   return ret;

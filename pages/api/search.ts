@@ -1,18 +1,15 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiHandler } from 'next';
-import searchMyHarvard from 'server/server';
+import searchMyHarvard, { verifyIdToken } from 'server/server';
 import { extendClass } from 'server/evaluation';
-import { getAuth } from 'firebase-admin/auth';
 import ClassIndex from '../../shared/meilisearch';
-import {
-  Class, ExtendedClass, Facet, SearchProperties, SearchResults,
+import type {
+  Class, ExtendedClass, Facet, FailedClasses, SearchProperties, SearchResults,
 } from '../../shared/apiTypes';
+import { FetchError } from '../../shared/fetcher';
+import { getClassId } from '../../src/util';
 
-type ResponseData = SearchResults | {
-  error?: string
-};
-
-const handler: NextApiHandler<ResponseData> = async (req, res) => {
+const handler: NextApiHandler<SearchResults> = async (req, res) => {
   const {
     search, facets, pageNumber, searchQuery, includeEvals = false, updateDb = false,
   } = req.body;
@@ -31,7 +28,11 @@ const handler: NextApiHandler<ResponseData> = async (req, res) => {
   let searchProperties: SearchProperties;
 
   try {
-    [{ ResultsCollection: rawResults }, { Facets: resultFacets }, searchProperties] = await searchMyHarvard({
+    [
+      { ResultsCollection: rawResults },
+      { Facets: resultFacets },
+      searchProperties,
+    ] = await searchMyHarvard({
       search, searchQuery, facets, pageNumber,
     });
   } catch (err: any) {
@@ -39,40 +40,48 @@ const handler: NextApiHandler<ResponseData> = async (req, res) => {
     return;
   }
 
-  const classes = await Promise.allSettled(rawResults.map((course) => extendClass(course, includeEvals || updateDb)));
+  // the search was successful; now fetch additional data (text description and evaluations)
+  // for the returned classes
 
-  if (classes.find((result) => result.status === 'rejected')) {
-    res.status(500).json({
-      error: `Failed fetching evaluations: ${classes
-        .map((result) => (result.status === 'rejected' ? result.reason : null))
-        .filter((val) => val !== null)
-        .join('; ')}`,
-    });
-    return;
-  }
+  const classes = await Promise.allSettled(rawResults.map(
+    (cls) => extendClass(cls, includeEvals || updateDb),
+  ));
 
-  const successfulClasses = classes
-    .map((result) => (result.status === 'fulfilled' ? result.value : null))
-    .filter((val) => val !== null) as ExtendedClass[];
+  const failedClasses: FailedClasses = {};
+
+  const extendedClasses = classes
+    .map((result) => {
+      if (result.status === 'fulfilled') {
+        return result.value;
+      }
+
+      // if the promise threw, the data is included in the error (see extendClass)
+      const reason = result.reason as FetchError;
+      const error = reason.info.message as string;
+      const data = reason.info.data as ExtendedClass;
+      failedClasses[getClassId(data)] = { error };
+      // still return the class data
+      return data;
+    }) as ExtendedClass[];
 
   if (updateDb) {
+    // user must be authenticated to modify the database
     const token = req.headers.authorization;
-    if (!token || !token.startsWith('Bearer')) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
-    const verify = await getAuth().verifyIdToken(token.split(' ')[1]);
-    const user = await getAuth().getUser(verify.uid);
-    if (user.customClaims?.admin) {
-      await ClassIndex.addDocuments(successfulClasses);
-      console.log('added documents', JSON.stringify(classes).slice(0, 500));
-    } else {
+    if (!verifyIdToken(token)) {
       res.status(401).json({ error: 'Must be an administrator to update' });
       return;
     }
+
+    await ClassIndex.addDocuments(extendedClasses);
+    console.log(`added ${extendedClasses.length} documents to MeiliSearch`);
   }
 
-  res.json({ classes: successfulClasses, facets: resultFacets, searchProperties });
+  res.json({
+    classes: extendedClasses,
+    facets: resultFacets,
+    searchProperties,
+    failedClasses,
+  });
 };
 
 export default handler;

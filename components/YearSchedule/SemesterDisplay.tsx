@@ -28,7 +28,7 @@ const SemesterDisplay: React.FC<Props> = function ({
   || Object.values(data.schedules).find((schedule) => schedule.year === year && schedule.season === season)!.id;
   const selectedSchedule = data.schedules[selectedScheduleId];
 
-  let containerStyles = 'h-full p-2 text-center flex-1 max-w-xs rounded-xl shadow-lg ';
+  let containerStyles = 'p-2 text-center flex-1 rounded-xl shadow-lg ';
   if (dragStatus.dragging) {
     containerStyles += (dragStatus.data.originScheduleId === selectedScheduleId
       ? 'bg-blue-300'
