@@ -33,6 +33,16 @@ const ResultsTab: React.FC<{
     return <p>Loading...</p>;
   }
 
+  if ('error' in searchResults) {
+    return (
+      <p className="text-red-500">
+        An error occurred:
+        {' '}
+        <code>{JSON.stringify(searchResults.error)}</code>
+      </p>
+    );
+  }
+
   const { classes, searchProperties } = searchResults;
   const pageNumber = searchProperties.PageNumber;
 

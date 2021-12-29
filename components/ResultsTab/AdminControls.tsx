@@ -82,7 +82,6 @@ const AdminControls: React.FC<Props> = function ({ searchParams, adminToken, tot
         pageNumber,
         adminToken,
       }).then((response) => {
-        console.log(response);
         if ('error' in response) {
           setRequestStatus(pageNumber, {
             error: response.error,

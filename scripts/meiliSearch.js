@@ -17,10 +17,10 @@ const deleteIndex = () => {
 const searchableAttributes = [
   'Title', // eg "Abstraction and Design in Computation"
   'SUBJECT', // eg "COMPSCI"
-  'CATALOG_NBR', // eg "51"
+  'CATALOG_NBR', // eg " 51"
   'HU_SBJCT_CATNBR_NL', // eg "COMPSCI51"
   'HU_ALIAS_CATNBR_NS', // eg "CS51"
-  'IS_SCL_DESCR', // eg "<p>Fundamental concepts in the design of computer programs..."
+  'textDescription', // eg "Fundamental concepts in the design of computer programs..."
 
   'DAY_OF_WEEK', // eg ["Tuesday", "Thursday"]
   'ACAD_CAREER', // eg "FAS"
@@ -49,10 +49,13 @@ const setAttributes = () => {
     filterableAttributes: [
       'CLASS_NBR',
       'SUBJECT',
+      'ACAD_ORG',
       'DAY_OF_WEEK',
       'LOCATION_DESCR_LOCATION',
       'SSR_COMPONENTDESCR',
+      'IS_SCL_DESCR100_HU_SCL_ATTR_LEVL',
     ],
+    sortableAttributes: ['CATALOG_NBR', 'IS_SCL_STRT_TM_DEC'],
     searchableAttributes,
     displayedAttributes: searchableAttributes,
   });

@@ -25,6 +25,19 @@ export type ExtendedClass = Class & {
   evals?: PossibleEvaluationResponse[]
 };
 
+// also used for sorting
+export const DAYS_OF_WEEK = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+] as const;
+
+export type DayOfWeek = typeof DAYS_OF_WEEK[number];
+
 // ==================== MY.HARVARD AND COURSE EVALUATION TYPES BELOW ====================
 
 export type MyHarvardResponse = [
@@ -77,7 +90,7 @@ export interface Class {
 
   Modified: Date; // latest date modified, eg "2021-12-11 23:34:23.000000"
 
-  DAY_OF_WEEK: string | string[]; // days of the week, eg ["Monday", "Wednesday", "Friday"]
+  DAY_OF_WEEK: DayOfWeek | DayOfWeek[]; // days of the week, eg ["Monday", "Wednesday", "Friday"]
   IS_SCL_MEETING_PAT: string; // see DAY_OF_WEEK, eg "Th"
   // "Y" or "N"
   MON: 'Y' | 'N';

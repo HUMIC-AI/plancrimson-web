@@ -1,65 +1,43 @@
 import React from 'react';
-import {
-  InstantSearch, Highlight,
-} from 'react-instantsearch-dom';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
-import { connectHits, connectSearchBox } from 'react-instantsearch-core';
-import { Class } from '../shared/apiTypes';
+import { InstantSearch } from 'react-instantsearch-core';
+import { CurrentRefinements } from 'react-instantsearch-dom';
 import Layout from '../components/Layout/Layout';
+import Attribute from '../components/SearchComponents/Attribute';
+import SearchBox from '../components/SearchComponents/SearchBox';
+import Hits from '../components/SearchComponents/Hits';
+import MeiliAttributes from '../shared/meiliAttributes.json';
+import { SearchPageContextProvider } from '../src/context/searchPage';
 
 const searchClient = instantMeiliSearch(
   'http://127.0.0.1:7700',
 );
 
-const Hits = connectHits<Class>(({ hits }) => (
-  <div className="w-full flex flex-col gap-4">
-    {hits.map((hit) => (
-      <div className="bg-gray-300 rounded p-2 shadow">
-        <h3 className="font-bold">
-          <Highlight attribute="Title" hit={hit} />
-        </h3>
-        <p className="text-blue-700">{hit.SUBJECT + hit.CATALOG_NBR}</p>
-        <p className="text-sm">
-          {hit.textDescription || hit.IS_SCL_DESCR}
-        </p>
-      </div>
-    ))}
-  </div>
-));
-
-const CustomSearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine }) => (
-  <div>
-    <input
-      type="search"
-      placeholder="Search courses"
-      autoComplete="off"
-      autoCapitalize="off"
-      autoCorrect="off"
-      spellCheck="false"
-      value={currentRefinement}
-      onChange={(ev) => refine(ev.currentTarget.value)}
-      maxLength={512}
-      required
-      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-lg transition-shadow"
-    />
-    {isSearchStalled && <p className="mt-2">Loading...</p>}
-  </div>
-));
-
-const Search = function () {
+const SearchPage = function () {
   return (
     <Layout>
       <InstantSearch
         indexName="courses"
         searchClient={searchClient}
       >
-        <div className="mx-auto max-w-lg p-4 shadow-lg border-2 border-gray-300 rounded-lg space-y-4">
-          <CustomSearchBox />
-          <Hits />
+        {/* <Configure hitsPerPage={10} /> */}
+        <div className="flex gap-2">
+          <div className="flex-shrink-0 w-64 p-2 hidden md:flex flex-col gap-2 bg-gray-800 rounded-md">
+            {Object.entries(MeiliAttributes.filterableAttributes).map(([attr, label]) => (
+              <Attribute attribute={attr} key={attr} label={label} />
+            ))}
+          </div>
+          <div className="flex-1 p-4 shadow-lg border-2 border-gray-300 rounded-lg space-y-4">
+            <SearchPageContextProvider>
+              <SearchBox />
+              <CurrentRefinements />
+              <Hits />
+            </SearchPageContextProvider>
+          </div>
         </div>
       </InstantSearch>
     </Layout>
   );
 };
 
-export default Search;
+export default SearchPage;

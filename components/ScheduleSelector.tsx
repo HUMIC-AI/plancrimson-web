@@ -5,42 +5,49 @@ import { classNames } from '../src/util';
 import FadeTransition from './FadeTransition';
 
 export interface ScheduleSelectorProps {
-  selectedSchedule?: string;
-  selectSchedule: React.Dispatch<string>;
+  selectedSchedule: string | null;
+  selectSchedule: React.Dispatch<string | null>;
+  schedules: string[];
 }
 
-type Props = ScheduleSelectorProps & { schedules: string[]; };
-
-const ScheduleSelector: React.FC<Props> = function ({ schedules, selectedSchedule, selectSchedule }) {
+const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({ schedules, selectedSchedule, selectSchedule }) {
   return (
     <div className="relative inline-block">
       <Listbox
         value={selectedSchedule}
         onChange={selectSchedule}
       >
-        <Listbox.Button className={classNames(
-          schedules.length === 0 && 'cursor-not-allowed text-gray-700 bg-gray-300',
-          'shadow rounded flex items-center py-2 px-3',
-        )}
-        >
-          {selectedSchedule || 'Select a schedule'}
-          {' '}
-          <FaAngleDown className="ml-4" />
-        </Listbox.Button>
-        {schedules.length > 0 && (
-        <FadeTransition>
-          <Listbox.Options className="absolute mt-2 w-full shadow z-20">
-            {schedules.map((schedule) => (
-              <Listbox.Option
-                key={schedule}
-                value={schedule}
-                className="even:bg-white w-full cursor-default odd:bg-gray-300 bg-opacity-50 py-2 px-3 first:rounded-t last:rounded-b focus:ring-blue-700 focus:ring-2"
-              >
-                {schedule}
-              </Listbox.Option>
-            ))}
-          </Listbox.Options>
-        </FadeTransition>
+        {({ open }) => (
+          <>
+            <Listbox.Button className={classNames(
+              schedules.length === 0 && 'cursor-not-allowed text-gray-700 bg-gray-300',
+              'shadow text-sm font-semibold rounded flex items-center py-2 px-3 min-w-max',
+            )}
+            >
+              {selectedSchedule || 'Select a schedule'}
+              {' '}
+              <FaAngleDown className={classNames(
+                'ml-4',
+                open && 'transform rotate-180 transition-transform',
+              )}
+              />
+            </Listbox.Button>
+            {schedules.length > 0 && (
+            <FadeTransition>
+              <Listbox.Options className="absolute mt-2 w-full shadow z-20">
+                {schedules.map((schedule) => (
+                  <Listbox.Option
+                    key={schedule}
+                    value={schedule}
+                    className="even:bg-white w-full cursor-default odd:bg-gray-300 bg-opacity-50 py-2 px-3 first:rounded-t last:rounded-b focus:ring-blue-700 focus:ring-2"
+                  >
+                    {schedule}
+                  </Listbox.Option>
+                ))}
+              </Listbox.Options>
+            </FadeTransition>
+            )}
+          </>
         )}
       </Listbox>
     </div>

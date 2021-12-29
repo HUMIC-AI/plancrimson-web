@@ -1,0 +1,8 @@
+{
+  "filterableAttributes": {
+    "SUBJECT": "Subject",
+    "DAY_OF_WEEK": "Day of week",
+    "LOCATION_DESCR_LOCATION": "Location",
+    "SSR_COMPONENTDESCR": "Class type"
+  }
+}

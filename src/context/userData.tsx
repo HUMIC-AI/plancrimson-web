@@ -66,8 +66,6 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
 
   const createSchedule: UserDataContextType['createSchedule'] = useCallback(async (scheduleId, year, season) => {
     setUserData((prev) => {
-      console.log({ prev });
-
       if (scheduleId in prev.schedules) return prev;
       // eslint-disable-next-line no-param-reassign
       prev.schedules[`${scheduleId}`] = {
@@ -173,7 +171,6 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
     error,
   }), [userData, addCourses, removeCourses, createSchedule, error]);
 
-  console.log({ value });
   return (
     <UserDataContext.Provider value={value}>
       {children}
