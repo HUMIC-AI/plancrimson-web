@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
+import { getAllClassIds } from '../../shared/util';
 import useUserData from '../../src/context/userData';
 import { useClassCache } from '../../src/hooks';
-import { getAllClassIds } from '../../src/util';
 import ScheduleSelector, { ScheduleSelectorProps } from '../ScheduleSelector';
 import Calendar from './Calendar';
 

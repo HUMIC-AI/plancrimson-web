@@ -4,8 +4,8 @@ import React from 'react';
 import type { Class } from '../../shared/apiTypes';
 import Highlight from './Highlight';
 import useUserData from '../../src/context/userData';
-import { getClassId } from '../../src/util';
 import useSearchPageContext from '../../src/context/searchPage';
+import { getClassId } from '../../shared/util';
 
 const Hits = connectHits<Class>(({ hits }) => {
   const { addCourses, removeCourses } = useUserData();

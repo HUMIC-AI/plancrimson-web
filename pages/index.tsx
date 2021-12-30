@@ -26,8 +26,11 @@ const Home: NextPage = function () {
             ? (
               <p>
                 An error occurred. Please try again.
+                {' '}
                 <code>
                   {searchError.message}
+                  {' '}
+                  {searchError.info.error}
                 </code>
               </p>
             )

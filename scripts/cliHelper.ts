@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync } from 'fs';
 import { extendClass } from '../server/evaluation';
 import { Class } from '../shared/apiTypes';
 import { FetchError } from '../shared/fetcher';

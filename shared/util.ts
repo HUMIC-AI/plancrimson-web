@@ -1,19 +1,19 @@
-import { User } from 'firebase/auth';
-import { doc, getFirestore, DocumentReference } from 'firebase/firestore';
-import { Class } from '../shared/apiTypes';
-import fetcher from '../shared/fetcher';
 import {
-  Season, seasonOrder, Semester, UserData,
+  Semester, seasonOrder, UserData, Season,
 } from './firestoreTypes';
+import { Class } from './apiTypes';
+import fetcher from './fetcher';
 
 export function classNames(...classes: (string | boolean)[]) {
   return classes.filter(Boolean).join(' ');
 }
 
-export function getClassId(course: Class) { return course.HU_STRM_CLASSNBR; }
+export function getClassId(course: Class) {
+  return course.HU_STRM_CLASSNBR;
+}
 
-export function getUserRef({ uid }: User) {
-  return doc(getFirestore(), `users/${uid}`) as DocumentReference<UserData>;
+export function getNumCredits(course: Class) {
+  return parseInt(course.HU_UNITS_MIN, 10);
 }
 
 export function compareSemesters(a: Semester, b: Semester) {

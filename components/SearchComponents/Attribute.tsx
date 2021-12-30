@@ -2,7 +2,7 @@ import { Disclosure } from '@headlessui/react';
 import React, { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { DayOfWeek, DAYS_OF_WEEK } from '../../shared/apiTypes';
-import { classNames } from '../../src/util';
+import { classNames } from '../../shared/util';
 import RefinementList from './RefinementList';
 
 function compareItems(a: { label: string }, b: { label: string }) {

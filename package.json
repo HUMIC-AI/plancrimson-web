@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:output": "tsc --noEmit false --outDir build --module commonjs",
     "start": "next start",
     "lint": "next lint"
   },

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout/Layout';
 import SemesterSchedule from '../components/SemesterSchedule/SemesterSchedule';
 import useUserData from '../src/context/userData';
-import { Schedule } from '../src/firestoreTypes';
+import { Schedule } from '../shared/firestoreTypes';
 
 const SemesterPage: React.FC = function () {
   const { data } = useUserData();

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { ExtendedClass, SearchParams } from '../../shared/apiTypes';
 import fetcher, { FetchError } from '../../shared/fetcher';
-import { classNames } from '../../src/util';
+import { classNames } from '../../shared/util';
 import DownloadLink from '../DownloadLink';
 
 type DownloadStatus = {
@@ -21,6 +21,7 @@ const AdminControls: React.FC<Props> = function ({ searchParams, adminToken, tot
   const [batchStatus, setBatchStatus] = useState<null | 'loading' | 'done'>(null);
   const [doBatch, setDoBatch] = useState(true);
   const [batchSize, setBatchSize] = useState(50);
+  const [force, setForce] = useState(false);
 
   // **pages** (not classes) of class information on my.harvard
   // are batched into groups of `BATCH_SIZE` pages
@@ -64,23 +65,33 @@ const AdminControls: React.FC<Props> = function ({ searchParams, adminToken, tot
         },
       });
       if ('error' in response) {
-        setRequestStatus(pageNumber, {
-          error: response.error,
-        });
+        if (force) {
+          await fetchPage(pageNumber);
+        } else {
+          setRequestStatus(pageNumber, {
+            error: response.error,
+          });
+        }
+      } else if (force) {
+        await fetchPage(pageNumber);
       } else {
         setRequestStatus(pageNumber, { data: response.classes });
       }
     } catch (err) {
+      if (force) {
+        await fetchPage(pageNumber);
+      } else {
       // originally the server would throw if it had trouble finding evaluations
       // but now this should rarely ever run
-      const { message, info, status } = err as FetchError;
-      const errInfo = JSON.stringify(info);
-      setRequestStatus(pageNumber, {
-        error: classNames(
-          message,
-          status >= 0 && (errInfo.length > 500 ? `${errInfo.slice(0, 500)}...` : errInfo),
-        ),
-      });
+        const { message, info, status } = err as FetchError;
+        const errInfo = JSON.stringify(info);
+        setRequestStatus(pageNumber, {
+          error: classNames(
+            message,
+            status >= 0 && (errInfo.length > 500 ? `${errInfo.slice(0, 500)}...` : errInfo),
+          ),
+        });
+      }
     }
   }
 
@@ -100,6 +111,10 @@ const AdminControls: React.FC<Props> = function ({ searchParams, adminToken, tot
 
     Promise.allSettled(promises).then(() => {
       setBatchStatus('done');
+      if (force && batch < totalBatches - 1) {
+        loadBatch((batch + 1) * batchSize + 1);
+        setBatch(batch + 1);
+      }
     });
   }
 
@@ -114,6 +129,10 @@ const AdminControls: React.FC<Props> = function ({ searchParams, adminToken, tot
           <label htmlFor="doBatch">
             <input type="checkbox" name="doBatch" id="doBatch" checked={doBatch} onChange={({ currentTarget }) => setDoBatch(currentTarget.checked)} />
             Batch search?
+          </label>
+          <label htmlFor="forceLoad">
+            <input type="checkbox" name="forceLoad" id="forceLoad" checked={force} onChange={({ currentTarget }) => setForce(currentTarget.checked)} />
+            Automatic load?
           </label>
           <input type="number" value={batchSize} onChange={({ currentTarget }) => setBatchSize(parseInt(currentTarget.value, 10))} />
           <button
@@ -169,7 +188,7 @@ const AdminControls: React.FC<Props> = function ({ searchParams, adminToken, tot
                         {' '}
                         classes,
                         {' '}
-                        {status.data.filter((cls) => cls.evals && cls.evals.length > 0).length}
+                        {status.data.filter((cls) => cls.meanRating).length}
                         {' '}
                         with evaluations
                       </DownloadLink>

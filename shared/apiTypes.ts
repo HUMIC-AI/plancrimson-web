@@ -22,7 +22,10 @@ export type SearchResults = {
 
 export type ExtendedClass = Class & {
   textDescription: string;
-  evals?: PossibleEvaluationResponse[]
+  meanClassSize?: number;
+  meanRating?: number;
+  meanRecommendation?: number;
+  meanHours?: number;
 };
 
 // also used for sorting
@@ -84,7 +87,6 @@ export interface Class {
   SearchKey: string; // dunno, eg "QGJHBZSZQ7qzz8utcC2y2dKDIYk="
   IS_SCL_DESCR: string; // course description with html, eg "<p>Practicum emphasizing an active but reflective approach to teaching applied sciences and engineering...</p>"
   IS_SCL_DESCR_HU_SCL_DESCRNOHTML: string; // description (still with html), eg "<p>Cryptography is as old as human communication itself...</p>"
-  textDescription?: string; // MANUALLY ADDED
 
   // ==================== TIME RELATED FIELDS ====================
 
@@ -318,10 +320,12 @@ export type SearchProperties = {
   BoostExcludeNonBoosted: string;
 };
 
-export interface EvaluationResponse {
+export interface Evaluation {
   url: string;
-  term: number;
+  year: number;
   season: string;
+  courseName: string;
+  instructorName: string;
   'Course Response Rate': CourseResponseRate;
   'Course General Questions': CourseGeneralQuestions;
   'General Instructor Questions': GeneralInstructorQuestions;
@@ -330,7 +334,7 @@ export interface EvaluationResponse {
   'What was/were your reason(s) for enrolling in this course? (Please check all that apply)': ReasonsForEnrolling;
 }
 
-export type PossibleEvaluationResponse = EvaluationResponse | {
+export type PossibleEvaluationResponse = Evaluation | {
   url: string;
   error: string
 };
@@ -344,9 +348,9 @@ export interface CourseGeneralQuestions {
 }
 
 export interface AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc {
-  count: string;
-  votes: number[];
-  courseMean: number;
+  count: number;
+  votes: (number | null)[];
+  courseMean: number | null;
   fasMean: number;
 }
 
@@ -367,7 +371,7 @@ export interface GeneralInstructorQuestions {
 
 export interface RecommendationsStats {
   recommendations: number[];
-  total: number;
+  count: number;
   ratio: number;
   mean: number;
   median: number;

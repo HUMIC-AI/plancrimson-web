@@ -7,8 +7,8 @@ import React, {
 } from 'react';
 import {
   UserData, Season, UserClassData, Schedule,
-} from '../firestoreTypes';
-import { getUserRef } from '../util';
+} from '../../shared/firestoreTypes';
+import { getUserRef } from '../hooks';
 
 type ClassAndSchedule = { classId: string; scheduleId: string };
 
@@ -72,7 +72,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
         id: scheduleId, season, year, classes: [],
       };
       if (user) {
-        setDoc(getUserRef(user), { schedules: prev.schedules }, { merge: true })
+        setDoc(getUserRef(user.uid), { schedules: prev.schedules }, { merge: true })
           .then(() => console.log('user updated'))
           .catch((err) => setError(err));
       }
@@ -91,7 +91,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
         }
       });
       if (user) {
-        updateDoc(getUserRef(user), firestoreUpdate as any);
+        updateDoc(getUserRef(user.uid), firestoreUpdate as any);
       }
       return { ...prev };
     });
@@ -121,7 +121,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
       });
 
       if (user) {
-        updateDoc(getUserRef(user), firestoreUpdate as any)
+        updateDoc(getUserRef(user.uid), firestoreUpdate as any)
           .then(() => console.log('doc updated'))
           .catch((err) => console.error('error removing courses', err));
       }
@@ -133,7 +133,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
   useEffect(() => {
     if (!user) return;
 
-    const unsub = onSnapshot<UserData>(getUserRef(user), (s) => {
+    const unsub = onSnapshot<UserData>(getUserRef(user.uid), (s) => {
       const now = new Date();
       setUserData({
         classYear: s.get('classYear') || now.getFullYear() + (now.getMonth() > 5 ? 4 : 3),
@@ -142,12 +142,12 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
       });
     }, (err) => setError(err));
 
-    getDoc(getUserRef(user)).then((snap) => {
+    getDoc(getUserRef(user.uid)).then((snap) => {
       // create a document if one doesn't exist. this also triggers the listener below
       if (!snap.exists()) {
         const now = new Date();
         const classYear = now.getFullYear() + (now.getMonth() > 5 ? 4 : 3);
-        setDoc(getUserRef(user), {
+        setDoc(getUserRef(user.uid), {
           lastLoggedIn: serverTimestamp(),
           classYear,
           schedules: generateSchedules(classYear),

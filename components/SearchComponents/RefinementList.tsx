@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { connectRefinementList } from 'react-instantsearch-core';
-import { classNames } from '../../src/util';
+import { classNames } from '../../shared/util';
 
 const RefinementList = connectRefinementList(({ items, refine }) => {
   const [allItems, setAllItems] = useState(items);

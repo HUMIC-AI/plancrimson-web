@@ -1,8 +1,8 @@
 import React, { createRef, useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { Class } from '../../shared/apiTypes';
+import { getClassId, classNames } from '../../shared/util';
 import useUserData from '../../src/context/userData';
-import { classNames, getClassId } from '../../src/util';
 
 export type DragStatus = {
   dragging: false;

@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { FaMinusCircle, FaPlusCircle } from 'react-icons/fa';
 import cheerio from 'cheerio';
 import useSWR from 'swr';
-import { Class, EvaluationResponse } from '../../shared/apiTypes';
+import { Class, Evaluation } from '../../shared/apiTypes';
 import fetcher from '../../shared/fetcher';
 import useUserData from '../../src/context/userData';
-import { Schedule } from '../../src/firestoreTypes';
-import { getClassId } from '../../src/util';
+import { Schedule } from '../../shared/firestoreTypes';
+import { getClassId } from '../../shared/util';
 
 export function getYearAndSeason(course: Class) {
   const season = /Fall/i.test(course.IS_SCL_DESCR_IS_SCL_DESCRH) ? 'Fall' : 'Spring' as const;
@@ -41,7 +41,7 @@ const Percentages = function ({ categories }: { categories: Array<number> }) {
   );
 };
 
-const Evaluation: React.FC<{ report: EvaluationResponse }> = function ({ report }) {
+const EvaluationComponent: React.FC<{ report: Evaluation }> = function ({ report }) {
   const {
     mean, median, mode, stdev,
   } = report['On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.'];
@@ -49,7 +49,7 @@ const Evaluation: React.FC<{ report: EvaluationResponse }> = function ({ report 
     <div className="rounded border-black border-2 p-2 flex flex-col items-stretch gap-4">
       <div className="flex justify-between items-center border-black border-b-2 pb-2">
         <h3 className="font-bold">
-          {`${report.term} ${report.season}`}
+          {`${report.year} ${report.season}`}
         </h3>
         <a href={report.url} className="text-blue-300 hover:text-blue-500">
           View report
@@ -63,7 +63,7 @@ const Evaluation: React.FC<{ report: EvaluationResponse }> = function ({ report 
 
       <div>
         <h4 className="font-bold">Overall evaluation</h4>
-        <Percentages categories={report['Course General Questions']['Evaluate the course overall.'].votes.slice().reverse()} />
+        <Percentages categories={(report['Course General Questions']['Evaluate the course overall.'].votes as number[]).slice().reverse()} />
       </div>
 
       <div>
@@ -198,7 +198,7 @@ const Course: React.FC<{
       <div className="">
         {feedback ? (Array.isArray(feedback) && (feedback.length === 0
           ? 'No evaluations found'
-          : feedback.map((report) => <Evaluation report={report} />)))
+          : feedback.map((report) => <EvaluationComponent report={report} />)))
           : 'Loading feedback...'}
       </div>
       )}

@@ -2,8 +2,8 @@
 import { Listbox } from '@headlessui/react';
 import React from 'react';
 import { FaAngleDown } from 'react-icons/fa';
-import { Schedule } from '../src/firestoreTypes';
-import { classNames, compareSemesters } from '../src/util';
+import { Schedule } from '../shared/firestoreTypes';
+import { classNames, compareSemesters } from '../shared/util';
 import FadeTransition from './FadeTransition';
 
 export interface ScheduleSelectorProps {

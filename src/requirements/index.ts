@@ -1,4 +1,4 @@
-import { Schedule, UserData } from '../firestoreTypes';
+import { Schedule, UserData } from '../../shared/firestoreTypes';
 import { ClassCache } from '../hooks';
 import { Requirement, RequirementGroup } from './util';
 import fasRequirements from './fasRequirements';

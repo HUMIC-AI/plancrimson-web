@@ -1,5 +1,5 @@
 import { Class } from '../../shared/apiTypes';
-import { Schedule, UserData } from '../firestoreTypes';
+import { Schedule, UserData } from '../../shared/firestoreTypes';
 
 /**
  * Only works for users on a typical four-year schedule.
@@ -28,5 +28,6 @@ export type RequirementGroup = {
   groupId: string;
   description?: string;
   sourcePage: number;
+  filter?: (value: Class) => boolean;
   requirements: (Requirement | RequirementGroup)[]
 };

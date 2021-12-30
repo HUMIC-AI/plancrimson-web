@@ -1,13 +1,13 @@
 /* eslint-disable no-param-reassign */
 import { Listbox } from '@headlessui/react';
 import React, { useEffect, useMemo, useState } from 'react';
+import { getAllSemesters, getSchedulesBySemester } from '../../shared/util';
 import useUserData from '../../src/context/userData';
-import { Schedule, Season } from '../../src/firestoreTypes';
+import { Schedule, Season } from '../../shared/firestoreTypes';
 import { useClassCache } from '../../src/hooks';
-import validateSchedules, { allRequirements, getReqs, RequirementsMet } from '../../src/schedules';
-import basicRequirements from '../../src/schedules/cs/basic';
-import { RequirementGroup } from '../../src/schedules/util';
-import { getAllSemesters, getSchedulesBySemester } from '../../src/util';
+import validateSchedules, { allRequirements, getReqs, RequirementsMet } from '../../src/requirements';
+import basicRequirements from '../../src/requirements/cs/basic';
+import { RequirementGroup } from '../../src/requirements/util';
 import { DragStatus } from './CourseCard';
 import RequirementsDisplay from './RequirementsDisplay';
 import SemesterDisplay, { SelectedSchedules } from './SemesterDisplay';

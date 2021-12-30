@@ -9,8 +9,8 @@ import { Fragment } from 'react';
 import {
   FaTimes, FaBars, FaCalendarCheck, FaUser,
 } from 'react-icons/fa';
+import { classNames } from '../../shared/util';
 import useUser from '../../src/context/user';
-import { classNames } from '../../src/util';
 
 const paths = [
   {

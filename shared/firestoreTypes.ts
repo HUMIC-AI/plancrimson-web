@@ -1,27 +1,23 @@
 // see https://infoforfaculty.fas.harvard.edu/book/grading-system
-export const grade = {
-  A: '',
-  'A-': '',
-  'B+': '',
-  B: '',
-  'B-': '',
-  'C+': '',
-  C: '',
-  'C-': '',
-  'D+': '',
-  D: '',
-  'D-': '',
-  E: '',
-  ABS: '',
-  EXL: '',
-  EXT: '',
-  PA: 'Pass', // A to D-
-  FL: 'Fail',
-  SAT: 'Satisfactory', // A to C-
-  UNSAT: 'Unsatisfactory',
-} as const;
+export const PASSING_GRADES = [
+  'A',
+  'A-',
+  'B+',
+  'B',
+  'B-',
+  'C+',
+  'C',
+  'C-',
+  'D+',
+  'D',
+  'D-',
+  'PA', // A to D-
+  'SAT', // A to C-
+] as const;
 
-export const FAILING_GRADES = ['E', 'ABS', 'EXL', 'FL', 'UNSAT'];
+export const FAILING_GRADES = ['E', 'ABS', 'EXL', 'EXT', 'FL', 'UNSAT'] as const;
+
+export type Grade = typeof PASSING_GRADES[number] | typeof FAILING_GRADES[number];
 
 export const seasonOrder = {
   Winter: 0,
@@ -53,5 +49,5 @@ export interface Schedule {
 // an entry in a schedule
 export interface UserClassData {
   classId: string;
-  grade?: keyof typeof grade;
+  grade?: Grade;
 }

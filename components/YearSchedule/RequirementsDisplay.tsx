@@ -1,8 +1,8 @@
 import React from 'react';
 import { FaCheck, FaTimes } from 'react-icons/fa';
-import { RequirementsMet } from '../../src/schedules';
-import { RequirementGroup } from '../../src/schedules/util';
-import { classNames } from '../../src/util';
+import { classNames } from '../../shared/util';
+import { RequirementsMet } from '../../src/requirements';
+import { RequirementGroup } from '../../src/requirements/util';
 
 type Props = {
   requirements: RequirementGroup;

@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import React, { useMemo } from 'react';
+import { getAllClassIds } from '../../shared/util';
 import useUserData from '../../src/context/userData';
-import { Schedule } from '../../src/firestoreTypes';
+import { Schedule } from '../../shared/firestoreTypes';
 import { useClassCache } from '../../src/hooks';
-import { getAllClassIds } from '../../src/util';
 import ScheduleSelector from '../ScheduleSelector';
 import CourseCard, { DragStatus } from './CourseCard';
 

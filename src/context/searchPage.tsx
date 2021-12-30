@@ -2,7 +2,7 @@ import React, {
   createContext, useContext, useMemo, useState,
 } from 'react';
 import { ScheduleSelectorProps } from '../../components/ScheduleSelector';
-import { Schedule } from '../firestoreTypes';
+import { Schedule } from '../../shared/firestoreTypes';
 import useUserData from './userData';
 
 export const SearchPageContext = createContext<ScheduleSelectorProps>({

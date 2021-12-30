@@ -1,26 +1,26 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import cheerio, { BasicAcceptedElems, CheerioAPI, Node } from 'cheerio';
-import { Class, ExtendedClass, EvaluationResponse } from '../shared/apiTypes';
+import { getFirestore } from 'firebase-admin/firestore';
+import { Class, ExtendedClass, Evaluation } from '../shared/apiTypes';
 import fetcher, { FetchError } from '../shared/fetcher';
 
 type Scraper = ($: CheerioAPI, el: BasicAcceptedElems<Node>) => any;
 
-const QReportMsg = 'Must provide authentication to access Q Reports. Visit https://qreports.fas.harvard.edu/browse/index, check the network request to "index", and copy the Cookie header into the Q_REPORTS_COOKIE variable in .env.local.';
-
-function assertQReportsCookie() {
-  const cookie = process.env.Q_REPORTS_COOKIE;
-  if (!cookie) {
-    throw new Error(QReportMsg);
-  }
-  return cookie;
+export async function getEvaluations(courseName: string): Promise<Evaluation[]> {
+  const db = getFirestore();
+  const evaluations = await db.collection('evaluations').where('courseName', '==', courseName).get();
+  return evaluations.docs.map((doc) => doc.data() as Evaluation);
 }
 
-function assertExploranceCookie() {
-  const cookie = process.env.EXPLORANCE_COOKIE;
-  if (!cookie) {
-    throw new Error('Must provide authentication to access QReports. Visit any Q Report page, e.g. https://harvard.bluera.com/harvard/rpvf-eng.aspx?lang=eng&redi=1&SelectedIDforPrint=2df896f38db7a3b95e9d749eecad2e77c1a9b3f2adfee3771214d92e63fcf7aea9cc1c51a29ba537e44683b279e4e65b&ReportType=2&regl=en-US, check the network request to "the main page", and copy the Cookie header into the EXPLORANCE_COOKIE variable in .env.local.');
-  }
-  return cookie;
+type Mean = {
+  count: number;
+  mean: number;
+};
+
+function calcMean(arr: Mean[]) {
+  const weightedTotal = arr.reduce((acc, val) => acc + val.mean * val.count, 0);
+  const count = arr.reduce((acc, val) => acc + val.count, 0);
+  return weightedTotal / count;
 }
 
 /**
@@ -30,11 +30,26 @@ function assertExploranceCookie() {
  * @returns the class object with the added textDescirption and evals properties
  */
 export async function extendClass(cls: Class, withEvals = true) {
-  const ret: ExtendedClass = { ...cls, textDescription: getDescriptionText(cls) };
+  const ret: ExtendedClass = {
+    ...cls,
+    textDescription: getDescriptionText(cls),
+  };
   if (withEvals) {
     try {
-      const evals = await getAllEvaluations(cls.ACAD_CAREER, cls.SUBJECT + cls.CATALOG_NBR);
-      ret.evals = evals;
+      const evals = await getEvaluations(cls.SUBJECT + cls.CATALOG_NBR);
+      if (evals.length === 0) return ret;
+      const classSizes = evals.map((evl) => evl['Course Response Rate'].invited);
+      ret.meanClassSize = classSizes.reduce((acc, val) => acc + val, 0) / classSizes.length;
+      const ratings = evals.map((evl) => {
+        const data = evl['Course General Questions']['Evaluate the course overall.'];
+        if (!data.courseMean) return null;
+        return { mean: data.courseMean, count: data.count };
+      }).filter((val) => val !== null) as Mean[];
+      ret.meanRating = calcMean(ratings);
+      const recommendations = evals.map((evl) => evl['How strongly would you recommend this course to your peers?']);
+      ret.meanRecommendation = calcMean(recommendations);
+      const hours = evals.map((evl) => evl['On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.']);
+      ret.meanHours = calcMean(hours);
     } catch (err) {
       const { message } = err as Error;
       throw new FetchError(
@@ -59,65 +74,16 @@ export function getDescriptionText(course: Class) {
   }
 }
 
-export default async function getAllEvaluations(school: string, course: string) {
-  let response;
-
-  try {
-    response = await fetcher({
-      method: 'GET',
-      url: 'https://qreports.fas.harvard.edu/home/courses',
-      params: {
-        school,
-        search: course,
-      },
-      headers: {
-        Origin: 'https://portal.my.harvard.edu',
-        Cookie: assertQReportsCookie(),
-      },
-    });
-  } catch (err) {
-    const { message, info } = err as FetchError;
-    throw new Error(`error getting evaluations from ${school} ${course}: ${message} ${info}`);
-  }
-
-  let $: CheerioAPI;
-  try {
-    $ = cheerio.load(response);
-  } catch (err: any) {
-    throw new Error(`error parsing result from ${school} ${course}: ${err.message}`);
-  }
-
-  if ($('title').text() === 'HarvardKey - Harvard University Authentication Service') {
-    throw new Error(QReportMsg);
-  }
-
-  const promises = $('#dtCourses > tbody > tr a')
-    .map((_, a) => {
-      const url = $(a).attr('href');
-      if (!url) return null;
-      try {
-        return getEvaluation(url);
-      } catch (err: any) {
-        return null;
-      }
-    })
-    .toArray();
-
-  const results = await Promise.allSettled(promises);
-
-  return results
-    .map((result) => (result.status === 'fulfilled' ? result.value : null))
-    .filter((el) => el !== null) as EvaluationResponse[];
-}
-
-async function getEvaluation(url: string): Promise<EvaluationResponse> {
+export async function getEvaluation(url: string, {
+  auth,
+}: { auth: string }): Promise<Evaluation> {
   let response = null;
   try {
     response = await fetcher({
       method: 'GET',
       url,
       headers: {
-        Cookie: assertExploranceCookie(),
+        Cookie: auth,
       },
     });
   } catch (err) {
@@ -130,33 +96,53 @@ async function getEvaluation(url: string): Promise<EvaluationResponse> {
 
   try {
     const $ = cheerio.load(response);
+    const text = $('.ChildReportSkipNav a').text();
+    const [courseName, instructorName] = text.slice('Feedback for '.length, text.indexOf('(')).split('-').map((str) => str.trim());
     const toc = $('.TOC h2').text().trim().split(' ');
     const initial = {
       url,
-      term: parseInt(toc[4], 10),
+      year: parseInt(toc[4], 10),
       season: toc[5],
-    } as EvaluationResponse;
+      courseName,
+      instructorName,
+    } as Evaluation;
 
     return $('.report-block').toArray().reduce((acc, el) => {
-      const title = $(el).find('h3, h4').text().trim() as keyof EvaluationResponse;
+      const title = $(el).find('h3, h4').text().trim() as keyof Evaluation;
 
+      // const COURSE_FEEDBACK_FOR = 'Course Feedback for ';
+      // const INSTRUCTOR_FEEDBACK_FOR = 'Instructor Feedback for ';
       let data = null;
-      if (title === 'Course Response Rate') {
-        data = getResponseRate($, el);
-      } else if (title === 'Course General Questions') {
-        data = getGeneralQuestions($, el);
-      } else if (title === 'General Instructor Questions') {
-        data = getGeneralQuestions($, el);
-      } else if (
-        title
+      const key = title;
+
+      try {
+        if (title === 'Course Response Rate') {
+          data = getResponseRate($, el);
+        } else if (title === 'Course General Questions') {
+          data = getGeneralQuestions($, el);
+        } else if (title === 'General Instructor Questions') {
+          data = getGeneralQuestions($, el);
+        } else if (
+          title
     === 'On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.'
-      ) {
-        data = getHours($, el);
-      } else if (title === 'How strongly would you recommend this course to your peers?') {
-        data = getRecommendations($, el);
-      } else if (title === 'What was/were your reason(s) for enrolling in this course? (Please check all that apply)') {
-        data = getReasons($, el);
+        ) {
+          data = getHours($, el);
+        } else if (title === 'How strongly would you recommend this course to your peers?') {
+          data = getRecommendations($, el);
+        } else if (title === 'What was/were your reason(s) for enrolling in this course? (Please check all that apply)') {
+          data = getReasons($, el);
+        }
+      } catch (err) {
+        console.error(err);
+        return acc;
       }
+      // else if (title.startsWith(COURSE_FEEDBACK_FOR)) {
+      //   data = title.slice(COURSE_FEEDBACK_FOR.length);
+      //   key = 'courseName';
+      // } else if (title.startsWith(INSTRUCTOR_FEEDBACK_FOR)) {
+      //   data = title.slice(INSTRUCTOR_FEEDBACK_FOR.length);
+      //   key = 'instructorName';
+      // }
 
       // skip if parsing fails for some reason
       if (data === null) return acc;
@@ -164,7 +150,7 @@ async function getEvaluation(url: string): Promise<EvaluationResponse> {
       // otherwise send the results back keyed by the question title
       return {
         ...acc,
-        [title]: data,
+        [key]: data,
       };
     }, initial);
   } catch (err) {
@@ -234,7 +220,7 @@ const getRecommendations: Scraper = ($, el) => {
       return parseInt(row[2], 10);
     })
     .reverse();
-  const total = recommendations.reduce((acc, val) => acc + val, 0);
+  const count = recommendations.reduce((acc, val) => acc + val, 0);
 
   const stats = tables
     .last()
@@ -247,7 +233,7 @@ const getRecommendations: Scraper = ($, el) => {
   const [ratio, mean, median, stdev] = stats;
   return {
     recommendations,
-    total,
+    count,
     ratio,
     mean,
     median,

@@ -1,9 +1,15 @@
 import { AxiosRequestConfig } from 'axios';
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
+import { getFirestore, DocumentReference, doc } from 'firebase/firestore';
 import { Class, SearchParams, SearchResults } from '../shared/apiTypes';
 import fetcher, { FetchError } from '../shared/fetcher';
-import { fetchClass } from './util';
+import { fetchClass } from '../shared/util';
+import { UserData } from '../shared/firestoreTypes';
+
+export function getUserRef(uid: string) {
+  return doc(getFirestore(), 'users', uid) as DocumentReference<UserData>;
+}
 
 /**
  * a hook to enable searching for classes on my.harvard.

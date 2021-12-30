@@ -6,9 +6,9 @@ import ScheduleSelector from '../ScheduleSelector';
 import { SearchParams, SearchResults } from '../../shared/apiTypes';
 import useUser from '../../src/context/user';
 import useUserData from '../../src/context/userData';
-import { getClassId } from '../../src/util';
 import AdminControls from './AdminControls';
-import { Schedule } from '../../src/firestoreTypes';
+import { Schedule } from '../../shared/firestoreTypes';
+import { getClassId } from '../../shared/util';
 
 const ResultsTab: React.FC<{
   searchParams: SearchParams;

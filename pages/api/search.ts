@@ -7,7 +7,7 @@ import type {
   Class, ExtendedClass, Facet, FailedClasses, SearchProperties, SearchResults,
 } from '../../shared/apiTypes';
 import { FetchError } from '../../shared/fetcher';
-import { getClassId } from '../../src/util';
+import { getClassId } from '../../shared/util';
 
 const handler: NextApiHandler<SearchResults> = async (req, res) => {
   const {

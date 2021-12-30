@@ -1,11 +1,11 @@
 import { Disclosure } from '@headlessui/react';
 import { FaTimes, FaBars } from 'react-icons/fa';
 import { connectSearchBox, connectStats } from 'react-instantsearch-core';
-import { classNames } from '../../src/util';
 import MeiliAttributes from '../../shared/meiliAttributes.json';
 import Attribute from './Attribute';
 import useSearchPageContext from '../../src/context/searchPage';
 import ScheduleSelector from '../ScheduleSelector';
+import { classNames } from '../../shared/util';
 
 const Stats = connectStats(({
   nbHits, processingTimeMS,
