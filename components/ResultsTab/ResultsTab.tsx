@@ -47,8 +47,6 @@ const ResultsTab: React.FC<{
   const { classes, searchProperties } = searchResults;
   const pageNumber = searchProperties.PageNumber;
 
-  console.log('SCHEDULES', data.schedules);
-
   return (
     <div className="space-y-2 mt-2">
       <ScheduleSelector

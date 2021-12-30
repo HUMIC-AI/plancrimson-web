@@ -3,7 +3,7 @@ import { Requirement } from '../util';
 import TAGS from './tags.json';
 
 export function hasTag(cls: Class, tag: CSCourseTag) {
-  const possibleNames = [cls.HU_SUBJ_CATLG_NBR, cls.HU_ALIAS_CATNBR_NL].filter(Boolean).join('|');
+  const possibleNames = [cls.HU_SUBJ_CATLG_NBR, cls.HU_ALIAS_CATNBR_NL, cls.HU_ALIAS_CATNBR_NS].filter(Boolean).join('|');
   const courseData = TAGS.find(({ courseNumber }) => new RegExp(possibleNames, 'i').test(courseNumber));
   if (!courseData) return false;
   return courseData.tags.includes(tag);

@@ -2,7 +2,7 @@ import { initializeApp, getApps, applicationDefault } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import qs from 'qs';
 import { MyHarvardResponse } from '../shared/apiTypes';
-import fetcher from '../shared/fetcher';
+import fetcher, { FetchError } from '../shared/fetcher';
 import advancedFields from '../src/advancedFields.json';
 
 if (getApps().length === 0) {
@@ -27,7 +27,7 @@ export default async function searchMyHarvard({
       `${advancedFields[key as keyof typeof advancedFields]}:`,
       `${key}:`,
     ),
-    `( ${search || ''} ) ( ${searchQuery || ''} )`,
+    `( ${search || ''} ) (${searchQuery || ''})`,
   );
 
   const formData = qs.stringify({
@@ -59,7 +59,7 @@ export default async function searchMyHarvard({
   });
 
   if (!Array.isArray(data)) {
-    throw new Error(`my.harvard returned a nonarray response: ${JSON.stringify(data)}. Ensure that the MY_HARVARD_COOKIE variable in .env.local is up to date.`);
+    throw new FetchError('my.harvard returned a nonarray response. Ensure that the MY_HARVARD_COOKIE variable in .env.local is up to date.', 0, data);
   }
 
   return data as MyHarvardResponse;

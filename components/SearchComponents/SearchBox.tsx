@@ -6,7 +6,6 @@ import MeiliAttributes from '../../shared/meiliAttributes.json';
 import Attribute from './Attribute';
 import useSearchPageContext from '../../src/context/searchPage';
 import ScheduleSelector from '../ScheduleSelector';
-import SortBy from './SortBy';
 
 const Stats = connectStats(({
   nbHits, processingTimeMS,
@@ -37,7 +36,7 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
       <div className="flex items-center space-x-2">
         <input
           type="search"
-          placeholder="Search courses"
+          placeholder="Search classes"
           autoComplete="off"
           autoCapitalize="off"
           autoCorrect="off"

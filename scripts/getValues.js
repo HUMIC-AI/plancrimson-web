@@ -1,9 +1,11 @@
-// const courses = require('./download1 (1).json');
 const fs = require('fs');
 
 async function main() {
+  const filename = process.argv[2];
+  if (!filename) throw new Error('must pass a filename');
+  const courses = JSON.parse(fs.readFileSync(filename).toString('utf8'));
   const keys = {};
-  courses.classes.forEach((cls) =>
+  courses.forEach((cls) =>
     Object.entries(cls).forEach(([key, value]) => {
       if (!(key in keys)) keys[key] = new Set();
       keys[key].add(value);
@@ -11,7 +13,7 @@ async function main() {
   );
   const result = {};
   Object.entries(keys).forEach(([key, set]) => (result[key] = [...set]));
-  fs.writeFileSync('out.json', JSON.stringify(result, null, 2));
+  console.log(JSON.stringify(result, null, 2));
 }
 
 main();

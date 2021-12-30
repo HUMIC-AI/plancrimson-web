@@ -72,8 +72,14 @@ const handler: NextApiHandler<SearchResults> = async (req, res) => {
       return;
     }
 
-    await ClassIndex.addDocuments(extendedClasses);
-    console.log(`added ${extendedClasses.length} documents to MeiliSearch`);
+    try {
+      await ClassIndex.addDocuments(extendedClasses);
+      console.log(`added ${extendedClasses.length} documents to MeiliSearch`);
+    } catch (err) {
+      const { message } = err as Error;
+      res.status(500).json({ error: `Could not add documents to MeiliSearch: ${message}` });
+      return;
+    }
   }
 
   res.json({

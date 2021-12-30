@@ -25,7 +25,10 @@ const Home: NextPage = function () {
           {searchError
             ? (
               <p>
-                {JSON.stringify(searchError, null, 2)}
+                An error occurred. Please try again.
+                <code>
+                  {searchError.message}
+                </code>
               </p>
             )
             : (

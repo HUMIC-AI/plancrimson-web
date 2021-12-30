@@ -68,11 +68,11 @@ const CategorySelect: React.FC<Props> = function ({ currentSearch, search, allFa
             const facet = getSchoolFacet(school);
             if (facet) {
               search(({
-                facets: [],
+                facets: [facet],
                 search: '',
               }));
             } else {
-              alert(`No option found for ${school}.`);
+              alert(`An unexpected error occurred: No option found for ${school}.`);
             }
           }}
           className="py-2 px-3 bg-blue-300 rounded shadow sm:text-sm ml-2"
