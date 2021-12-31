@@ -1,30 +1,13 @@
 import { Disclosure } from '@headlessui/react';
 import { FaTimes, FaBars } from 'react-icons/fa';
-import { connectSearchBox, connectStats } from 'react-instantsearch-dom';
+import { connectSearchBox } from 'react-instantsearch-dom';
 import MeiliAttributes from '../../shared/meiliAttributes.json';
 import Attribute from './Attribute';
 import useSearchPageContext from '../../src/context/searchPage';
 import ScheduleSelector from '../ScheduleSelector';
 import { classNames } from '../../shared/util';
-
-const Stats = connectStats(({
-  nbHits, processingTimeMS,
-}) => (
-  <div>
-    <span>
-      Time:
-      {' '}
-      {processingTimeMS}
-      {' '}
-      ms
-    </span>
-    <span className="ml-2">
-      {nbHits}
-      {' '}
-      classes found
-    </span>
-  </div>
-));
+import { ATTRIBUTE_DESCRIPTIONS, Class } from '../../shared/apiTypes';
+import Stats from './Stats';
 
 const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine }) => {
   const {
@@ -32,8 +15,8 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
   } = useSearchPageContext();
 
   return (
-    <div>
-      <div className="flex items-center space-x-2">
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
         <input
           type="search"
           placeholder="Search classes"
@@ -50,22 +33,16 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
             'focus:outline-none focus:shadow-lg shadow transition-shadow',
           )}
         />
-        {/* <label htmlFor="enableHighlight">
-          <input
-            type="checkbox"
-            name="enableHighlight"
-            id="enableHighlight"
-            checked={highlightEnabled}
-            onClick={({ currentTarget }) => setHighlightEnabled(currentTarget.checked)}
+
+        <div className="hidden sm:block">
+          <ScheduleSelector
+            schedules={schedules}
+            selectSchedule={selectSchedule}
+            selectedSchedule={selectedSchedule}
           />
-          <span className="ml-2">Highlight</span>
-        </label> */}
-        <ScheduleSelector
-          schedules={schedules}
-          selectSchedule={selectSchedule}
-          selectedSchedule={selectedSchedule}
-        />
-        <Disclosure as="div" className="relative md:hidden">
+        </div>
+
+        <Disclosure as="div" className="relative lg:hidden">
           {({ open }) => (
             <>
               <Disclosure.Button className="inset-y-0 right-0 flex items-center">
@@ -74,23 +51,26 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
                   : <FaBars className="w-5 h-5 ml-4 text-gray-700" />}
               </Disclosure.Button>
               <Disclosure.Panel
-                unmount={false}
                 className="absolute z-20 mt-2 right-0 w-48 p-2 flex flex-col gap-2 bg-gray-800 rounded-md"
               >
-                {Object.entries(MeiliAttributes.filterableAttributes).map(([attr, label]) => (
-                  <Attribute attribute={attr} key={attr} label={label} />
+                {MeiliAttributes.filterableAttributes.map((attr) => (
+                  <Attribute attribute={attr} key={attr} label={ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr} />
                 ))}
               </Disclosure.Panel>
             </>
           )}
         </Disclosure>
       </div>
-      <Stats />
-      {/* <SortBy items={[
-        { value: 'courses:CATALOG_NBR:asc', label: 'ascending catalog number' },
-      ]}
-      /> */}
-      {isSearchStalled && <p className="mt-2">Loading...</p>}
+
+      <div className="sm:hidden flex items-center gap-2 justify-between">
+        <Stats />
+        <ScheduleSelector
+          schedules={schedules}
+          selectSchedule={selectSchedule}
+          selectedSchedule={selectedSchedule}
+        />
+      </div>
+      {isSearchStalled && <p>Loading...</p>}
     </div>
   );
 });

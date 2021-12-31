@@ -8,7 +8,7 @@ import { allTruthy, getClassId } from '../shared/util';
 
 type Scraper = ($: CheerioAPI, el: BasicAcceptedElems<Node>) => any;
 
-export async function getEvaluations(courseName: string): Promise<Evaluation[]> {
+export async function getEvaluationsServer(courseName: string): Promise<Evaluation[]> {
   const db = getFirestore();
   const evaluations = await db.collection('evaluations')
     .where('courseName', '==', courseName).get();
@@ -40,7 +40,7 @@ export async function extendClass(cls: Class, withEvals = true) {
   };
   if (withEvals) {
     try {
-      const evals = await getEvaluations(cls.SUBJECT + cls.CATALOG_NBR);
+      const evals = await getEvaluationsServer(cls.SUBJECT + cls.CATALOG_NBR);
       console.error(`found ${evals.length} evaluations for ${cls.SUBJECT}${cls.CATALOG_NBR}`);
       if (evals.length === 0) return ret;
 

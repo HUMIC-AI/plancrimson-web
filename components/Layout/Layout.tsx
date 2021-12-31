@@ -16,7 +16,7 @@ const Layout: React.FC<{ title?: string; } > = function ({ children, title }) {
       <div className="flex flex-col min-h-screen">
         <Navbar />
 
-        <main className="p-8 container mx-auto">
+        <main className="sm:p-8 container mx-auto">
           {children}
         </main>
       </div>

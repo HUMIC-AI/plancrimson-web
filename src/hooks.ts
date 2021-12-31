@@ -12,29 +12,6 @@ export function getUserRef(uid: string) {
   return doc(getFirestore(), 'users', uid) as DocumentReference<UserData>;
 }
 
-/**
- * a hook to enable searching for classes on my.harvard.
- * will send a new request whenever searchParams changes
- */
-export default function useSearch() {
-  const [searchParams, search] = useState<SearchParams>({});
-  const { data, error } = useSWR<SearchResults, FetchError, AxiosRequestConfig>(typeof searchParams.search === 'undefined'
-    ? null as unknown as AxiosRequestConfig
-    : {
-      url: '/api/search',
-      method: 'POST',
-      data: searchParams,
-    }, fetcher);
-
-  return {
-    searchResults: data,
-    searchParams,
-    search,
-    error,
-    loading: searchParams.search && !data && !error,
-  };
-}
-
 export type ClassCache = Record<string, Class>;
 
 export function useClassCache(classIds: Array<string>) {

@@ -1,7 +1,10 @@
 import {
+  collection, getDocs, getFirestore, query, where,
+} from 'firebase/firestore';
+import {
   Semester, seasonOrder, UserData, Season,
 } from './firestoreTypes';
-import { Class } from './apiTypes';
+import { ATTRIBUTE_DESCRIPTIONS, Class, Evaluation } from './apiTypes';
 import seasPlan from './seasPlan.json';
 
 export function getSemester(course: Class) {
@@ -12,7 +15,8 @@ export function getSemester(course: Class) {
 }
 
 export function classNames(...classes: (string | boolean)[]) {
-  return classes.filter(Boolean).join(' ');
+  return classes.filter(Boolean).join(' ')
+    .replace('hover-blue', 'shadow bg-blue-300 hover:bg-blue-500 transition-colors');
 }
 
 export function allTruthy<T>(list: T[]) {
@@ -27,10 +31,17 @@ export function getNumCredits(course: Class) {
   return parseInt(course.HU_UNITS_MIN, 10);
 }
 
-export function compareSemesters(a: Semester, b: Semester) {
+export function compareSemesters<T extends Semester>(a: T, b: T) {
   if (a.year !== b.year) return a.year - b.year;
   const seasonDiff = seasonOrder[a.season] - seasonOrder[b.season];
-  return seasonDiff;
+  if (seasonDiff !== 0) return seasonDiff;
+  if ('id' in a && 'id' in b) {
+    const { id: aId } = a as any;
+    const { id: bId } = b as any;
+    if (aId < bId) return -1;
+    if (aId > bId) return 1;
+  }
+  return 0;
 }
 
 export function getAllSemesters(data: UserData) {
@@ -76,4 +87,35 @@ export function checkViable(cls: Class, semester: Semester) {
   }
 
   return false;
+}
+
+export function adjustLabel(label: string) {
+  if (label === '2222') return 'Spring';
+  if (label === '2218') return 'Fall';
+  return label;
+}
+
+export function adjustAttr(attr: string) {
+  return ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr;
+}
+
+export async function getEvaluations(courseName: string) {
+  console.log(`getting evaluations for ${courseName}`);
+  const evaluations = await getDocs(query(
+    collection(getFirestore(), 'evaluations'),
+    where('courseName', '==', courseName),
+  ));
+  console.log(evaluations.docs.map((doc) => doc.id));
+  return evaluations.docs.map((doc) => doc.data() as Evaluation);
+}
+
+export function getEvaluationId(evaluation: Evaluation) {
+  return [
+    evaluation.courseName,
+    evaluation.instructorName,
+    evaluation.year,
+    evaluation.season]
+    .map((val) => val || 'UNKNOWN')
+    .join('-')
+    .replace(/[^a-zA-Z0-9]/g, '-');
 }

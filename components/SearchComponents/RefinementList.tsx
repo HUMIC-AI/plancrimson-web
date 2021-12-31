@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { connectRefinementList } from 'react-instantsearch-dom';
-import { classNames } from '../../shared/util';
+import { adjustLabel, classNames } from '../../shared/util';
 
 const RefinementList = connectRefinementList(({ items, refine }) => {
   const [allItems, setAllItems] = useState(items);
@@ -31,7 +31,7 @@ const RefinementList = connectRefinementList(({ items, refine }) => {
               onChange={() => value && refine(value)}
             />
             <span className={classNames('ml-2', isRefined && 'font-semibold')}>
-              {label}
+              {adjustLabel(label)}
               {' '}
               (
               {count}

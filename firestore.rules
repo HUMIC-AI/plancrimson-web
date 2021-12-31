@@ -1,3 +1,4 @@
+rules_version = '2'
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{uid} {
@@ -11,6 +12,10 @@ service cloud.firestore {
       // else all client requests to your database will be denied until you
       // update your rules.
       allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    match /evaluations/{evlId} {
+      allow read: if request.auth != null;
     }
   }
 }

@@ -1,5 +1,5 @@
 import { NextApiHandler } from 'next';
-import { getEvaluations } from '../../server/evaluation';
+import { getEvaluationsServer } from '../../server/evaluation';
 
 const handler: NextApiHandler = async (req, res) => {
   const { school, course } = req.query;
@@ -10,7 +10,7 @@ const handler: NextApiHandler = async (req, res) => {
   }
 
   try {
-    const data = await getEvaluations(course);
+    const data = await getEvaluationsServer(course);
     res.json(data);
   } catch (err: any) {
     res.status(500).json({ error: err.message });

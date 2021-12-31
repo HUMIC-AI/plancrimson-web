@@ -40,6 +40,26 @@ export const DAYS_OF_WEEK = [
   'Sunday',
 ] as const;
 
+export const DAY_TO_KEY = {
+  Monday: 'MON',
+  Tuesday: 'TUES',
+  Wednesday: 'WED',
+  Thursday: 'THURS',
+  Friday: 'FRI',
+  Saturday: 'SAT',
+  Sunday: 'Key', // doesn't actually exist so we troll a bit and set it so that day[DAY_TO_KEY] is never 'Y'
+} as const;
+
+export const DAY_TO_LETTER = {
+  Monday: 'M',
+  Tuesday: 'T',
+  Wednesday: 'W',
+  Thursday: 'R',
+  Friday: 'F',
+  Saturday: 'S',
+  Sunday: 'U',
+} as const;
+
 export type DayOfWeek = typeof DAYS_OF_WEEK[number];
 
 // ==================== FOUR YEAR PLAN RESPONSES ====================
@@ -158,7 +178,7 @@ export interface Class {
   IS_SCL_DESCR_IS_SCL_DESCRI: string; // see above
 
   // non user friendly
-  CLASS_NBR: string; // unique class number, eg "14433"
+  CLASS_NBR: string; // not unique class number, eg "14433"
   CLASS_SECTION: string; // class section, eg "001"
   CRSE_ID: string; // course id, eg "219759", not unique e.g. for EXPOS
   HU_STRM_CLASSNBR: string; // term class number, eg "2218_17028"
@@ -175,7 +195,7 @@ export interface Class {
   | 'Reading and Research'
   | 'Project';
 
-  IS_SCL_DESCR_IS_SCL_DESCRL: string; // instructor name, eg "Ariel Procaccia"
+  IS_SCL_DESCR_IS_SCL_DESCRL: string | string[]; // instructor name, eg "Ariel Procaccia"
   LAST_NAME: string | string[]; // last name of instructor or array of them, eg ["Protopapas", "Glickman"]
 
   LOCATION_DESCR_LOCATION: string // eg "Cambridge Campus"
@@ -273,6 +293,7 @@ type AttributeDescriptions = Partial<{
 }>;
 
 export const ATTRIBUTE_DESCRIPTIONS: AttributeDescriptions = {
+  STRM: 'Term',
   SUBJECT: 'Subject',
   DAY_OF_WEEK: 'Day of week',
   ACAD_ORG: 'Department',

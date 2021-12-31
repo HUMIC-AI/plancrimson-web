@@ -21,11 +21,13 @@ const Attribute: React.FC<{ attribute: string; label: string }> = function ({ at
     <Disclosure as="div">
       {({ open }) => (
         <>
-          <Disclosure.Button className={classNames(
-            'bg-white flex justify-between items-center w-full py-2 px-3',
-            'text-sm text-left font-medium',
-            open ? 'rounded-t' : 'rounded',
-          )}
+          <Disclosure.Button
+            className={classNames(
+              'bg-white flex justify-between items-center w-full py-2 px-3',
+              'text-sm text-left font-medium',
+              open ? 'rounded-t' : 'rounded',
+            )}
+            as="div"
           >
             <h3 className="flex-1">{label}</h3>
             <span className="inline-flex items-center ml-4">
@@ -35,14 +37,14 @@ const Attribute: React.FC<{ attribute: string; label: string }> = function ({ at
                   ev.stopPropagation();
                   setOperator(operator === 'and' ? 'or' : 'and');
                 }}
-                className="hover:font-semibold w-6 bg-gray-700 rounded text-white"
+                className="hover:font-semibold w-8 bg-gray-700 rounded text-white"
               >
                 {operator}
               </button>
               <FaChevronDown className="w-5 h-5 ml-2" />
             </span>
           </Disclosure.Button>
-          <Disclosure.Panel unmount={false}>
+          <Disclosure.Panel unmount>
             <div className="p-2 origin-top-right bg-gray-300 rounded-b">
               <RefinementList
                 attribute={attribute}

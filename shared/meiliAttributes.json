@@ -1,5 +1,6 @@
 {
   "filterableAttributes": [
+    "STRM",
     "SUBJECT",
     "DAY_OF_WEEK",
     "ACAD_ORG",
