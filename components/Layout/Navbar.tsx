@@ -15,10 +15,6 @@ import useUser from '../../src/context/user';
 const paths = [
   {
     href: '/',
-    name: 'Home',
-  },
-  {
-    href: '/search',
     name: 'Search',
   },
   {
@@ -115,7 +111,7 @@ const UserMenu = function () {
 };
 
 const Navbar = function () {
-  const { pathname } = useRouter();
+  const { pathname, query } = useRouter();
 
   return (
     <Disclosure as="nav" className="bg-gray-800">
@@ -147,7 +143,15 @@ const Navbar = function () {
                 <div className="hidden sm:block sm:ml-6">
                   <div className="flex space-x-4">
                     {paths.map((item) => (
-                      <Link key={item.name} href={item.href}>
+                      // pass the query between pages to preserve the selected schedule
+                      // see src/context/selectedSchedule.tsx
+                      <Link
+                        key={item.name}
+                        href={{
+                          pathname: item.href,
+                          query,
+                        }}
+                      >
                         {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                         <a
                           className={classNames(
@@ -176,7 +180,8 @@ const Navbar = function () {
                   key={item.name}
                   aria-current={item.href === pathname ? 'page' : undefined}
                 >
-                  <Link href={item.href}>
+                  {/* see comment above */}
+                  <Link href={{ pathname: item.href, query }}>
                     {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                     <a
                       className={classNames(

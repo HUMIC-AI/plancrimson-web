@@ -44,7 +44,7 @@ export function compareSemesters<T extends Semester>(a: T, b: T) {
   return 0;
 }
 
-export function getAllSemesters(data: UserData) {
+export function getUniqueSemesters(data: UserData) {
   const semesters = [] as { year: number, season: Season }[];
   Object.values(data.schedules).forEach(({ year, season }) => {
     // if this semester has not yet been added
@@ -55,8 +55,12 @@ export function getAllSemesters(data: UserData) {
   return semesters.sort(compareSemesters);
 }
 
+export function sortSchedules(schedules: UserData['schedules']) {
+  return Object.values(schedules).sort(compareSemesters);
+}
+
 export function getSchedulesBySemester(data: UserData, targetYear: number, targetSeason: Season) {
-  return Object.values(data.schedules).filter(({ year, season }) => year === targetYear && season === targetSeason);
+  return sortSchedules(data.schedules).filter(({ year, season }) => year === targetYear && season === targetSeason);
 }
 
 export function getAllClassIds(data: UserData) {

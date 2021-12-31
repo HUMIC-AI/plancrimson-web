@@ -18,7 +18,7 @@ type UserDataContextType = {
   data: UserData;
   addCourses: (...courses: ClassAndSchedule[]) => void;
   removeCourses: RemoveCourses;
-  createSchedule: (scheduleId: string, year: number, season: Season) => void;
+  createSchedule: (scheduleId: string, year: number, season: Season, classes?: UserClassData[]) => Promise<Schedule>;
   error?: FirestoreError;
 };
 
@@ -30,7 +30,7 @@ const UserDataContext = createContext<UserDataContextType>({
   },
   addCourses: () => null,
   removeCourses: () => null,
-  createSchedule: () => null,
+  createSchedule: () => Promise.reject(new Error('Must be within context provider')),
 });
 
 const generateSchedules = (classYear: number) => {
@@ -64,21 +64,30 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
   const [userData, setUserData] = useState<UserData>({ classYear: 2025, schedules: {}, lastLoggedIn: new Date() });
   const [error, setError] = useState<FirestoreError | undefined>();
 
-  const createSchedule: UserDataContextType['createSchedule'] = useCallback(async (scheduleId, year, season) => {
+  const createSchedule: UserDataContextType['createSchedule'] = useCallback((scheduleId, year, season, classes = []) => new Promise<Schedule>((resolve, reject) => {
     setUserData((prev) => {
-      if (scheduleId in prev.schedules) return prev;
-      // eslint-disable-next-line no-param-reassign
-      prev.schedules[`${scheduleId}`] = {
-        id: scheduleId, season, year, classes: [],
-      };
-      if (user) {
-        setDoc(getUserRef(user.uid), { schedules: prev.schedules }, { merge: true })
-          .then(() => console.log('user updated'))
-          .catch((err) => setError(err));
+      if (scheduleId in prev.schedules) {
+        reject(new Error('id taken'));
+        return prev;
       }
-      return { ...prev };
+      const newSchedule: Schedule = {
+        id: scheduleId, season, year, classes,
+      };
+      const schedules = {
+        ...prev.schedules,
+        [scheduleId]: newSchedule,
+      };
+
+      if (user) {
+        setDoc(getUserRef(user.uid), { schedules }, { merge: true })
+          .then(() => resolve(newSchedule))
+          .catch((err) => reject(err));
+      } else {
+        process.nextTick(() => resolve(newSchedule));
+      }
+      return { ...prev, schedules };
     });
-  }, [user]);
+  }), [user]);
 
   const addCourses = useCallback(async (...classesToAdd: ClassAndSchedule[]) => {
     setUserData((prev) => {

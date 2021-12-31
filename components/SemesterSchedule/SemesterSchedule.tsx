@@ -1,15 +1,13 @@
 import React, { useMemo } from 'react';
 import { getAllClassIds } from '../../shared/util';
+import useSelectedScheduleContext from '../../src/context/selectedSchedule';
 import useUserData from '../../src/context/userData';
 import { useClassCache } from '../../src/hooks';
-import ScheduleSelector, { ScheduleSelectorProps } from '../ScheduleSelector';
+import ScheduleSelector from '../ScheduleSelector';
 import Calendar from './Calendar';
 
-const SemesterSchedule: React.FC<ScheduleSelectorProps> = function ({
-  schedules,
-  selectSchedule,
-  selectedSchedule,
-}) {
+const SemesterSchedule: React.FC = function () {
+  const { schedules, selectSchedule, selectedSchedule } = useSelectedScheduleContext();
   const { data, createSchedule } = useUserData();
   const classIds = useMemo(() => getAllClassIds(data), [data]);
   const { classCache } = useClassCache(classIds);

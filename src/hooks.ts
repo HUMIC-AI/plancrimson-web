@@ -1,9 +1,6 @@
-import { AxiosRequestConfig } from 'axios';
 import { useEffect, useState } from 'react';
-import useSWR from 'swr';
 import { getFirestore, DocumentReference, doc } from 'firebase/firestore';
-import { Class, SearchParams, SearchResults } from '../shared/apiTypes';
-import fetcher, { FetchError } from '../shared/fetcher';
+import { ExtendedClass } from '../shared/apiTypes';
 import { UserData } from '../shared/firestoreTypes';
 import ClassIndex from '../shared/meilisearch';
 import { allTruthy } from '../shared/util';
@@ -12,7 +9,7 @@ export function getUserRef(uid: string) {
   return doc(getFirestore(), 'users', uid) as DocumentReference<UserData>;
 }
 
-export type ClassCache = Record<string, Class>;
+export type ClassCache = Record<string, ExtendedClass>;
 
 export function useClassCache(classIds: Array<string>) {
   const [classCache, setClassCache] = useState<ClassCache>({});
@@ -27,7 +24,8 @@ export function useClassCache(classIds: Array<string>) {
     }))
       .then((results) => {
         const fulfilled = allTruthy(results.map((result) => (result.status === 'fulfilled' ? result.value : null)));
-        setClassCache(Object.assign({}, ...fulfilled));
+        const updatedCache = Object.assign({}, ...fulfilled);
+        process.nextTick(() => setClassCache(updatedCache));
         const rejected = allTruthy(results.map((result) => (result.status === 'rejected' ? result.reason : null)));
         setFetchClassError(rejected);
       })
@@ -37,4 +35,20 @@ export function useClassCache(classIds: Array<string>) {
   }, [classIds]);
 
   return { classCache, fetchClassError };
+}
+
+export function useCourseDialog() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [openedCourse, openCourse] = useState<ExtendedClass | null>(null);
+
+  const handleExpand = (course: ExtendedClass) => {
+    openCourse(course);
+    setIsOpen(true);
+  };
+
+  const closeModal = () => setIsOpen(false);
+
+  return {
+    isOpen, openedCourse, handleExpand, closeModal,
+  };
 }

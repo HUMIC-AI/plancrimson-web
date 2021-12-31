@@ -2,33 +2,69 @@ import React from 'react';
 import {
   FaInfo, FaTimes, FaPlus, FaUser, FaMapMarkerAlt, FaClock, FaCalendarDay,
 } from 'react-icons/fa';
-import { Highlight } from 'react-instantsearch-dom';
 import {
   DAYS_OF_WEEK, DAY_TO_KEY, DAY_TO_LETTER, ExtendedClass,
 } from '../../shared/apiTypes';
 import { Schedule } from '../../shared/firestoreTypes';
 import { getClassId, classNames } from '../../shared/util';
 import useUserData from '../../src/context/userData';
+import Highlight from '../SearchComponents/Highlight';
 
 type Props = {
   course: ExtendedClass;
   selectedSchedule: Schedule | null;
-  handleExpand: () => void;
+  handleExpand: (course: ExtendedClass) => void;
+  highlight?: boolean;
+  inSearchContext?: boolean;
+  setDragStatus?: React.Dispatch<React.SetStateAction<DragStatus>>;
 };
 
-const CourseCard: React.FC<Props> = function ({ course, selectedSchedule, handleExpand }) {
+export type DragStatus = {
+  dragging: false;
+} | {
+  dragging: true;
+  data: {
+    classId: string;
+    originScheduleId: string;
+  };
+};
+
+const MockHighlight: React.FC<{ attribute: keyof ExtendedClass; hit: ExtendedClass }> = function ({ attribute, hit }) {
+  return <span>{hit[attribute]}</span>;
+};
+
+const CourseCard: React.FC<Props> = function ({
+  course, selectedSchedule, handleExpand, highlight, setDragStatus, inSearchContext = true,
+}) {
   const { addCourses, removeCourses } = useUserData();
+  const draggable = typeof setDragStatus !== 'undefined';
+
+  const HighlightComponent = inSearchContext ? Highlight : MockHighlight;
 
   return (
-    <div className="rounded-xl shadow overflow-hidden border-gray-800 border-4">
-      <div className="bg-gray-800 p-2 text-white">
-        <p className="flex justify-between items-center">
-          <span className="font-bold text-blue-300">
-            <Highlight attribute="SUBJECT" hit={course} />
-            <Highlight attribute="CATALOG_NBR" hit={course} />
+    <div
+      className="rounded-xl shadow overflow-hidden border-gray-800 border-4"
+      draggable={draggable}
+      onDragStart={draggable ? (ev) => {
+      // eslint-disable-next-line no-param-reassign
+        ev.dataTransfer.dropEffect = 'move';
+        if (!selectedSchedule?.id) alert('Oops! An unexpected error occurred.');
+        else {
+          setDragStatus({
+            dragging: true,
+            data: { classId: getClassId(course), originScheduleId: selectedSchedule.id },
+          });
+        }
+      } : undefined}
+    >
+      <div className={classNames(highlight ? 'bg-blue-500' : 'bg-gray-800', 'p-2 text-white')}>
+        <p className="flex justify-between items-start">
+          <span className="font-bold text-left text-blue-300">
+            <HighlightComponent attribute="SUBJECT" hit={course} />
+            <HighlightComponent attribute="CATALOG_NBR" hit={course} />
           </span>
           <span className="flex items-center gap-2 ml-2">
-            <button type="button" className="bg-black bg-opacity-0 hover:bg-opacity-50 transition-colors rounded p-1" onClick={handleExpand}>
+            <button type="button" className="bg-black bg-opacity-0 hover:bg-opacity-50 transition-colors rounded p-1" onClick={() => handleExpand(course)}>
               <FaInfo />
             </button>
             {selectedSchedule && (
@@ -58,7 +94,7 @@ const CourseCard: React.FC<Props> = function ({ course, selectedSchedule, handle
           </span>
         </p>
         <h3>
-          <Highlight attribute="Title" hit={course} />
+          <HighlightComponent attribute="Title" hit={course} />
         </h3>
       </div>
       <div className="p-2">
@@ -66,7 +102,7 @@ const CourseCard: React.FC<Props> = function ({ course, selectedSchedule, handle
           <FaUser />
           <span>{course.IS_SCL_DESCR_IS_SCL_DESCRL || 'Unknown'}</span>
           <FaMapMarkerAlt />
-          {course.SUBJECT.startsWith('MIT') ? <span>MIT</span> : <Highlight attribute="LOCATION_DESCR_LOCATION" hit={course} />}
+          {course.SUBJECT.startsWith('MIT') ? <span>MIT</span> : <HighlightComponent attribute="LOCATION_DESCR_LOCATION" hit={course} />}
           <FaCalendarDay />
           {course.IS_SCL_MEETING_PAT === 'TBA'
             ? <span>TBA</span>
@@ -87,9 +123,9 @@ const CourseCard: React.FC<Props> = function ({ course, selectedSchedule, handle
                 </div>
                 <FaClock />
                 <span>
-                  <Highlight attribute="IS_SCL_TIME_START" hit={course} />
+                  <HighlightComponent attribute="IS_SCL_TIME_START" hit={course} />
                   {course.IS_SCL_TIME_START && '–'}
-                  <Highlight attribute="IS_SCL_TIME_END" hit={course} />
+                  <HighlightComponent attribute="IS_SCL_TIME_END" hit={course} />
                 </span>
               </>
             )}
@@ -98,7 +134,7 @@ const CourseCard: React.FC<Props> = function ({ course, selectedSchedule, handle
         <>
           <hr className="border-black my-2" />
           <p className="text-sm line-clamp-3">
-            <Highlight attribute="textDescription" hit={course} />
+            <HighlightComponent attribute="textDescription" hit={course} />
           </p>
         </>
         )}

@@ -6,7 +6,7 @@ import Attribute from '../components/SearchComponents/Attribute';
 import SearchBox from '../components/SearchComponents/SearchBox';
 import Hits from '../components/SearchComponents/Hits';
 import MeiliAttributes from '../shared/meiliAttributes.json';
-import { SearchPageContextProvider } from '../src/context/searchPage';
+import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
 import CurrentRefinements from '../components/SearchComponents/CurrentRefinements';
 import { adjustAttr } from '../shared/util';
 import SortBy from '../components/SearchComponents/SortBy';
@@ -31,7 +31,7 @@ const SearchPage = function () {
             ))}
           </div>
           <div className="flex-1 p-4 shadow-lg border-2 border-gray-300 rounded-lg space-y-4">
-            <SearchPageContextProvider>
+            <SelectedScheduleProvider>
               <SearchBox />
               <div className="flex items-center justify-between">
                 <SortBy
@@ -47,7 +47,7 @@ const SearchPage = function () {
               </div>
               <CurrentRefinements />
               <Hits />
-            </SearchPageContextProvider>
+            </SelectedScheduleProvider>
           </div>
         </div>
       </InstantSearch>

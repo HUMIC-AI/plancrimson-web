@@ -1,17 +1,19 @@
 import { connectHits } from 'react-instantsearch-dom';
-import React, { useState } from 'react';
+import React from 'react';
 import {
   ExtendedClass,
 } from '../../shared/apiTypes';
-import useSearchPageContext from '../../src/context/searchPage';
+import useSelectedScheduleContext from '../../src/context/selectedSchedule';
 import { getClassId } from '../../shared/util';
 import CourseCard from '../Course/CourseCard';
 import CourseDialog from '../Course/CourseDialog';
+import { useCourseDialog } from '../../src/hooks';
 
 const Hits = connectHits<ExtendedClass>(({ hits }) => {
-  const { selectedSchedule } = useSearchPageContext();
-  const [isOpen, setIsOpen] = useState(false);
-  const [openedCourse, openCourse] = useState<ExtendedClass | null>(null);
+  const { selectedSchedule } = useSelectedScheduleContext();
+  const {
+    isOpen, openedCourse, closeModal, handleExpand,
+  } = useCourseDialog();
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-4 gap-4">
       {hits.map((hit) => (
@@ -19,16 +21,13 @@ const Hits = connectHits<ExtendedClass>(({ hits }) => {
           key={getClassId(hit)}
           course={hit}
           selectedSchedule={selectedSchedule}
-          handleExpand={() => {
-            openCourse(hit);
-            setIsOpen(true);
-          }}
+          handleExpand={handleExpand}
         />
       ))}
       <CourseDialog
         isOpen={isOpen}
         course={openedCourse}
-        closeModal={() => setIsOpen(false)}
+        closeModal={closeModal}
       />
     </div>
   );

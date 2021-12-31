@@ -3,13 +3,12 @@ import React, { Fragment } from 'react';
 import {
   FaUser, FaMapMarkerAlt, FaCalendarDay, FaClock, FaBook, FaUserGraduate, FaClipboardCheck, FaUserLock, FaSchool, FaBuilding, FaCoins, FaStar, FaUserClock, FaHourglassEnd, FaExchangeAlt,
 } from 'react-icons/fa';
-import { Highlight } from 'react-instantsearch-dom';
 import useSWR from 'swr';
 import {
   DAYS_OF_WEEK, DAY_TO_KEY, DAY_TO_LETTER, ExtendedClass,
 } from '../../shared/apiTypes';
 import {
-  allTruthy, classNames, compareSemesters, getClassId, getEvaluationId, getEvaluations,
+  allTruthy, classNames, getClassId, getEvaluationId, getEvaluations, sortSchedules,
 } from '../../shared/util';
 import useUserData from '../../src/context/userData';
 import EvaluationComponent from './EvaluationComponent';
@@ -37,29 +36,32 @@ const InfoPanel: React.FC<Props> = function ({ course }) {
         {course.IS_SCL_MEETING_PAT === 'TBA'
           ? <span>TBA</span>
           : (
-            <>
-              <div className="inline-grid grid-cols-7 max-w-xs border border-black rounded overflow-hidden">
-                {DAYS_OF_WEEK.map((day) => (
-                  <span
-                    key={day}
-                    className={classNames(
-                      course[DAY_TO_KEY[day]] === 'Y' ? 'bg-gray-700 text-white' : 'bg-gray-300',
-                      'text-center leading-none font-semibold p-1',
-                    )}
-                  >
-                    {DAY_TO_LETTER[day]}
-                  </span>
-                ))}
-              </div>
-              {/* <Highlight attribute="IS_SCL_MEETING_PAT" hit={hit} /> */}
-              <FaClock />
-              <span>
-                <Highlight attribute="IS_SCL_TIME_START" hit={course} />
-                {course.IS_SCL_TIME_START && '–'}
-                <Highlight attribute="IS_SCL_TIME_END" hit={course} />
-              </span>
-            </>
+            <div className="inline-grid grid-cols-7 max-w-xs border border-black rounded overflow-hidden">
+              {DAYS_OF_WEEK.map((day) => (
+                <span
+                  key={day}
+                  className={classNames(
+                    course[DAY_TO_KEY[day]] === 'Y' ? 'bg-gray-700 text-white' : 'bg-gray-300',
+                    'text-center leading-none font-semibold p-1',
+                  )}
+                >
+                  {DAY_TO_LETTER[day]}
+                </span>
+              ))}
+            </div>
           )}
+        {course.IS_SCL_TIME_START && (
+        <>
+          <FaClock />
+          <span>
+            `$
+            {course.IS_SCL_TIME_START}
+            –$
+            {course.IS_SCL_TIME_END}
+            `
+          </span>
+        </>
+        )}
         <FaBook title="Course type" />
         <span>{course.SSR_COMPONENTDESCR}</span>
         <FaUserGraduate title="Course level" />
@@ -175,7 +177,7 @@ const Tabs: React.FC<Props> = function ({ course }) {
         </Tab.Panel>
         <Tab.Panel>
           <div className="grid grid-cols-[1fr_1fr_auto] items-center">
-            {Object.values(userData.schedules).sort(compareSemesters).map((schedule) => {
+            {sortSchedules(userData.schedules).map((schedule) => {
               const enabled = !!schedule.classes.find(({ classId }) => classId === getClassId(course));
               return (
                 <Fragment key={schedule.id}>

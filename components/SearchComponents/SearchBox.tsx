@@ -3,7 +3,7 @@ import { FaTimes, FaBars } from 'react-icons/fa';
 import { connectSearchBox } from 'react-instantsearch-dom';
 import MeiliAttributes from '../../shared/meiliAttributes.json';
 import Attribute from './Attribute';
-import useSearchPageContext from '../../src/context/searchPage';
+import useSelectedScheduleContext from '../../src/context/selectedSchedule';
 import ScheduleSelector from '../ScheduleSelector';
 import { classNames } from '../../shared/util';
 import { ATTRIBUTE_DESCRIPTIONS, Class } from '../../shared/apiTypes';
@@ -12,7 +12,7 @@ import Stats from './Stats';
 const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine }) => {
   const {
     schedules, selectSchedule, selectedSchedule,
-  } = useSearchPageContext();
+  } = useSelectedScheduleContext();
 
   return (
     <div className="flex flex-col gap-2">
