@@ -12,7 +12,13 @@ const links = [
 const ResourcesPage: React.FC = function () {
   return (
     <Layout>
-      <p>The data is taken from my.harvard.</p>
+      <p>
+        The data is taken from the
+        {' '}
+        <a href="https://my.harvard.edu/">my.harvard.edu</a>
+        {' '}
+        Course Catalog.
+      </p>
       <div>
         <ul>
           <li>

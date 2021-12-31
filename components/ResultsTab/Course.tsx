@@ -6,21 +6,7 @@ import { Class, Evaluation } from '../../shared/apiTypes';
 import fetcher from '../../shared/fetcher';
 import useUserData from '../../src/context/userData';
 import { Schedule } from '../../shared/firestoreTypes';
-import { getClassId } from '../../shared/util';
-
-export function getYearAndSeason(course: Class) {
-  const season = /Fall/i.test(course.IS_SCL_DESCR_IS_SCL_DESCRH) ? 'Fall' : 'Spring' as const;
-  const academicYear = parseInt(course.ACAD_YEAR, 10);
-  const year = season === 'Fall' ? academicYear - 1 : academicYear;
-  return { year, season };
-}
-
-export function getSemesters(startYear: number) {
-  return [...new Array(5)].flatMap((_, i) => [
-    { year: startYear + i, season: 'Spring' },
-    { year: startYear + i, season: 'Fall' },
-  ]).slice(1, -1); // get rid of first and last since of mismatch
-}
+import { allTruthy, getClassId } from '../../shared/util';
 
 const colors = ['bg-blue-300', 'bg-yellow-300', 'bg-green-300', 'bg-gray-300', 'bg-red-300'];
 
@@ -42,9 +28,7 @@ const Percentages = function ({ categories }: { categories: Array<number> }) {
 };
 
 const EvaluationComponent: React.FC<{ report: Evaluation }> = function ({ report }) {
-  const {
-    mean, median, mode, stdev,
-  } = report['On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.'];
+  const hoursData = report['On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.'];
   return (
     <div className="rounded border-black border-2 p-2 flex flex-col items-stretch gap-4">
       <div className="flex justify-between items-center border-black border-b-2 pb-2">
@@ -58,20 +42,22 @@ const EvaluationComponent: React.FC<{ report: Evaluation }> = function ({ report
 
       <div>
         <h4 className="font-bold">Recommendations</h4>
-        <Percentages categories={report['How strongly would you recommend this course to your peers?'].recommendations} />
+        <Percentages categories={allTruthy(report['How strongly would you recommend this course to your peers?']?.recommendations || [])} />
       </div>
 
       <div>
         <h4 className="font-bold">Overall evaluation</h4>
-        <Percentages categories={(report['Course General Questions']['Evaluate the course overall.'].votes as number[]).slice().reverse()} />
+        <Percentages categories={(allTruthy(report['Course General Questions']?.['Evaluate the course overall.'].votes || [])).slice().reverse()} />
       </div>
 
+      {hoursData && (
       <div>
         <h4 className="font-bold">Hours per week (outside of class)</h4>
         <p>
-          {`Mean: ${mean} | Median: ${median} | Mode: ${mode} | Stdev: ${stdev}`}
+          {`Mean: ${hoursData.mean} | Median: ${hoursData.median} | Mode: ${hoursData.mode} | Stdev: ${hoursData.stdev}`}
         </p>
       </div>
+      )}
     </div>
   );
 };

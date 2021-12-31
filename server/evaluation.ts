@@ -1,14 +1,17 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import cheerio, { BasicAcceptedElems, CheerioAPI, Node } from 'cheerio';
+import './initFirebase';
 import { getFirestore } from 'firebase-admin/firestore';
 import { Class, ExtendedClass, Evaluation } from '../shared/apiTypes';
 import fetcher, { FetchError } from '../shared/fetcher';
+import { allTruthy, getClassId } from '../shared/util';
 
 type Scraper = ($: CheerioAPI, el: BasicAcceptedElems<Node>) => any;
 
 export async function getEvaluations(courseName: string): Promise<Evaluation[]> {
   const db = getFirestore();
-  const evaluations = await db.collection('evaluations').where('courseName', '==', courseName).get();
+  const evaluations = await db.collection('evaluations')
+    .where('courseName', '==', courseName).get();
   return evaluations.docs.map((doc) => doc.data() as Evaluation);
 }
 
@@ -32,24 +35,38 @@ function calcMean(arr: Mean[]) {
 export async function extendClass(cls: Class, withEvals = true) {
   const ret: ExtendedClass = {
     ...cls,
+    id: getClassId(cls),
     textDescription: getDescriptionText(cls),
   };
   if (withEvals) {
     try {
       const evals = await getEvaluations(cls.SUBJECT + cls.CATALOG_NBR);
+      console.error(`found ${evals.length} evaluations for ${cls.SUBJECT}${cls.CATALOG_NBR}`);
       if (evals.length === 0) return ret;
-      const classSizes = evals.map((evl) => evl['Course Response Rate'].invited);
-      ret.meanClassSize = classSizes.reduce((acc, val) => acc + val, 0) / classSizes.length;
-      const ratings = evals.map((evl) => {
-        const data = evl['Course General Questions']['Evaluate the course overall.'];
-        if (!data.courseMean) return null;
+
+      const classSizes = allTruthy(evals.map((evl) => evl['Course Response Rate']?.invited));
+      if (classSizes.length > 0) {
+        ret.meanClassSize = classSizes.reduce((acc, val) => acc + val, 0) / classSizes.length;
+      }
+
+      const ratings = allTruthy(evals.map((evl) => {
+        const data = evl['Course General Questions']?.['Evaluate the course overall.'];
+        if (!data?.courseMean) return null;
         return { mean: data.courseMean, count: data.count };
-      }).filter((val) => val !== null) as Mean[];
-      ret.meanRating = calcMean(ratings);
-      const recommendations = evals.map((evl) => evl['How strongly would you recommend this course to your peers?']);
-      ret.meanRecommendation = calcMean(recommendations);
-      const hours = evals.map((evl) => evl['On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.']);
-      ret.meanHours = calcMean(hours);
+      }));
+      if (ratings.length > 0) {
+        ret.meanRating = calcMean(ratings);
+      }
+
+      const recommendations = allTruthy(evals.map((evl) => evl['How strongly would you recommend this course to your peers?']));
+      if (recommendations.length > 0) {
+        ret.meanRecommendation = calcMean(recommendations);
+      }
+
+      const hours = allTruthy(evals.map((evl) => evl['On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.']));
+      if (hours.length > 0) {
+        ret.meanHours = calcMean(hours);
+      }
     } catch (err) {
       const { message } = err as Error;
       throw new FetchError(
@@ -77,86 +94,62 @@ export function getDescriptionText(course: Class) {
 export async function getEvaluation(url: string, {
   auth,
 }: { auth: string }): Promise<Evaluation> {
-  let response = null;
-  try {
-    response = await fetcher({
-      method: 'GET',
-      url,
-      headers: {
-        Cookie: auth,
-      },
-    });
-  } catch (err) {
-    const { message } = err as FetchError;
-    if (message === 'Maximum number of redirects exceeded') {
-      throw new Error('Maximum number of redirects exceeded. Check the explorance cookie.');
-    }
-    throw new Error(`Error fetching from ${url}: ${message}`);
-  }
+  const response = await fetcher({
+    method: 'GET',
+    url,
+    headers: {
+      Cookie: auth,
+    },
+  });
 
-  try {
-    const $ = cheerio.load(response);
-    const text = $('.ChildReportSkipNav a').text();
-    const [courseName, instructorName] = text.slice('Feedback for '.length, text.indexOf('(')).split('-').map((str) => str.trim());
-    const toc = $('.TOC h2').text().trim().split(' ');
-    const initial = {
-      url,
-      year: parseInt(toc[4], 10),
-      season: toc[5],
-      courseName,
-      instructorName,
-    } as Evaluation;
+  const $ = cheerio.load(response);
+  const text = $('.ChildReportSkipNav a').text();
+  const [courseName = 'UNKNOWN', instructorName = 'UNKNOWN'] = text.slice('Feedback for '.length, text.indexOf('(')).split('-').map((str) => str.trim());
+  const toc = $('.TOC h2').text().trim().split(' ');
+  const initial = {
+    url,
+    year: parseInt(toc[4], 10),
+    season: toc[5],
+    courseName,
+    instructorName,
+  } as Evaluation;
 
-    return $('.report-block').toArray().reduce((acc, el) => {
-      const title = $(el).find('h3, h4').text().trim() as keyof Evaluation;
+  return $('.report-block').toArray().reduce((acc, el) => {
+    const title = $(el).find('h3, h4').text().trim() as keyof Evaluation;
 
-      // const COURSE_FEEDBACK_FOR = 'Course Feedback for ';
-      // const INSTRUCTOR_FEEDBACK_FOR = 'Instructor Feedback for ';
-      let data = null;
-      const key = title;
+    let data = null;
 
-      try {
-        if (title === 'Course Response Rate') {
-          data = getResponseRate($, el);
-        } else if (title === 'Course General Questions') {
-          data = getGeneralQuestions($, el);
-        } else if (title === 'General Instructor Questions') {
-          data = getGeneralQuestions($, el);
-        } else if (
-          title
+    try {
+      if (title === 'Course Response Rate') {
+        data = getResponseRate($, el);
+      } else if (title === 'Course General Questions') {
+        data = getGeneralQuestions($, el);
+      } else if (title === 'General Instructor Questions') {
+        data = getGeneralQuestions($, el);
+      } else if (
+        title
     === 'On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.'
-        ) {
-          data = getHours($, el);
-        } else if (title === 'How strongly would you recommend this course to your peers?') {
-          data = getRecommendations($, el);
-        } else if (title === 'What was/were your reason(s) for enrolling in this course? (Please check all that apply)') {
-          data = getReasons($, el);
-        }
-      } catch (err) {
-        console.error(err);
+      ) {
+        data = getHours($, el);
+      } else if (title === 'How strongly would you recommend this course to your peers?') {
+        data = getRecommendations($, el);
+      } else if (title === 'What was/were your reason(s) for enrolling in this course? (Please check all that apply)') {
+        data = getReasons($, el);
+      } else {
+        // if this element is unimportant
         return acc;
       }
-      // else if (title.startsWith(COURSE_FEEDBACK_FOR)) {
-      //   data = title.slice(COURSE_FEEDBACK_FOR.length);
-      //   key = 'courseName';
-      // } else if (title.startsWith(INSTRUCTOR_FEEDBACK_FOR)) {
-      //   data = title.slice(INSTRUCTOR_FEEDBACK_FOR.length);
-      //   key = 'instructorName';
-      // }
+    } catch (err) {
+      console.error(`error parsing ${title} when loading ${url}`);
+      console.error((err as Error).message);
+      return acc;
+    }
 
-      // skip if parsing fails for some reason
-      if (data === null) return acc;
-
-      // otherwise send the results back keyed by the question title
-      return {
-        ...acc,
-        [key]: data,
-      };
-    }, initial);
-  } catch (err) {
-    const { message } = err as Error;
-    throw new Error(`couldn't parse html from ${url}: ${message}`);
-  }
+    return {
+      ...acc,
+      [title]: data,
+    };
+  }, initial);
 }
 
 const getResponseRate: Scraper = ($, el) => {
@@ -227,6 +220,19 @@ const getRecommendations: Scraper = ($, el) => {
     .find('td')
     .toArray()
     .map((td) => parseFloat($(td).text().trim().replace('%', '')));
+
+  if (stats.length === 5) {
+    const [ratio, mean, median,, stdev] = stats;
+    return {
+      recommendations,
+      count,
+      ratio,
+      mean,
+      median,
+      stdev,
+    };
+  }
+
   if (stats.length !== 4) {
     throw new Error('Could not read recommendation statistics');
   }

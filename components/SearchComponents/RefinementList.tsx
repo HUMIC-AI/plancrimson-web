@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { connectRefinementList } from 'react-instantsearch-core';
+import { connectRefinementList } from 'react-instantsearch-dom';
 import { classNames } from '../../shared/util';
 
 const RefinementList = connectRefinementList(({ items, refine }) => {

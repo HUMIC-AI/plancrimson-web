@@ -21,6 +21,7 @@ export type SearchResults = {
 };
 
 export type ExtendedClass = Class & {
+  id: string; // for meilisearch
   textDescription: string;
   meanClassSize?: number;
   meanRating?: number;
@@ -40,6 +41,38 @@ export const DAYS_OF_WEEK = [
 ] as const;
 
 export type DayOfWeek = typeof DAYS_OF_WEEK[number];
+
+// ==================== FOUR YEAR PLAN RESPONSES ====================
+
+type SeasArea = 'ACS' | 'AP' | 'AM' | 'EE' | 'BE' | 'CS' | 'ESE' | 'General' | 'Mat & ME' | 'MSMBA' | 'SEM';
+
+type Prefix = 'AC' | 'AM' | 'AP' | 'BE' | 'CS' | 'EPS' | 'ES' | 'ESE' | 'FRSEMR' | 'GENED' | 'Gen' | 'SEMINAR';
+
+export namespace SeasPlan {
+
+  export interface SeasScheduleInfo {
+    area: SeasArea;
+    courseNumber: string;
+    title: string;
+    isUndergraduate: boolean;
+    semesters: Array<SeasSemesterInfo>;
+    prefix: Prefix;
+    id: null;
+  }
+
+  export interface SeasSemesterInfo {
+    academicYear: number;
+    term: 'Fall' | 'Spring';
+    instructors: Array<Instructor>;
+    offeredStatus: 'Yes' | 'No' | '';
+  }
+
+  export interface Instructor {
+    firstName: string;
+    lastName: string;
+  }
+
+}
 
 // ==================== MY.HARVARD AND COURSE EVALUATION TYPES BELOW ====================
 
@@ -68,7 +101,7 @@ export interface Class {
   // organizational info
   ACAD_ORG: string | string[]; // organizations, eg ["APMA", "CS", "APPHYS", "ENGSCI"]
   ACAD_ORG_PRIMARY_ORG: string; // primary organization, eg "CS"
-  HU_ALIAS: string; // see ACAD_ORG_PRIMARY_ORG, eg "CS"
+  HU_ALIAS?: string; // see ACAD_ORG_PRIMARY_ORG, eg "CS"
   PARENT_NODE_NAME: string; // used for filtering on my.harvard, eg "SEAS"
   SUBJECT: string; // subject, eg "ENG-SCI" or "COMPSCI"
   IS_SCL_DESCR_IS_SCL_DESCRJ: string; // eg "Computer Science"
@@ -326,12 +359,12 @@ export interface Evaluation {
   season: string;
   courseName: string;
   instructorName: string;
-  'Course Response Rate': CourseResponseRate;
-  'Course General Questions': CourseGeneralQuestions;
-  'General Instructor Questions': GeneralInstructorQuestions;
-  'On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.': HoursStats;
-  'How strongly would you recommend this course to your peers?': RecommendationsStats;
-  'What was/were your reason(s) for enrolling in this course? (Please check all that apply)': ReasonsForEnrolling;
+  'Course Response Rate'?: CourseResponseRate;
+  'Course General Questions'?: CourseGeneralQuestions;
+  'General Instructor Questions'?: GeneralInstructorQuestions;
+  'On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.'?: HoursStats;
+  'How strongly would you recommend this course to your peers?'?: RecommendationsStats;
+  'What was/were your reason(s) for enrolling in this course? (Please check all that apply)'?: ReasonsForEnrolling;
 }
 
 export type PossibleEvaluationResponse = Evaluation | {

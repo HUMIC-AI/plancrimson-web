@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const { MeiliSearch } = require('meilisearch');
 const inquirer = require('inquirer');
 const attributes = require('../shared/meiliAttributes.json');
@@ -8,20 +9,14 @@ const client = new MeiliSearch({
 
 const createIndex = () => {
   console.log('remember to set the attributes after');
-  return client.createIndex('courses', { primaryKey: 'HU_STRM_CLASSNBR' });
+  return client.createIndex('courses', { primaryKey: 'id' });
 };
 
-const deleteIndex = () => {
-  return client.deleteIndexIfExists('courses');
-};
+const deleteIndex = () => client.deleteIndexIfExists('courses');
 
-const setAttributes = () => {
-  return client.index('courses').updateSettings(attributes);
-};
+const setAttributes = () => client.index('courses').updateSettings(attributes);
 
-const getAllUpdateStatus = () => {
-  return client.index('courses').getAllUpdateStatus();
-};
+const getAllUpdateStatus = () => client.index('courses').getAllUpdateStatus();
 
 const loadDocuments = async () => {
   const { docPath } = await inquirer.prompt([
@@ -33,9 +28,11 @@ const loadDocuments = async () => {
   ]);
 
   try {
+    // eslint-disable-next-line import/no-dynamic-require, global-require
     const docs = require(docPath);
-    if (!Array.isArray(docs))
+    if (!Array.isArray(docs)) {
       throw new Error('this file does not contain an array');
+    }
 
     const demoText = JSON.stringify(docs[0], null, 2).slice(0, 100);
     const { confirm } = await inquirer.prompt([
@@ -48,18 +45,16 @@ const loadDocuments = async () => {
 
     if (confirm) {
       return await client.index('courses').addDocuments(docs);
-    } else {
-      console.log('nothing changed');
     }
+    console.log('nothing changed');
   } catch (err) {
     console.error(err);
     console.error('the error above occurred. nothing done');
   }
+  return null;
 };
 
-const createAPIKey = () => {
-  return client.getKeys();
-};
+const createAPIKey = () => client.getKeys();
 
 const methods = {
   'create "courses" index': createIndex,

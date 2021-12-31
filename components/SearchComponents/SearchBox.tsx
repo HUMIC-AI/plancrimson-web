@@ -1,6 +1,6 @@
 import { Disclosure } from '@headlessui/react';
 import { FaTimes, FaBars } from 'react-icons/fa';
-import { connectSearchBox, connectStats } from 'react-instantsearch-core';
+import { connectSearchBox, connectStats } from 'react-instantsearch-dom';
 import MeiliAttributes from '../../shared/meiliAttributes.json';
 import Attribute from './Attribute';
 import useSearchPageContext from '../../src/context/searchPage';

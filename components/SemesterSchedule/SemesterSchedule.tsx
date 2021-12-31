@@ -43,7 +43,7 @@ const SemesterSchedule: React.FC<ScheduleSelectorProps> = function ({
             className="focus:ring-blue-700 max-w-xs rounded py-2 px-3 flex-shrink"
           />
           <select name="season" className="rounded py-2 pl-2 pr-6 flex-1">
-            {['Spring', 'Fall', 'Summer'].map((season) => (
+            {['Spring', 'Fall'].map((season) => (
               <option key={season} value={season}>
                 {season}
               </option>

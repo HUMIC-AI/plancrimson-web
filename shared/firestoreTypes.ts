@@ -17,6 +17,8 @@ export const PASSING_GRADES = [
 
 export const FAILING_GRADES = ['E', 'ABS', 'EXL', 'EXT', 'FL', 'UNSAT'] as const;
 
+export type Viability = 'Yes' | 'Probably' | 'Unlikely' | 'No';
+
 export type Grade = typeof PASSING_GRADES[number] | typeof FAILING_GRADES[number];
 
 export const seasonOrder = {

@@ -1,5 +1,5 @@
 import { FaPlus, FaTimes } from 'react-icons/fa';
-import { connectHits } from 'react-instantsearch-core';
+import { connectHits } from 'react-instantsearch-dom';
 import React from 'react';
 import type { Class } from '../../shared/apiTypes';
 import Highlight from './Highlight';

@@ -1,4 +1,5 @@
-import './initFirebase';
+/* eslint-disable no-console */
+import '../server/initFirebase';
 import { getAuth } from 'firebase-admin/auth';
 
 async function main() {
@@ -13,9 +14,11 @@ async function main() {
   try {
     const user = await auth.getUser(process.argv[2]);
     auth.setCustomUserClaims(user.uid, claims);
+    console.log(`successfully set ${user.uid} claims to ${claims}`);
   } catch (err) {
     const user = await auth.getUserByEmail(process.argv[2]);
     getAuth().setCustomUserClaims(user.uid, claims);
+    console.log(`successfully set ${user.uid} claims to ${claims}`);
   }
 }
 

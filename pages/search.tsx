@@ -1,7 +1,6 @@
 import React from 'react';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
-import { InstantSearch } from 'react-instantsearch-core';
-import { CurrentRefinements } from 'react-instantsearch-dom';
+import { InstantSearch, CurrentRefinements } from 'react-instantsearch-dom';
 import Layout from '../components/Layout/Layout';
 import Attribute from '../components/SearchComponents/Attribute';
 import SearchBox from '../components/SearchComponents/SearchBox';

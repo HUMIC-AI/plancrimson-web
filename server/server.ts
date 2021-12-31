@@ -1,15 +1,9 @@
-import { initializeApp, getApps, applicationDefault } from 'firebase-admin/app';
+import './initFirebase';
 import { getAuth } from 'firebase-admin/auth';
 import qs from 'qs';
 import { MyHarvardResponse } from '../shared/apiTypes';
 import fetcher, { FetchError } from '../shared/fetcher';
 import advancedFields from '../src/advancedFields.json';
-
-if (getApps().length === 0) {
-  initializeApp({
-    credential: applicationDefault(),
-  });
-}
 
 type Props = {
   search: string;
@@ -29,6 +23,8 @@ export default async function searchMyHarvard({
     ),
     `( ${search || ''} ) (${searchQuery || ''})`,
   );
+
+  console.log(`searching my.harvard for ${searchText}`);
 
   const formData = qs.stringify({
     SearchReqJSON: JSON.stringify({

@@ -1,5 +1,5 @@
 /* eslint-disable react/no-array-index-key */
-import { connectHighlight } from 'react-instantsearch-core';
+import { connectHighlight } from 'react-instantsearch-dom';
 
 const Highlight = connectHighlight(({ highlight, attribute, hit }) => {
   const parsedHit = highlight({

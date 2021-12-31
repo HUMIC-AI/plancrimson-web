@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { readFileSync } from 'fs';
 import { extendClass } from '../server/evaluation';
 import { Class } from '../shared/apiTypes';
