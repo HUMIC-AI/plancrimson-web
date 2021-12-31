@@ -47,6 +47,7 @@ const YearSchedule: React.FC = function () {
         );
       }
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   const revalidateSchedules = () => {

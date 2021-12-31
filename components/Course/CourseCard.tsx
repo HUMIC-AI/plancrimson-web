@@ -48,6 +48,7 @@ const CourseCard: React.FC<Props> = function ({
       onDragStart={draggable ? (ev) => {
       // eslint-disable-next-line no-param-reassign
         ev.dataTransfer.dropEffect = 'move';
+        // eslint-disable-next-line no-alert
         if (!selectedSchedule?.id) alert('Oops! An unexpected error occurred.');
         else {
           setDragStatus({
