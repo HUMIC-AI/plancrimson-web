@@ -40,3 +40,5 @@ serviceAccountKey.json
 
 # typesense data
 /data/
+/downloads/
+/oldEvaluations/

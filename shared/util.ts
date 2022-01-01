@@ -104,12 +104,10 @@ export function adjustAttr(attr: string) {
 }
 
 export async function getEvaluations(courseName: string) {
-  console.log(`getting evaluations for ${courseName}`);
   const evaluations = await getDocs(query(
     collection(getFirestore(), 'evaluations'),
     where('courseName', '==', courseName),
   ));
-  console.log(evaluations.docs.map((doc) => doc.id));
   return evaluations.docs.map((doc) => doc.data() as Evaluation);
 }
 
@@ -122,4 +120,26 @@ export function getEvaluationId(evaluation: Evaluation) {
     .map((val) => val || 'UNKNOWN')
     .join('-')
     .replace(/[^a-zA-Z0-9]/g, '-');
+}
+
+export function getMeiliHost() {
+  const host = process.env.NODE_ENV === 'production'
+    ? process.env.NEXT_PUBLIC_MEILI_IP
+    : 'http://127.0.0.1:7700';
+
+  if (!host) {
+    throw new Error('must configure the MEILI_IP environment variable');
+  }
+
+  return host;
+}
+
+export function getMeiliApiKey() {
+  const key = process.env.NEXT_PUBLIC_MEILI_API_KEY;
+
+  if (process.env.NODE_ENV === 'production' && !key) {
+    throw new Error('must configure the MeiliSearch API key through the NEXT_PUBLIC_MEILI_API_KEY environment variable');
+  }
+
+  return key;
 }

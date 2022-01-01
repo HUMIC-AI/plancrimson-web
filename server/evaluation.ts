@@ -58,14 +58,14 @@ export async function extendClass(cls: Class, withEvals = true) {
         ret.meanRating = calcMean(ratings);
       }
 
-      const recommendations = allTruthy(evals.map((evl) => evl['How strongly would you recommend this course to your peers?']));
+      const recommendations = evals.map((evl) => evl['How strongly would you recommend this course to your peers?']).filter((val) => val?.mean && val.count);
       if (recommendations.length > 0) {
-        ret.meanRecommendation = calcMean(recommendations);
+        ret.meanRecommendation = calcMean(recommendations as Mean[]);
       }
 
-      const hours = allTruthy(evals.map((evl) => evl['On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.']));
+      const hours = evals.map((evl) => evl['On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.']).filter((val) => val?.mean && val.count);
       if (hours.length > 0) {
-        ret.meanHours = calcMean(hours);
+        ret.meanHours = calcMean(hours as Mean[]);
       }
     } catch (err) {
       const { message } = err as Error;
@@ -106,13 +106,13 @@ export async function getEvaluation(url: string, {
   const text = $('.ChildReportSkipNav a').text();
   const [courseName = 'UNKNOWN', instructorName = 'UNKNOWN'] = text.slice('Feedback for '.length, text.indexOf('(')).split('-').map((str) => str.trim());
   const toc = $('.TOC h2').text().trim().split(' ');
-  const initial = {
+  const initial: Evaluation = {
     url,
     year: parseInt(toc[4], 10),
     season: toc[5],
     courseName,
     instructorName,
-  } as Evaluation;
+  };
 
   return $('.report-block').toArray().reduce((acc, el) => {
     const title = $(el).find('h3, h4').text().trim() as keyof Evaluation;

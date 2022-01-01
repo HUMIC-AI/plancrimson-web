@@ -1,13 +1,14 @@
 import Link from 'next/link';
-import React, { useMemo } from 'react';
+import React from 'react';
 import { FaCalendar, FaClone, FaSearch } from 'react-icons/fa';
-import { getAllClassIds, getSchedulesBySemester } from '../../shared/util';
+import { getSchedulesBySemester } from '../../shared/util';
 import useUserData from '../../src/context/userData';
 import { Season } from '../../shared/firestoreTypes';
-import { useClassCache, useCourseDialog } from '../../src/hooks';
+import { useCourseDialog } from '../../src/hooks';
 import ScheduleSelector from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
 import CourseDialog from '../Course/CourseDialog';
+import useClassCache from '../../src/context/classCache';
 
 type Props = {
   selectedScheduleId: string | null;
@@ -27,11 +28,10 @@ const SemesterDisplay: React.FC<Props> = function ({
   const {
     data, addCourses, removeCourses, createSchedule,
   } = useUserData();
-  const classIds = useMemo(() => getAllClassIds(data), [data]);
   const {
     closeModal, handleExpand, isOpen, openedCourse,
   } = useCourseDialog();
-  const { classCache } = useClassCache(classIds);
+  const { getClass } = useClassCache(data);
 
   let containerStyles = 'p-4 text-center flex-1 rounded-xl shadow-lg w-52 ';
   if (dragStatus.dragging) {
@@ -113,18 +113,18 @@ const SemesterDisplay: React.FC<Props> = function ({
           <p>
             Expected hours per week:
             {' '}
-            {selectedSchedule.classes.map(({ classId }) => classCache[classId]?.meanHours?.toFixed(2) || '?').join(' + ')}
+            {selectedSchedule.classes.map(({ classId }) => getClass(classId)?.meanHours?.toFixed(2) || '?').join(' + ')}
           </p>
         </div>
       )}
 
       <div className="flex flex-col items-center gap-4 mt-2">
         {selectedSchedule && selectedSchedule.classes.map(({ classId: id }) => (
-          id && classCache[id]
+          id && getClass(id)
             ? (
               <CourseCard
                 key={id}
-                course={classCache[id]}
+                course={getClass(id)!}
                 handleExpand={handleExpand}
                 highlight={highlightedClasses.includes(id)}
                 selectedSchedule={selectedSchedule}

@@ -4,18 +4,18 @@ const Stats = connectStats(({
   nbHits, processingTimeMS,
 }) => (
   <div>
-    <span>
+    <p>
       Time:
       {' '}
       {processingTimeMS}
       {' '}
       ms
-    </span>
-    <span className="ml-2">
+    </p>
+    <p>
       {nbHits}
       {' '}
       classes found
-    </span>
+    </p>
   </div>
 ));
 

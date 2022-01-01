@@ -1,5 +1,5 @@
 import React from 'react';
-import { Class } from '../../shared/apiTypes';
+import { ExtendedClass } from '../../shared/apiTypes';
 
 const days = ['MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT'] as const;
 
@@ -10,7 +10,11 @@ function toPercent(time: string) {
 
 const dayStartTime = 8; // time to start the calendar at
 
-const Calendar: React.FC<{ classes: Class[] }> = function ({ classes }) {
+type CalendarProps = {
+  classes: (ExtendedClass | null)[];
+};
+
+const Calendar: React.FC<CalendarProps> = function ({ classes }) {
   return (
     <div className="mt-2 rounded-md border-black border-2">
       <div className="pl-6 grid grid-cols-5">
@@ -45,7 +49,7 @@ const Calendar: React.FC<{ classes: Class[] }> = function ({ classes }) {
           {days.slice(0, 5).map((day) => (
             <div key={day} className="even:bg-gray-300 odd:bg-gray-100 h-full relative">
               {/* courses */}
-              {classes.filter((cls) => cls && cls[day] === 'Y').map(({
+              {(classes.filter((cls) => cls && cls[day] === 'Y') as ExtendedClass[]).map(({
                 Key, SUBJECT: subject, CATALOG_NBR: catalogNumber, IS_SCL_TIME_START: startTime, IS_SCL_TIME_END: endTime,
               }) => (
                 <div

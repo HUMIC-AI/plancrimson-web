@@ -1,16 +1,16 @@
 /* eslint-disable no-param-reassign */
 import { Listbox } from '@headlessui/react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getUniqueSemesters, getSchedulesBySemester } from '../../shared/util';
 import useUserData from '../../src/context/userData';
 import { Season } from '../../shared/firestoreTypes';
-import { useClassCache } from '../../src/hooks';
 import validateSchedules, { allRequirements, getReqs, RequirementsMet } from '../../src/requirements';
 import basicRequirements from '../../src/requirements/cs/basic';
 import { RequirementGroup } from '../../src/requirements/util';
 import RequirementsDisplay from './RequirementsDisplay';
 import SemesterDisplay from './SemesterDisplay';
 import { DragStatus } from '../Course/CourseCard';
+import useClassCache from '../../src/context/classCache';
 
 const YearSchedule: React.FC = function () {
   const [dragStatus, setDragStatus] = useState<DragStatus>({
@@ -22,13 +22,7 @@ const YearSchedule: React.FC = function () {
   const [validationResults, setValidationResults] = useState<RequirementsMet>({});
   const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(basicRequirements);
   const [highlightedClasses, setHighlightedClasses] = useState<string[]>([]);
-  const numbers = useMemo(
-    () => (data.schedules
-      ? Object.values(data.schedules).map((s) => s.classes.map((c) => c.classId)).flat()
-      : []),
-    [data],
-  );
-  const { classCache } = useClassCache(numbers);
+  const { getClass } = useClassCache(data);
 
   const selectSchedule = (year: number, season: Season, schedule: string) => {
     setSelectedSchedules((prev) => ({
@@ -55,12 +49,12 @@ const YearSchedule: React.FC = function () {
       Object.values(scheduleIds).map((id) => data.schedules[id]),
       getReqs(selectedRequirements),
       data,
-      classCache,
+      getClass,
     );
     setValidationResults(results);
   };
 
-  useEffect(revalidateSchedules, [scheduleIds, selectedRequirements, data, classCache]);
+  useEffect(revalidateSchedules, [scheduleIds, selectedRequirements, data, getClass]);
 
   return (
     <div className="flex flex-col md:flex-row-reverse gap-4 container">

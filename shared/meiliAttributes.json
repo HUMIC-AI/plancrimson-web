@@ -9,7 +9,14 @@
     "IS_SCL_DESCR100_HU_SCL_ATTR_LEVL"
   ],
   "displayedAttributes": ["*"],
-  "sortableAttributes": ["CATALOG_NBR", "IS_SCL_STRT_TM_DEC"],
+  "sortableAttributes": [
+    "CATALOG_NBR",
+    "IS_SCL_STRT_TM_DEC",
+    "meanClassSize",
+    "meanHours",
+    "meanRecommendation",
+    "meanRating"
+  ],
   "searchableAttributes": [
     "Title",
     "SUBJECT",

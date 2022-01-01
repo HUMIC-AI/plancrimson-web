@@ -1,9 +1,9 @@
 import { Schedule, UserData } from '../../shared/firestoreTypes';
-import { ClassCache } from '../hooks';
 import { Requirement, RequirementGroup } from './util';
 import fasRequirements from './fasRequirements';
 import basicRequirements from './cs/basic';
 import honorsRequirements from './cs/honors';
+import { ClassCacheContextType } from '../context/classCache';
 
 // want to query for all people planning to take this class at a certain time
 
@@ -34,7 +34,7 @@ const validateSchedules = (
   schedules: Schedule[],
   requirements: Requirement[],
   userData: UserData,
-  classCache: ClassCache,
+  getClass: ClassCacheContextType['getClass'],
 ): RequirementsMet => {
   const requirementsMet = {} as Record<string, any>;
   const classesUsed = {} as Record<string, string[]>;
@@ -47,10 +47,15 @@ const validateSchedules = (
   const reducerResults = schedules.reduce(
     (prev, schedule) => schedule.classes.reduce(
       (acc, cls) => {
-        if (!classCache[cls.classId]) return acc;
+        if (!getClass(cls.classId)) return acc;
         const next = {} as Record<string, any>;
         requirements.forEach((req) => {
-          const newValue = req.reducer(acc[req.id], classCache[cls.classId], schedule, userData);
+          const newValue = req.reducer(
+            acc[req.id],
+            getClass(cls.classId)!,
+            schedule,
+            userData,
+          );
           if (newValue !== null) {
             next[req.id] = newValue;
             classesUsed[req.id].push(cls.classId);

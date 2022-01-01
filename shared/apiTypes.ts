@@ -380,6 +380,7 @@ export interface Evaluation {
   season: string;
   courseName: string;
   instructorName: string;
+  comments?: string[] | null;
   'Course Response Rate'?: CourseResponseRate;
   'Course General Questions'?: CourseGeneralQuestions;
   'General Instructor Questions'?: GeneralInstructorQuestions;
@@ -394,18 +395,22 @@ export type PossibleEvaluationResponse = Evaluation | {
 };
 
 export interface CourseGeneralQuestions {
-  'Evaluate the course overall.': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
-  'Course materials (readings, audio-visual materials, textbooks, lab manuals, website, etc.)': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
-  'Assignments (exams, essays, problem sets, language homework, etc.)': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
-  'Feedback you received on work you produced in this course': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
-  'Section component of the course': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
+  'Evaluate the course overall.': EvaluationStatistics;
+  'Course materials (readings, audio-visual materials, textbooks, lab manuals, website, etc.)': EvaluationStatistics;
+  'Assignments (exams, essays, problem sets, language homework, etc.)': EvaluationStatistics;
+  'Feedback you received on work you produced in this course': EvaluationStatistics;
+  'Section component of the course': EvaluationStatistics | null;
+  'Pointed to Dissertation Topic or Research Lab'?: EvaluationStatistics;
+  'Helped Develop Research Skills'?: EvaluationStatistics;
+  'Could be Developed into Talks or Publications'?: EvaluationStatistics;
+  'Helped Prepare for Generals'?: EvaluationStatistics;
 }
 
-export interface AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc {
+export interface EvaluationStatistics {
   count: number;
-  votes: (number | null)[];
+  votes: number[] | null;
   courseMean: number | null;
-  fasMean: number;
+  fasMean: number | null;
 }
 
 export interface CourseResponseRate {
@@ -414,31 +419,31 @@ export interface CourseResponseRate {
 }
 
 export interface GeneralInstructorQuestions {
-  'Evaluate your Instructor overall.': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
-  'Gives effective lectures or presentations, if applicable': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
-  'Is accessible outside of class (including after class, office hours, e-mail, etc.)': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
-  'Generates enthusiasm for the subject matter': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
-  'Facilitates discussion and encourages participation': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
-  'Gives useful feedback on assignments': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
-  'Returns assignments in a timely fashion': AssignmentsExamsEssaysProblemSetsLanguageHomeworkEtc;
+  'Evaluate your Instructor overall.': EvaluationStatistics;
+  'Gives effective lectures or presentations, if applicable': EvaluationStatistics;
+  'Is accessible outside of class (including after class, office hours, e-mail, etc.)': EvaluationStatistics;
+  'Generates enthusiasm for the subject matter'?: EvaluationStatistics;
+  'Facilitates discussion and encourages participation': EvaluationStatistics;
+  'Gives useful feedback on assignments': EvaluationStatistics;
+  'Returns assignments in a timely fashion': EvaluationStatistics;
 }
 
 export interface RecommendationsStats {
-  recommendations: number[];
+  recommendations: number[] | null;
   count: number;
   ratio: number;
-  mean: number;
-  median: number;
-  stdev: number;
+  mean: number | null;
+  median: number | null;
+  stdev: number | null;
 }
 
 export interface HoursStats {
   count: number;
   ratio: number;
-  mean: number;
-  median: number;
-  mode: number;
-  stdev: number;
+  mean: number | null;
+  median: number | null;
+  mode: number | null;
+  stdev: number | null;
 }
 
 export interface ReasonsForEnrolling {
