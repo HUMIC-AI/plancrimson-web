@@ -16,7 +16,8 @@ import {
 
 // eslint-disable-next-line import/prefer-default-export
 export const mathematicalPreparation: RequirementGroup = {
-  groupId: 'Mathematical preparation (2–5 courses, see Note on Mathematical preparation in item c. below)',
+  groupId: 'Mathematical preparation',
+  subheading: '2–5 courses, see Note on Mathematical preparation in item c. below',
   sourcePage: 56,
   requirements: [
     {
@@ -52,7 +53,8 @@ export const mathematicalPreparation: RequirementGroup = {
 };
 
 const formalReasoning: RequirementGroup = {
-  groupId: 'Formal Reasoning tag (3 courses in the Computer Science core)',
+  groupId: 'Formal Reasoning tag',
+  subheading: '3 courses in the Computer Science core',
   description: 'Three courses on formal reasoning about computer science, including at least:',
   sourcePage: 57,
   requirements: [
@@ -68,7 +70,8 @@ const formalReasoning: RequirementGroup = {
 };
 
 export const csCore: RequirementGroup = {
-  groupId: 'Computer Science core (9 courses)',
+  groupId: 'Computer Science core',
+  subheading: '9 courses',
   description: 'Nine courses from an approved list on the concentration\'s website. This list contains Computer Science courses and some courses in related fields. These courses must, taken together, satisfy the following “tag” requirements. The concentration website has a list of tags and the corresponding courses. (For convenience, a table of tags and courses as of 2021 is included below.) A tag requirement is satisfied or partially satisfied by a Plan of Study containing a corresponding course. Each course on a Plan of Study may satisfy zero, one, two, or more tag requirements. Example Plans of Study satisfying these requirements can be found on the concentration website. While some courses can satisfy multiple tags, students still need to take nine Computer Science core courses.',
   sourcePage: 57,
   requirements: [
@@ -86,7 +89,8 @@ export const csCore: RequirementGroup = {
 };
 
 const requiredCourses: RequirementGroup = {
-  groupId: 'Required courses (11–14 courses)',
+  groupId: 'Required courses',
+  subheading: '11–14 courses',
   description: 'A student’s Plan of Study must satisfy each of the requirements below.',
   sourcePage: 56,
   requirements: [
@@ -106,7 +110,8 @@ iv. Students starting in MATH 21B or similar: 11 courses (two courses to complet
 };
 
 const basicRequirements: RequirementGroup = {
-  groupId: 'Basic Requirements: 11–14 courses (44–56 credits)',
+  groupId: 'Basic Requirements',
+  subheading: '11–14 courses (44–56 credits)',
   sourcePage: 56,
   requirements: [
     requiredCourses,

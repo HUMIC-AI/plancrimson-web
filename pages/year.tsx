@@ -3,7 +3,7 @@ import YearSchedule from '../components/YearSchedule/YearSchedule';
 
 const YearPage = function () {
   return (
-    <Layout>
+    <Layout size="max-w-screen">
       <YearSchedule />
     </Layout>
   );

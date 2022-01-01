@@ -44,7 +44,7 @@ const Attribute: React.FC<{ attribute: string; label: string }> = function ({ at
               <FaChevronDown className="w-5 h-5 ml-2" />
             </span>
           </Disclosure.Button>
-          <Disclosure.Panel unmount>
+          <Disclosure.Panel unmount={false}>
             <div className="p-2 origin-top-right bg-gray-300 rounded-b">
               <RefinementList
                 attribute={attribute}

@@ -137,7 +137,9 @@ const Navbar = function () {
                   <FaCalendarCheck className="block lg:hidden h-8 w-auto" />
                   <div className="hidden lg:flex items-center gap-4">
                     <FaCalendarCheck className="h-8 w-auto" />
-                    <h1 className="text-lg">Harvard Concentration Planner</h1>
+                    <h1 className="text-lg">
+                      Plan Crimson
+                    </h1>
                   </div>
                 </div>
                 <div className="hidden sm:block sm:ml-6">

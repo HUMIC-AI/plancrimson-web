@@ -10,7 +10,7 @@ type UserContextType = {
 
 export const UserContext = createContext<UserContextType>({});
 
-export const UserContextProvider: React.FC = function ({ children }) {
+export const UserProvider: React.FC = function ({ children }) {
   const [user, setUser] = useState<User | null | undefined>();
   const [authError, setAuthError] = useState<Error | undefined>();
 

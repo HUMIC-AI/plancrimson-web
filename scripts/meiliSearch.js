@@ -3,8 +3,13 @@ const { MeiliSearch } = require('meilisearch');
 const inquirer = require('inquirer');
 const attributes = require('../shared/meiliAttributes.json');
 
+const host = process.env.NEXT_PUBLIC_MEILI_IP || 'http://127.0.0.1:7700';
+
+console.log(`connecting to host ${host}`);
+
 const client = new MeiliSearch({
-  host: 'http://127.0.0.1:7700',
+  host,
+  apiKey: process.env.NEXT_PUBLIC_MEILI_API_KEY,
 });
 
 const createIndex = () => {

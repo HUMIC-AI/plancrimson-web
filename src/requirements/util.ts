@@ -15,9 +15,9 @@ export function getSchoolYear(schedule: Schedule, classYear: number) {
 
 export type Requirement<Accumulator = number> = {
   id: string;
-  description: string;
+  description?: string;
   sourcePage: number;
-  validate: (value: Accumulator) => boolean;
+  validate?: (value: Accumulator) => boolean;
   initialValue?: Accumulator
 
   // should return null to indicate no change
@@ -26,6 +26,7 @@ export type Requirement<Accumulator = number> = {
 
 export type RequirementGroup = {
   groupId: string;
+  subheading?: string;
   description?: string;
   sourcePage: number;
   filter?: (value: Class) => boolean;
