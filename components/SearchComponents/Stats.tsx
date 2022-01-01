@@ -12,9 +12,9 @@ const Stats = connectStats(({
       ms
     </p>
     <p>
-      {nbHits}
+      Results:
       {' '}
-      classes found
+      {nbHits}
     </p>
   </div>
 ));

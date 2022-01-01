@@ -10,10 +10,11 @@ export interface ScheduleSelectorProps {
   selectedSchedule: Schedule | null;
   selectSchedule: React.Dispatch<Schedule>;
   schedules: Schedule[];
+  direction: 'left' | 'center' | 'right';
 }
 
 const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
-  schedules, selectedSchedule, selectSchedule,
+  schedules, selectedSchedule, selectSchedule, direction,
 }) {
   return (
     <div className="flex flex-col items-center">
@@ -40,7 +41,13 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
             </Listbox.Button>
             {schedules.length > 0 && (
             <FadeTransition>
-              <Listbox.Options className="absolute mt-2 w-full min-w-max shadow z-30">
+              <Listbox.Options className={classNames(
+                'absolute mt-2 w-full min-w-max shadow z-30',
+                direction === 'left' && 'right-0',
+                direction === 'center' && 'left-1/2 transform -translate-x-1/2',
+                direction === 'right' && 'left-0',
+              )}
+              >
                 {schedules.sort(compareSemesters).map((schedule) => (
                   <Listbox.Option
                     key={schedule.id}

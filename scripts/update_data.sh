@@ -2,12 +2,19 @@
 
 echo "starting with pid $$"
 
-ROOT_DIR=$(pwd)/mitData
+if [[ -z $MY_HARVARD_COOKIE ]]; then
+    echo "must set MY_HARVARD_COOKIE env variable"
+    exit 1
+fi
+
+if [[ -z $MEILI_PRIVATE ]]; then
+    echo "must set MEILI_PRIVATE env variable"
+    exit 1
+fi
+
 FETCH_EVALUATIONS_SCRIPT='/Users/alexandercai/Developer/web/harvard-concentration-planner/build/scripts/fetchEvaluations.js'
 EXTEND_CLASS_SCRIPT='/Users/alexandercai/Developer/web/harvard-concentration-planner/build/scripts/cliHelper.js'
 export GOOGLE_APPLICATION_CREDENTIALS='/Users/alexandercai/Developer/web/harvard-concentration-planner/serviceAccountKey.json'
-export MY_HARVARD_COOKIE='_clck=j48mwa|1|ew8|0; OptanonAlertBoxClosed=2021-11-09T16:15:25.157Z; OptanonConsent=isIABGlobal=false&datestamp=Mon+Nov+29+2021+16:29:47+GMT-0500+(Eastern+Standard+Time)&version=6.15.0&hosts=&consentId=44fa3662-4b23-4918-9e16-713114936874&interactionCount=1&landingPath=NotLandingPage&groups=C0001:1,C0002:1,C0003:1,C0004:1,C0005:1&geolocation=US;&AwaitingReconsent=false; MOD_AUTH_CAS=27ad20fc13609dc056a8a93d55994db9; hrvihprd-858p-8080-PORTAL-PSJSESSIONID=Y9QUg07nXKrulg3bQ13XLtqiGw_xZih4!1709796157; ExpirePage=https://portal.my.harvard.edu/psp/hrvihprd/; PS_TokenSite=https://portal.my.harvard.edu/psp/hrvihprd/?hrvihprd-858p-8080-PORTAL-PSJSESSIONID; PS_TOKEN=sAAAAAQDAgEBAAAAvAIAAAAAAAAsAAAABABTaGRyAk4AfQg4AC4AMQAwABT27DF+dzZNDtekX7uXEudSZYceSnAAAAAFAFNkYXRhZHicHYw7DoRADEPfAKKm5g6M2PAR9HwbhHYRLSfhZns4zCRKbNlObiCJI+eE/4hQWcuHGqNVl2LpyMZMvvNj4uBi4cvJKtzFBmpT0HRWaEy7CvxVPK/nafTM0wWnl2bwADPkDSs=; ps_theme=node:EMPL portal:EMPLOYEE theme_id:HU_BRANDING_THEME accessibility:N formfactor:3 piamode:2; ps_theme=node:EMPL portal:EMPLOYEE theme_id:HU_BRANDING_THEME accessibility:N formfactor:3 piamode:2; HPTabNameRemote=; PS_DEVICEFEATURES=width:1920 height:1080 pixelratio:1 touch:0 geolocation:1 websockets:1 webworkers:1 datepicker:1 dtpicker:1 timepicker:1 dnd:1 sessionstorage:1 localstorage:1 history:1 canvas:1 svg:1 postmessage:1 hc:0 maf:0; PS_LOGINLIST=https://csinternal.my.harvard.edu/hrvcsprd https://portal.my.harvard.edu/hrvihprd; hrvcsprd-clb-858p-8080-PORTAL-PSJSESSIONID=cZ4Ug10VKvLELrTGXfZXW_yvUwNzd2lE!-1561881161; AWSELB=B98D5B150620EF03BF44401303982FFCAA00B47465F0ED7F69FF3F143E9E2D577761F33BA15FDA7A2CE28DE3C53CFF2A74C9E4AD922BD5EEC55CD7432BB5EBA995D45DF291158DEAA9FA9E08B1B06BE05F663009FD273EC69503C8268E3D3129EC0BEB5A38D54C0072E12BC438E767141B8FFD083B; SignOnDefault=; PS_LASTSITE=https://portal.my.harvard.edu/psp/hrvihprd/; https://portal.my.harvard.edu/psp/hrvihprd/employee/empl/refresh=list:|; HPTabName=HU_CLASS_SEARCH; LastActiveTab=HU_CLASS_SEARCH; psback=""url":"https://portal.my.harvard.edu/psp/hrvihprd/EMPLOYEE/EMPL/h/?tab=HU_CLASS_SEARCH" "label":"Home" "origin":"PIA" "layout":"0" "refurl":"https://portal.my.harvard.edu/psp/hrvihprd/EMPLOYEE/EMPL/h/?tab=HU_CLASS_SEARCH""; AWSALB=xd+bgLZEJYO0WdFuQnZApyLrEOz5J+AyYLR6uAgQzrcXLD8tKZhoS7nEzaitXwh1xSUct2jJEl2GHwRaLhpulX+gegz9EtaySza9tntrlugTHCaE/bLwD4dj1wGj; AWSALBCORS=xd+bgLZEJYO0WdFuQnZApyLrEOz5J+AyYLR6uAgQzrcXLD8tKZhoS7nEzaitXwh1xSUct2jJEl2GHwRaLhpulX+gegz9EtaySza9tntrlugTHCaE/bLwD4dj1wGj; PS_TOKENEXPIRE=01_Jan_2022_07:23:14_GMT'
-MEILI_PRIVATE='083c82ddd5e12eefd7162a127d346e90bc2c1fd9e5b5ebe4e9fe90a079549139'
 BATCH_SIZE=15
 
 # search query surroundings
@@ -24,8 +31,15 @@ FORCE=
 for ARG in $@; do
     if [[ $ARG == "-f" ]]; then
         FORCE="yes"
+    else
+        ROOT_DIR=$ARG
     fi
 done
+
+if [[ -z $ROOT_DIR ]]; then
+    echo "must specify root directory"
+    exit 1
+fi
 
 if [[ -n "$FORCE" && -e "$ROOT_DIR" ]]; then
     read -p "remove $ROOT_DIR? "

@@ -11,7 +11,7 @@ import CurrentRefinements from '../components/SearchComponents/CurrentRefinement
 import { adjustAttr, getMeiliApiKey, getMeiliHost } from '../shared/util';
 import SortBy from '../components/SearchComponents/SortBy';
 import Stats from '../components/SearchComponents/Stats';
-import { useIsVisible } from '../src/hooks';
+import { useLgBreakpoint } from '../src/hooks';
 
 const searchClient = instantMeiliSearch(
   getMeiliHost(),
@@ -20,10 +20,10 @@ const searchClient = instantMeiliSearch(
 
 const AttributeMenu = function () {
   const ref = useRef<HTMLDivElement>(null!);
-  const isVisible = useIsVisible(ref);
+  const isLg = useLgBreakpoint();
   return (
     <div className="flex-shrink-0 w-64 p-2 hidden lg:flex flex-col gap-2 bg-gray-800 rounded-md" ref={ref}>
-      {isVisible && MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
+      {isLg && MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
         <Attribute attribute={attr} key={attr} label={adjustAttr(attr)} />
       ))}
     </div>
@@ -44,7 +44,7 @@ const SearchPage = function () {
           <div className="flex-1 p-6 shadow-lg border-2 border-gray-200 rounded-lg space-y-4">
             <SelectedScheduleProvider>
               <SearchBox />
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-4">
                 <SortBy
                   defaultRefinement="courses"
                   items={[

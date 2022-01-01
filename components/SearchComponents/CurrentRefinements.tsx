@@ -6,14 +6,14 @@ const CurrentRefinements = connectCurrentRefinements(({
   items,
   refine,
 }) => (
-  <ul className="flex items-center">
+  <ul className="flex items-center gap-4">
     {items.length === 0
       ? <li>Filter for courses using the menu!</li>
       : items.map((item) => (
         <li key={item.label}>
           {item.items ? (
             <div className="flex items-center">
-              <span className="font-bold">
+              <span className="font-medium">
                 {adjustAttr(item.attribute)}
                 :
               </span>

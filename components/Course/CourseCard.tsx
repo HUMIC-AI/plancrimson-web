@@ -7,6 +7,7 @@ import {
 } from '../../shared/apiTypes';
 import { Schedule } from '../../shared/firestoreTypes';
 import { getClassId, classNames } from '../../shared/util';
+import useCardStyle from '../../src/context/cardStyle';
 import useUserData from '../../src/context/userData';
 import Highlight from '../SearchComponents/Highlight';
 
@@ -37,13 +38,14 @@ const CourseCard: React.FC<Props> = function ({
   course, selectedSchedule, handleExpand, highlight, setDragStatus, inSearchContext = true,
 }) {
   const { addCourses, removeCourses } = useUserData();
+  const { isExpanded } = useCardStyle();
   const draggable = typeof setDragStatus !== 'undefined';
 
   const HighlightComponent = inSearchContext ? Highlight : MockHighlight;
 
   return (
     <div
-      className="rounded-xl shadow overflow-hidden border-gray-800 border-4"
+      className="rounded-xl shadow overflow-hidden border-gray-800 bg-gray-800 border-4 text-left"
       draggable={draggable}
       onDragStart={draggable ? (ev) => {
       // eslint-disable-next-line no-param-reassign
@@ -60,12 +62,16 @@ const CourseCard: React.FC<Props> = function ({
     >
       <div className={classNames(highlight ? 'bg-blue-500' : 'bg-gray-800', 'p-2 text-white')}>
         <p className="flex justify-between items-start">
-          <span className="font-bold text-left text-blue-300">
+          <span className="font-bold text-blue-300">
             <HighlightComponent attribute="SUBJECT" hit={course} />
             <HighlightComponent attribute="CATALOG_NBR" hit={course} />
           </span>
           <span className="flex items-center gap-2 ml-2">
-            <button type="button" className="bg-black bg-opacity-0 hover:bg-opacity-50 transition-colors rounded p-1" onClick={() => handleExpand(course)}>
+            <button
+              type="button"
+              className="bg-black bg-opacity-0 hover:bg-opacity-50 transition-colors rounded p-1"
+              onClick={() => handleExpand(course)}
+            >
               <FaInfo />
             </button>
             {selectedSchedule && (
@@ -94,16 +100,20 @@ const CourseCard: React.FC<Props> = function ({
                 ))}
           </span>
         </p>
-        <h3>
+        <h3 className={classNames(isExpanded || 'text-sm')}>
           <HighlightComponent attribute="Title" hit={course} />
         </h3>
       </div>
-      <div className="p-2">
+
+      {isExpanded && (
+      <div className="p-2 bg-white h-full">
         <div className="inline-grid grid-cols-[auto_1fr] items-center gap-y-2 gap-x-4">
           <FaUser />
           <span>{course.IS_SCL_DESCR_IS_SCL_DESCRL || 'Unknown'}</span>
           <FaMapMarkerAlt />
-          {course.SUBJECT.startsWith('MIT') ? <span>MIT</span> : <HighlightComponent attribute="LOCATION_DESCR_LOCATION" hit={course} />}
+          {course.SUBJECT.startsWith('MIT')
+            ? <span>MIT</span>
+            : <HighlightComponent attribute="LOCATION_DESCR_LOCATION" hit={course} />}
           <FaCalendarDay />
           {course.IS_SCL_MEETING_PAT === 'TBA'
             ? <span>TBA</span>
@@ -140,6 +150,7 @@ const CourseCard: React.FC<Props> = function ({
         </>
         )}
       </div>
+      )}
     </div>
   );
 };

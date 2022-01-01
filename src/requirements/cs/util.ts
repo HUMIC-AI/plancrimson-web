@@ -18,7 +18,6 @@ export function countTag(tag: CSCourseTag, required = 1): Pick<Requirement, 'red
 
 export const descriptionOnly = () => ({
   reducer: () => null,
-  validate: () => true,
 });
 
 type ProgrammingOneAndTwoAccumulator = {
@@ -49,7 +48,6 @@ const programmingOneAndTwo: Requirement<ProgrammingOneAndTwoAccumulator> = {
     return null;
   },
   validate: ({ programming1, programming2 }) => {
-    console.log('VALIDATING', programming1, programming2);
     if (programming2 >= 2) return true;
     if (programming2 >= 1 && programming1 >= 1) return true;
     return false;

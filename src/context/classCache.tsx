@@ -7,7 +7,9 @@ import React, {
 } from 'react';
 import { ExtendedClass } from '../../shared/apiTypes';
 import { UserData } from '../../shared/firestoreTypes';
-import { getAllClassIds, getMeiliApiKey, getMeiliHost } from '../../shared/util';
+import {
+  getAllClassIds, getMeiliApiKey, getMeiliHost, throwMissingContext,
+} from '../../shared/util';
 
 export type ClassCache = Record<string, ExtendedClass>;
 
@@ -17,8 +19,8 @@ export type ClassCacheContextType = {
 };
 
 const ClassCacheContext = createContext<ClassCacheContextType>({
-  getClass: () => null,
-  appendClasses: () => null,
+  getClass: throwMissingContext,
+  appendClasses: throwMissingContext,
 });
 
 type DialogProps = {
@@ -94,7 +96,7 @@ const ErrorDialog: React.FC<DialogProps> = function ({ isOpen, closeDialog, erro
   );
 };
 
-export const ClassCacheContextProvider: React.FC = function ({ children }) {
+export const ClassCacheProvider: React.FC = function ({ children }) {
   const [classIndex, setClassIndex] = useState<Index<ExtendedClass> | null>(null);
   const [classIds, setClassIds] = useState<string[]>([]);
   const [classCache, setClassCache] = useState<ClassCache>({});
@@ -130,12 +132,15 @@ export const ClassCacheContextProvider: React.FC = function ({ children }) {
 
   const getClass = useCallback((classId: string) => classCache[classId] || null, [classCache]);
 
-  const appendClasses: ClassCacheContextType['appendClasses'] = (newClassIds: string[]) => setClassIds((prev) => [...prev, ...newClassIds]);
+  const appendClasses: ClassCacheContextType['appendClasses'] = useCallback(
+    (newClassIds: string[]) => setClassIds((prev) => [...prev, ...newClassIds]),
+    [],
+  );
 
   const context = useMemo(() => ({
     getClass,
     appendClasses,
-  }), [getClass]);
+  }), [getClass, appendClasses]);
 
   return (
     <ClassCacheContext.Provider value={context}>
@@ -148,7 +153,7 @@ export const ClassCacheContextProvider: React.FC = function ({ children }) {
 const useClassCache = (data: UserData) => {
   const { appendClasses, getClass } = useContext(ClassCacheContext);
   useEffect(() => appendClasses(getAllClassIds(data)), [data, appendClasses]);
-  return { getClass };
+  return getClass;
 };
 
 export default useClassCache;

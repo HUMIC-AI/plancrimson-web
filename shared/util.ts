@@ -143,3 +143,7 @@ export function getMeiliApiKey() {
 
   return key;
 }
+
+export function throwMissingContext<T>(): T {
+  throw new Error('must provide context element');
+}

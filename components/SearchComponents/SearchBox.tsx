@@ -1,5 +1,5 @@
 import { Disclosure } from '@headlessui/react';
-import { FaTimes, FaBars } from 'react-icons/fa';
+import { FaTimes, FaBars, FaArrowsAltV } from 'react-icons/fa';
 import { connectSearchBox } from 'react-instantsearch-dom';
 import { Fragment, useRef } from 'react';
 import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
@@ -9,15 +9,16 @@ import ScheduleSelector from '../ScheduleSelector';
 import { classNames } from '../../shared/util';
 import { ATTRIBUTE_DESCRIPTIONS, Class } from '../../shared/apiTypes';
 import Stats from './Stats';
-import { useIsVisible } from '../../src/hooks';
+import { useLgBreakpoint } from '../../src/hooks';
+import useCardStyle from '../../src/context/cardStyle';
 
 const AttributeMenu = function () {
   const ref = useRef<HTMLDivElement>(null!);
-  const isVisible = useIsVisible(ref);
+  const isLg = useLgBreakpoint();
 
   return (
     <div className="relative lg:hidden" ref={ref}>
-      {isVisible && (
+      {!isLg && (
       <Disclosure as={Fragment}>
         {({ open }) => (
           <>
@@ -46,6 +47,7 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
   const {
     schedules, selectSchedule, selectedSchedule,
   } = useSelectedScheduleContext();
+  const { isExpanded, expand } = useCardStyle();
 
   return (
     <div className="flex flex-col gap-2">
@@ -72,8 +74,13 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
             schedules={schedules}
             selectSchedule={selectSchedule}
             selectedSchedule={selectedSchedule}
+            direction="left"
           />
         </div>
+
+        <button type="button" onClick={() => expand(!isExpanded)}>
+          <FaArrowsAltV />
+        </button>
 
         <AttributeMenu />
       </div>
@@ -84,6 +91,7 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
           schedules={schedules}
           selectSchedule={selectSchedule}
           selectedSchedule={selectedSchedule}
+          direction="left"
         />
       </div>
       {isSearchStalled && <p>Loading...</p>}

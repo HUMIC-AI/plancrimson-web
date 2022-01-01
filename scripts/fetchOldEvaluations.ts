@@ -8,8 +8,12 @@ import {
 } from '../shared/apiTypes';
 import { allTruthy } from '../shared/util';
 
+const cookie = process.env.EVALUATIONS_COOKIE;
+
+if (!cookie) throw new Error('must provide EVALUATIONS_COOKIE env variable');
+
 // https://course-evaluation-reports.fas.harvard.edu/fas/list
-axios.defaults.headers.common.Cookie = '_clck=j48mwa|1|ew8|0; OptanonAlertBoxClosed=2021-11-09T16:15:25.157Z; OptanonConsent=isIABGlobal=false&datestamp=Mon+Nov+29+2021+16:29:47+GMT-0500+(Eastern+Standard+Time)&version=6.15.0&hosts=&consentId=44fa3662-4b23-4918-9e16-713114936874&interactionCount=1&landingPath=NotLandingPage&groups=C0001:1,C0002:1,C0003:1,C0004:1,C0005:1&geolocation=US;&AwaitingReconsent=false; JSESSIONID=42FDCDCF22C1E505368B7448C2E0A436';
+axios.defaults.headers.common.Cookie = cookie;
 
 const baseUrl = 'https://course-evaluation-reports.fas.harvard.edu/fas';
 const years: string[] = [];
@@ -319,7 +323,7 @@ async function main() {
   if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir);
 
   // eslint-disable-next-line no-restricted-syntax
-  for (const yearterm of years) {
+  for (const yearterm of years.slice(2)) {
     const response = await axios({
       method: 'GET',
       url: 'https://course-evaluation-reports.fas.harvard.edu/fas/list',

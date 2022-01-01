@@ -1,9 +1,11 @@
 import {
-  MutableRefObject, useEffect, useState,
+  useEffect, useState,
 } from 'react';
 import { getFirestore, DocumentReference, doc } from 'firebase/firestore';
 import { ExtendedClass } from '../shared/apiTypes';
 import { UserData } from '../shared/firestoreTypes';
+
+const LG_BREAKPOINT = 1024;
 
 export function getUserRef(uid: string) {
   return doc(getFirestore(), 'users', uid) as DocumentReference<UserData>;
@@ -25,15 +27,23 @@ export function useCourseDialog() {
   };
 }
 
-export function useIsVisible<T extends Element>(ref: MutableRefObject<T>) {
-  const [isVisible, setIsVisible] = useState(false);
-  const observer = typeof window !== 'undefined' ? new IntersectionObserver(
-    ([entry]) => setIsVisible(entry.isIntersecting),
-  ) : null;
+export function useLgBreakpoint() {
+  const [isPast, setIsPast] = useState(false);
+
   useEffect(() => {
-    observer?.observe(ref.current);
+    if (!window) return; // ignore on server
+
+    function handleResize(this: Window) {
+      setIsPast(this.innerWidth >= LG_BREAKPOINT);
+    }
+
+    setIsPast(window.innerWidth >= LG_BREAKPOINT);
+
+    window.addEventListener('resize', handleResize);
+
     // eslint-disable-next-line consistent-return
-    return () => observer?.disconnect();
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
-  return isVisible;
+
+  return isPast;
 }

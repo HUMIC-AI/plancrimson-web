@@ -1,8 +1,10 @@
 import 'tailwindcss/tailwind.css';
 import type { AppProps } from 'next/app';
 import { getApps, initializeApp } from 'firebase/app';
-import { UserContext, UserContextProvider } from '../src/context/user';
+import { UserContext, UserProvider } from '../src/context/user';
 import { UserDataProvider } from '../src/context/userData';
+import { ClassCacheProvider } from '../src/context/classCache';
+import { CardStyleProvider } from '../src/context/cardStyle';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -22,15 +24,19 @@ if (getApps().length === 0) {
 
 const MyApp = function ({ Component, pageProps }: AppProps) {
   return (
-    <UserContextProvider>
+    <UserProvider>
       <UserContext.Consumer>
         {({ user }) => (
           <UserDataProvider user={user}>
-            <Component {...pageProps} />
+            <ClassCacheProvider>
+              <CardStyleProvider>
+                <Component {...pageProps} />
+              </CardStyleProvider>
+            </ClassCacheProvider>
           </UserDataProvider>
         )}
       </UserContext.Consumer>
-    </UserContextProvider>
+    </UserProvider>
   );
 };
 

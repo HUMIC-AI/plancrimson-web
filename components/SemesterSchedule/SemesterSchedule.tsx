@@ -8,7 +8,7 @@ import Calendar from './Calendar';
 const SemesterSchedule: React.FC = function () {
   const { schedules, selectSchedule, selectedSchedule } = useSelectedScheduleContext();
   const { data, createSchedule } = useUserData();
-  const { getClass } = useClassCache(data);
+  const getClass = useClassCache(data);
 
   const newSemester: React.FormEventHandler<HTMLFormElement> = (ev) => {
     ev.preventDefault();
@@ -23,6 +23,7 @@ const SemesterSchedule: React.FC = function () {
           schedules={schedules}
           selectSchedule={selectSchedule}
           selectedSchedule={selectedSchedule}
+          direction="right"
         />
 
         <form onSubmit={newSemester} className="rounded p-2 bg-gray-300 flex flex-col sm:flex-row flex-wrap gap-2">

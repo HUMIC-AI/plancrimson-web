@@ -32,12 +32,14 @@ export const allRequirements = [
 
 const validateSchedules = (
   schedules: Schedule[],
-  requirements: Requirement[],
+  allReqs: Requirement[],
   userData: UserData,
   getClass: ClassCacheContextType['getClass'],
 ): RequirementsMet => {
   const requirementsMet = {} as Record<string, any>;
   const classesUsed = {} as Record<string, string[]>;
+
+  const requirements = allReqs.filter((req) => typeof req.validate !== 'undefined');
 
   requirements.forEach((req) => {
     requirementsMet[req.id] = req.initialValue || 0;
@@ -73,7 +75,7 @@ const validateSchedules = (
   const results: RequirementsMet = {};
   requirements.forEach((req) => {
     results[req.id] = {
-      satisfied: req.validate(reducerResults[req.id]),
+      satisfied: req.validate!(reducerResults[req.id]),
       classes: classesUsed[req.id],
     };
   });
