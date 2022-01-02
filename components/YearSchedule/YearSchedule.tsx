@@ -35,14 +35,14 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
         as="div"
         className="relative mb-4"
       >
-        <Listbox.Button className="shadow py-2 px-3 border-2 rounded w-full text-left flex justify-between items-center">
+        <Listbox.Button className="shadow py-2 px-3 border-2 rounded w-full text-left flex justify-between items-center font-medium">
           {selectedRequirements.groupId}
           <FaChevronDown />
         </Listbox.Button>
         <FadeTransition>
-          <Listbox.Options className="absolute mt-2 rounded-lg overflow-hidden">
+          <Listbox.Options className="absolute mt-2 rounded-lg overflow-hidden shadow border">
             {allRequirements.map(({ groupId }) => (
-              <Listbox.Option key={groupId} value={groupId} className="even:bg-gray-400 odd:bg-gray-200 py-1 px-2">
+              <Listbox.Option key={groupId} value={groupId} className="odd:bg-white even:bg-gray-100 py-2 px-4 font-medium">
                 {groupId}
               </Listbox.Option>
             ))}

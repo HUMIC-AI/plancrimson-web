@@ -1,7 +1,8 @@
 import { Disclosure } from '@headlessui/react';
 import { FaTimes, FaBars, FaArrowsAltV } from 'react-icons/fa';
 import { connectSearchBox } from 'react-instantsearch-dom';
-import { Fragment, useRef } from 'react';
+import React, { Fragment, useRef } from 'react';
+import type { SearchBoxProvided } from 'react-instantsearch-core';
 import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
 import Attribute from './Attribute';
 import useSelectedScheduleContext from '../../src/context/selectedSchedule';
@@ -43,7 +44,7 @@ const AttributeMenu = function () {
   );
 };
 
-const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine }) => {
+export const SearchBoxComponent: React.FC<SearchBoxProvided> = function ({ currentRefinement, isSearchStalled, refine }) {
   const {
     schedules, selectSchedule, selectedSchedule,
   } = useSelectedScheduleContext();
@@ -97,6 +98,6 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
       {isSearchStalled && <p>Loading...</p>}
     </div>
   );
-});
+};
 
-export default SearchBox;
+export default connectSearchBox(SearchBoxComponent);

@@ -61,19 +61,19 @@ const RequirementsDisplay: React.FC<Props> = function ({
   let borderStyles: string;
   switch (depth) {
     case 0:
-      color = 'bg-transparent text-black';
+      color = 'bg-transparent text-black focus:bg-gray-400';
       borderStyles = '';
       break;
     case 1:
-      color = 'bg-gray-800';
+      color = 'bg-gray-800 focus:bg-gray-400';
       borderStyles = 'border-gray-800 border-4';
       break;
     case 2:
-      color = 'bg-gray-600';
+      color = 'bg-gray-600 focus:bg-gray-400';
       borderStyles = 'border-gray-600 border-2';
       break;
     default:
-      color = 'bg-gray-400';
+      color = 'bg-gray-400 focus:bg-gray-400';
       borderStyles = 'border-gray-400 border-1';
       break;
   }
@@ -89,7 +89,7 @@ const RequirementsDisplay: React.FC<Props> = function ({
       )}
     >
       <Disclosure.Button className={classNames(
-        'text-left text-white p-2 w-full hover:opacity-70 transition-opacity',
+        'text-left text-white p-2 w-full hover:opacity-70 transition-opacity focus:ring-white focus:outline-none',
         color,
       )}
       >

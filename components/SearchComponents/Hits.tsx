@@ -1,5 +1,6 @@
 import { connectHits } from 'react-instantsearch-dom';
 import React from 'react';
+import type { HitsProvided } from 'react-instantsearch-core';
 import {
   ExtendedClass,
 } from '../../shared/apiTypes';
@@ -9,7 +10,7 @@ import CourseCard from '../Course/CourseCard';
 import CourseDialog from '../Course/CourseDialog';
 import { useCourseDialog } from '../../src/hooks';
 
-const Hits = connectHits<ExtendedClass>(({ hits }) => {
+export const HitsComponent: React.FC<HitsProvided<ExtendedClass>> = function ({ hits }) {
   const { selectedSchedule } = useSelectedScheduleContext();
   const {
     isOpen, openedCourse, closeModal, handleExpand,
@@ -31,6 +32,6 @@ const Hits = connectHits<ExtendedClass>(({ hits }) => {
       />
     </div>
   );
-});
+};
 
-export default Hits;
+export default connectHits<ExtendedClass>(HitsComponent);

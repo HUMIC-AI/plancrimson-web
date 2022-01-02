@@ -12,23 +12,19 @@ const links = [
 const ResourcesPage: React.FC = function () {
   return (
     <Layout>
-      <p>
-        The data is taken from the
-        {' '}
-        <a href="https://my.harvard.edu/">my.harvard.edu</a>
-        {' '}
-        Course Catalog.
-      </p>
-      <div>
-        <ul>
-          <li>
-            <a href="https://csadvising.seas.harvard.edu/concentration/courses/tags/">
-              CS Advising Course Tags
-            </a>
-          </li>
+      <div className="max-w-sm mx-auto">
+        <h1 className="text-2xl leading-loose font-semibold">Other Resources</h1>
+        <p>
+          Data is taken from the
+          {' '}
+          <a href="https://my.harvard.edu/" target="_blank" rel="noreferrer" className="hover:opacity-50 transition-opacity font-semibold">my.harvard</a>
+          {' '}
+          Course Catalog.
+        </p>
+        <ul className="list-disc list-inside">
           {links.map(([name, href]) => (
             <li key={href}>
-              <a href={href} target="_blank" rel="noreferrer">
+              <a href={href} target="_blank" rel="noreferrer" className="hover:opacity-50 transition-opacity font-semibold">
                 {name}
               </a>
             </li>

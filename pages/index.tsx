@@ -1,19 +1,20 @@
 import React, { useRef } from 'react';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
 import { InstantSearch } from 'react-instantsearch-dom';
+import { adjustAttr, getMeiliApiKey, getMeiliHost } from '../shared/util';
+import MEILI_ATTRIBUTES from '../shared/meiliAttributes.json';
+import { useLgBreakpoint } from '../src/hooks';
+import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
+import useUser, { alertSignIn } from '../src/context/user';
 import Layout from '../components/Layout/Layout';
 import Attribute from '../components/SearchComponents/Attribute';
-import SearchBox from '../components/SearchComponents/SearchBox';
-import Hits from '../components/SearchComponents/Hits';
-import MEILI_ATTRIBUTES from '../shared/meiliAttributes.json';
-import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
-import CurrentRefinements from '../components/SearchComponents/CurrentRefinements';
-import { adjustAttr, getMeiliApiKey, getMeiliHost } from '../shared/util';
-import SortBy from '../components/SearchComponents/SortBy';
-import Stats from '../components/SearchComponents/Stats';
-import { useLgBreakpoint } from '../src/hooks';
+import SearchBox, { SearchBoxComponent } from '../components/SearchComponents/SearchBox';
+import Hits, { HitsComponent } from '../components/SearchComponents/Hits';
+import CurrentRefinements, { CurrentRefinementsComponent } from '../components/SearchComponents/CurrentRefinements';
+import SortBy, { SortByComponent } from '../components/SearchComponents/SortBy';
+import Stats, { StatsComponent } from '../components/SearchComponents/Stats';
 
-const searchClient = instantMeiliSearch(
+const meiliSearchClient = instantMeiliSearch(
   getMeiliHost(),
   getMeiliApiKey(),
 );
@@ -21,6 +22,7 @@ const searchClient = instantMeiliSearch(
 const AttributeMenu = function () {
   const ref = useRef<HTMLDivElement>(null!);
   const isLg = useLgBreakpoint();
+
   return (
     <div className="flex-shrink-0 w-64 p-2 hidden lg:flex flex-col gap-2 bg-gray-800 rounded-md" ref={ref}>
       {isLg && MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
@@ -30,39 +32,65 @@ const AttributeMenu = function () {
   );
 };
 
+// we show a demo if the user is not logged in,
+// but do not allow them to send requests to the database
 const SearchPage = function () {
+  const { user } = useUser();
+
   return (
     <Layout>
       <InstantSearch
         indexName="courses"
-        searchClient={searchClient}
+        searchClient={meiliSearchClient}
       >
-        {/* <Configure hitsPerPage={10} /> */}
         <div className="flex gap-4">
           <AttributeMenu />
 
           <div className="flex-1 p-6 shadow-lg border-2 border-gray-200 rounded-lg space-y-4">
             <SelectedScheduleProvider>
-              <SearchBox />
+              {user
+                ? <SearchBox />
+                : <SearchBoxComponent isSearchStalled={false} refine={alertSignIn} currentRefinement="Search now" />}
               <div className="flex items-start justify-between gap-4">
-                <SortBy
-                  defaultRefinement="courses"
-                  items={[
-                    { label: 'Default', value: 'courses' },
-                    { label: 'Catalog number', value: 'courses:CATALOG_NBR:asc' },
-                    { label: 'Start time', value: 'courses:IS_SCL_STRT_TM_DEC:asc' },
-                    { label: 'Average class size', value: 'courses:meanClassSize:desc' },
-                    { label: 'Workload', value: 'courses:meanClassSize:asc' },
-                    { label: 'Highly Recommended', value: 'courses:meanRecommendation:desc' },
-                    { label: 'Highly Rated', value: 'courses:meanRating:desc' },
-                  ]}
-                />
+                {user ? (
+                  <SortBy
+                    defaultRefinement="courses"
+                    items={[
+                      { label: 'Default', value: 'courses' },
+                      { label: 'Catalog number', value: 'courses:CATALOG_NBR:asc' },
+                      { label: 'Start time', value: 'courses:IS_SCL_STRT_TM_DEC:asc' },
+                      { label: 'Average class size', value: 'courses:meanClassSize:desc' },
+                      { label: 'Light Workload', value: 'courses:meanClassSize:asc' },
+                      { label: 'Highly Recommended', value: 'courses:meanRecommendation:desc' },
+                      { label: 'Highly Rated', value: 'courses:meanRating:desc' },
+                    ]}
+                  />
+                ) : (
+                  <SortByComponent
+                    items={[
+                      { label: 'Default', value: 'courses', isRefined: true },
+                      { label: 'Catalog number', value: 'courses:CATALOG_NBR:asc', isRefined: false },
+                      { label: 'Start time', value: 'courses:IS_SCL_STRT_TM_DEC:asc', isRefined: false },
+                      { label: 'Average class size', value: 'courses:meanClassSize:desc', isRefined: false },
+                      { label: 'Light Workload', value: 'courses:meanClassSize:asc', isRefined: false },
+                      { label: 'Highly Recommended', value: 'courses:meanRecommendation:desc', isRefined: false },
+                      { label: 'Highly Rated', value: 'courses:meanRating:desc', isRefined: false },
+                    ]}
+                    refine={alertSignIn}
+                  />
+                )}
                 <div className="hidden sm:block flex-1 min-w-max">
-                  <Stats />
+                  {user
+                    ? <Stats />
+                    : <StatsComponent nbHits={10000} processingTimeMS={200} />}
                 </div>
               </div>
-              <CurrentRefinements />
-              <Hits />
+              {user
+                ? <CurrentRefinements />
+                : <CurrentRefinementsComponent items={[]} refine={alertSignIn} />}
+              {user
+                ? <Hits />
+                : <HitsComponent hits={[]} /> }
             </SelectedScheduleProvider>
           </div>
         </div>

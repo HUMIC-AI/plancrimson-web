@@ -22,7 +22,7 @@ const Layout: React.FC<LayoutProps> = function ({ children, title, size = 'conta
         </title>
       </Head>
 
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen justify-around">
         <Navbar />
 
         <main className={classNames('sm:p-8 mx-auto flex-1', size)}>

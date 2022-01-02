@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable no-await-in-loop */
 import axios from 'axios';
 import cheerio, { CheerioAPI } from 'cheerio';
@@ -323,7 +324,7 @@ async function main() {
   if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir);
 
   // eslint-disable-next-line no-restricted-syntax
-  for (const yearterm of years.slice(2)) {
+  for (const yearterm of years.slice(17)) {
     const response = await axios({
       method: 'GET',
       url: 'https://course-evaluation-reports.fas.harvard.edu/fas/list',
