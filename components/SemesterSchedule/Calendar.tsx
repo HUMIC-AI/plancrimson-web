@@ -118,7 +118,7 @@ const Calendar: React.FC<CalendarProps> = function ({ classes }) {
         <div className="grid grid-cols-5 h-full relative ml-6">
           {validClasses.slice(0, 5).map((classesToday, i) => (
             // eslint-disable-next-line react/no-array-index-key
-            <div key={i} className="even:bg-gray-300 odd:bg-white h-full relative">
+            <div key={i} className="odd:bg-gray-300 even:bg-white h-full relative">
               {/* courses */}
               {classesToday.map(({
                 label, title, location, startTime, endTime,

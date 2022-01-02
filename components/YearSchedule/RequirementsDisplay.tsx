@@ -84,7 +84,7 @@ const RequirementsDisplay: React.FC<Props> = function ({
       defaultOpen={depth === 0}
       as="div"
       className={classNames(
-        'rounded-lg overflow-hidden mt-2',
+        'rounded-lg overflow-hidden mt-4',
         borderStyles,
       )}
     >

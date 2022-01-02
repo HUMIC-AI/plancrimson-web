@@ -1,6 +1,7 @@
 import React from 'react';
 import { Evaluation } from '../../shared/apiTypes';
 import { allTruthy } from '../../shared/util';
+import ExternalLink from '../ExternalLink';
 import Percentages from './Percentages';
 
 const EvaluationComponent: React.FC<{ report: Evaluation }> = function ({ report }) {
@@ -12,9 +13,9 @@ const EvaluationComponent: React.FC<{ report: Evaluation }> = function ({ report
         <h3 className="font-bold">
           {`${report.year} ${report.season}`}
         </h3>
-        <a href={report.url} className="text-blue-300 hover:text-blue-500" target="_blank" rel="noreferrer">
+        <ExternalLink href={report.url}>
           View report
-        </a>
+        </ExternalLink>
       </div>
 
       <div>

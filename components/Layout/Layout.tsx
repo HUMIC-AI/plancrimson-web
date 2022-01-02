@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React from 'react';
 import { classNames } from '../../shared/util';
+import ExternalLink from '../ExternalLink';
 import Navbar from './Navbar';
 
 type LayoutProps = {
@@ -13,13 +14,16 @@ type LayoutProps = {
 
 const Layout: React.FC<LayoutProps> = function ({ children, title, size = 'container' }) {
   const { query } = useRouter();
+  const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
   return (
     <div className="flex flex-col min-h-screen overflow-auto justify-around">
       <Head>
-        <title>
-          Plan Crimson
-          {title ? ` | ${title}` : ''}
-        </title>
+        <title>{pageTitle}</title>
+        <link rel="icon" href="favicon.svg" type="image/x-icon" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content="Wait no longer to plan out your concentration. For Harvard College students." />
+        <meta property="og:image" content="favicon.svg" />
+        <meta property="og:url" content="https://plancrimson.xyz/" />
       </Head>
 
       <Navbar />
@@ -36,9 +40,9 @@ const Layout: React.FC<LayoutProps> = function ({ children, title, size = 'conta
           <span>
             Data is not guaranteed to match
             {' '}
-            <a href="https://my.harvard.edu/" target="_blank" rel="noreferrer" className="font-bold hover:opacity-50 transition-opacity">
+            <ExternalLink href="https://my.harvard.edu/">
               my.harvard
-            </a>
+            </ExternalLink>
           </span>
           <span>
             &#169; 2022 Alexander Cai | alexcai [at] college
@@ -46,21 +50,21 @@ const Layout: React.FC<LayoutProps> = function ({ children, title, size = 'conta
           <span>
             Logo
             {' '}
-            <a href="https://fontawesome.com/license" target="_blank" rel="noreferrer" className="font-bold hover:opacity-50 transition-opacity">
+            <ExternalLink href="https://fontawesome.com/license">
               &#169; 2018 FontAwesome
-            </a>
+            </ExternalLink>
           </span>
           <span>
             Course metadata and evaluations
             {' '}
-            <a href="https://www.harvard.edu/" target="_blank" rel="noreferrer" className="font-bold hover:opacity-50 transition-opacity">
+            <ExternalLink href="https://www.harvard.edu/">
               &#169; 2022 The President and Fellows of Harvard College
-            </a>
+            </ExternalLink>
           </span>
           <span>
-            <a href="https://account.venmo.com/u/Alexander-Cai-1" target="_blank" rel="noreferrer" className="font-bold hover:opacity-50 transition-opacity">
+            <ExternalLink href="https://account.venmo.com/u/Alexander-Cai-1">
               Buy me a coffee
-            </a>
+            </ExternalLink>
             {' | '}
             <Link href={{
               pathname: '/privacy',

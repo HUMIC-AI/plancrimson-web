@@ -80,7 +80,7 @@ const SearchPage = function () {
                     refine={alertSignIn}
                   />
                 )}
-                <div className="hidden sm:block flex-1 min-w-max">
+                <div className="hidden sm:block">
                   {user
                     ? <Stats />
                     : <StatsComponent nbHits={10000} processingTimeMS={200} />}

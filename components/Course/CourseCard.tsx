@@ -52,7 +52,12 @@ const CourseCard: React.FC<Props> = function ({
         }
       } : undefined}
     >
-      <div className={classNames(highlight ? 'bg-blue-500' : 'bg-gray-800', 'p-2 text-white')}>
+      <div className={classNames(
+        highlight ? 'bg-blue-500' : 'bg-gray-800',
+        'p-2 text-white',
+        draggable && 'cursor-move',
+      )}
+      >
         <p className="flex justify-between items-start">
           <span className="font-bold text-blue-300">
             <HighlightComponent attribute="SUBJECT" course={course} inSearch={inSearchContext} />

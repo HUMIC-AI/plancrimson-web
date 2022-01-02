@@ -1,6 +1,8 @@
+import ExternalLink from '../components/ExternalLink';
 import Layout from '../components/Layout/Layout';
 
-const links = [
+const links: [string, string][] = [
+  ['Harvard College Student Handbook', 'https://handbook.college.harvard.edu/'],
   ['CS Advising Site', 'https://csadvising.seas.harvard.edu/'],
   ['SEAS Four Year Course Plan', 'https://info.seas.harvard.edu/courses/#/multiYearPlan'],
   ['Vericlass', 'https://vericlass.net/'],
@@ -12,21 +14,21 @@ const links = [
 const ResourcesPage: React.FC = function () {
   return (
     <Layout>
-      <div className="max-w-sm mx-auto">
+      <div className="max-w-md mx-auto">
         <h1 className="text-2xl leading-loose font-semibold">Other Resources</h1>
         <p>
           Data is taken from the
           {' '}
-          <a href="https://my.harvard.edu/" target="_blank" rel="noreferrer" className="hover:opacity-50 transition-opacity font-semibold">my.harvard</a>
+          <ExternalLink href="https://my.harvard.edu/">my.harvard</ExternalLink>
           {' '}
-          Course Catalog.
+          Course Catalog. Here&apos;s some other useful sites for planning out your concentration!
         </p>
-        <ul className="list-disc list-inside">
+        <ul className="list-disc list-inside mt-4">
           {links.map(([name, href]) => (
             <li key={href}>
-              <a href={href} target="_blank" rel="noreferrer" className="hover:opacity-50 transition-opacity font-semibold">
+              <ExternalLink href={href}>
                 {name}
-              </a>
+              </ExternalLink>
             </li>
           ))}
         </ul>
