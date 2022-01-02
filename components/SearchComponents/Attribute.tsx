@@ -39,7 +39,7 @@ const Attribute: React.FC<{ attribute: string; label: string }> = function ({ at
                   ev.stopPropagation();
                   setOperator(operator === 'and' ? 'or' : 'and');
                 }}
-                className="hover:font-semibold w-8 bg-gray-700 rounded text-white"
+                className="hover:font-semibold w-8 bg-gray-800 rounded text-white"
               >
                 {operator}
               </button>

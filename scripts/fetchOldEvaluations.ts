@@ -324,7 +324,7 @@ async function main() {
   if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir);
 
   // eslint-disable-next-line no-restricted-syntax
-  for (const yearterm of years.slice(17)) {
+  for (const yearterm of years.slice(21)) {
     const response = await axios({
       method: 'GET',
       url: 'https://course-evaluation-reports.fas.harvard.edu/fas/list',
@@ -332,6 +332,7 @@ async function main() {
         yearterm,
       },
     });
+    console.error(`==================== LOADING YEAR ${yearterm} ====================`);
 
     const $ = cheerio.load(response.data);
     const departments = $('.course-block-head > .remove_link > span').map((_, span) => $(span).attr('title_abbrev')).toArray();

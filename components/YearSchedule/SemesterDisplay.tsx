@@ -41,7 +41,7 @@ const SemesterDisplay: React.FC<Props> = function ({
       ? 'bg-blue-300'
       : 'bg-gray-300 cursor-not-allowed');
   } else {
-    containerStyles += 'even:bg-gray-300 odd:bg-gray-100';
+    containerStyles += 'odd:bg-gray-300 even:bg-white';
   }
 
   const schedules = getSchedulesBySemester(data, year, season);

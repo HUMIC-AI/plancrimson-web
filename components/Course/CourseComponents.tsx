@@ -2,7 +2,7 @@ import React, { Fragment } from 'react';
 import {
   FaUser, FaMapMarkerAlt, FaCalendarDay, FaClock,
 } from 'react-icons/fa';
-import { ExtendedClass } from '../../shared/apiTypes';
+import { DAYS_OF_WEEK, ExtendedClass } from '../../shared/apiTypes';
 import { classNames } from '../../shared/util';
 import Highlight from '../SearchComponents/Highlight';
 
@@ -65,7 +65,6 @@ export const Location: React.FC<CourseProps> = function ({ course, inSearch }) {
   );
 };
 
-const dayAbbreviations = 'Mo Tu We Th Fr Sa Su'.split(' ');
 const dayLetters = 'MTWRFSU';
 
 const WeekDisplay: React.FC<{ pattern: string; index?: number; }> = function ({ pattern, index }) {
@@ -77,7 +76,7 @@ const WeekDisplay: React.FC<{ pattern: string; index?: number; }> = function ({ 
         ? <span>TBA</span>
         : (
           <div className="inline-grid grid-cols-7 max-w-xs border-2 border-gray-800 rounded overflow-hidden">
-            {dayAbbreviations.map((abbrev, j) => (
+            {DAYS_OF_WEEK.map((val) => val.slice(0, 2)).map((abbrev, j) => (
               <span
                 key={abbrev}
                 className={classNames(

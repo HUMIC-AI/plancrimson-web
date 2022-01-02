@@ -61,19 +61,19 @@ const RequirementsDisplay: React.FC<Props> = function ({
   let borderStyles: string;
   switch (depth) {
     case 0:
-      color = 'bg-transparent text-black focus:bg-gray-400';
+      color = 'bg-transparent text-black focus:bg-blue-300';
       borderStyles = '';
       break;
     case 1:
-      color = 'bg-gray-800 focus:bg-gray-400';
+      color = 'bg-gray-800 focus:bg-blue-300';
       borderStyles = 'border-gray-800 border-4';
       break;
     case 2:
-      color = 'bg-gray-600 focus:bg-gray-400';
+      color = 'bg-gray-600 focus:bg-blue-300';
       borderStyles = 'border-gray-600 border-2';
       break;
     default:
-      color = 'bg-gray-400 focus:bg-gray-400';
+      color = 'bg-gray-300 focus:bg-blue-300';
       borderStyles = 'border-gray-400 border-1';
       break;
   }

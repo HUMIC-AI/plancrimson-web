@@ -40,9 +40,9 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
           <FaChevronDown />
         </Listbox.Button>
         <FadeTransition>
-          <Listbox.Options className="absolute mt-2 rounded-lg overflow-hidden shadow border">
+          <Listbox.Options className="absolute w-full rounded-b-lg overflow-hidden shadow border">
             {allRequirements.map(({ groupId }) => (
-              <Listbox.Option key={groupId} value={groupId} className="odd:bg-white even:bg-gray-100 py-2 px-4 font-medium">
+              <Listbox.Option key={groupId} value={groupId} className="odd:bg-gray-300 even:bg-white py-2 px-4 font-medium">
                 {groupId}
               </Listbox.Option>
             ))}
@@ -104,7 +104,7 @@ const YearSchedule: React.FC = function () {
   }, [scheduleIds, selectedRequirements, data, getClass]);
 
   return (
-    <div className="grid md:grid-cols-[auto_1fr] md:flex-row-reverse items-stretch gap-4">
+    <div className="grid md:grid-cols-[auto_1fr] gap-4">
       <RequirementsSection
         selectedRequirements={selectedRequirements}
         setHighlightedClasses={setHighlightedClasses}
@@ -112,8 +112,8 @@ const YearSchedule: React.FC = function () {
         validationResults={validationResults}
       />
 
-      {/* place it first on small devices */}
-      <div className="bg-gray-800 p-4 md:rounded-lg md:shadow-lg overflow-auto row-start-1 md:row-auto">
+      {/* this is the gray component, place it first on small devices */}
+      <div className="bg-gray-800 p-4 md:rounded-lg md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full">
         <p className="text-white">
           <span>
             Total courses:
@@ -126,19 +126,21 @@ const YearSchedule: React.FC = function () {
           </button>
         </p>
 
-        <div className="grid overflow-x-auto mt-4 grid-flow-col">
-          {getUniqueSemesters(data).map(({ year, season }) => (
-            <SemesterDisplay
-              key={year + season}
-              year={year}
-              season={season}
-              selectedScheduleId={scheduleIds[year + season] || null}
-              selectSchedule={(id) => selectSchedule(year, season, id)}
-              highlightedClasses={highlightedClasses}
-              dragStatus={dragStatus}
-              setDragStatus={setDragStatus}
-            />
-          ))}
+        <div className="overflow-x-auto mt-4">
+          <div className="grid grid-flow-col">
+            {getUniqueSemesters(data).map(({ year, season }) => (
+              <SemesterDisplay
+                key={year + season}
+                year={year}
+                season={season}
+                selectedScheduleId={scheduleIds[year + season] || null}
+                selectSchedule={(id) => selectSchedule(year, season, id)}
+                highlightedClasses={highlightedClasses}
+                dragStatus={dragStatus}
+                setDragStatus={setDragStatus}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -50,7 +50,7 @@ const InfoPanel: React.FC<Props> = function ({ course }) {
           <>
             <FaStar title="Average rating" />
             <span>
-              {course.meanRating}
+              {course.meanRating.toFixed(2)}
               {' '}
               average rating (1–5)
             </span>
@@ -60,7 +60,7 @@ const InfoPanel: React.FC<Props> = function ({ course }) {
           <>
             <FaUserClock title="Average total number of students" />
             <span>
-              {course.meanClassSize}
+              {course.meanClassSize.toFixed(2)}
               {' '}
               students total on average
             </span>
@@ -70,7 +70,7 @@ const InfoPanel: React.FC<Props> = function ({ course }) {
           <>
             <FaHourglassEnd title="Average number of hours spent outside of class" />
             <span>
-              {course.meanHours}
+              {course.meanHours.toFixed(2)}
               {' '}
               hours per week
             </span>

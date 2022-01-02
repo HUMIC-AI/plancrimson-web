@@ -16,7 +16,7 @@ export interface ScheduleSelectorProps {
 const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
   schedules, selectedSchedule, selectSchedule, direction,
 }) {
-  const optionStyles = 'even:bg-white w-full min-w-max cursor-default odd:bg-gray-300 bg-opacity-50 py-2 px-3 first:rounded-t last:rounded-b focus:ring-blue-700 focus:ring-2';
+  const optionStyles = 'even:bg-white w-full min-w-max cursor-default odd:bg-gray-300 py-2 px-3 focus:ring-blue-700 focus:ring-2';
 
   return (
     <div className="flex flex-col items-center">
@@ -39,7 +39,7 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
             </Listbox.Button>
             <FadeTransition>
               <Listbox.Options className={classNames(
-                'absolute mt-2 w-full min-w-max shadow z-30',
+                'absolute mt-2 w-full min-w-max shadow-md rounded-lg overflow-hidden border-2 z-30',
                 direction === 'left' && 'right-0',
                 direction === 'center' && 'left-1/2 transform -translate-x-1/2',
                 direction === 'right' && 'left-0',

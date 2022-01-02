@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
-import { InstantSearch } from 'react-instantsearch-dom';
+import { Configure, InstantSearch } from 'react-instantsearch-dom';
 import { adjustAttr, getMeiliApiKey, getMeiliHost } from '../shared/util';
 import MEILI_ATTRIBUTES from '../shared/meiliAttributes.json';
 import { useLgBreakpoint } from '../src/hooks';
@@ -43,6 +43,7 @@ const SearchPage = function () {
         indexName="courses"
         searchClient={meiliSearchClient}
       >
+        {user && <Configure hitsPerPage={12} />}
         <div className="flex gap-4">
           <AttributeMenu />
 
@@ -90,7 +91,7 @@ const SearchPage = function () {
                 : <CurrentRefinementsComponent items={[]} refine={alertSignIn} />}
               {user
                 ? <Hits />
-                : <HitsComponent hits={[]} /> }
+                : <HitsComponent hits={[]} hasMore hasPrevious={false} refineNext={alertSignIn} refinePrevious={alertSignIn} /> }
             </SelectedScheduleProvider>
           </div>
         </div>
