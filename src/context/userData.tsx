@@ -8,6 +8,7 @@ import React, {
 import {
   UserData, Season, UserClassData, Schedule,
 } from '../../shared/firestoreTypes';
+import { throwMissingContext } from '../../shared/util';
 import { getUserRef } from '../hooks';
 
 type ClassAndSchedule = { classId: string; scheduleId: string };
@@ -19,6 +20,8 @@ type UserDataContextType = {
   addCourses: (...courses: ClassAndSchedule[]) => void;
   removeCourses: RemoveCourses;
   createSchedule: (scheduleId: string, year: number, season: Season, classes?: UserClassData[]) => Promise<Schedule>;
+  renameSchedule: (scheduleId: string, newId: string) => Promise<Schedule>;
+  deleteSchedule: (scheduleId: string) => Promise<void>;
   error?: FirestoreError;
 };
 
@@ -28,9 +31,11 @@ const UserDataContext = createContext<UserDataContextType>({
     classYear: 2025,
     schedules: {},
   },
-  addCourses: () => null,
-  removeCourses: () => null,
-  createSchedule: () => Promise.reject(new Error('Must be within context provider')),
+  addCourses: throwMissingContext,
+  removeCourses: throwMissingContext,
+  createSchedule: throwMissingContext,
+  renameSchedule: throwMissingContext,
+  deleteSchedule: throwMissingContext,
 });
 
 const generateSchedules = (classYear: number) => {
@@ -67,7 +72,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
   const createSchedule: UserDataContextType['createSchedule'] = useCallback((scheduleId, year, season, classes = []) => new Promise<Schedule>((resolve, reject) => {
     setUserData((prev) => {
       if (scheduleId in prev.schedules) {
-        reject(new Error('id taken'));
+        process.nextTick(() => reject(new Error('id taken')));
         return prev;
       }
       const newSchedule: Schedule = {
@@ -79,11 +84,55 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
       };
 
       if (user) {
-        setDoc(getUserRef(user.uid), { schedules }, { merge: true })
+        updateDoc(getUserRef(user.uid), { schedules })
           .then(() => resolve(newSchedule))
           .catch((err) => reject(err));
       } else {
         process.nextTick(() => resolve(newSchedule));
+      }
+      return { ...prev, schedules };
+    });
+  }), [user]);
+
+  const renameSchedule: UserDataContextType['renameSchedule'] = useCallback((scheduleId: string, newId: string) => new Promise<Schedule>((resolve, reject) => {
+    setUserData((prev) => {
+      if (!(scheduleId in prev.schedules)) {
+        process.nextTick(() => reject(new Error('schedule not found')));
+        return prev;
+      }
+      if (newId in prev.schedules) {
+        process.nextTick(() => reject(new Error('id taken')));
+        return prev;
+      }
+
+      const { [scheduleId]: oldSchedule, ...rest } = prev.schedules;
+      const newSchedule: Schedule = { ...oldSchedule, id: newId };
+      const schedules: Record<string, Schedule> = { ...rest, [newId]: newSchedule };
+      if (user) {
+        updateDoc(getUserRef(user.uid), { schedules })
+          .then(() => resolve(newSchedule))
+          .catch((err) => reject(err));
+      } else {
+        process.nextTick(() => resolve(newSchedule));
+      }
+      return { ...prev, schedules };
+    });
+  }), [user]);
+
+  const deleteSchedule: UserDataContextType['deleteSchedule'] = useCallback((scheduleId: string) => new Promise((resolve, reject) => {
+    setUserData((prev) => {
+      if (!(scheduleId in prev.schedules)) {
+        process.nextTick(() => reject(new Error('schedule not found')));
+        return prev;
+      }
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const { [scheduleId]: _, ...schedules } = prev.schedules;
+      if (user) {
+        updateDoc(getUserRef(user.uid), { schedules })
+          .then(() => resolve())
+          .catch((err) => reject(err));
+      } else {
+        process.nextTick(() => resolve());
       }
       return { ...prev, schedules };
     });
@@ -177,8 +226,10 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
     addCourses,
     removeCourses,
     createSchedule,
+    renameSchedule,
+    deleteSchedule,
     error,
-  }), [userData, addCourses, removeCourses, createSchedule, error]);
+  }), [userData, addCourses, removeCourses, createSchedule, renameSchedule, deleteSchedule, error]);
 
   return (
     <UserDataContext.Provider value={value}>

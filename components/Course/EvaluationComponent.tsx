@@ -32,7 +32,7 @@ const EvaluationComponent: React.FC<{ report: Evaluation }> = function ({ report
         <div>
           <h4 className="font-bold">Hours per week (outside of class)</h4>
           <p>
-            {`Mean: ${hoursData.mean} | Median: ${hoursData.median} | Mode: ${hoursData.mode} | Stdev: ${hoursData.stdev}`}
+            {`Mean: ${hoursData.mean?.toFixed(2)} | Median: ${hoursData.median?.toFixed(2)} | Mode: ${hoursData.mode?.toFixed(2)} | Stdev: ${hoursData.stdev?.toFixed(2)}`}
           </p>
         </div>
       )}

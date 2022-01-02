@@ -3,7 +3,7 @@ import Layout from '../components/Layout/Layout';
 import SemesterSchedule from '../components/SemesterSchedule/SemesterSchedule';
 import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
 
-const SemesterPage: React.FC = function () {
+const SchedulePage: React.FC = function () {
   return (
     <Layout>
       <SelectedScheduleProvider>
@@ -13,4 +13,4 @@ const SemesterPage: React.FC = function () {
   );
 };
 
-export default SemesterPage;
+export default SchedulePage;

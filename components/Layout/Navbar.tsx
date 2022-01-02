@@ -19,12 +19,12 @@ const paths = [
     name: 'Search',
   },
   {
-    href: '/semester',
-    name: 'Semester',
-  },
-  {
     href: '/plan',
     name: 'Plan',
+  },
+  {
+    href: '/schedule',
+    name: 'Schedule',
   },
   {
     href: '/resources',

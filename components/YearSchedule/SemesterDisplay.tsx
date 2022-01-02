@@ -1,13 +1,13 @@
 import Link from 'next/link';
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  FaCalendarWeek, FaClone, FaSearch,
+  FaCalendarWeek, FaCheck, FaClone, FaEdit, FaSearch, FaTimes, FaTrash,
 } from 'react-icons/fa';
 import {
   checkViable, classNames, getSchedulesBySemester,
 } from '../../shared/util';
 import useUserData from '../../src/context/userData';
-import { Season } from '../../shared/firestoreTypes';
+import { Schedule, Season } from '../../shared/firestoreTypes';
 import { useCourseDialog } from '../../src/hooks';
 import ScheduleSelector from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
@@ -32,12 +32,14 @@ const SemesterDisplay: React.FC<Props> = function ({
   year, season, selectedScheduleId, selectSchedule, highlightedClasses, dragStatus, setDragStatus, colWidth,
 }) {
   const {
-    data, addCourses, removeCourses, createSchedule,
+    data, addCourses, removeCourses, createSchedule, renameSchedule, deleteSchedule,
   } = useUserData();
   const {
     closeModal, handleExpand, isOpen, openedCourse,
   } = useCourseDialog();
   const getClass = useClassCache(data);
+  const [editing, setEditing] = useState(false);
+  const [scheduleTitle, setScheduleTitle] = useState<string>();
 
   const schedules = getSchedulesBySemester(data, year, season);
   const selectedSchedule = selectedScheduleId ? data.schedules[selectedScheduleId] : null;
@@ -48,10 +50,24 @@ const SemesterDisplay: React.FC<Props> = function ({
     season: selectedSchedule.season,
   });
 
+  function copySchedule(schedule: Schedule, i: number = 0) {
+    createSchedule(
+      `${schedule.id} copy${i ? ` ${i}` : ''}`,
+      schedule.year,
+      schedule.season,
+      schedule.classes,
+    )
+      .then((newSchedule) => selectSchedule(newSchedule.id))
+      .catch((err) => {
+        if (err.message === 'id taken') copySchedule(schedule, i + 1);
+        else alert(`Couldn't create your schedule: ${err.message}`);
+      });
+  }
+
   return (
     <div
       className={classNames(
-        'relative md:h-full overflow-y-hidden',
+        'relative md:h-full overflow-y-hidden overflow-x-visible',
         dragStatus.dragging
           ? (dragStatus.data.originScheduleId === selectedScheduleId
             ? 'bg-gray-300 cursor-not-allowed'
@@ -79,22 +95,49 @@ const SemesterDisplay: React.FC<Props> = function ({
         }}
       >
         {/* First component of display */}
-        <div className="flex justify-between items-center py-2 px-4 border-black border-b-2">
-          <h1 className="text-lg">
+        <div className="flex flex-col items-stretch gap-2 py-2 px-4 border-black border-b-2">
+          <h1 className="text-lg text-center min-w-max">
             {year}
             {' '}
             {season}
           </h1>
 
-          <div>
+          {editing ? (
+            <form
+              className="relative"
+              // eslint-disable-next-line consistent-return
+              onSubmit={async (ev) => {
+                ev.preventDefault();
+                if (!selectedScheduleId) return alert('no schedule selected to rename');
+                if (!scheduleTitle) return alert('invalid title given');
+                renameSchedule(selectedScheduleId, scheduleTitle)
+                  .then((schedule) => {
+                    selectSchedule(schedule.id);
+                    setEditing(false);
+                  })
+                  .catch((err) => alert(`Oops, couldn't rename your schedule: ${err.message}`));
+              }}
+            >
+              <input
+                type="text"
+                value={scheduleTitle}
+                onChange={({ currentTarget }) => setScheduleTitle(currentTarget.value)}
+                className="w-full py-1 px-2 rounded focus:shadow shadow-inner border-2"
+              />
+              <button type="submit" className="absolute inset-y-0 right-2 flex items-center">
+                <FaCheck />
+              </button>
+            </form>
+          ) : (
             <ScheduleSelector
               schedules={schedules}
               selectedSchedule={selectedSchedule}
               selectSchedule={(schedule) => selectSchedule(schedule.id)}
-              direction="left"
+              direction="center"
             />
+          )}
 
-            {selectedSchedule && (
+          {selectedSchedule && (
             <div className="flex justify-center items-center gap-2 mt-2 text-gray-500 text-xs">
               <Link href={{
                 pathname: '/semester',
@@ -118,18 +161,40 @@ const SemesterDisplay: React.FC<Props> = function ({
               </Link>
               <button
                 type="button"
-                onClick={async () => {
-                  const newSchedule = await createSchedule(`${selectedSchedule.id} copy`, selectedSchedule.year, selectedSchedule.season, selectedSchedule.classes);
-                  selectSchedule(newSchedule.id);
-                }}
+                onClick={() => copySchedule(selectedSchedule)}
                 className="p-1 rounded bg-black bg-opacity-0 hover:text-black transition-colors"
               >
                 <FaClone />
               </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (editing) setEditing(false);
+                  else {
+                    setScheduleTitle(selectedSchedule.id);
+                    setEditing(true);
+                  }
+                }}
+                className="p-1 rounded bg-black bg-opacity-0 hover:text-black transition-colors"
+              >
+                {editing ? <FaTimes /> : <FaEdit />}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  // eslint-disable-next-line no-restricted-globals
+                  const confirmDelete = confirm(`Are you sure you want to delete your schedule ${selectedSchedule.id}?`);
+                  if (confirmDelete) {
+                    deleteSchedule(selectedSchedule.id)
+                      .then(() => selectSchedule(schedules[0].id))
+                      .catch((err) => alert(`There was a problem deleting your schedule: ${err.message}`));
+                  }
+                }}
+              >
+                <FaTrash />
+              </button>
             </div>
-            )}
-
-          </div>
+          )}
         </div>
 
         {/* {selectedSchedule.classes.length > 0 && (

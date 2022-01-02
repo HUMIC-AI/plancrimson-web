@@ -48,7 +48,7 @@ const PlanningSection: React.FC<Props> = function ({
           <button type="button" onClick={() => expand(!isExpanded)} className="py-2 px-4 bg-gray-600 hover:opacity-50 transition-opacity rounded">
             {isExpanded ? 'Compact cards' : 'Expand cards'}
           </button>
-          <div ref={ref} className="flex justify-center rounded py-1 w-24 min-w-[96px] resize-x bg-gray-300 overflow-auto">
+          <div ref={ref} className="flex justify-center rounded py-1 w-24 min-w-[96px] resize-x bg-gray-600 overflow-auto">
             <FaArrowsAltH />
           </div>
         </div>
