@@ -7,8 +7,8 @@ import validateSchedules, { getReqs, RequirementsMet } from '../../src/requireme
 import basicRequirements from '../../src/requirements/cs/basic';
 import { RequirementGroup } from '../../src/requirements/util';
 import useClassCache from '../../src/context/classCache';
-import RequirementsSection from './RequirementsSection';
 import PlanningSection from './PlanningSection';
+import RequirementsSection from './RequirementsSection';
 
 const YearSchedule: React.FC = function () {
   const { data } = useUserData();
@@ -41,8 +41,10 @@ const YearSchedule: React.FC = function () {
   }, [data]);
 
   useEffect(() => {
+    const schedules = Object.values(scheduleIds).map((id) => data.schedules[id]);
+    if (schedules.some((val) => !val)) return;
     const results = validateSchedules(
-      Object.values(scheduleIds).map((id) => data.schedules[id]),
+      schedules,
       getReqs(selectedRequirements),
       data,
       getClass,
