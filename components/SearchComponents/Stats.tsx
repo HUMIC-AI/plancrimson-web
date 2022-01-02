@@ -1,22 +1,26 @@
+import React from 'react';
+import type { StatsProvided } from 'react-instantsearch-core';
 import { connectStats } from 'react-instantsearch-dom';
 
-const Stats = connectStats(({
+export const StatsComponent: React.FC<Pick<StatsProvided, 'nbHits' | 'processingTimeMS'>> = function ({
   nbHits, processingTimeMS,
-}) => (
-  <div>
-    <p>
-      Time:
-      {' '}
-      {processingTimeMS}
-      {' '}
-      ms
-    </p>
-    <p>
-      Results:
-      {' '}
-      {nbHits}
-    </p>
-  </div>
-));
+}) {
+  return (
+    <div>
+      <p className="min-w-max">
+        Time:
+        {' '}
+        {processingTimeMS}
+        {' '}
+        ms
+      </p>
+      <p className="min-w-max">
+        Results:
+        {' '}
+        {nbHits}
+      </p>
+    </div>
+  );
+};
 
-export default Stats;
+export default connectStats(StatsComponent);

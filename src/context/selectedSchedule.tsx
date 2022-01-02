@@ -22,7 +22,7 @@ export const SelectedScheduleProvider: React.FC = function ({ children }) {
   const context = useMemo<SelectedScheduleContextType>(() => ({
     selectedSchedule: (typeof selected === 'string' && schedules[selected]) || null,
     // see https://nextjs.org/docs/api-reference/next/link#with-url-object
-    selectSchedule: (schedule) => replace({ pathname, query: { selected: schedule.id } }),
+    selectSchedule: (schedule) => schedule && replace({ pathname, query: { selected: schedule.id } }),
     schedules: sortSchedules(schedules),
   }), [
     selected, schedules, pathname, replace,

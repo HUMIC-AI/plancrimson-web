@@ -1,12 +1,12 @@
 import Layout from '../components/Layout/Layout';
 import YearSchedule from '../components/YearSchedule/YearSchedule';
 
-const YearPage = function () {
+const PlanPage = function () {
   return (
-    <Layout size="max-w-screen">
+    <Layout size="w-full md:p-8">
       <YearSchedule />
     </Layout>
   );
 };
 
-export default YearPage;
+export default PlanPage;

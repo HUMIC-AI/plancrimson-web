@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import type { RefinementListProvided } from 'react-instantsearch-core';
 import { connectRefinementList } from 'react-instantsearch-dom';
 import { adjustLabel, classNames } from '../../shared/util';
 
-const RefinementList = connectRefinementList(({ items, refine }) => {
+export const RefinementListComponent: React.FC<Pick<RefinementListProvided, 'items' | 'refine'>> = function ({ items, refine }) {
   const [allItems, setAllItems] = useState(items);
   useEffect(() => {
     setAllItems((prev) => (items.length > prev.length
@@ -42,6 +43,6 @@ const RefinementList = connectRefinementList(({ items, refine }) => {
       ))}
     </ul>
   );
-});
+};
 
-export default RefinementList;
+export default connectRefinementList(RefinementListComponent);

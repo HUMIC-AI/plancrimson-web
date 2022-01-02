@@ -17,46 +17,46 @@ const SemesterSchedule: React.FC = function () {
   };
 
   return (
-    <div>
-      <div className="space-y-2 mt-2">
-        <ScheduleSelector
-          schedules={schedules}
-          selectSchedule={selectSchedule}
-          selectedSchedule={selectedSchedule}
-          direction="right"
-        />
+    <div className="sm:space-y-4">
+      <ScheduleSelector
+        schedules={schedules}
+        selectSchedule={selectSchedule}
+        selectedSchedule={selectedSchedule}
+        direction="center"
+      />
 
-        <form onSubmit={newSemester} className="rounded p-2 bg-gray-300 flex flex-col sm:flex-row flex-wrap gap-2">
-          <input
-            type="text"
-            name="semesterId"
-            placeholder="Schedule name"
-            className="focus:ring-blue-700 rounded py-2 px-3 flex-1"
-          />
-          <input
-            type="number"
-            name="year"
-            placeholder="Year"
-            className="focus:ring-blue-700 max-w-xs rounded py-2 px-3 flex-shrink"
-          />
-          <select name="season" className="rounded py-2 pl-2 pr-6 flex-1">
-            {['Spring', 'Fall'].map((season) => (
-              <option key={season} value={season}>
-                {season}
-              </option>
-            ))}
-          </select>
-          <button type="submit" className="flex-1 py-2 px-3 font-semibold rounded bg-blue-300 hover:bg-blue-500 min-w-max">
-            Add new schedule
-          </button>
-        </form>
-
-        <Calendar
-          classes={selectedSchedule
-            ? selectedSchedule.classes.map(({ classId }) => getClass(classId))
-            : []}
+      <form onSubmit={newSemester} className="sm:rounded-lg sm:max-w-md mx-auto p-2 bg-gray-300 flex flex-col sm:flex-row flex-wrap gap-2">
+        <input
+          type="text"
+          name="semesterId"
+          placeholder="Schedule name"
+          className="focus:ring-blue-700 rounded py-2 px-3 flex-1"
         />
-      </div>
+        <input
+          type="number"
+          name="year"
+          placeholder="Year"
+          className="focus:ring-blue-700 sm:max-w-xs rounded py-2 px-3 flex-shrink"
+        />
+        <select name="season" className="rounded py-2 pl-2 pr-6 flex-1">
+          {['Spring', 'Fall'].map((season) => (
+            <option key={season} value={season}>
+              {season}
+            </option>
+          ))}
+        </select>
+        <button type="submit" className="flex-1 py-2 px-3 font-semibold rounded bg-blue-300 hover:bg-blue-500 min-w-max">
+          Add new schedule
+        </button>
+      </form>
+
+      <Calendar
+        classes={selectedSchedule
+          ? selectedSchedule.classes.map(({ classId }) => getClass(classId))
+          : []}
+      />
+
+      <p className="text-center my-4 sm:my-0">Export functionality coming soon!</p>
     </div>
   );
 };

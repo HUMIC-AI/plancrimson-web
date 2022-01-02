@@ -8,6 +8,8 @@ type UserContextType = {
   error?: Error,
 };
 
+export const alertSignIn = () => alert('Sign in to search for courses!');
+
 export const UserContext = createContext<UserContextType>({});
 
 export const UserProvider: React.FC = function ({ children }) {

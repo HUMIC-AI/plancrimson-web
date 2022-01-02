@@ -1,3 +1,4 @@
+import ExternalLink from '../components/ExternalLink';
 import Layout from '../components/Layout/Layout';
 
 const PrivacyPage = function () {
@@ -9,9 +10,9 @@ const PrivacyPage = function () {
           Users&apos; course selections are stored in Firebase, which is owned by
           Google. You can view their privacy information
           {' '}
-          <a href="https://firebase.google.com/support/privacy/" target="_blank" rel="noopener noreferrer" className="font-semibold hover:opacity-50 transition-opacity">
+          <ExternalLink href="https://firebase.google.com/support/privacy/">
             via this link
-          </a>
+          </ExternalLink>
           .
         </p>
         <p>

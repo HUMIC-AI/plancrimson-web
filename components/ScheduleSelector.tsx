@@ -16,6 +16,8 @@ export interface ScheduleSelectorProps {
 const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
   schedules, selectedSchedule, selectSchedule, direction,
 }) {
+  const optionStyles = 'even:bg-white w-full min-w-max cursor-default odd:bg-gray-300 py-2 px-3 focus:ring-blue-700 focus:ring-2';
+
   return (
     <div className="flex flex-col items-center">
       <Listbox
@@ -26,11 +28,7 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
       >
         {({ open }) => (
           <>
-            <Listbox.Button className={classNames(
-              schedules.length === 0 && 'cursor-not-allowed text-gray-700 bg-gray-300',
-              'shadow text-sm font-semibold rounded flex items-center py-2 px-3 min-w-max',
-            )}
-            >
+            <Listbox.Button className="shadow text-sm font-semibold rounded flex items-center py-2 px-3 min-w-max">
               {selectedSchedule?.id || 'Select a schedule'}
               {' '}
               <FaAngleDown className={classNames(
@@ -39,31 +37,38 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
               )}
               />
             </Listbox.Button>
-            {schedules.length > 0 && (
             <FadeTransition>
               <Listbox.Options className={classNames(
-                'absolute mt-2 w-full min-w-max shadow z-30',
+                'absolute mt-2 w-full min-w-max shadow-md rounded-lg overflow-hidden border-2 z-30',
                 direction === 'left' && 'right-0',
                 direction === 'center' && 'left-1/2 transform -translate-x-1/2',
                 direction === 'right' && 'left-0',
               )}
               >
-                {schedules.sort(compareSemesters).map((schedule) => (
+                {schedules.length > 0 ? (
+                  schedules.sort(compareSemesters).map((schedule) => (
+                    <Listbox.Option
+                      key={schedule.id}
+                      value={schedule}
+                      className={optionStyles}
+                    >
+                      {schedule.id}
+                      {' '}
+                      (
+                      {schedule.classes.length}
+                      )
+                    </Listbox.Option>
+                  ))
+                ) : (
                   <Listbox.Option
-                    key={schedule.id}
-                    value={schedule}
-                    className="even:bg-white w-full min-w-max cursor-default odd:bg-gray-300 bg-opacity-50 py-2 px-3 first:rounded-t last:rounded-b focus:ring-blue-700 focus:ring-2"
+                    value={null}
+                    className={optionStyles}
                   >
-                    {schedule.id}
-                    {' '}
-                    (
-                    {schedule.classes.length}
-                    )
+                    No schedules
                   </Listbox.Option>
-                ))}
+                )}
               </Listbox.Options>
             </FadeTransition>
-            )}
           </>
         )}
       </Listbox>

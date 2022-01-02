@@ -1,67 +1,33 @@
 import { Switch, Tab } from '@headlessui/react';
 import React, { Fragment } from 'react';
 import {
-  FaUser, FaMapMarkerAlt, FaCalendarDay, FaClock, FaBook, FaUserGraduate, FaClipboardCheck, FaUserLock, FaSchool, FaBuilding, FaCoins, FaStar, FaUserClock, FaHourglassEnd, FaExchangeAlt,
+  FaBook, FaUserGraduate, FaClipboardCheck, FaUserLock, FaSchool, FaBuilding, FaCoins, FaStar, FaUserClock, FaHourglassEnd, FaExchangeAlt,
 } from 'react-icons/fa';
 import useSWR from 'swr';
 import {
-  DAYS_OF_WEEK, DAY_TO_KEY, DAY_TO_LETTER, ExtendedClass,
+  ExtendedClass,
 } from '../../shared/apiTypes';
 import {
   allTruthy, classNames, getClassId, getEvaluationId, getEvaluations, sortSchedules,
 } from '../../shared/util';
 import useUserData from '../../src/context/userData';
+import {
+  ClassTime, DaysOfWeek, Instructors, Location,
+} from './CourseComponents';
 import EvaluationComponent from './EvaluationComponent';
 
 type Props = { course: ExtendedClass };
 
 const InfoPanel: React.FC<Props> = function ({ course }) {
-  const instructors = course?.IS_SCL_DESCR_IS_SCL_DESCRL;
-
   return (
     <Tab.Panel>
       {/* Class information */}
       <div className="grid grid-cols-[auto_1fr] items-center gap-y-2 gap-x-4">
-        <FaUser />
-        {/* eslint-disable-next-line no-nested-ternary */}
-        <span>{instructors ? (typeof instructors === 'string' ? instructors : instructors.join(', ')) : 'Unknown'}</span>
-        <FaMapMarkerAlt />
-        {course.SUBJECT.startsWith('MIT') ? <span>MIT</span> : (
-          <span>
-            {course.LOCATION_DESCR_LOCATION}
-            {course.IS_SCL_DESCR_IS_SCL_DESCRG && ` (${course.IS_SCL_DESCR_IS_SCL_DESCRG})`}
-          </span>
-        )}
-        <FaCalendarDay />
-        {course.IS_SCL_MEETING_PAT === 'TBA'
-          ? <span>TBA</span>
-          : (
-            <div className="inline-grid grid-cols-7 max-w-xs border border-black rounded overflow-hidden">
-              {DAYS_OF_WEEK.map((day) => (
-                <span
-                  key={day}
-                  className={classNames(
-                    course[DAY_TO_KEY[day]] === 'Y' ? 'bg-gray-700 text-white' : 'bg-gray-300',
-                    'text-center leading-none font-semibold p-1',
-                  )}
-                >
-                  {DAY_TO_LETTER[day]}
-                </span>
-              ))}
-            </div>
-          )}
-        {course.IS_SCL_TIME_START && (
-        <>
-          <FaClock />
-          <span>
-            `$
-            {course.IS_SCL_TIME_START}
-            –$
-            {course.IS_SCL_TIME_END}
-            `
-          </span>
-        </>
-        )}
+        <Instructors course={course} />
+        <Location course={course} />
+        <DaysOfWeek course={course} />
+        <ClassTime course={course} />
+
         <FaBook title="Course type" />
         <span>{course.SSR_COMPONENTDESCR}</span>
         <FaUserGraduate title="Course level" />
@@ -84,7 +50,7 @@ const InfoPanel: React.FC<Props> = function ({ course }) {
           <>
             <FaStar title="Average rating" />
             <span>
-              {course.meanRating}
+              {course.meanRating.toFixed(2)}
               {' '}
               average rating (1–5)
             </span>
@@ -94,7 +60,7 @@ const InfoPanel: React.FC<Props> = function ({ course }) {
           <>
             <FaUserClock title="Average total number of students" />
             <span>
-              {course.meanClassSize}
+              {course.meanClassSize.toFixed(2)}
               {' '}
               students total on average
             </span>
@@ -104,7 +70,7 @@ const InfoPanel: React.FC<Props> = function ({ course }) {
           <>
             <FaHourglassEnd title="Average number of hours spent outside of class" />
             <span>
-              {course.meanHours}
+              {course.meanHours.toFixed(2)}
               {' '}
               hours per week
             </span>

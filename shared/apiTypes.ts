@@ -40,26 +40,6 @@ export const DAYS_OF_WEEK = [
   'Sunday',
 ] as const;
 
-export const DAY_TO_KEY = {
-  Monday: 'MON',
-  Tuesday: 'TUES',
-  Wednesday: 'WED',
-  Thursday: 'THURS',
-  Friday: 'FRI',
-  Saturday: 'SAT',
-  Sunday: 'Key', // doesn't actually exist so we troll a bit and set it so that day[DAY_TO_KEY] is never 'Y'
-} as const;
-
-export const DAY_TO_LETTER = {
-  Monday: 'M',
-  Tuesday: 'T',
-  Wednesday: 'W',
-  Thursday: 'R',
-  Friday: 'F',
-  Saturday: 'S',
-  Sunday: 'U',
-} as const;
-
 export type DayOfWeek = typeof DAYS_OF_WEEK[number];
 
 // ==================== FOUR YEAR PLAN RESPONSES ====================
@@ -146,7 +126,7 @@ export interface Class {
   Modified: Date; // latest date modified, eg "2021-12-11 23:34:23.000000"
 
   DAY_OF_WEEK: DayOfWeek | DayOfWeek[]; // days of the week, eg ["Monday", "Wednesday", "Friday"]
-  IS_SCL_MEETING_PAT: string; // see DAY_OF_WEEK, eg "Th"
+  IS_SCL_MEETING_PAT: string | string[]; // see DAY_OF_WEEK, eg "Th"
   // "Y" or "N"
   MON: 'Y' | 'N';
   TUES: 'Y' | 'N';
@@ -164,8 +144,8 @@ export interface Class {
 
   ACAD_YEAR: string; // academic year, eg "2022" (note that if in fall, this will be one higher than chronological year)
   IS_SCL_DESCR_IS_SCL_DESCRH: string; // semester, eg "2022 Spring"
-  IS_SCL_TIME_START: string; // time start, eg "3:45pm"
-  IS_SCL_TIME_END: string; // time end, eg "6:30pm"
+  IS_SCL_TIME_START: string | string[]; // time start, eg "3:45pm"
+  IS_SCL_TIME_END: string | string[]; // time end, eg "6:30pm"
   IS_SCL_STRT_TM_DEC: string; // time start in decimal, eg "15.7500"
   IS_SCL_END_TM_DEC: string; // time end in decimal, eg "18.5000"
 

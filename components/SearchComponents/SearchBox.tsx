@@ -1,7 +1,8 @@
 import { Disclosure } from '@headlessui/react';
 import { FaTimes, FaBars, FaArrowsAltV } from 'react-icons/fa';
 import { connectSearchBox } from 'react-instantsearch-dom';
-import { Fragment, useRef } from 'react';
+import React, { Fragment } from 'react';
+import type { SearchBoxProvided } from 'react-instantsearch-core';
 import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
 import Attribute from './Attribute';
 import useSelectedScheduleContext from '../../src/context/selectedSchedule';
@@ -13,19 +14,18 @@ import { useLgBreakpoint } from '../../src/hooks';
 import useCardStyle from '../../src/context/cardStyle';
 
 const AttributeMenu = function () {
-  const ref = useRef<HTMLDivElement>(null!);
   const isLg = useLgBreakpoint();
 
   return (
-    <div className="relative lg:hidden" ref={ref}>
+    <div className="relative lg:hidden">
       {!isLg && (
       <Disclosure as={Fragment}>
         {({ open }) => (
           <>
             <Disclosure.Button className="inset-y-0 right-0 flex items-center">
               {open
-                ? <FaTimes className="w-5 h-5 ml-4 text-gray-700" />
-                : <FaBars className="w-5 h-5 ml-4 text-gray-700" />}
+                ? <FaTimes className="w-5 h-5 text-gray-700" />
+                : <FaBars className="w-5 h-5 text-gray-700" />}
             </Disclosure.Button>
             <Disclosure.Panel
               unmount={false}
@@ -43,7 +43,7 @@ const AttributeMenu = function () {
   );
 };
 
-const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine }) => {
+export const SearchBoxComponent: React.FC<SearchBoxProvided> = function ({ currentRefinement, isSearchStalled, refine }) {
   const {
     schedules, selectSchedule, selectedSchedule,
   } = useSelectedScheduleContext();
@@ -51,7 +51,7 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
         <input
           type="search"
           placeholder="Search classes"
@@ -78,7 +78,14 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
           />
         </div>
 
-        <button type="button" onClick={() => expand(!isExpanded)}>
+        <button
+          type="button"
+          onClick={() => expand(!isExpanded)}
+          className={classNames(
+            isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
+            'rounded-full hover:opacity-50 p-1 border -ml-1',
+          )}
+        >
           <FaArrowsAltV />
         </button>
 
@@ -97,6 +104,6 @@ const SearchBox = connectSearchBox(({ currentRefinement, isSearchStalled, refine
       {isSearchStalled && <p>Loading...</p>}
     </div>
   );
-});
+};
 
-export default SearchBox;
+export default connectSearchBox(SearchBoxComponent);

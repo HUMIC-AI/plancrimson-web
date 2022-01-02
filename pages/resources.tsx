@@ -1,6 +1,8 @@
+import ExternalLink from '../components/ExternalLink';
 import Layout from '../components/Layout/Layout';
 
-const links = [
+const links: [string, string][] = [
+  ['Harvard College Student Handbook', 'https://handbook.college.harvard.edu/'],
   ['CS Advising Site', 'https://csadvising.seas.harvard.edu/'],
   ['SEAS Four Year Course Plan', 'https://info.seas.harvard.edu/courses/#/multiYearPlan'],
   ['Vericlass', 'https://vericlass.net/'],
@@ -9,31 +11,54 @@ const links = [
   ['Coursicle', 'https://www.coursicle.com/harvard/'],
 ];
 
+const siteInfoLinks = [
+  ['React', 'https://reactjs.org/'],
+  ['Next.js', 'https://nextjs.org/'],
+  ['TypeScript', 'https://www.typescriptlang.org/'],
+  ['Tailwind CSS', 'https://tailwindcss.com/'],
+  ['MeiliSearch', 'https://www.meilisearch.com/'],
+  ['Firebase', 'https://firebase.google.com/'],
+  ['DigitalOcean', 'https://www.digitalocean.com/'],
+  ['Vercel', 'https://vercel.com/'],
+];
+
 const ResourcesPage: React.FC = function () {
   return (
     <Layout>
-      <p>
-        The data is taken from the
-        {' '}
-        <a href="https://my.harvard.edu/">my.harvard.edu</a>
-        {' '}
-        Course Catalog.
-      </p>
-      <div>
-        <ul>
-          <li>
-            <a href="https://csadvising.seas.harvard.edu/concentration/courses/tags/">
-              CS Advising Course Tags
-            </a>
-          </li>
+      <div className="max-w-md mx-auto space-y-4">
+        <h1 className="text-2xl leading-loose font-semibold">Other Resources</h1>
+        <p>
+          The data for Plan Crimson is taken from the
+          {' '}
+          <ExternalLink href="https://my.harvard.edu/">my.harvard</ExternalLink>
+          {' '}
+          Course Catalog. Here&apos;s some other useful sites for planning out your concentration!
+        </p>
+        <ul className="list-disc list-inside">
           {links.map(([name, href]) => (
             <li key={href}>
-              <a href={href} target="_blank" rel="noreferrer">
+              <ExternalLink href={href}>
                 {name}
-              </a>
+              </ExternalLink>
             </li>
           ))}
         </ul>
+        <h1 className="text-2xl leading-loose font-semibold">About this site</h1>
+        <p>Here&apos;s some of the tech this site was built with:</p>
+        <ul className="list-disc list-inside">
+          {siteInfoLinks.map(([name, href]) => (
+            <li key={href}>
+              <ExternalLink href={href}>
+                {name}
+              </ExternalLink>
+            </li>
+          ))}
+        </ul>
+        <p>I am not affiliated with any of the above organizations.</p>
+        <p>
+          Thanks for using Plan Crimson! Reach out with any feedback, questions, bug reports, requests, etc. at
+          alexcai [at] college [dot] harvard [dot] edu.
+        </p>
       </div>
     </Layout>
   );

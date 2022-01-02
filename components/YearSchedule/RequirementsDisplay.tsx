@@ -4,6 +4,7 @@ import { FaCheck, FaTimes } from 'react-icons/fa';
 import { classNames } from '../../shared/util';
 import { RequirementsMet } from '../../src/requirements';
 import { RequirementGroup } from '../../src/requirements/util';
+import FadeTransition from '../FadeTransition';
 
 type Props = {
   depth: number;
@@ -61,19 +62,19 @@ const RequirementsDisplay: React.FC<Props> = function ({
   let borderStyles: string;
   switch (depth) {
     case 0:
-      color = 'bg-transparent text-black';
+      color = 'bg-transparent text-black focus:bg-blue-300';
       borderStyles = '';
       break;
     case 1:
-      color = 'bg-gray-800';
+      color = 'bg-gray-800 focus:bg-blue-300';
       borderStyles = 'border-gray-800 border-4';
       break;
     case 2:
-      color = 'bg-gray-600';
+      color = 'bg-gray-600 focus:bg-blue-300';
       borderStyles = 'border-gray-600 border-2';
       break;
     default:
-      color = 'bg-gray-400';
+      color = 'bg-gray-600 bg-opacity-70 focus:bg-blue-300';
       borderStyles = 'border-gray-400 border-1';
       break;
   }
@@ -84,12 +85,13 @@ const RequirementsDisplay: React.FC<Props> = function ({
       defaultOpen={depth === 0}
       as="div"
       className={classNames(
-        'rounded-lg overflow-hidden mt-2',
+        'overflow-hidden mt-4',
+        depth > 1 ? 'rounded-lg' : 'sm:rounded-lg',
         borderStyles,
       )}
     >
       <Disclosure.Button className={classNames(
-        'text-left text-white p-2 w-full hover:opacity-70 transition-opacity',
+        'text-left text-white p-2 w-full hover:opacity-70 transition-opacity focus:ring-white focus:outline-none',
         color,
       )}
       >
@@ -114,81 +116,83 @@ const RequirementsDisplay: React.FC<Props> = function ({
         </p>
         )}
       </Disclosure.Button>
-      <Disclosure.Panel className={depth > 0 ? 'p-2' : ''}>
-        {reqGroup.description && <p className="mb-4">{reqGroup.description}</p>}
+      <FadeTransition>
+        <Disclosure.Panel className={depth > 0 ? 'p-2' : ''}>
+          {reqGroup.description && <p className="mb-4">{reqGroup.description}</p>}
 
-        <ul className="space-y-4 max-w-xl text-sm">
-          {reqGroup.requirements.map((req) => {
-            if ('groupId' in req) {
+          <ul className="space-y-4 text-sm">
+            {reqGroup.requirements.map((req) => {
+              if ('groupId' in req) {
+                return (
+                  <li key={req.groupId}>
+                    <RequirementsDisplay
+                      depth={depth + 1}
+                      key={req.groupId}
+                      requirements={req}
+                      validationResults={validationResults}
+                      setHighlightedClasses={setHighlightedClasses}
+                    />
+                  </li>
+                );
+              }
+
+              const MaybeDescriptionComponent = req.description ? (
+                <Disclosure>
+                  {(({ open: descriptionOpen }) => (
+                    <>
+                      <Disclosure.Button className="font-medium text-gray-400 hover:text-gray-800">
+                        {descriptionOpen ? 'Hide details' : 'Show details'}
+                      </Disclosure.Button>
+                      <Disclosure.Panel>
+                        <p>{req.description}</p>
+                      </Disclosure.Panel>
+                    </>
+                  ))}
+                </Disclosure>
+              ) : null;
+
+              if (typeof req.validate === 'undefined') {
+                return (
+                  <li key={req.id} className="px-4 sm:px-0">
+                    <div>{req.id}</div>
+                    {MaybeDescriptionComponent}
+                  </li>
+                );
+              }
+
+              const satisfied = validationResults[req.id]?.satisfied || false;
+              const classes = validationResults[req.id]?.classes || [];
+              // a single requirement
               return (
-                <li key={req.groupId}>
-                  <RequirementsDisplay
-                    depth={depth + 1}
-                    key={req.groupId}
-                    requirements={req}
-                    validationResults={validationResults}
-                    setHighlightedClasses={setHighlightedClasses}
-                  />
-                </li>
-              );
-            }
-
-            const MaybeDescriptionComponent = req.description ? (
-              <Disclosure>
-                {(({ open: descriptionOpen }) => (
-                  <>
-                    <Disclosure.Button className="font-medium text-gray-400 hover:text-gray-800">
-                      {descriptionOpen ? 'Hide details' : 'Show details'}
-                    </Disclosure.Button>
-                    <Disclosure.Panel>
-                      <p>{req.description}</p>
-                    </Disclosure.Panel>
-                  </>
-                ))}
-              </Disclosure>
-            ) : null;
-
-            if (typeof req.validate === 'undefined') {
-              return (
-                <li key={req.id}>
-                  <div>{req.id}</div>
+                <li key={req.id} className="px-4 sm:px-0">
+                  <div className={classNames(
+                    satisfied ? 'text-green-500' : 'text-red-500',
+                    'flex justify-between items-center gap-2',
+                  )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setHighlightedClasses(classes)}
+                      className="text-left"
+                    >
+                      {req.id}
+                    </button>
+                    <span className="inline-flex items-center gap-1">
+                      {satisfied
+                        ? <FaCheck />
+                        : <FaTimes />}
+                      (
+                      {classes.length}
+                      )
+                    </span>
+                  </div>
                   {MaybeDescriptionComponent}
                 </li>
               );
-            }
-
-            const satisfied = validationResults[req.id]?.satisfied || false;
-            const classes = validationResults[req.id]?.classes || [];
-            // a single requirement
-            return (
-              <li key={req.id}>
-                <div className={classNames(
-                  satisfied ? 'text-green-500' : 'text-red-500',
-                  'flex justify-between items-center gap-2',
-                )}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setHighlightedClasses(classes)}
-                    className="text-left"
-                  >
-                    {req.id}
-                  </button>
-                  <span className="inline-flex items-center gap-1">
-                    {satisfied
-                      ? <FaCheck />
-                      : <FaTimes />}
-                    (
-                    {classes.length}
-                    )
-                  </span>
-                </div>
-                {MaybeDescriptionComponent}
-              </li>
-            );
-          })}
-        </ul>
-      </Disclosure.Panel>
+            })}
+          </ul>
+        </Disclosure.Panel>
+      </FadeTransition>
     </Disclosure>
   );
 };

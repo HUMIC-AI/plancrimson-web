@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { DayOfWeek, DAYS_OF_WEEK } from '../../shared/apiTypes';
 import { classNames } from '../../shared/util';
-import RefinementList from './RefinementList';
+import useUser, { alertSignIn } from '../../src/context/user';
+import RefinementList, { RefinementListComponent } from './RefinementList';
 
 function compareItems(a: { label: string }, b: { label: string }) {
   if (a.label < b.label) return -1;
@@ -17,6 +18,7 @@ function compareWeekdays(a: { label: DayOfWeek }, b: { label: DayOfWeek }) {
 
 const Attribute: React.FC<{ attribute: string; label: string }> = function ({ attribute, label }) {
   const [operator, setOperator] = useState<'and' | 'or'>('or');
+  const { user } = useUser();
   return (
     <Disclosure as="div">
       {({ open }) => (
@@ -37,7 +39,7 @@ const Attribute: React.FC<{ attribute: string; label: string }> = function ({ at
                   ev.stopPropagation();
                   setOperator(operator === 'and' ? 'or' : 'and');
                 }}
-                className="hover:font-semibold w-8 bg-gray-700 rounded text-white"
+                className="hover:font-semibold w-8 bg-gray-800 rounded text-white"
               >
                 {operator}
               </button>
@@ -46,15 +48,39 @@ const Attribute: React.FC<{ attribute: string; label: string }> = function ({ at
           </Disclosure.Button>
           <Disclosure.Panel unmount={false}>
             <div className="p-2 origin-top-right bg-gray-300 rounded-b">
-              <RefinementList
-                attribute={attribute}
-                operator={operator}
-                showMore
-                showMoreLimit={300}
-                transformItems={(items) => (attribute === 'DAY_OF_WEEK'
-                  ? items.sort(compareWeekdays)
-                  : items.sort(compareItems))}
-              />
+              {user ? (
+                <RefinementList
+                  attribute={attribute}
+                  operator={operator}
+                  showMore
+                  showMoreLimit={300}
+                  transformItems={(items) => (attribute === 'DAY_OF_WEEK'
+                    ? items.sort(compareWeekdays)
+                    : items.sort(compareItems))}
+                />
+              ) : (
+                <RefinementListComponent
+                  items={[
+                    {
+                      count: Math.floor(Math.random() * 50),
+                      isRefined: true,
+                      label: 'Example',
+                      objectID: '',
+                      value: ['Example'],
+                      _highlightResult: {},
+                    },
+                    {
+                      count: Math.floor(Math.random() * 50),
+                      isRefined: false,
+                      label: 'Sign in to get started',
+                      objectID: '',
+                      value: [],
+                      _highlightResult: {},
+                    },
+                  ]}
+                  refine={alertSignIn}
+                />
+              )}
             </div>
           </Disclosure.Panel>
         </>
