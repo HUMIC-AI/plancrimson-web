@@ -24,8 +24,8 @@ const AttributeMenu = function () {
           <>
             <Disclosure.Button className="inset-y-0 right-0 flex items-center">
               {open
-                ? <FaTimes className="w-5 h-5 ml-4 text-gray-700" />
-                : <FaBars className="w-5 h-5 ml-4 text-gray-700" />}
+                ? <FaTimes className="w-5 h-5 text-gray-700" />
+                : <FaBars className="w-5 h-5 text-gray-700" />}
             </Disclosure.Button>
             <Disclosure.Panel
               unmount={false}
@@ -51,7 +51,7 @@ export const SearchBoxComponent: React.FC<SearchBoxProvided> = function ({ curre
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
         <input
           type="search"
           placeholder="Search classes"
@@ -78,7 +78,14 @@ export const SearchBoxComponent: React.FC<SearchBoxProvided> = function ({ curre
           />
         </div>
 
-        <button type="button" onClick={() => expand(!isExpanded)}>
+        <button
+          type="button"
+          onClick={() => expand(!isExpanded)}
+          className={classNames(
+            isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
+            'rounded-full hover:opacity-50 p-1 border -ml-1',
+          )}
+        >
           <FaArrowsAltV />
         </button>
 

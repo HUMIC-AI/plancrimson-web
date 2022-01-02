@@ -7,14 +7,14 @@ export const StatsComponent: React.FC<Pick<StatsProvided, 'nbHits' | 'processing
 }) {
   return (
     <div>
-      <p>
+      <p className="min-w-max">
         Time:
         {' '}
         {processingTimeMS}
         {' '}
         ms
       </p>
-      <p>
+      <p className="min-w-max">
         Results:
         {' '}
         {nbHits}

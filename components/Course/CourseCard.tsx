@@ -36,9 +36,10 @@ const CourseCard: React.FC<Props> = function ({
   const draggable = typeof setDragStatus !== 'undefined';
 
   return (
-    <div className="shadow">
+    // move the shadow outside to avoid it getting hidden
+    <div className="shadow-lg">
       <div
-        className="rounded-xl overflow-hidden border-gray-800 bg-gray-800 border-4 text-left"
+        className="rounded-xl overflow-hidden border-gray-800 bg-gray-800 border-4 text-left h-full"
         draggable={draggable}
         onDragStart={draggable ? (ev) => {
           // eslint-disable-next-line no-param-reassign

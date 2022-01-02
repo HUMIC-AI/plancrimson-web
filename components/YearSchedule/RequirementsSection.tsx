@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Listbox } from '@headlessui/react';
 import { FaChevronDown, FaTimes } from 'react-icons/fa';
 import { RequirementsMet, allRequirements } from '../../src/requirements';
@@ -6,6 +6,7 @@ import { RequirementGroup } from '../../src/requirements/util';
 import ExternalLink from '../ExternalLink';
 import FadeTransition from '../FadeTransition';
 import RequirementsDisplay from './RequirementsDisplay';
+import { classNames } from '../../shared/util';
 
 type RequirementsSectionProps = {
   selectedRequirements: RequirementGroup;
@@ -19,6 +20,26 @@ type RequirementsSectionProps = {
 const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
   selectedRequirements, setSelectedRequirements, validationResults, setHighlightedClasses, notification, setNotification,
 }) {
+  const topRef = useRef<HTMLDivElement>(null!);
+  const bottomRef = useRef<HTMLDivElement>(null!);
+  const [topIntersecting, setTopIntersecting] = useState(false);
+  const [bottomIntersecting, setBottomIntersecting] = useState(false);
+
+  useEffect(() => {
+    const topObserver = new IntersectionObserver(([{ isIntersecting }]) => {
+      setTopIntersecting(isIntersecting);
+    });
+    topObserver.observe(topRef.current);
+    const bottomObserver = new IntersectionObserver(([{ isIntersecting }]) => {
+      setBottomIntersecting(isIntersecting);
+    });
+    bottomObserver.observe(bottomRef.current);
+    return () => {
+      topObserver.disconnect();
+      bottomObserver.disconnect();
+    };
+  }, []);
+
   return (
     <div className="relative border-gray-200 space-y-4 md:border-2 md:rounded-lg md:shadow-lg md:max-w-xs lg:max-w-sm xl:max-w-md w-screen">
       <div className="md:absolute md:inset-4 flex flex-col gap-4">
@@ -35,9 +56,9 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
             <FaChevronDown />
           </Listbox.Button>
           <FadeTransition>
-            <Listbox.Options className="absolute w-full rounded-b-lg overflow-hidden shadow border">
+            <Listbox.Options className="absolute w-full bg-gray-800 rounded-b-lg overflow-hidden shadow border z-20">
               {allRequirements.map(({ groupId }) => (
-                <Listbox.Option key={groupId} value={groupId} className="odd:bg-gray-300 even:bg-white py-2 px-4 font-medium">
+                <Listbox.Option key={groupId} value={groupId} className="odd:bg-gray-300 even:bg-white hover:opacity-50 transition-opacity py-2 px-4 font-medium cursor-pointer">
                   {groupId}
                 </Listbox.Option>
               ))}
@@ -74,13 +95,20 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
         </FadeTransition>
 
         <div className="flex-1 relative">
-          <div className="md:absolute md:inset-0 overflow-y-auto md:border-y-2 md:border-black md:border-dashed">
+          <div className={classNames(
+            'md:absolute md:inset-0 overflow-y-auto box-content md:border-black md:border-dashed',
+            !topIntersecting && 'md:border-t-2',
+            !bottomIntersecting && 'md:border-b-2',
+          )}
+          >
+            <div ref={topRef} id="topIntersection" />
             <RequirementsDisplay
               depth={0}
               requirements={selectedRequirements}
               validationResults={validationResults}
               setHighlightedClasses={setHighlightedClasses}
             />
+            <div ref={bottomRef} id="bottomIntersection" />
           </div>
         </div>
       </div>

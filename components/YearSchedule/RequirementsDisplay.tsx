@@ -74,7 +74,7 @@ const RequirementsDisplay: React.FC<Props> = function ({
       borderStyles = 'border-gray-600 border-2';
       break;
     default:
-      color = 'bg-gray-300 focus:bg-blue-300';
+      color = 'bg-gray-600 bg-opacity-70 focus:bg-blue-300';
       borderStyles = 'border-gray-400 border-1';
       break;
   }
