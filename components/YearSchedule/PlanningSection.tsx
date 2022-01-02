@@ -36,7 +36,7 @@ const PlanningSection: React.FC<Props> = function ({
   }, []);
 
   return (
-    <div className="relative bg-gray-800 p-4 md:rounded-lg md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full md:h-full">
+    <div className="relative bg-gray-800 md:p-4 md:rounded-lg md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full md:h-full">
       <div className="flex flex-col space-y-4 md:h-full">
         <div className="text-white flex flex-col md:flex-row items-center gap-4">
           <span>
@@ -54,7 +54,7 @@ const PlanningSection: React.FC<Props> = function ({
         </div>
 
         <div className="relative overflow-x-auto flex-1">
-          <div className="md:absolute md:inset-0 grid grid-flow-col rounded-lg overflow-auto">
+          <div className="md:absolute md:inset-0 grid grid-flow-col rounded-t-lg md:rounded-b-lg overflow-auto">
             {getUniqueSemesters(data).map(({ year, season }) => (
               <SemesterDisplay
                 key={year + season}

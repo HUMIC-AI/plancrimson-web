@@ -1,17 +1,29 @@
 import { Transition } from '@headlessui/react';
 import React, { Fragment } from 'react';
 
-const FadeTransition: React.FC<{ show?: boolean; }> = function ({ children, show }) {
+type Props = {
+  show?: boolean;
+  unmount?: boolean;
+  beforeEnter?: () => void;
+  afterLeave?: () => void;
+};
+
+const FadeTransition: React.FC<Props> = function ({
+  children, unmount, show, beforeEnter, afterLeave,
+}) {
   return (
     <Transition
-      enter="transition-opacity duration-100 ease-out"
+      enter="transition-opacity duration-200 ease-in-out"
       enterFrom="opacity-0"
       enterTo="opacity-100"
-      leave="transition-opacity duration-100 ease-in"
+      leave="transition-opacity duration-200 ease-in-out"
       leaveFrom="opacity-100"
       leaveTo="opacity-0"
       show={show}
       as={Fragment}
+      unmount={unmount}
+      beforeEnter={beforeEnter}
+      afterLeave={afterLeave}
     >
       {children}
     </Transition>
