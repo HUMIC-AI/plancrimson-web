@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   FaCalendarWeek, FaCheck, FaClone, FaEdit, FaSearch, FaTimes, FaTrash,
 } from 'react-icons/fa';
@@ -13,6 +13,7 @@ import ScheduleSelector from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
 import CourseDialog from '../Course/CourseDialog';
 import useClassCache from '../../src/context/classCache';
+import FadeTransition from '../FadeTransition';
 
 type Props = {
   selectedScheduleId: string | null;
@@ -38,6 +39,10 @@ const SemesterDisplay: React.FC<Props> = function ({
     closeModal, handleExpand, isOpen, openedCourse,
   } = useCourseDialog();
   const getClass = useClassCache(data);
+
+  const editRef = useRef<HTMLInputElement>(null!);
+  // independent to sync up the transitions nicely
+  const [showSelector, setShowSelector] = useState(true);
   const [editing, setEditing] = useState(false);
   const [scheduleTitle, setScheduleTitle] = useState<string>();
 
@@ -95,14 +100,14 @@ const SemesterDisplay: React.FC<Props> = function ({
         }}
       >
         {/* First component of display */}
-        <div className="flex flex-col items-stretch gap-2 py-2 px-4 border-black border-b-2">
-          <h1 className="text-lg text-center min-w-max">
+        <div className="flex flex-col items-stretch gap-2 p-4 border-black border-b-2">
+          <h1 className="text-lg text-center min-w-max font-semibold">
             {year}
             {' '}
             {season}
           </h1>
 
-          {editing ? (
+          <FadeTransition show={editing} unmount={false} beforeEnter={() => setShowSelector(false)} afterLeave={() => setShowSelector(true)}>
             <form
               className="relative"
               // eslint-disable-next-line consistent-return
@@ -123,12 +128,15 @@ const SemesterDisplay: React.FC<Props> = function ({
                 value={scheduleTitle}
                 onChange={({ currentTarget }) => setScheduleTitle(currentTarget.value)}
                 className="w-full py-1 px-2 rounded focus:shadow shadow-inner border-2"
+                ref={editRef}
               />
               <button type="submit" className="absolute inset-y-0 right-2 flex items-center">
                 <FaCheck />
               </button>
             </form>
-          ) : (
+          </FadeTransition>
+
+          {showSelector && (
             <ScheduleSelector
               schedules={schedules}
               selectedSchedule={selectedSchedule}
@@ -173,6 +181,7 @@ const SemesterDisplay: React.FC<Props> = function ({
                   else {
                     setScheduleTitle(selectedSchedule.id);
                     setEditing(true);
+                    process.nextTick(() => editRef.current.focus());
                   }
                 }}
                 className="p-1 rounded bg-black bg-opacity-0 hover:text-black transition-colors"
