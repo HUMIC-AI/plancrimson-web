@@ -3,7 +3,9 @@ import React from 'react';
 import {
   FaCalendarWeek, FaClone, FaSearch,
 } from 'react-icons/fa';
-import { classNames, getSchedulesBySemester } from '../../shared/util';
+import {
+  checkViable, classNames, getSchedulesBySemester,
+} from '../../shared/util';
 import useUserData from '../../src/context/userData';
 import { Season } from '../../shared/firestoreTypes';
 import { useCourseDialog } from '../../src/hooks';
@@ -22,10 +24,12 @@ type Props = {
   highlightedClasses: string[];
   dragStatus: DragStatus;
   setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>;
+
+  colWidth: number;
 };
 
 const SemesterDisplay: React.FC<Props> = function ({
-  year, season, selectedScheduleId, selectSchedule, highlightedClasses, dragStatus, setDragStatus,
+  year, season, selectedScheduleId, selectSchedule, highlightedClasses, dragStatus, setDragStatus, colWidth,
 }) {
   const {
     data, addCourses, removeCourses, createSchedule,
@@ -38,19 +42,26 @@ const SemesterDisplay: React.FC<Props> = function ({
   const schedules = getSchedulesBySemester(data, year, season);
   const selectedSchedule = selectedScheduleId ? data.schedules[selectedScheduleId] : null;
 
+  const draggedClass = dragStatus.dragging && getClass(dragStatus.data.classId);
+  const viableDrop = draggedClass && selectedSchedule && checkViable(draggedClass, {
+    year: selectedSchedule.year,
+    season: selectedSchedule.season,
+  });
+
   return (
-    <div className={classNames(
-      'relative h-full overflow-y-hidden w-52 md:w-64 lg:w-72',
-      // eslint-disable-next-line no-nested-ternary
-      dragStatus.dragging
-        ? (dragStatus.data.originScheduleId === selectedScheduleId
-          ? 'bg-blue-300'
-          : 'bg-gray-300 cursor-not-allowed')
-        : 'odd:bg-gray-300 even:bg-white',
-    )}
+    <div
+      className={classNames(
+        'relative md:h-full overflow-y-hidden',
+        dragStatus.dragging
+          ? (dragStatus.data.originScheduleId === selectedScheduleId
+            ? 'bg-gray-300 cursor-not-allowed'
+            : (viableDrop ? 'bg-blue-300' : 'bg-yellow-300'))
+          : 'odd:bg-gray-300 even:bg-white',
+      )}
+      style={{ width: `${colWidth}px` }}
     >
       <div
-        className="flex flex-col h-full"
+        className="flex flex-col md:h-full"
         onDragOver={(ev) => {
           ev.preventDefault();
           // eslint-disable-next-line no-param-reassign
@@ -80,7 +91,7 @@ const SemesterDisplay: React.FC<Props> = function ({
               schedules={schedules}
               selectedSchedule={selectedSchedule}
               selectSchedule={(schedule) => selectSchedule(schedule.id)}
-              direction="center"
+              direction="left"
             />
 
             {selectedSchedule && (
@@ -134,7 +145,7 @@ const SemesterDisplay: React.FC<Props> = function ({
         )} */}
 
         {/* Second component: actual classes */}
-        <div className="flex-1 p-4 overflow-auto">
+        <div className="flex-1 p-4 md:overflow-auto">
           <div className="flex flex-col items-stretch gap-4">
             {selectedSchedule && selectedSchedule.classes.map(({ classId: id }) => (
               id && getClass(id)

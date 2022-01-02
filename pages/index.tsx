@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
 import { Configure, InstantSearch } from 'react-instantsearch-dom';
 import { adjustAttr, getMeiliApiKey, getMeiliHost } from '../shared/util';
@@ -20,11 +20,10 @@ const meiliSearchClient = instantMeiliSearch(
 );
 
 const AttributeMenu = function () {
-  const ref = useRef<HTMLDivElement>(null!);
   const isLg = useLgBreakpoint();
 
   return (
-    <div className="flex-shrink-0 w-64 p-2 hidden lg:flex flex-col gap-2 bg-gray-800 rounded-md" ref={ref}>
+    <div className="flex-shrink-0 w-64 p-2 hidden lg:flex flex-col gap-2 bg-gray-800 rounded-md">
       {isLg && MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
         <Attribute attribute={attr} key={attr} label={adjustAttr(attr)} />
       ))}

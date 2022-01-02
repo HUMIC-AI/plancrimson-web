@@ -1,7 +1,7 @@
 import { Disclosure } from '@headlessui/react';
 import { FaTimes, FaBars, FaArrowsAltV } from 'react-icons/fa';
 import { connectSearchBox } from 'react-instantsearch-dom';
-import React, { Fragment, useRef } from 'react';
+import React, { Fragment } from 'react';
 import type { SearchBoxProvided } from 'react-instantsearch-core';
 import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
 import Attribute from './Attribute';
@@ -14,11 +14,10 @@ import { useLgBreakpoint } from '../../src/hooks';
 import useCardStyle from '../../src/context/cardStyle';
 
 const AttributeMenu = function () {
-  const ref = useRef<HTMLDivElement>(null!);
   const isLg = useLgBreakpoint();
 
   return (
-    <div className="relative lg:hidden" ref={ref}>
+    <div className="relative lg:hidden">
       {!isLg && (
       <Disclosure as={Fragment}>
         {({ open }) => (

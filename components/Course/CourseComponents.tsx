@@ -29,7 +29,6 @@ export const Instructors: React.FC<CourseProps> = function ({ course, inSearch }
   return (
     <>
       <FaUser />
-      {/* eslint-disable-next-line no-nested-ternary */}
       {instructors
         ? (typeof instructors === 'string'
           ? (
@@ -58,7 +57,16 @@ export const Location: React.FC<CourseProps> = function ({ course, inSearch }) {
               attribute="LOCATION_DESCR_LOCATION"
               inSearch={inSearch || false}
             />
-            {course.IS_SCL_DESCR_IS_SCL_DESCRG && ` (${course.IS_SCL_DESCR_IS_SCL_DESCRG})`}
+            {course.IS_SCL_DESCR_IS_SCL_DESCRG && (
+            <>
+              {' '}
+              <span className="text-gray-600">
+                (
+                {course.IS_SCL_DESCR_IS_SCL_DESCRG}
+                )
+              </span>
+            </>
+            )}
           </span>
         )}
     </>

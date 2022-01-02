@@ -12,7 +12,7 @@ type LayoutProps = {
   size?: string;
 };
 
-const Layout: React.FC<LayoutProps> = function ({ children, title, size = 'container' }) {
+const Layout: React.FC<LayoutProps> = function ({ children, title, size = 'container sm:p-8' }) {
   const { query } = useRouter();
   const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
   return (
@@ -28,7 +28,7 @@ const Layout: React.FC<LayoutProps> = function ({ children, title, size = 'conta
 
       <Navbar />
 
-      <main className={classNames('sm:p-8 mx-auto flex-1', size)}>
+      <main className={classNames('mx-auto flex-1', size)}>
         {children}
       </main>
 

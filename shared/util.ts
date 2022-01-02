@@ -68,14 +68,12 @@ export function getAllClassIds(data: UserData) {
 }
 
 export function checkViable(cls: Class, semester: Semester) {
+  const { year, season } = getSemester(cls);
   // if it is in this semester
-  if (getSemester(cls).year === semester.year && getSemester(cls).season === semester.season) {
+  if (year === semester.year && season === semester.season) {
     return true;
   }
 
-  if (!cls.HU_ALIAS) return false;
-
-  // todo
   const subjectRegExp = new RegExp(allTruthy([cls.HU_ALIAS, cls.SUBJECT]).join('|'), 'i');
   const catalogNumberRegExp = new RegExp(cls.CATALOG_NBR.trim(), 'i');
   if (seasPlan.find((planEntry) => {
@@ -89,6 +87,9 @@ export function checkViable(cls: Class, semester: Semester) {
   })) {
     return true;
   }
+
+  // "likely"
+  if (season === semester.season) return true;
 
   return false;
 }
