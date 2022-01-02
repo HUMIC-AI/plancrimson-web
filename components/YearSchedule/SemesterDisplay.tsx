@@ -69,6 +69,8 @@ const SemesterDisplay: React.FC<Props> = function ({
       });
   }
 
+  const buttonStyles = 'p-1 rounded bg-black bg-opacity-0 hover:text-black hover:bg-opacity-50 transition-colors';
+
   return (
     <div
       className={classNames(
@@ -146,14 +148,14 @@ const SemesterDisplay: React.FC<Props> = function ({
           )}
 
           {selectedSchedule && (
-            <div className="flex justify-center items-center gap-2 mt-2 text-gray-500 text-xs">
+            <div className="flex justify-center items-center gap-2 mt-2 text-gray-600 text-xs">
               <Link href={{
                 pathname: '/semester',
                 query: { selected: selectedSchedule.id },
               }}
               >
                 {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                <a className="p-1 rounded bg-black bg-opacity-0 hover:text-black transition-colors">
+                <a className={buttonStyles}>
                   <FaCalendarWeek />
                 </a>
               </Link>
@@ -163,14 +165,14 @@ const SemesterDisplay: React.FC<Props> = function ({
               }}
               >
                 {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                <a className="p-1 rounded bg-black bg-opacity-0 hover:text-black transition-colors">
+                <a className={buttonStyles}>
                   <FaSearch />
                 </a>
               </Link>
               <button
                 type="button"
                 onClick={() => copySchedule(selectedSchedule)}
-                className="p-1 rounded bg-black bg-opacity-0 hover:text-black transition-colors"
+                className={buttonStyles}
               >
                 <FaClone />
               </button>
@@ -184,7 +186,7 @@ const SemesterDisplay: React.FC<Props> = function ({
                     process.nextTick(() => editRef.current.focus());
                   }
                 }}
-                className="p-1 rounded bg-black bg-opacity-0 hover:text-black transition-colors"
+                className={buttonStyles}
               >
                 {editing ? <FaTimes /> : <FaEdit />}
               </button>
@@ -199,6 +201,7 @@ const SemesterDisplay: React.FC<Props> = function ({
                       .catch((err) => alert(`There was a problem deleting your schedule: ${err.message}`));
                   }
                 }}
+                className={buttonStyles}
               >
                 <FaTrash />
               </button>

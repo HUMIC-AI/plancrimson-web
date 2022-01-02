@@ -6,6 +6,9 @@ import MEILI_ATTRIBUTES from '../shared/meiliAttributes.json';
 import { useLgBreakpoint } from '../src/hooks';
 import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
 import useUser, { alertSignIn } from '../src/context/user';
+import sampleCourses from '../components/SearchComponents/sampleCourses.json';
+
+// components
 import Layout from '../components/Layout/Layout';
 import Attribute from '../components/SearchComponents/Attribute';
 import SearchBox, { SearchBoxComponent } from '../components/SearchComponents/SearchBox';
@@ -13,6 +16,7 @@ import Hits, { HitsComponent } from '../components/SearchComponents/Hits';
 import CurrentRefinements, { CurrentRefinementsComponent } from '../components/SearchComponents/CurrentRefinements';
 import SortBy, { SortByComponent } from '../components/SearchComponents/SortBy';
 import Stats, { StatsComponent } from '../components/SearchComponents/Stats';
+import { DAY_SHORT } from '../shared/apiTypes';
 
 const meiliSearchClient = instantMeiliSearch(
   getMeiliHost(),
@@ -46,7 +50,7 @@ const SearchPage = function () {
         <div className="flex gap-4">
           <AttributeMenu />
 
-          <div className="flex-1 p-6 shadow-lg border-2 border-gray-200 rounded-lg space-y-4">
+          <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 rounded-lg space-y-4">
             <SelectedScheduleProvider>
               {user
                 ? <SearchBox />
@@ -90,7 +94,18 @@ const SearchPage = function () {
                 : <CurrentRefinementsComponent items={[]} refine={alertSignIn} />}
               {user
                 ? <Hits />
-                : <HitsComponent hits={[]} hasMore hasPrevious={false} refineNext={alertSignIn} refinePrevious={alertSignIn} /> }
+                : (
+                  <HitsComponent
+                    hits={sampleCourses
+                      // oh, the things i do for typescript
+                      .map((course) => ({ ...course, ...Object.assign({}, ...DAY_SHORT.map((attr) => ({ [attr]: course[attr] as 'Y' | 'N' }))) }))}
+                    hasMore
+                    hasPrevious={false}
+                    refineNext={alertSignIn}
+                    refinePrevious={alertSignIn}
+                    inSearch={false}
+                  />
+                ) }
             </SelectedScheduleProvider>
           </div>
         </div>

@@ -4,15 +4,14 @@ import fs from 'fs';
 import { Evaluation } from '../shared/apiTypes';
 import { getEvaluationId } from '../shared/util';
 
-async function main() {
-  // if (process.argv.length < 3) throw new Error('pass file name of JSON file');
-  const evaluations: Evaluation[] = JSON.parse(fs.readFileSync(process.argv[2]).toString('utf8'));
+export default async function uploadEvaluations(evaluations: Evaluation[]) {
   const db = getFirestore();
   const BATCH_SIZE = 480;
+  const allResults: FirebaseFirestore.WriteResult[] = [];
   for (let i = 0; i < evaluations.length; i += BATCH_SIZE) {
     const batch = db.batch();
     const evls = evaluations.slice(i, i + BATCH_SIZE);
-    console.error(`loading ${evls.length} evaluations`);
+    console.log(`loading ${evls.length} evaluations`);
     evls.forEach((e) => batch.set(
       db.doc(`evaluations/${getEvaluationId(e)}`),
       e,
@@ -20,7 +19,17 @@ async function main() {
     // eslint-disable-next-line no-await-in-loop
     const results = await batch.commit();
     console.log(`wrote ${results.length} evaluations`);
+    allResults.push(...results);
   }
+  return allResults;
 }
 
-main();
+if (require.main === module) {
+  const filePath = process.argv[2];
+  if (!filePath) throw new Error('must specify path to load evaluations from');
+  const data = fs.readFileSync(filePath).toString('utf8');
+  const evaluations = JSON.parse(data);
+  uploadEvaluations(evaluations)
+    .then((results) => console.log(`wrote ${results.length} results`))
+    .catch((err) => console.error(err));
+}

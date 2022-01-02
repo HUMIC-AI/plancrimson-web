@@ -1,7 +1,5 @@
 import React from 'react';
-import { DAYS_OF_WEEK, ExtendedClass } from '../../shared/apiTypes';
-
-const days = ['MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT'] as const;
+import { DAYS_OF_WEEK, DAY_SHORT, ExtendedClass } from '../../shared/apiTypes';
 
 const dayStartTime = 8; // time to start the calendar at
 
@@ -86,9 +84,9 @@ const Calendar: React.FC<CalendarProps> = function ({ classes }) {
   });
 
   return (
-    <div className="sm:rounded-lg border-black border-2 shadow-lg">
+    <div className="sm:rounded-lg border-gray-800 sm:border-4 shadow-lg">
       <div className="pl-6 py-2 bg-gray-800 text-white grid grid-cols-5">
-        {days.slice(0, 5).map((day) => (
+        {DAY_SHORT.slice(0, 5).map((day) => (
           <h1 key={day} className="font-semibold text-center">
             {day}
           </h1>

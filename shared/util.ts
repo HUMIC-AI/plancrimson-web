@@ -8,7 +8,11 @@ import { ATTRIBUTE_DESCRIPTIONS, Class, Evaluation } from './apiTypes';
 import seasPlan from './seasPlan.json';
 
 export function getSemester(course: Class) {
-  const season = /Fall/i.test(course.IS_SCL_DESCR_IS_SCL_DESCRH) ? 'Fall' : 'Spring' as const;
+  const season = course.STRM === '2222'
+    ? 'Spring'
+    : (course.STRM === '2218'
+      ? 'Fall'
+      : course.IS_SCL_DESCR_IS_SCL_DESCRH) as Season;
   const academicYear = parseInt(course.ACAD_YEAR, 10);
   const year = season === 'Fall' ? academicYear - 1 : academicYear;
   return { year, season };

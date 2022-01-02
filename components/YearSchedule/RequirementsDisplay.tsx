@@ -75,7 +75,7 @@ const RequirementsDisplay: React.FC<Props> = function ({
       break;
     default:
       color = 'bg-gray-600 bg-opacity-70 focus:bg-blue-300';
-      borderStyles = 'border-gray-400 border-1';
+      borderStyles = 'border-gray-300 border-1';
       break;
   }
 
@@ -111,7 +111,7 @@ const RequirementsDisplay: React.FC<Props> = function ({
         </div>
 
         {reqGroup.subheading && (
-        <p className={depth === 0 ? 'text-gray-800 text-sm' : 'text-gray-200 text-sm'}>
+        <p className={depth === 0 ? 'text-gray-800 text-sm' : 'text-gray-300 text-sm'}>
           {reqGroup.subheading}
         </p>
         )}
@@ -140,7 +140,7 @@ const RequirementsDisplay: React.FC<Props> = function ({
                 <Disclosure>
                   {(({ open: descriptionOpen }) => (
                     <>
-                      <Disclosure.Button className="font-medium text-gray-400 hover:text-gray-800">
+                      <Disclosure.Button className="font-medium text-gray-300 hover:text-gray-800">
                         {descriptionOpen ? 'Hide details' : 'Show details'}
                       </Disclosure.Button>
                       <Disclosure.Panel>
