@@ -13,12 +13,10 @@ import { getUserRef } from '../hooks';
 
 type ClassAndSchedule = { classId: string; scheduleId: string };
 
-type RemoveCourses = (...courses: { classId: string; scheduleId?: string }[]) => void;
-
 type UserDataContextType = {
   data: UserData;
   addCourses: (...courses: ClassAndSchedule[]) => void;
-  removeCourses: RemoveCourses;
+  removeCourses: (...courses: { classId: string; scheduleId?: string }[]) => Promise<UserData['schedules']>;
   createSchedule: (scheduleId: string, year: number, season: Season, classes?: UserClassData[]) => Promise<Schedule>;
   renameSchedule: (scheduleId: string, newId: string) => Promise<Schedule>;
   deleteSchedule: (scheduleId: string) => Promise<void>;
@@ -52,7 +50,6 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
 
   const createSchedule: UserDataContextType['createSchedule'] = useCallback((scheduleId, year, season, classes = []) => new Promise<Schedule>((resolve, reject) => {
     setUserData((prev) => {
-      console.log(prev.schedules);
       if (scheduleId in prev.schedules) {
         process.nextTick(() => reject(new Error('id taken')));
         return prev;
@@ -120,7 +117,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
     });
   }), [user]);
 
-  const addCourses = useCallback(async (...classesToAdd: ClassAndSchedule[]) => {
+  const addCourses: UserDataContextType['addCourses'] = useCallback(async (...classesToAdd: ClassAndSchedule[]) => {
     setUserData((prev) => {
       const firestoreUpdate = {} as Record<string, UserClassData[]>;
       classesToAdd.forEach(({ classId, scheduleId }) => {
@@ -138,10 +135,10 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
     // setCourseCache((prev) => Object.assign({}, prev, ...courses.map(({ course }) => ({ [course.Key]: course }))));
   }, [user]);
 
-  const removeCourses: RemoveCourses = useCallback((...classesToRemove) => {
+  const removeCourses: UserDataContextType['removeCourses'] = useCallback((...classesToRemove) => new Promise<UserData['schedules']>((resolve, reject) => {
     setUserData((prev) => {
       const firestoreUpdate = {} as Record<string, UserClassData[]>;
-      const newState = { ...prev };
+      const newState: UserData = JSON.parse(JSON.stringify(prev));
 
       classesToRemove.forEach(({ classId, scheduleId: fromScheduleId }) => {
         if (fromScheduleId) {
@@ -162,13 +159,15 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
 
       if (user) {
         updateDoc(getUserRef(user.uid), firestoreUpdate as any)
-          .then(() => console.log('doc updated'))
-          .catch((err) => console.error('error removing courses', err));
+          .then(() => resolve(newState.schedules))
+          .catch((err) => reject(err));
+      } else {
+        process.nextTick(() => resolve(newState.schedules));
       }
 
       return newState;
     });
-  }, [user]);
+  }), [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -195,9 +194,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
               year, season, id: `${season} ${year}`, classes: [],
             },
           }))),
-        }, { merge: true })
-          .then(() => console.log('new document created'))
-          .catch((err) => setError(err));
+        }, { merge: true }).catch((err) => setError(err));
       } else {
         setUserData(snap.data());
       }

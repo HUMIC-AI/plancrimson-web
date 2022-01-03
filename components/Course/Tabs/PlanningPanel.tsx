@@ -21,7 +21,6 @@ const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass; }> = fu
     },
     [schedule, course, data],
   );
-  console.log('VIABILITY', schedule.year, schedule.season, viabilityStatus);
 
   return (
     <Fragment key={schedule.id}>

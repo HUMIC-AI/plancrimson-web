@@ -83,6 +83,15 @@
     "rules": {
       "func-names": "off",
       "max-len": "off",
+      "no-alert": "off",
+      "no-console": [
+        "error",
+        {
+          "allow": [
+            "error"
+          ]
+        }
+      ],
       "no-nested-ternary": "off",
       "react/jsx-props-no-spreading": "off",
       "react/require-default-props": "off"

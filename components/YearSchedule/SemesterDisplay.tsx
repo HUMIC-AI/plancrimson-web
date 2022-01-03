@@ -90,20 +90,6 @@ const SemesterDisplay: React.FC<Props> = function ({
 
   const buttonStyles = 'p-1 rounded bg-black bg-opacity-0 hover:text-black hover:bg-opacity-50 transition-colors';
 
-  function copySchedule(schedule: Schedule, i: number = 0) {
-    createSchedule(
-      `${schedule.id} copy${i ? ` ${i}` : ''}`,
-      schedule.year,
-      schedule.season,
-      schedule.classes,
-    )
-      .then((newSchedule) => selectSchedule(newSchedule.id))
-      .catch((err) => {
-        if (err.message === 'id taken') copySchedule(schedule, i + 1);
-        else alert(`Couldn't create your schedule: ${err.message}`);
-      });
-  }
-
   return (
     <div
       className={classNames(
