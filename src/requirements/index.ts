@@ -1,9 +1,10 @@
 import { Schedule, UserData } from '../../shared/firestoreTypes';
 import { Requirement, RequirementGroup } from './util';
-import fasRequirements from './fasRequirements';
+import fasRequirements from './degree';
 import basicRequirements from './cs/basic';
 import honorsRequirements from './cs/honors';
 import { ClassCacheContextType } from '../context/classCache';
+import collegeRequirements from './college';
 
 // want to query for all people planning to take this class at a certain time
 
@@ -26,6 +27,7 @@ export type RequirementsMet = {
 
 export const allRequirements = [
   fasRequirements,
+  collegeRequirements,
   basicRequirements,
   honorsRequirements,
 ];

@@ -46,6 +46,8 @@ export const DAY_SHORT = ['MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT'] as const;
 
 export type DayOfWeek = typeof DAYS_OF_WEEK[number];
 
+export type Viability = 'Yes' | 'Likely' | 'Unlikely' | 'No';
+
 // ==================== FOUR YEAR PLAN RESPONSES ====================
 
 type SeasArea = 'ACS' | 'AP' | 'AM' | 'EE' | 'BE' | 'CS' | 'ESE' | 'General' | 'Mat & ME' | 'MSMBA' | 'SEM';
@@ -211,11 +213,13 @@ export interface Class {
   | 'STS'
   | 'HSI'
   | 'E&C';
-  IS_SCL_DESCR100_HU_SCL_ATTR_LDD: // divisional distribution
+  IS_SCL_DESCR100_HU_SCL_ATTR_LDD?: // divisional distribution
   | 'Science & Engineering & Applied Science'
   | 'Arts and Humanities'
+  | 'Social Sciences'
   | 'None';
   CRSE_ATTR_VALUE_HU_LDD_ATTR: string; // see above, eg "NONE" | "SCI"
+  IS_SCL_DESCR100_HU_SCL_ATTR_LQR?: 'Yes'; // quantitative reasoning with data
   IS_SCL_DESCR100_HU_SCL_ATTR_XREG: string; // harvard cross registration, eg "Available for Harvard Cross Registration"
   CRSE_ATTR_VALUE_HU_XREG_ATTR: string; // see above, eg "YESXREG" | "NOXREG"
 

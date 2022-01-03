@@ -8,7 +8,7 @@ import FadeTransition from './FadeTransition';
 
 export interface ScheduleSelectorProps {
   selectedSchedule: Schedule | null;
-  selectSchedule: React.Dispatch<Schedule>;
+  selectSchedule: React.Dispatch<Schedule | null>;
   schedules: Schedule[];
   direction: 'left' | 'center' | 'right';
 }

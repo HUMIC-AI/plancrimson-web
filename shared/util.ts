@@ -4,8 +4,11 @@ import {
 import {
   Semester, seasonOrder, UserData, Season,
 } from './firestoreTypes';
-import { ATTRIBUTE_DESCRIPTIONS, Class, Evaluation } from './apiTypes';
+import {
+  ATTRIBUTE_DESCRIPTIONS, Class, Evaluation, Viability,
+} from './apiTypes';
 import seasPlan from './seasPlan.json';
+import { getSchoolYear } from '../src/requirements/util';
 
 export function getSemester(course: Class) {
   const season = course.STRM === '2222'
@@ -35,8 +38,10 @@ export function getNumCredits(course: Class) {
   return parseInt(course.HU_UNITS_MIN, 10);
 }
 
-export function compareSemesters<T extends Semester>(a: T, b: T) {
-  if (a.year !== b.year) return a.year - b.year;
+export function compareSemesters(a: Semester<string | number>, b: Semester<string | number>) {
+  const aYear = parseInt(a.year as string, 10);
+  const bYear = parseInt(b.year as string, 10);
+  if (aYear !== bYear) return aYear - bYear;
   const seasonDiff = seasonOrder[a.season] - seasonOrder[b.season];
   if (seasonDiff !== 0) return seasonDiff;
   if ('id' in a && 'id' in b) {
@@ -48,8 +53,23 @@ export function compareSemesters<T extends Semester>(a: T, b: T) {
   return 0;
 }
 
+export function getDefaultSemesters(classYear: number) {
+  const schedules: Semester[] = [];
+
+  for (let year = classYear - 4; year <= classYear; year += 1) {
+    if (year > classYear - 4) {
+      schedules.push({ year, season: 'Spring' });
+    }
+    if (year < classYear) {
+      schedules.push({ year, season: 'Fall' });
+    }
+  }
+
+  return schedules;
+}
+
 export function getUniqueSemesters(data: UserData) {
-  const semesters = [] as { year: number, season: Season }[];
+  const semesters = getDefaultSemesters(data.classYear);
   Object.values(data.schedules).forEach(({ year, season }) => {
     // if this semester has not yet been added
     if (!semesters.find(({ year: y, season: s }) => year === y && season === s)) {
@@ -71,31 +91,80 @@ export function getAllClassIds(data: UserData) {
   return Object.values(data.schedules).flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
 }
 
-export function checkViable(cls: Class, semester: Semester) {
+export function checkViable(cls: Class, semester: Semester, data: UserData): {
+  viability: Viability;
+  reason: string;
+  instructors?: { firstName: string; lastName: string; }[];
+} {
   const { year, season } = getSemester(cls);
-  // if it is in this semester
+
   if (year === semester.year && season === semester.season) {
-    return true;
+    return {
+      viability: 'Yes',
+      reason: 'This course is offered this semester.',
+    };
   }
 
-  const subjectRegExp = new RegExp(allTruthy([cls.HU_ALIAS, cls.SUBJECT]).join('|'), 'i');
+  if (cls.SUBJECT === 'FRSEMR' && getSchoolYear(semester, data.classYear) > 1) {
+    return {
+      viability: 'No',
+      reason: 'Freshman Seminars can only be taken in the first year.',
+    };
+  }
+
+  // check the SEAS plan
+  const searchSubjects = allTruthy([cls.SUBJECT, cls.HU_ALIAS, ...(Array.isArray(cls.ACAD_ORG) ? cls.ACAD_ORG : [cls.ACAD_ORG])]);
   const catalogNumberRegExp = new RegExp(cls.CATALOG_NBR.trim(), 'i');
-  if (seasPlan.find((planEntry) => {
-    const [subject, number] = planEntry.courseNumber.split(' ');
-    const subjectMatches = (subject === 'AC' && cls.ACAD_ORG === 'COMPSE')
-                           || subjectRegExp.test(subject);
-    // trim leading zeros
-    const numberMatches = catalogNumberRegExp.test(number.replace(/^0+/g, ''));
-    if (subjectMatches && numberMatches) return true;
-    return false;
-  })) {
-    return true;
+  const foundInSeasPlan = seasPlan.find(({ prefix, courseNumber }) => (
+    searchSubjects.includes(prefix.replace('AC', 'APCOMP'))
+    && catalogNumberRegExp.test(courseNumber)
+  ));
+
+  if (foundInSeasPlan) {
+    const matchesSemester = foundInSeasPlan.semesters.find((plannedSemester) => (
+      (
+        plannedSemester.term === 'Spring'
+        && semester.season === 'Spring'
+        && plannedSemester.academicYear + 1 === semester.year
+      ) || (
+        plannedSemester.term === 'Fall'
+        && semester.season === 'Fall'
+        && plannedSemester.academicYear === semester.year
+      )
+    ));
+
+    if (matchesSemester?.offeredStatus === 'No') {
+      return {
+        viability: 'No',
+        reason: 'This course will not be offered this semester according to the SEAS Four Year Plan.',
+      };
+    }
+
+    if (matchesSemester?.offeredStatus === 'Yes') {
+      return {
+        viability: 'Yes',
+        reason: 'This course is in the SEAS Four Year Plan.',
+        instructors: matchesSemester.instructors,
+      };
+    }
+
+    return {
+      viability: 'Unlikely',
+      reason: 'This semester is not listed in this course\'s offerings in the SEAS Four Year Plan.',
+    };
   }
 
-  // "likely"
-  if (season === semester.season) return true;
+  if (season === semester.season) {
+    return {
+      viability: 'Likely',
+      reason: `This course is usually offered in the ${season.toLowerCase()}.`,
+    };
+  }
 
-  return false;
+  return {
+    viability: 'Unlikely',
+    reason: 'This course is not usually offered in this term.',
+  };
 }
 
 export function adjustLabel(label: string) {

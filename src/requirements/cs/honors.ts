@@ -60,7 +60,7 @@ const requiredCourses: RequirementGroup = {
 };
 
 const honorsRequirements: RequirementGroup = {
-  groupId: 'Honors Requirements',
+  groupId: 'CS - Honors Requirements',
   subheading: '13–16 courses (52–64 credits)',
   sourcePage: 58,
   requirements: [

@@ -193,7 +193,7 @@ const getGeneralQuestions: Scraper<ApiTypes.CourseGeneralQuestions> = ($, el) =>
 
     const title = row[0];
     const count = parseInt(row[1], 10);
-    const votes = row.slice(2, 7).map((v) => parseInt(v, 10));
+    const votes = row.slice(2, 7).map((v) => Math.round((parseInt(v, 10) * count) / 100));
     const courseMean = parseFloat(row[7]);
     const fasMean = parseFloat(row[8]);
     const ret: ApiTypes.CourseGeneralQuestions = {

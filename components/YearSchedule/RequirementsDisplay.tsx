@@ -6,6 +6,23 @@ import { RequirementsMet } from '../../src/requirements';
 import { RequirementGroup } from '../../src/requirements/util';
 import FadeTransition from '../FadeTransition';
 
+const Description: React.FC<{ description: React.ReactNode; }> = function ({ description }) {
+  return (
+    <Disclosure>
+      {(({ open }) => (
+        <>
+          <Disclosure.Button className="font-medium text-gray-300 hover:text-gray-800">
+            {open ? 'Hide details' : 'Show details'}
+          </Disclosure.Button>
+          <Disclosure.Panel>
+            <p>{description}</p>
+          </Disclosure.Panel>
+        </>
+      ))}
+    </Disclosure>
+  );
+};
+
 type Props = {
   depth: number;
   requirements: RequirementGroup;
@@ -102,9 +119,11 @@ const RequirementsDisplay: React.FC<Props> = function ({
             </p>
           </Heading>
           {reqCount.total > 0 && (
-          <span>
+          <span className="min-w-max font-medium">
             {reqCount.numSatisfied}
+            {' '}
             /
+            {' '}
             {reqCount.total}
           </span>
           )}
@@ -117,8 +136,8 @@ const RequirementsDisplay: React.FC<Props> = function ({
         )}
       </Disclosure.Button>
       <FadeTransition>
-        <Disclosure.Panel className={depth > 0 ? 'p-2' : ''}>
-          {reqGroup.description && <p className="mb-4">{reqGroup.description}</p>}
+        <Disclosure.Panel className={depth > 0 ? 'p-2 space-y-4' : 'space-y-4'}>
+          {reqGroup.description && <Description description={reqGroup.description} />}
 
           <ul className="space-y-4 text-sm">
             {reqGroup.requirements.map((req) => {
@@ -136,26 +155,11 @@ const RequirementsDisplay: React.FC<Props> = function ({
                 );
               }
 
-              const MaybeDescriptionComponent = req.description ? (
-                <Disclosure>
-                  {(({ open: descriptionOpen }) => (
-                    <>
-                      <Disclosure.Button className="font-medium text-gray-300 hover:text-gray-800">
-                        {descriptionOpen ? 'Hide details' : 'Show details'}
-                      </Disclosure.Button>
-                      <Disclosure.Panel>
-                        <p>{req.description}</p>
-                      </Disclosure.Panel>
-                    </>
-                  ))}
-                </Disclosure>
-              ) : null;
-
               if (typeof req.validate === 'undefined') {
                 return (
                   <li key={req.id} className="px-4 sm:px-0">
                     <div>{req.id}</div>
-                    {MaybeDescriptionComponent}
+                    {req.description && <Description description={req.description} />}
                   </li>
                 );
               }
@@ -186,7 +190,7 @@ const RequirementsDisplay: React.FC<Props> = function ({
                       )
                     </span>
                   </div>
-                  {MaybeDescriptionComponent}
+                  {req.description && <Description description={req.description} />}
                 </li>
               );
             })}

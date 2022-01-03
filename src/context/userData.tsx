@@ -8,7 +8,7 @@ import React, {
 import {
   UserData, Season, UserClassData, Schedule,
 } from '../../shared/firestoreTypes';
-import { throwMissingContext } from '../../shared/util';
+import { getDefaultSemesters, throwMissingContext } from '../../shared/util';
 import { getUserRef } from '../hooks';
 
 type ClassAndSchedule = { classId: string; scheduleId: string };
@@ -38,25 +38,6 @@ const UserDataContext = createContext<UserDataContextType>({
   deleteSchedule: throwMissingContext,
 });
 
-const generateSchedules = (classYear: number) => {
-  const schedules: Record<string, Schedule> = {};
-
-  for (let year = classYear - 4; year <= classYear; year += 1) {
-    if (year > classYear - 4) {
-      schedules[`Spring ${year}`] = {
-        id: `Spring ${year}`, classes: [], season: 'Spring', year,
-      };
-    }
-    if (year < classYear) {
-      schedules[`Fall ${year}`] = {
-        id: `Fall ${year}`, classes: [], season: 'Fall', year,
-      };
-    }
-  }
-
-  return schedules;
-};
-
 /**
  * We put this in a separate context than the user to avoid unnecessary rerenders.
  * The state consists of the user data, which works both locally and if the user is not logged in,
@@ -71,6 +52,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
 
   const createSchedule: UserDataContextType['createSchedule'] = useCallback((scheduleId, year, season, classes = []) => new Promise<Schedule>((resolve, reject) => {
     setUserData((prev) => {
+      console.log(prev.schedules);
       if (scheduleId in prev.schedules) {
         process.nextTick(() => reject(new Error('id taken')));
         return prev;
@@ -208,7 +190,11 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
         setDoc(getUserRef(user.uid), {
           lastLoggedIn: serverTimestamp(),
           classYear,
-          schedules: generateSchedules(classYear),
+          schedules: Object.assign({}, ...getDefaultSemesters(classYear).map(({ year, season }): Record<string, Schedule> => ({
+            [`${season} ${year}`]: {
+              year, season, id: `${season} ${year}`, classes: [],
+            },
+          }))),
         }, { merge: true })
           .then(() => console.log('new document created'))
           .catch((err) => setError(err));

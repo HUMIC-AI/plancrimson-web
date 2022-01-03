@@ -11,7 +11,7 @@ export default async function uploadEvaluations(evaluations: Evaluation[]) {
   for (let i = 0; i < evaluations.length; i += BATCH_SIZE) {
     const batch = db.batch();
     const evls = evaluations.slice(i, i + BATCH_SIZE);
-    console.log(`loading ${evls.length} evaluations`);
+    console.log(`loading ${evls.length} evaluations (${i / BATCH_SIZE}/${Math.ceil(evaluations.length / BATCH_SIZE)})`);
     evls.forEach((e) => batch.set(
       db.doc(`evaluations/${getEvaluationId(e)}`),
       e,
@@ -29,6 +29,7 @@ if (require.main === module) {
   if (!filePath) throw new Error('must specify path to load evaluations from');
   const data = fs.readFileSync(filePath).toString('utf8');
   const evaluations = JSON.parse(data);
+  console.log(`uploading ${evaluations.length} total evaluations`);
   uploadEvaluations(evaluations)
     .then((results) => console.log(`wrote ${results.length} results`))
     .catch((err) => console.error(err));

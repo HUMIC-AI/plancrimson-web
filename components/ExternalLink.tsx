@@ -5,8 +5,16 @@ type Props = {
 };
 
 const ExternalLink: React.FC<Props> = function ({ href, children }) {
+  const isMail = href.startsWith('mailto');
   return (
-    <a href={href} target="_blank" rel="noreferrer" className="font-bold hover:opacity-50 transition-opacity" onClick={(ev) => ev.stopPropagation()}>
+    // eslint-disable-next-line react/jsx-no-target-blank
+    <a
+      href={href}
+      target={isMail ? undefined : '_blank'}
+      rel={isMail ? undefined : 'noreferrer'}
+      className="font-bold hover:opacity-50 transition-opacity"
+      onClick={(ev) => ev.stopPropagation()}
+    >
       {children}
     </a>
   );
