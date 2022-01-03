@@ -46,7 +46,8 @@ const CustomButton: React.FC<ButtonProps> = function ({
       // ref={ref}
       className={classNames(
         enabled ? 'bg-gray-800 hover:opacity-50' : 'bg-gray-600 cursor-not-allowed',
-        'p-2 shadow w-48 min-w-[84px] max-w-[192px] rounded text-white transition-opacity resize-x overflow-auto',
+        'p-2 shadow w-48 min-w-[84px] max-w-full sm:max-w-[192px] rounded text-white transition-opacity',
+        // 'resize-x overflow-auto',
         'flex justify-center',
       )}
     >
@@ -56,8 +57,8 @@ const CustomButton: React.FC<ButtonProps> = function ({
   );
 };
 
-export const HitsComponent: React.FC<InfiniteHitsProvided<ExtendedClass>> = function ({
-  hits, hasPrevious, hasMore, refinePrevious, refineNext,
+export const HitsComponent: React.FC<InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }> = function ({
+  hits, hasPrevious, hasMore, refinePrevious, refineNext, inSearch = true,
 }) {
   const { selectedSchedule } = useSelectedScheduleContext();
   const {
@@ -86,6 +87,7 @@ export const HitsComponent: React.FC<InfiniteHitsProvided<ExtendedClass>> = func
             course={hit}
             selectedSchedule={selectedSchedule}
             handleExpand={handleExpand}
+            inSearchContext={inSearch}
           />
         ))}
         <CourseDialog

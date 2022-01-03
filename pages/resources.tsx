@@ -32,7 +32,15 @@ const ResourcesPage: React.FC = function () {
           {' '}
           <ExternalLink href="https://my.harvard.edu/">my.harvard</ExternalLink>
           {' '}
-          Course Catalog. Here&apos;s some other useful sites for planning out your concentration!
+          Course Catalog. Evaluations from Fall 2019 and onwards are from
+          {' '}
+          <ExternalLink href="https://qreports.fas.harvard.edu/">QReports</ExternalLink>
+          {' '}
+          and evaluations from before then are from the old
+          {' '}
+          <ExternalLink href="https://course-evaluation-reports.fas.harvard.edu/fas/list">Course Evaluations</ExternalLink>
+          {' '}
+          site. Here&apos;s some other useful sites for planning out your concentration!
         </p>
         <ul className="list-disc list-inside">
           {links.map(([name, href]) => (

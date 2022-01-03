@@ -2,52 +2,40 @@
 /* eslint-disable no-await-in-loop */
 import cheerio from 'cheerio';
 import '../server/initFirebase';
-import { getFirestore } from 'firebase-admin/firestore';
+import fs from 'fs';
 import { getEvaluation } from '../server/evaluation';
-import { Evaluation } from '../shared/apiTypes';
 import fetcher from '../shared/fetcher';
-import { allTruthy, getEvaluationId } from '../shared/util';
+import { allTruthy } from '../shared/util';
 
-// https://qreports.fas.harvard.edu/browse/index
-const Q_REPORTS_COOKIE = '_clck=j48mwa|1|ew8|0; OptanonAlertBoxClosed=2021-11-09T16:15:25.157Z; OptanonConsent=isIABGlobal=false&datestamp=Mon+Nov+29+2021+16:29:47+GMT-0500+(Eastern+Standard+Time)&version=6.15.0&hosts=&consentId=44fa3662-4b23-4918-9e16-713114936874&interactionCount=1&landingPath=NotLandingPage&groups=C0001:1,C0002:1,C0003:1,C0004:1,C0005:1&geolocation=US;&AwaitingReconsent=false; JSESSIONID=249E579489510E7D261A19FDB792D7DD';
+const Q_REPORTS_COOKIE = process.env.Q_REPORTS_COOKIE!;
+const BLUERA_COOKIE = process.env.BLUERA_COOKIE!;
 
-// https://harvard.bluera.com/harvard/rpv-eng.aspx?lang=eng&redi=1&SelectedIDforPrint=4cc2715ea6d197b8ef4936c209c906b4c55ce5c4abd5b2eaf2e105cb5ce19b1db5c46e22ae06144facc2f034e157aa15&ReportType=2&regl=en-US
-const BLUERA_COOKIE = 'cookiesession1=678B2900234567898901234ABCEFBA23; GDPR_tokenf17de2b2277e4e8c38e7a9303a75868af96b9afa7d12939a7012b3869de24863=f17de2b2277e4e8c38e7a9303a75868af96b9afa7d12939a7012b3869de24863; ASP.NET_SessionId=rxgxxowjxc5yp3c1fefq5q5q; CookieName=9B7E283331B1AAC461BC4EC3C2A62ACD3C8B1805BDD9CF16E5FECA6F98023ACC895E6F7490023FF0C3EB4B0F05D94D13260B13669EA8BB6A18FD5482DAB403535C5D4C0F8913F11232220798429915348AF1B73C173B254A61F11863D316B1F920F171ED12678FA262BA9662B6796F5FF95C7D9FB4740947AED50653C2F1A9FF9725A52C91CFBF65871510DD6FE6E54B06BF7B89398DD632253A053154B3535F; session_token=f539d86066274f12986d6650e2ef0b95';
+if (!Q_REPORTS_COOKIE || !BLUERA_COOKIE) {
+  throw new Error('ensure the Q_REPORTS_COOKIE and BLUERA_COOKIE env variables are set (see https://qreports.fas.harvard.edu/browse/index)');
+}
 
 const batchSize = 480;
 
-async function uploadEvaluations(evaluations: Evaluation[]) {
-  console.error(`writing ${evaluations.length} evaluations to firestore`);
-  const db = getFirestore();
-  let total = 0;
-  for (let i = 0; i < evaluations.length; i += batchSize) {
-    const batchWriter = db.batch();
-    evaluations.slice(i, i + batchSize).forEach(
-      (evaluation) => batchWriter.set(
-        db.doc(`evaluations/${getEvaluationId(evaluation)}`),
-        evaluation,
-      ),
-    );
-    const results = await batchWriter.commit();
-    total += results.length;
-  }
-  console.error(`wrote ${total} evaluations to firestore`);
-}
+const terms = ['2021 Spring', '2020 Fall', '2019 Fall'];
 
-const qReportUrls = [
-  'https://qreports.fas.harvard.edu/browse/index?calTerm=2021%20Spring',
-  'https://qreports.fas.harvard.edu/browse/index?calTerm=2020%20Fall',
-  'https://qreports.fas.harvard.edu/browse/index?calTerm=2019%20Fall',
-];
+const baseUrl = 'https://qreports.fas.harvard.edu/browse/index';
 
 /**
  * Prints a list of JSON objects to the console
  * which can be joined together using `jq --slurp` on the command line.
  */
-async function downloadEvaluations({ autoUpload = false }: { autoUpload?: boolean } = {}) {
-  const evaluationUrls = await Promise.all(qReportUrls.map((url) => fetcher({
-    url,
+async function downloadEvaluations() {
+  const exportPath = process.argv[2];
+  if (!exportPath) {
+    throw new Error('pass the directory name to save the results in');
+  }
+
+  if (!fs.existsSync(exportPath)) fs.mkdirSync(exportPath);
+
+  const evaluationUrls = await Promise.all(terms.map((term) => fetcher({
+    url: baseUrl,
     method: 'GET',
+    params: { calTerm: term },
     headers: {
       Cookie: Q_REPORTS_COOKIE,
     },
@@ -57,30 +45,29 @@ async function downloadEvaluations({ autoUpload = false }: { autoUpload?: boolea
   })));
 
   const allUrls = evaluationUrls.flat();
-  console.error(`found ${allUrls.length} evaluations`);
+  console.log(`found ${allUrls.length} evaluations`);
 
   for (let i = 0; i < allUrls.length; i += batchSize) {
     const urls = allUrls.slice(i, i + batchSize);
-    console.error(`loading ${urls.length} evaluations (${i + 1}/${Math.ceil(allUrls.length / batchSize)})`);
+    const batchNumber = i / batchSize + 1;
+    console.log(`loading ${urls.length} evaluations (${batchNumber}/${Math.ceil(allUrls.length / batchSize)})`);
 
     const evls = await Promise.all(urls
       .map(async (url) => {
         try {
           const evl = await getEvaluation(url, { auth: BLUERA_COOKIE });
           return evl;
-        } catch (err) {
+        } catch (err: any) {
           console.error(`skipping evaluation at ${url}`);
-          console.error(err);
+          console.error(err.message);
           return null;
         }
       }));
+
     const loadedEvls = allTruthy(evls);
-    if (autoUpload) await uploadEvaluations(loadedEvls);
-    loadedEvls.forEach((evl) => {
-      console.log(JSON.stringify(evl, null, 2));
-    });
-    console.error(`done loading ${loadedEvls.length} evaluations`);
+    fs.writeFileSync(`${exportPath}/batch-${batchNumber}.json`, JSON.stringify(loadedEvls));
+    console.log(`done loading ${loadedEvls.length}/${urls.length} evaluations`);
   }
 }
 
-downloadEvaluations({ autoUpload: true });
+downloadEvaluations();

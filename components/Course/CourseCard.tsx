@@ -2,7 +2,7 @@ import React from 'react';
 import { FaInfo, FaTimes, FaPlus } from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
 import { Schedule } from '../../shared/firestoreTypes';
-import { getClassId, classNames } from '../../shared/util';
+import { getClassId, classNames, getSemester } from '../../shared/util';
 import useCardStyle from '../../src/context/cardStyle';
 import useUserData from '../../src/context/userData';
 import {
@@ -34,6 +34,7 @@ const CourseCard: React.FC<Props> = function ({
   const { addCourses, removeCourses } = useUserData();
   const { isExpanded } = useCardStyle();
   const draggable = typeof setDragStatus !== 'undefined';
+  const semester = getSemester(course);
 
   return (
     // move the shadow outside to avoid it getting hidden
@@ -65,6 +66,7 @@ const CourseCard: React.FC<Props> = function ({
               <HighlightComponent attribute="SUBJECT" course={course} inSearch={inSearchContext} />
               <HighlightComponent attribute="CATALOG_NBR" course={course} inSearch={inSearchContext} />
             </span>
+            {/* the info and course selection buttons */}
             <span className="flex items-center gap-2 ml-2">
               <button
                 type="button"
@@ -102,6 +104,11 @@ const CourseCard: React.FC<Props> = function ({
           <h3 className={classNames(isExpanded || 'text-sm')}>
             <HighlightComponent attribute="Title" course={course} inSearch={inSearchContext} />
           </h3>
+          <p className="text-sm text-gray-300">
+            {semester.season}
+            {' '}
+            {semester.year}
+          </p>
         </div>
 
         {isExpanded && (

@@ -110,7 +110,7 @@ iv. Students starting in MATH 21B or similar: 11 courses (two courses to complet
 };
 
 const basicRequirements: RequirementGroup = {
-  groupId: 'Basic Requirements',
+  groupId: 'CS - Basic Requirements',
   subheading: '11–14 courses (44–56 credits)',
   sourcePage: 56,
   requirements: [

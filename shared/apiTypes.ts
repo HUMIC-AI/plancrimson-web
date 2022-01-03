@@ -1,3 +1,5 @@
+import { Season } from './firestoreTypes';
+
 export type SearchParams = Partial<{
   search: string;
   pageNumber: number;
@@ -40,7 +42,11 @@ export const DAYS_OF_WEEK = [
   'Sunday',
 ] as const;
 
+export const DAY_SHORT = ['MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT'] as const;
+
 export type DayOfWeek = typeof DAYS_OF_WEEK[number];
+
+export type Viability = 'Yes' | 'Likely' | 'Unlikely' | 'No';
 
 // ==================== FOUR YEAR PLAN RESPONSES ====================
 
@@ -123,9 +129,9 @@ export interface Class {
 
   // ==================== TIME RELATED FIELDS ====================
 
-  Modified: Date; // latest date modified, eg "2021-12-11 23:34:23.000000"
+  Modified: string; // latest date modified, eg "2021-12-11 23:34:23.000000"
 
-  DAY_OF_WEEK: DayOfWeek | DayOfWeek[]; // days of the week, eg ["Monday", "Wednesday", "Friday"]
+  DAY_OF_WEEK?: DayOfWeek | DayOfWeek[]; // days of the week, eg ["Monday", "Wednesday", "Friday"]
   IS_SCL_MEETING_PAT: string | string[]; // see DAY_OF_WEEK, eg "Th"
   // "Y" or "N"
   MON: 'Y' | 'N';
@@ -183,7 +189,7 @@ export interface Class {
 
   // which courses this counts for, eg ["Faculty of Arts & Sciences}{2218}{12284}{STAT}{121A", "Faculty of Arts & Sciences}{2218}{13626}{APCOMP}{209A"]
   // maybe DESCRB}{STRM}{ACAD_ORG_PRIMARY_ORG}{HU_CAT_NBR_NL
-  IS_SCL_DESCR_HU_SCL_XREG: string | string[];
+  IS_SCL_DESCR_HU_SCL_XREG?: string | string[];
 
   IS_SCL_DESCR_HU_CONSENT: string; // eg "Instructor Consent Required" or "No Special Consent Required"
   IS_SCL_DESCRSHORT_HU_CONSENT: string; // see above, eg "No Consent" or "Instructor"
@@ -197,21 +203,23 @@ export interface Class {
 
   IS_SCL_DESCR100_HU_SCL_ATTR_LEVL: string; // eg "Graduate Course" or "Primarily for Graduate Students" or "For Undergraduate and Graduate Students"
   CRSE_ATTR_VALUE_HU_LEVL_ATTR: string; // see above eg "GRADCOURSE" | "UGRDGRAD" | "PRIMGRAD"
-  IS_SCL_DESCR100_HU_SCL_ATTR_GE: // general education requirements
+  IS_SCL_DESCR100_HU_SCL_ATTR_GE?: // general education requirements
   | 'Aesthetics and Culture'
   | 'Science and Technology in Society'
   | 'Histories, Societies, Individuals'
   | 'Ethics and Civics';
-  CRSE_ATTR_VALUE_HU_GE_ATTR: // see above
+  CRSE_ATTR_VALUE_HU_GE_ATTR?: // see above
   | 'A&C'
   | 'STS'
   | 'HSI'
   | 'E&C';
-  IS_SCL_DESCR100_HU_SCL_ATTR_LDD: // divisional distribution
+  IS_SCL_DESCR100_HU_SCL_ATTR_LDD?: // divisional distribution
   | 'Science & Engineering & Applied Science'
   | 'Arts and Humanities'
+  | 'Social Sciences'
   | 'None';
   CRSE_ATTR_VALUE_HU_LDD_ATTR: string; // see above, eg "NONE" | "SCI"
+  IS_SCL_DESCR100_HU_SCL_ATTR_LQR?: 'Yes'; // quantitative reasoning with data
   IS_SCL_DESCR100_HU_SCL_ATTR_XREG: string; // harvard cross registration, eg "Available for Harvard Cross Registration"
   CRSE_ATTR_VALUE_HU_XREG_ATTR: string; // see above, eg "YESXREG" | "NOXREG"
 
@@ -357,7 +365,7 @@ export type SearchProperties = {
 export interface Evaluation {
   url: string;
   year: number;
-  season: string;
+  season: Season;
   courseName: string;
   instructorName: string;
   comments?: string[] | null;
@@ -367,6 +375,7 @@ export interface Evaluation {
   'On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.'?: HoursStats;
   'How strongly would you recommend this course to your peers?'?: RecommendationsStats;
   'What was/were your reason(s) for enrolling in this course? (Please check all that apply)'?: ReasonsForEnrolling;
+  'What would you like to tell future students about this class?'?: string;
 }
 
 export type PossibleEvaluationResponse = Evaluation | {

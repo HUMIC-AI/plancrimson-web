@@ -1,5 +1,4 @@
-/* eslint-disable no-console */
-/* eslint-disable no-await-in-loop */
+/* eslint-disable no-console, no-await-in-loop */
 import axios from 'axios';
 import cheerio, { CheerioAPI } from 'cheerio';
 import fs from 'fs';
@@ -7,6 +6,7 @@ import {
   CourseGeneralQuestions,
   Evaluation, EvaluationStatistics, GeneralInstructorQuestions, ReasonsForEnrolling,
 } from '../shared/apiTypes';
+import { Season } from '../shared/firestoreTypes';
 import { allTruthy } from '../shared/util';
 
 const cookie = process.env.EVALUATIONS_COOKIE;
@@ -195,7 +195,7 @@ async function getComments(placeholderUrl: string): Promise<string[] | null> {
   return comments;
 }
 
-async function parseEvaluation(url: string, season: string, year: string) {
+async function parseEvaluation(url: string, year: number, season: Season) {
   const result = await axios.get(url);
   const $ = cheerio.load(result.data);
 
@@ -261,7 +261,7 @@ async function parseEvaluation(url: string, season: string, year: string) {
     courseName,
     instructorName,
     season,
-    year: parseInt(year, 10),
+    year,
     comments,
     'Course General Questions': generalData,
     'Course Response Rate': {
@@ -302,7 +302,7 @@ async function getEvaluationLinks(dept: string, year: string, term: string) {
   return $('a').map((_, a) => $(a).attr('href')).toArray();
 }
 
-function loadEvaluations(urls: string[], year: string, term: string) {
+function loadEvaluations(urls: string[], year: number, term: Season) {
   return Promise.allSettled(urls.map((url, i) => new Promise<Evaluation | null>((resolve, reject) => {
     setTimeout(() => {
       console.error(`parsing evaluation ${i + 1}/${urls.length} ${baseUrl}/${url}`);
@@ -336,7 +336,7 @@ async function main() {
 
     const $ = cheerio.load(response.data);
     const departments = $('.course-block-head > .remove_link > span').map((_, span) => $(span).attr('title_abbrev')).toArray();
-    const [year, term] = yearterm.split('_');
+    const [schoolYear, termNumber] = yearterm.split('_');
 
     if (!fs.existsSync(`${baseDir}/${yearterm}`)) {
       fs.mkdirSync(`${baseDir}/${yearterm}`);
@@ -345,7 +345,10 @@ async function main() {
     // eslint-disable-next-line no-restricted-syntax
     for (const department of departments) {
       console.error(`==================== loading department ${department} ====================`);
-      const urls = await getEvaluationLinks(department, year, term);
+      const urls = await getEvaluationLinks(department, schoolYear, termNumber);
+      const [year, term]: [number, Season] = parseInt(termNumber, 10) === 1
+        ? [parseInt(schoolYear, 10), 'Fall']
+        : [parseInt(schoolYear, 10) + 1, 'Spring'];
       const results = await loadEvaluations(urls, year, term);
       const successes = allTruthy(results.map((result) => (result.status === 'fulfilled' ? result.value : null)));
       console.error(`===== loaded ${successes.length}/${urls.length} evaluations for department ${department} =====`);
