@@ -2,7 +2,7 @@
 /* eslint-disable no-await-in-loop */
 import cheerio from 'cheerio';
 import '../server/initFirebase';
-import fs from 'fs';
+import fs, { readFileSync } from 'fs';
 import { getEvaluation } from '../server/evaluation';
 import fetcher from '../shared/fetcher';
 import { allTruthy } from '../shared/util';
@@ -26,23 +26,30 @@ const baseUrl = 'https://qreports.fas.harvard.edu/browse/index';
  */
 async function downloadEvaluations() {
   const exportPath = process.argv[2];
+  const urlsPath = process.argv[3];
   if (!exportPath) {
     throw new Error('pass the directory name to save the results in');
   }
 
   if (!fs.existsSync(exportPath)) fs.mkdirSync(exportPath);
 
-  const evaluationUrls = await Promise.all(terms.map((term) => fetcher({
-    url: baseUrl,
-    method: 'GET',
-    params: { calTerm: term },
-    headers: {
-      Cookie: Q_REPORTS_COOKIE,
-    },
-  }).then((html) => {
-    const $ = cheerio.load(html);
-    return $('#bluecourses a').map((_, a) => $(a).attr('href')).toArray();
-  })));
+  const evaluationUrls = urlsPath
+    ? JSON.parse(readFileSync(urlsPath).toString('utf8')) as string[]
+    : await Promise.all(terms.map((term) => fetcher({
+      url: baseUrl,
+      method: 'GET',
+      params: { calTerm: term },
+      headers: {
+        Cookie: Q_REPORTS_COOKIE,
+      },
+    }).then((html) => {
+      const $ = cheerio.load(html);
+      return $('#bluecourses a').map((_, a) => $(a).attr('href')).toArray();
+    })));
+
+  if (evaluationUrls.some((u) => typeof u !== 'string')) {
+    throw new Error('urls need to be strings');
+  }
 
   const allUrls = evaluationUrls.flat();
   console.log(`found ${allUrls.length} evaluations`);

@@ -38,41 +38,59 @@ const GridHeading: React.FC<{ title: string; data: EvaluationStatistics | null }
   );
 };
 
-type OverallEvaluationProps = {
+type DisclosureComponentProps = {
   heading: string;
+  visibleStats?: EvaluationStatistics;
+};
+
+type OverallEvaluationProps = DisclosureComponentProps & {
   visibleStats: EvaluationStatistics;
   components: Record<string, EvaluationStatistics | null>;
 };
 
-const OverallEvaluation: React.FC<OverallEvaluationProps> = function ({ heading, visibleStats, components }) {
+const DisclosureComponent: React.FC<DisclosureComponentProps> = function ({ heading, visibleStats, children }) {
   return (
     <Disclosure as="div" className="border-gray-600 border-2 rounded-lg">
-      <Disclosure.Button className="w-full text-left flex items-center gap-2 bg-gray-600 py-1 px-4 text-white">
-        <h4 className="flex-1 text-md font-bold">
-          {heading}
-        </h4>
-        <span className="flex items-center gap-4">
-          <span className="min-w-max">
-            (
-            {visibleStats.courseMean || 'NA'}
-            {' '}
-            /
-            {' '}
-            {visibleStats.fasMean || 'NA'}
-            )
-          </span>
-          <FaChevronDown />
-        </span>
-      </Disclosure.Button>
-      <div className="border-2 rounded-b p-2 flex flex-col gap-4">
-        <Percentages categories={visibleStats.votes || null} />
-        <Disclosure.Panel>
-          <div className="grid grid-cols-[auto_1fr] gap-4 items-center">
-            {Object.entries(components).map(([title, data]) => <GridHeading key={title} {...{ title, data }} />)}
+      {({ open }) => (
+        <>
+          <Disclosure.Button className="w-full text-left flex items-center gap-2 bg-gray-600 py-1 px-4 text-white">
+            <h4 className="flex-1 text-md font-bold">
+              {heading}
+            </h4>
+            {visibleStats && (
+            <span className="flex items-center gap-4">
+              <span className="min-w-max">
+                (
+                {visibleStats.courseMean || 'NA'}
+                {' '}
+                /
+                {' '}
+                {visibleStats.fasMean || 'NA'}
+                )
+              </span>
+              <FaChevronDown />
+            </span>
+            )}
+          </Disclosure.Button>
+          <div className={classNames('rounded-b flex flex-col gap-4', (visibleStats || open) && 'border-2 p-2')}>
+            {visibleStats && <Percentages categories={visibleStats.votes || null} />}
+            <Disclosure.Panel>
+              {children}
+            </Disclosure.Panel>
           </div>
-        </Disclosure.Panel>
-      </div>
+        </>
+      )}
     </Disclosure>
+  );
+};
+
+const OverallEvaluation: React.FC<OverallEvaluationProps> = function ({ components, heading, visibleStats }) {
+  return (
+    <DisclosureComponent heading={heading} visibleStats={visibleStats}>
+      <div className="grid grid-cols-[auto_1fr] gap-4 items-center">
+        {Object.entries(components).map(([title, data]) => <GridHeading key={title} {...{ title, data }} />)}
+      </div>
+    </DisclosureComponent>
   );
 };
 
@@ -151,12 +169,6 @@ const EvaluationComponent: React.FC<{ report: Evaluation | Evaluation[] }> = fun
                 students total
               </p>
 
-              <Section title="Recommendations">
-                <Percentages
-                  categories={courseEvaluation['How strongly would you recommend this course to your peers?']?.recommendations || null}
-                />
-              </Section>
-
               {overall && generalComponents && (
               <OverallEvaluation
                 heading="Overall evaluation"
@@ -176,6 +188,25 @@ const EvaluationComponent: React.FC<{ report: Evaluation | Evaluation[] }> = fun
                   </p>
                 </Section>
               )}
+
+              <Section title="Recommendations">
+                <Percentages
+                  categories={courseEvaluation['How strongly would you recommend this course to your peers?']?.recommendations || null}
+                />
+              </Section>
+
+              {(courseEvaluation.comments && courseEvaluation.comments.length > 0)
+                ? (
+                  <DisclosureComponent heading="Comments">
+                    <ul className="max-h-72 -m-2 overflow-auto">
+                      {courseEvaluation.comments.map((comment) => (
+                        <li key={comment} className="even:bg-gray-300 p-2">
+                          {comment}
+                        </li>
+                      ))}
+                    </ul>
+                  </DisclosureComponent>
+                ) : <p>No comments found</p>}
             </Disclosure.Panel>
           </FadeTransition>
         </>

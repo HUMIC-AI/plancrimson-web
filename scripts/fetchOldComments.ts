@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import axios from 'axios';
 import cheerio from 'cheerio';
 import {
@@ -32,22 +33,27 @@ async function main() {
     console.log(`loading batch ${batch} / ${nBatches} with ${batchIds.length} pages`);
     // eslint-disable-next-line no-await-in-loop
     const results = await Promise.all(batchIds.map(async (id: string, j) => {
+      try {
       // eslint-disable-next-line no-promise-executor-return
-      const response = await axios.get(baseUrl, {
-        params: {
-          course_id: id,
-          qid: 1487,
-        },
-        headers: {
-          Cookie: cookie,
-        },
-      });
+        const response = await axios.get(baseUrl, {
+          params: {
+            course_id: id,
+            qid: 1487,
+          },
+          headers: {
+            Cookie: cookie,
+          },
+        });
 
-      const $ = cheerio.load(response.data);
-      const data = $('.response').map((_, el) => $(el).text().replace(/\s+/g, ' ').trim()).toArray();
-      console.log(`loading course ${j} found ${data.length} responses`);
+        const $ = cheerio.load(response.data);
+        const data = $('.response').map((_, el) => $(el).text().replace(/\s+/g, ' ').trim()).toArray();
+        console.log(`loading course ${j} (id ${id}) found ${data.length} responses`);
 
-      return { [id]: data };
+        return { [id]: data };
+      } catch (err: any) {
+        console.error(`error loading course ${id}: ${err.message}`);
+        return {};
+      }
     }));
 
     const acc = Object.assign({}, ...results);

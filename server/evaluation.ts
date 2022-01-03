@@ -104,13 +104,15 @@ export async function getEvaluation(url: string, {
   });
 
   const $ = cheerio.load(response);
-  const text = $('.ChildReportSkipNav a').text();
+  const text = $('.ChildReportSkipNav h3 a').text();
   const [courseName = 'UNKNOWN', instructorName = 'UNKNOWN'] = text.slice('Feedback for '.length, text.indexOf('(')).split('-').map((str) => str.trim());
   const toc = $('.TOC h2').text().trim().split(' ');
+  const tmpYear = parseInt(toc[4], 10);
+  const [year, season] = tmpYear ? [tmpYear, toc[5] as Season] : [parseInt(toc[6], 10), toc[7] as Season];
   const initial: ApiTypes.Evaluation = {
     url,
-    year: parseInt(toc[4], 10),
-    season: toc[5] as Season,
+    year,
+    season,
     courseName,
     instructorName,
   };
