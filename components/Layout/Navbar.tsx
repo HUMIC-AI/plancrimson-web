@@ -1,7 +1,10 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import {
-  signOut, getAuth, signInWithPopup, GoogleAuthProvider,
+  signOut,
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
 } from 'firebase/auth';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -39,19 +42,19 @@ const UserMenu = function () {
   return (
     <Menu as="div" className="ml-3 relative">
       <div>
-        <Menu.Button className="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+        <Menu.Button name="Open user menu" className="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
           <span className="sr-only">Open user menu</span>
-          {user?.photoURL
-            ? (
-              <Image
-                className="h-8 w-8 rounded-full"
-                src={user.photoURL}
-                width={32}
-                height={32}
-                alt=""
-              />
-            )
-            : <FaUser className="h-8 w-8 text-white" />}
+          {user?.photoURL ? (
+            <Image
+              className="h-8 w-8 rounded-full"
+              src={user.photoURL}
+              width={32}
+              height={32}
+              alt=""
+            />
+          ) : (
+            <FaUser className="h-8 w-8 text-white" />
+          )}
         </Menu.Button>
       </div>
       <Transition
@@ -63,14 +66,16 @@ const UserMenu = function () {
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95"
       >
-        <Menu.Items className={classNames(
-          'origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white focus:outline-none',
-        )}
+        <Menu.Items
+          className={classNames(
+            'origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white focus:outline-none',
+          )}
         >
           <Menu.Item>
             {({ active }) => (
               <button
                 type="button"
+                name={user ? 'Sign out' : 'Sign in'}
                 className={classNames(
                   active ? 'bg-white' : '',
                   'block w-full px-4 py-2 text-sm text-left text-gray-800',
@@ -104,10 +109,9 @@ const Navbar = function () {
         <>
           <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
             <div className="relative flex items-center justify-between h-16">
-
               {/* Mobile menu button */}
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
-                <Disclosure.Button className="inline-flex items-center justify-center p-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                <Disclosure.Button name="Open main menu" className="inline-flex items-center justify-center p-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
                   <span className="sr-only">Open main menu</span>
                   {open ? (
                     <FaTimes className="block h-6 w-6" aria-hidden="true" />
@@ -122,9 +126,7 @@ const Navbar = function () {
                   <FaCalendarCheck className="block lg:hidden h-8 w-auto" />
                   <div className="hidden lg:flex items-center gap-4">
                     <FaCalendarCheck className="h-8 w-auto" />
-                    <h1 className="text-lg">
-                      Plan Crimson
-                    </h1>
+                    <h1 className="text-lg">Plan Crimson</h1>
                   </div>
                 </div>
                 <div className="hidden sm:block sm:ml-6">
@@ -141,10 +143,14 @@ const Navbar = function () {
                       >
                         <a
                           className={classNames(
-                            item.href === pathname ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white',
+                            item.href === pathname
+                              ? 'bg-gray-800 text-white'
+                              : 'text-gray-300 hover:bg-gray-800 hover:text-white',
                             'px-3 py-2 rounded-md text-sm font-medium',
                           )}
-                          aria-current={item.href === pathname ? 'page' : undefined}
+                          aria-current={
+                            item.href === pathname ? 'page' : undefined
+                          }
                         >
                           {item.name}
                         </a>

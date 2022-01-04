@@ -82,6 +82,7 @@ const CourseDialog: React.FC<Props> = function ({ isOpen, closeModal, course }) 
 
               <button
                 type="button"
+                name="Close dialog"
                 onClick={closeModal}
                 className="absolute top-5 right-5 text-gray-800 rounded-full p-2 bg-white hover:opacity-50 transition-opacity"
               >

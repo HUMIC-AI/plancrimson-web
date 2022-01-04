@@ -3,7 +3,7 @@ import React, { Fragment, useMemo } from 'react';
 import { FaCheck, FaTimes } from 'react-icons/fa';
 import { classNames } from '../../shared/util';
 import { RequirementsMet } from '../../src/requirements';
-import { RequirementGroup } from '../../src/requirements/util';
+import { Requirement, RequirementGroup } from '../../src/requirements/util';
 import FadeTransition from '../FadeTransition';
 
 const Description: React.FC<{ description: React.ReactNode; }> = function ({ description }) {
@@ -27,7 +27,8 @@ type Props = {
   depth: number;
   requirements: RequirementGroup;
   validationResults: RequirementsMet;
-  setHighlightedClasses: React.Dispatch<React.SetStateAction<string[]>>;
+  highlightRequirement: React.Dispatch<React.SetStateAction<Requirement | undefined>>;
+  highlightedRequirement: Requirement | undefined;
 };
 
 function getNumSatisfied(group: RequirementGroup, results: RequirementsMet): {
@@ -54,7 +55,8 @@ const RequirementsDisplay: React.FC<Props> = function ({
   depth,
   requirements: reqGroup,
   validationResults,
-  setHighlightedClasses,
+  highlightRequirement,
+  highlightedRequirement,
 }) {
   const Heading: React.FC = useMemo(() => {
     switch (depth) {
@@ -79,19 +81,19 @@ const RequirementsDisplay: React.FC<Props> = function ({
   let borderStyles: string;
   switch (depth) {
     case 0:
-      color = 'bg-transparent text-black focus:bg-blue-300';
+      color = 'bg-transparent text-black';
       borderStyles = '';
       break;
     case 1:
-      color = 'bg-gray-800 focus:bg-blue-300';
+      color = 'bg-gray-800';
       borderStyles = 'border-gray-800 border-4';
       break;
     case 2:
-      color = 'bg-gray-600 focus:bg-blue-300';
+      color = 'bg-gray-600';
       borderStyles = 'border-gray-600 border-2';
       break;
     default:
-      color = 'bg-gray-600 bg-opacity-70 focus:bg-blue-300';
+      color = 'bg-gray-600 bg-opacity-70';
       borderStyles = 'border-gray-300 border-1';
       break;
   }
@@ -108,7 +110,7 @@ const RequirementsDisplay: React.FC<Props> = function ({
       )}
     >
       <Disclosure.Button className={classNames(
-        'text-left text-white p-2 w-full hover:opacity-70 transition-opacity focus:ring-white focus:outline-none',
+        'text-left text-white p-2 w-full hover:opacity-80 transition-opacity focus:ring-white focus:outline-none focus:bg-blue-600',
         color,
       )}
       >
@@ -149,7 +151,8 @@ const RequirementsDisplay: React.FC<Props> = function ({
                       key={req.groupId}
                       requirements={req}
                       validationResults={validationResults}
-                      setHighlightedClasses={setHighlightedClasses}
+                      highlightRequirement={highlightRequirement}
+                      highlightedRequirement={highlightedRequirement}
                     />
                   </li>
                 );
@@ -166,18 +169,20 @@ const RequirementsDisplay: React.FC<Props> = function ({
 
               const satisfied = validationResults[req.id]?.satisfied || false;
               const classes = validationResults[req.id]?.classes || [];
+              const isHighlighted = highlightedRequirement?.id === req.id;
               // a single requirement
               return (
                 <li key={req.id} className="px-4 sm:px-0">
                   <div className={classNames(
-                    satisfied ? 'text-green-500' : 'text-red-500',
-                    'flex justify-between items-center gap-2',
+                    isHighlighted ? 'text-blue-500 font-bold'
+                      : (satisfied ? 'text-green-500' : 'text-red-500'),
+                    'flex justify-between items-center gap-2 transition-colors',
                   )}
                   >
                     <button
                       type="button"
-                      onClick={() => setHighlightedClasses(classes)}
-                      className="text-left"
+                      onClick={() => highlightRequirement(isHighlighted ? undefined : req)}
+                      className={classNames(isHighlighted && 'font-bold', 'text-left')}
                     >
                       {req.id}
                     </button>

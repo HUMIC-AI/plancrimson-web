@@ -1,4 +1,5 @@
 import React from 'react';
+import { classNames } from '../../shared/util';
 import useClassCache from '../../src/context/classCache';
 import useSelectedScheduleContext from '../../src/context/selectedSchedule';
 import useUserData from '../../src/context/userData';
@@ -45,7 +46,7 @@ const SemesterSchedule: React.FC = function () {
             </option>
           ))}
         </select>
-        <button type="submit" className="flex-1 py-2 px-3 font-semibold rounded bg-blue-300 hover:bg-blue-500 min-w-max">
+        <button type="submit" className={classNames('flex-1 py-2 px-3 font-semibold hover-blue min-w-max')}>
           Add new schedule
         </button>
       </form>

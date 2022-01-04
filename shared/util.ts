@@ -1,29 +1,51 @@
 import {
-  collection, getDocs, getFirestore, query, where,
+  collection,
+  getDocs,
+  getFirestore,
+  query,
+  where,
 } from 'firebase/firestore';
 import {
   Semester, seasonOrder, UserData, Season,
 } from './firestoreTypes';
 import {
-  ATTRIBUTE_DESCRIPTIONS, Class, Evaluation, Viability,
+  ATTRIBUTE_DESCRIPTIONS,
+  Class,
+  DayOfWeek,
+  DAYS_OF_WEEK,
+  Evaluation,
+  Viability,
 } from './apiTypes';
 import seasPlan from './seasPlan.json';
 import { getSchoolYear } from '../src/requirements/util';
 
+export const unsplashParams = '?utm_source=Plan+Crimson&utm_medium=referral';
+
+export function compareWeekdays(a: string, b: string) {
+  return (
+    DAYS_OF_WEEK.indexOf(a as DayOfWeek) - DAYS_OF_WEEK.indexOf(b as DayOfWeek)
+  );
+}
+
 export function getSemester(course: Class) {
   const season = course.STRM === '2222'
     ? 'Spring'
-    : (course.STRM === '2218'
+    : ((course.STRM === '2218'
       ? 'Fall'
-      : course.IS_SCL_DESCR_IS_SCL_DESCRH) as Season;
+      : course.IS_SCL_DESCR_IS_SCL_DESCRH) as Season);
   const academicYear = parseInt(course.ACAD_YEAR, 10);
   const year = season === 'Fall' ? academicYear - 1 : academicYear;
   return { year, season };
 }
 
 export function classNames(...classes: (string | boolean)[]) {
-  return classes.filter(Boolean).join(' ')
-    .replace('hover-blue', 'shadow bg-blue-300 hover:bg-blue-500 transition-colors');
+  return classes
+    .filter(Boolean)
+    .join(' ')
+    .replace(
+      'hover-blue',
+      'shadow rounded bg-gray-800 hover:bg-opacity-50 text-white transition-colors',
+    );
 }
 
 export function allTruthy<T>(list: T[]) {
@@ -38,7 +60,10 @@ export function getNumCredits(course: Class) {
   return parseInt(course.HU_UNITS_MIN, 10);
 }
 
-export function compareSemesters(a: Semester<string | number>, b: Semester<string | number>) {
+export function compareSemesters(
+  a: Semester<string | number>,
+  b: Semester<string | number>,
+) {
   const aYear = parseInt(a.year as string, 10);
   const bYear = parseInt(b.year as string, 10);
   if (aYear !== bYear) return aYear - bYear;
@@ -72,7 +97,9 @@ export function getUniqueSemesters(data: UserData) {
   const semesters = getDefaultSemesters(data.classYear);
   Object.values(data.schedules).forEach(({ year, season }) => {
     // if this semester has not yet been added
-    if (!semesters.find(({ year: y, season: s }) => year === y && season === s)) {
+    if (
+      !semesters.find(({ year: y, season: s }) => year === y && season === s)
+    ) {
       semesters.push({ year, season });
     }
   });
@@ -83,19 +110,29 @@ export function sortSchedules(schedules: UserData['schedules']) {
   return Object.values(schedules).sort(compareSemesters);
 }
 
-export function getSchedulesBySemester(data: UserData, targetYear: number, targetSeason: Season) {
-  return sortSchedules(data.schedules).filter(({ year, season }) => year === targetYear && season === targetSeason);
+export function getSchedulesBySemester(
+  data: UserData,
+  targetYear: number,
+  targetSeason: Season,
+) {
+  return sortSchedules(data.schedules).filter(
+    ({ year, season }) => year === targetYear && season === targetSeason,
+  );
 }
 
 export function getAllClassIds(data: UserData) {
   return Object.values(data.schedules).flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
 }
 
-export function checkViable(cls: Class, semester: Semester, data: UserData): {
-  viability: Viability;
-  reason: string;
-  instructors?: { firstName: string; lastName: string; }[];
-} {
+export function checkViable(
+  cls: Class,
+  semester: Semester,
+  data: UserData,
+): {
+    viability: Viability;
+    reason: string;
+    instructors?: { firstName: string; lastName: string }[];
+  } {
   const { year, season } = getSemester(cls);
 
   if (year === semester.year && season === semester.season) {
@@ -113,30 +150,33 @@ export function checkViable(cls: Class, semester: Semester, data: UserData): {
   }
 
   // check the SEAS plan
-  const searchSubjects = allTruthy([cls.SUBJECT, cls.HU_ALIAS, ...(Array.isArray(cls.ACAD_ORG) ? cls.ACAD_ORG : [cls.ACAD_ORG])]);
+  const searchSubjects = allTruthy([
+    cls.SUBJECT,
+    cls.HU_ALIAS,
+    ...(Array.isArray(cls.ACAD_ORG) ? cls.ACAD_ORG : [cls.ACAD_ORG]),
+  ]);
   const catalogNumberRegExp = new RegExp(cls.CATALOG_NBR.trim(), 'i');
-  const foundInSeasPlan = seasPlan.find(({ prefix, courseNumber }) => (
-    searchSubjects.includes(prefix.replace('AC', 'APCOMP'))
-    && catalogNumberRegExp.test(courseNumber)
-  ));
+  const foundInSeasPlan = seasPlan.find(
+    ({ prefix, courseNumber }) => searchSubjects.includes(prefix.replace('AC', 'APCOMP'))
+      && catalogNumberRegExp.test(courseNumber),
+  );
 
   if (foundInSeasPlan) {
-    const matchesSemester = foundInSeasPlan.semesters.find((plannedSemester) => (
-      (
-        plannedSemester.term === 'Spring'
-        && semester.season === 'Spring'
-        && plannedSemester.academicYear + 1 === semester.year
-      ) || (
-        plannedSemester.term === 'Fall'
-        && semester.season === 'Fall'
-        && plannedSemester.academicYear === semester.year
-      )
-    ));
+    const matchesSemester = foundInSeasPlan.semesters.find(
+      (plannedSemester) => (plannedSemester.term === 'Spring'
+          && semester.season === 'Spring'
+          && plannedSemester.academicYear + 1 === semester.year)
+        || (plannedSemester.term === 'Fall'
+          && semester.season === 'Fall'
+          && plannedSemester.academicYear === semester.year),
+    );
 
     if (matchesSemester?.offeredStatus === 'No') {
       return {
         viability: 'No',
-        reason: 'This course will not be offered this semester according to the SEAS Four Year Plan.',
+        reason: `${
+          cls.SUBJECT + cls.CATALOG_NBR
+        } will not be offered in ${season} ${year} according to the SEAS Four Year Plan.`,
       };
     }
 
@@ -150,7 +190,8 @@ export function checkViable(cls: Class, semester: Semester, data: UserData): {
 
     return {
       viability: 'Unlikely',
-      reason: 'This semester is not listed in this course\'s offerings in the SEAS Four Year Plan.',
+      reason:
+        "This semester is not listed in this course's offerings in the SEAS Four Year Plan.",
     };
   }
 
@@ -163,7 +204,7 @@ export function checkViable(cls: Class, semester: Semester, data: UserData): {
 
   return {
     viability: 'Unlikely',
-    reason: 'This course is not usually offered in this term.',
+    reason: `This course is not usually offered in the ${season.toLowerCase()}.`,
   };
 }
 
@@ -178,10 +219,12 @@ export function adjustAttr(attr: string) {
 }
 
 export async function getEvaluations(courseName: string) {
-  const evaluations = await getDocs(query(
-    collection(getFirestore(), 'evaluations'),
-    where('courseName', '==', courseName),
-  ));
+  const evaluations = await getDocs(
+    query(
+      collection(getFirestore(), 'evaluations'),
+      where('courseName', '==', courseName),
+    ),
+  );
   return evaluations.docs.map((doc) => doc.data() as Evaluation);
 }
 
@@ -190,7 +233,8 @@ export function getEvaluationId(evaluation: Evaluation) {
     evaluation.courseName,
     evaluation.instructorName,
     evaluation.year,
-    evaluation.season]
+    evaluation.season,
+  ]
     .map((val) => val || 'UNKNOWN')
     .join('-')
     .replace(/[^a-zA-Z0-9]/g, '-');
@@ -212,7 +256,9 @@ export function getMeiliApiKey() {
   const key = process.env.NEXT_PUBLIC_MEILI_API_KEY;
 
   if (process.env.NODE_ENV === 'production' && !key) {
-    throw new Error('must configure the MeiliSearch API key through the NEXT_PUBLIC_MEILI_API_KEY environment variable');
+    throw new Error(
+      'must configure the MeiliSearch API key through the NEXT_PUBLIC_MEILI_API_KEY environment variable',
+    );
   }
 
   return key;

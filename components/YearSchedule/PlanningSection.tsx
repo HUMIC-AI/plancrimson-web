@@ -6,17 +6,20 @@ import { Season } from '../../shared/firestoreTypes';
 import { getUniqueSemesters } from '../../shared/util';
 import useCardStyle from '../../src/context/cardStyle';
 import useUserData from '../../src/context/userData';
+import { Requirement } from '../../src/requirements/util';
 import { DragStatus } from '../Course/CourseCard';
 import SemesterDisplay from './SemesterDisplay';
 
 type Props = {
   scheduleIds: Record<string, string>;
-  highlightedClasses: string[];
+  highlightedRequirement: Requirement | undefined;
   selectSchedule: (year: number, season: Season, schedule: string) => void;
 };
 
 const PlanningSection: React.FC<Props> = function ({
-  scheduleIds, highlightedClasses, selectSchedule,
+  scheduleIds,
+  highlightedRequirement,
+  selectSchedule,
 }) {
   const { data } = useUserData();
   const [dragStatus, setDragStatus] = useState<DragStatus>({
@@ -35,17 +38,27 @@ const PlanningSection: React.FC<Props> = function ({
   const rightScrollRef = useRef<HTMLDivElement>(null!);
 
   useEffect(() => {
-    const resizeObserver = new ResizeObserver(([{ borderBoxSize: [{ inlineSize }] }]) => {
-      setWidth(Math.max(Math.min(inlineSize + 208 - 96, 2048), 208));
-    });
+    const resizeObserver = new ResizeObserver(
+      ([
+        {
+          borderBoxSize: [{ inlineSize }],
+        },
+      ]) => {
+        setWidth(Math.max(Math.min(inlineSize + 208 - 96, 2048), 208));
+      },
+    );
     resizeObserver.observe(resizeRef.current);
-    const leftScrollObserver = new IntersectionObserver(([{ isIntersecting }]) => {
-      setLeftIntersecting(isIntersecting);
-    });
+    const leftScrollObserver = new IntersectionObserver(
+      ([{ isIntersecting }]) => {
+        setLeftIntersecting(isIntersecting);
+      },
+    );
     leftScrollObserver.observe(leftScrollRef.current);
-    const rightScrollObserver = new IntersectionObserver(([{ isIntersecting }]) => {
-      setRightIntersecting(isIntersecting);
-    });
+    const rightScrollObserver = new IntersectionObserver(
+      ([{ isIntersecting }]) => {
+        setRightIntersecting(isIntersecting);
+      },
+    );
     rightScrollObserver.observe(rightScrollRef.current);
     return () => {
       resizeObserver.disconnect();
@@ -75,10 +88,17 @@ const PlanningSection: React.FC<Props> = function ({
             {' '}
             / 32
           </span>
-          <button type="button" onClick={() => expand(!isExpanded)} className="py-2 px-4 bg-gray-600 hover:opacity-50 transition-opacity rounded">
+          <button
+            type="button"
+            onClick={() => expand(!isExpanded)}
+            className="py-2 px-4 bg-gray-600 hover:opacity-50 transition-opacity rounded"
+          >
             {isExpanded ? 'Compact cards' : 'Expand cards'}
           </button>
-          <div ref={resizeRef} className="flex justify-center rounded py-1 w-24 min-w-[96px] resize-x bg-gray-600 overflow-auto">
+          <div
+            ref={resizeRef}
+            className="flex justify-center rounded py-1 w-24 min-w-[96px] resize-x bg-gray-600 overflow-auto"
+          >
             <FaArrowsAltH />
           </div>
         </div>
@@ -94,42 +114,44 @@ const PlanningSection: React.FC<Props> = function ({
             {semesters.map(({ year, season }) => (
               <SemesterDisplay
                 key={year + season}
-                year={year}
-                season={season}
                 selectedScheduleId={scheduleIds[year + season] || null}
                 selectSchedule={(id) => selectSchedule(year, season, id)}
-                highlightedClasses={highlightedClasses}
-                dragStatus={dragStatus}
-                setDragStatus={setDragStatus}
-                colWidth={colWidth}
+                {...{
+                  year,
+                  season,
+                  highlightedRequirement,
+                  dragStatus,
+                  setDragStatus,
+                  colWidth,
+                }}
               />
             ))}
             <div ref={rightScrollRef} />
           </div>
 
           {dragStatus.dragging && (
-          <>
-            {leftIntersecting || (
-            <div
-              className="absolute inset-y-0 left-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
-              onDragOver={() => {
-                semestersContainerRef.current.scrollBy(-2, 0);
-              }}
-            >
-              <FaChevronLeft />
-            </div>
-            )}
-            {rightIntersecting || (
-            <div
-              className="absolute inset-y-0 right-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
-              onDragOver={() => {
-                semestersContainerRef.current.scrollBy(2, 0);
-              }}
-            >
-              <FaChevronRight />
-            </div>
-            )}
-          </>
+            <>
+              {leftIntersecting || (
+                <div
+                  className="absolute inset-y-0 left-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
+                  onDragOver={() => {
+                    semestersContainerRef.current.scrollBy(-2, 0);
+                  }}
+                >
+                  <FaChevronLeft />
+                </div>
+              )}
+              {rightIntersecting || (
+                <div
+                  className="absolute inset-y-0 right-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
+                  onDragOver={() => {
+                    semestersContainerRef.current.scrollBy(2, 0);
+                  }}
+                >
+                  <FaChevronRight />
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

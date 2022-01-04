@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Listbox } from '@headlessui/react';
 import { FaChevronDown, FaTimes } from 'react-icons/fa';
 import { RequirementsMet, allRequirements } from '../../src/requirements';
-import { RequirementGroup } from '../../src/requirements/util';
+import { Requirement, RequirementGroup } from '../../src/requirements/util';
 import ExternalLink from '../ExternalLink';
 import FadeTransition from '../FadeTransition';
 import RequirementsDisplay from './RequirementsDisplay';
@@ -12,13 +12,15 @@ type RequirementsSectionProps = {
   selectedRequirements: RequirementGroup;
   setSelectedRequirements: React.Dispatch<RequirementGroup>;
   validationResults: RequirementsMet;
-  setHighlightedClasses: React.Dispatch<React.SetStateAction<string[]>>;
+  highlightedRequirement: Requirement | undefined;
+  highlightRequirement: React.Dispatch<React.SetStateAction<Requirement | undefined>>;
   notification: boolean;
   setNotification: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
-  selectedRequirements, setSelectedRequirements, validationResults, setHighlightedClasses, notification, setNotification,
+  selectedRequirements, setSelectedRequirements, validationResults,
+  highlightedRequirement, highlightRequirement, notification, setNotification,
 }) {
   const topRef = useRef<HTMLDivElement>(null!);
   const bottomRef = useRef<HTMLDivElement>(null!);
@@ -72,8 +74,7 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
               Remember that this is an unofficial tool
               {' '}
               <strong>only</strong>
-              {' '}
-              and is not affiliated with Harvard. For up-to-date requirements,
+              , is still under development, and is not affiliated with Harvard. For up-to-date requirements,
               consult the
               {' '}
               <ExternalLink href="https://handbook.college.harvard.edu/">Harvard College Student Handbook</ExternalLink>
@@ -106,7 +107,8 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
               depth={0}
               requirements={selectedRequirements}
               validationResults={validationResults}
-              setHighlightedClasses={setHighlightedClasses}
+              highlightRequirement={highlightRequirement}
+              highlightedRequirement={highlightedRequirement}
             />
             <div ref={bottomRef} id="bottomIntersection" />
           </div>

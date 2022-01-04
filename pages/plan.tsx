@@ -8,7 +8,7 @@ import useClassCache from '../src/context/classCache';
 import useUserData from '../src/context/userData';
 import validateSchedules, { RequirementsMet, getReqs } from '../src/requirements';
 import basicRequirements from '../src/requirements/cs/basic';
-import { RequirementGroup } from '../src/requirements/util';
+import { Requirement, RequirementGroup } from '../src/requirements/util';
 
 const PlanPage = function () {
   const { data } = useUserData();
@@ -16,7 +16,7 @@ const PlanPage = function () {
   const [scheduleIds, setSelectedSchedules] = useState<Record<string, string>>({});
   const [validationResults, setValidationResults] = useState<RequirementsMet>({});
   const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(basicRequirements);
-  const [highlightedClasses, setHighlightedClasses] = useState<string[]>([]);
+  const [highlightedRequirement, setHighlightedRequirement] = useState<Requirement>();
   const [notification, setNotification] = useState(true);
   const getClass = useClassCache(data);
 
@@ -53,13 +53,14 @@ const PlanPage = function () {
   }, [scheduleIds, selectedRequirements, data, getClass]);
 
   return (
-    <Layout size="w-full md:p-8">
+    <Layout size="w-full md:p-8" title="Plan">
       <div className="grid md:grid-rows-1 min-h-screen md:grid-cols-[auto_1fr] items-stretch gap-4">
         <RequirementsSection
           {...{
             selectedRequirements,
             setSelectedRequirements,
-            setHighlightedClasses,
+            highlightRequirement: setHighlightedRequirement,
+            highlightedRequirement,
             notification,
             setNotification,
             validationResults,
@@ -69,7 +70,7 @@ const PlanPage = function () {
         <PlanningSection
           {...{
             scheduleIds,
-            highlightedClasses,
+            highlightedRequirement,
             selectSchedule,
           }}
         />
