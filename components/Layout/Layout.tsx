@@ -29,7 +29,8 @@ const Layout: React.FC<LayoutProps> = function ({
         <meta name="description" content={description} />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={description} />
-        <meta property="og:image" content="demo.png" />
+        <meta property="og:image" content="https://plancrimson.xyz/demo.png" />
+        <meta property="og:type" content="website" />
         <meta property="og:url" content="https://plancrimson.xyz/" />
       </Head>
 
