@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
 import { Configure, InstantSearch } from 'react-instantsearch-dom';
+import { useRouter } from 'next/router';
 import { adjustAttr, getMeiliApiKey, getMeiliHost } from '../shared/util';
 import MEILI_ATTRIBUTES from '../shared/meiliAttributes.json';
 import { useLgBreakpoint } from '../src/hooks';
@@ -21,6 +22,7 @@ import CurrentRefinements, {
 import SortBy, { SortByComponent } from '../components/SearchComponents/SortBy';
 import Stats, { StatsComponent } from '../components/SearchComponents/Stats';
 import { DAY_SHORT } from '../shared/apiTypes';
+import StateResults from '../components/SearchComponents/StateResults';
 
 const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey());
 
@@ -33,6 +35,9 @@ const AttributeMenu = function () {
         && MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
           <Attribute attribute={attr} key={attr} label={adjustAttr(attr)} />
         ))}
+      <span className="text-white text-xs p-1">
+        If filters are not showing up, clear your search and try again.
+      </span>
     </div>
   );
 };
@@ -41,10 +46,22 @@ const AttributeMenu = function () {
 // but do not allow them to send requests to the database
 const SearchPage = function () {
   const { user } = useUser();
+  const { query } = useRouter();
+  const [searchState, setSearchState] = useState(query);
+
+  useEffect(() => {
+    setSearchState(query);
+  }, [query]);
 
   return (
     <Layout>
-      <InstantSearch indexName="courses" searchClient={meiliSearchClient}>
+      <InstantSearch
+        indexName="courses"
+        searchClient={meiliSearchClient}
+        searchState={searchState}
+        onSearchStateChange={(newState) => setSearchState(newState)}
+        stalledSearchDelay={500}
+      >
         {user && <Configure hitsPerPage={12} />}
         <div className="flex gap-4">
           <AttributeMenu />
@@ -60,7 +77,18 @@ const SearchPage = function () {
                   currentRefinement="Search now"
                 />
               )}
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center">
+                <StateResults />
+
+                <div className="hidden sm:block ml-2">
+                  {user ? (
+                    <Stats />
+                  ) : (
+                    <StatsComponent nbHits={10000} processingTimeMS={100} />
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-[auto_1fr] gap-4">
                 {user ? (
                   <SortBy
                     defaultRefinement="courses"
@@ -121,19 +149,15 @@ const SearchPage = function () {
                     refine={alertSignIn}
                   />
                 )}
-                <div className="hidden sm:block">
-                  {user ? (
-                    <Stats />
-                  ) : (
-                    <StatsComponent nbHits={10000} processingTimeMS={200} />
-                  )}
-                </div>
+                {user ? (
+                  <CurrentRefinements />
+                ) : (
+                  <CurrentRefinementsComponent
+                    items={[]}
+                    refine={alertSignIn}
+                  />
+                )}
               </div>
-              {user ? (
-                <CurrentRefinements />
-              ) : (
-                <CurrentRefinementsComponent items={[]} refine={alertSignIn} />
-              )}
               {user ? (
                 <Hits />
               ) : (

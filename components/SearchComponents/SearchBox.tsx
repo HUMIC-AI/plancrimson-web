@@ -1,5 +1,5 @@
 import { Disclosure } from '@headlessui/react';
-import { FaTimes, FaBars, FaArrowsAltV } from 'react-icons/fa';
+import { FaTimes, FaBars } from 'react-icons/fa';
 import { connectSearchBox } from 'react-instantsearch-dom';
 import React, { Fragment } from 'react';
 import type { SearchBoxProvided } from 'react-instantsearch-core';
@@ -11,7 +11,6 @@ import { classNames } from '../../shared/util';
 import { ATTRIBUTE_DESCRIPTIONS, Class } from '../../shared/apiTypes';
 import Stats from './Stats';
 import { useLgBreakpoint } from '../../src/hooks';
-import useCardStyle from '../../src/context/cardStyle';
 
 const AttributeMenu = function () {
   const isLg = useLgBreakpoint();
@@ -19,38 +18,46 @@ const AttributeMenu = function () {
   return (
     <div className="relative lg:hidden">
       {!isLg && (
-      <Disclosure as={Fragment}>
-        {({ open }) => (
-          <>
-            <Disclosure.Button className="inset-y-0 right-0 flex items-center">
-              {open
-                ? <FaTimes className="w-5 h-5 text-gray-700" />
-                : <FaBars className="w-5 h-5 text-gray-700" />}
-            </Disclosure.Button>
-            <Disclosure.Panel
-              unmount={false}
-              className="absolute z-20 mt-2 right-0 w-48 p-2 flex flex-col gap-2 bg-gray-800 rounded-md"
-            >
-              {MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
-                <Attribute attribute={attr} key={attr} label={ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr} />
-              ))}
-            </Disclosure.Panel>
-          </>
-        )}
-      </Disclosure>
+        <Disclosure as={Fragment}>
+          {({ open }) => (
+            <>
+              <Disclosure.Button className="inset-y-0 right-0 flex items-center">
+                {open ? (
+                  <FaTimes className="w-5 h-5 text-gray-700" />
+                ) : (
+                  <FaBars className="w-5 h-5 text-gray-700" />
+                )}
+              </Disclosure.Button>
+              <Disclosure.Panel
+                unmount={false}
+                className="absolute z-20 mt-2 right-0 w-48 p-2 flex flex-col gap-2 bg-gray-800 rounded-md"
+              >
+                {MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
+                  <Attribute
+                    attribute={attr}
+                    key={attr}
+                    label={ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr}
+                  />
+                ))}
+                <span className="text-white text-xs p-1">If filters are not showing up, clear your search and try again.</span>
+              </Disclosure.Panel>
+            </>
+          )}
+        </Disclosure>
       )}
     </div>
   );
 };
 
-export const SearchBoxComponent: React.FC<SearchBoxProvided> = function ({ currentRefinement, isSearchStalled, refine }) {
-  const {
-    schedules, selectSchedule, selectedSchedule,
-  } = useSelectedScheduleContext();
-  const { isExpanded, expand } = useCardStyle();
+export const SearchBoxComponent: React.FC<SearchBoxProvided> = function ({
+  currentRefinement,
+  isSearchStalled,
+  refine,
+}) {
+  const { schedules, selectSchedule, selectedSchedule } = useSelectedScheduleContext();
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center gap-4">
         <input
           type="search"
@@ -77,17 +84,6 @@ export const SearchBoxComponent: React.FC<SearchBoxProvided> = function ({ curre
             direction="left"
           />
         </div>
-
-        <button
-          type="button"
-          onClick={() => expand(!isExpanded)}
-          className={classNames(
-            isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
-            'rounded-full hover:opacity-50 p-1 border -ml-1',
-          )}
-        >
-          <FaArrowsAltV />
-        </button>
 
         <AttributeMenu />
       </div>

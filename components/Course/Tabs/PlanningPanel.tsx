@@ -82,6 +82,7 @@ const PlanningPanel: React.FC<{ course: ExtendedClass }> = function ({ course })
         <div className="grid grid-cols-[1fr_1fr_auto] items-center">
           {sortSchedules(userData.schedules).map((schedule) => (
             <ScheduleRow
+              key={schedule.id}
               course={course}
               schedule={schedule}
             />

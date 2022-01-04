@@ -15,15 +15,15 @@ type SortByProps = {
 
 export const SortByComponent: React.FC<SortByProps> = function ({ items, refine }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <h3 className="font-medium">Sort by:</h3>
-      <ul className="contents">
+    <>
+      <h3 className="font-medium min-w-max">Sort by:</h3>
+      <ul className="flex flex-wrap items-center gap-2">
         {items.map((item: Item) => (
           <li key={item.value} className="contents">
             <button
               type="button"
               className={classNames(
-                item.isRefined && 'font-bold',
+                item.isRefined && 'font-bold bg-blue-900',
                 'shadow rounded py-1 px-2 hover-blue text-sm min-w-min',
               )}
               onClick={(event) => {
@@ -36,7 +36,7 @@ export const SortByComponent: React.FC<SortByProps> = function ({ items, refine 
           </li>
         ))}
       </ul>
-    </div>
+    </>
   );
 };
 

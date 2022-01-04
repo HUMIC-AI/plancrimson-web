@@ -4,12 +4,13 @@ import React, { Fragment } from 'react';
 type Props = {
   show?: boolean;
   unmount?: boolean;
+  afterEnter?: () => void;
   beforeEnter?: () => void;
   afterLeave?: () => void;
 };
 
 const FadeTransition: React.FC<Props> = function ({
-  children, unmount, show, beforeEnter, afterLeave,
+  children, unmount, show, beforeEnter, afterEnter, afterLeave,
 }) {
   return (
     <Transition
@@ -19,6 +20,7 @@ const FadeTransition: React.FC<Props> = function ({
       leave="transition-opacity duration-200 ease-in-out"
       leaveFrom="opacity-100"
       leaveTo="opacity-0"
+      afterEnter={afterEnter}
       show={show}
       as={Fragment}
       unmount={unmount}

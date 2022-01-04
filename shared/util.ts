@@ -21,9 +21,19 @@ import { getSchoolYear } from '../src/requirements/util';
 
 export const unsplashParams = '?utm_source=Plan+Crimson&utm_medium=referral';
 
-export function compareWeekdays(a: string, b: string) {
+type HasLabel = {
+  label: string;
+};
+
+export function compareItems(a: HasLabel, b: HasLabel) {
+  if (a.label < b.label) return -1;
+  if (a.label > b.label) return 1;
+  return 0;
+}
+
+export function compareWeekdays(a: HasLabel, b: HasLabel) {
   return (
-    DAYS_OF_WEEK.indexOf(a as DayOfWeek) - DAYS_OF_WEEK.indexOf(b as DayOfWeek)
+    DAYS_OF_WEEK.indexOf(a.label as DayOfWeek) - DAYS_OF_WEEK.indexOf(b.label as DayOfWeek)
   );
 }
 

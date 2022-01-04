@@ -1,40 +1,54 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import type { CurrentRefinementsProvided } from 'react-instantsearch-core';
 import { connectCurrentRefinements } from 'react-instantsearch-dom';
 import {
-  adjustAttr, adjustLabel, classNames, compareWeekdays,
+  adjustAttr,
+  adjustLabel,
+  classNames,
+  compareItems,
+  compareWeekdays,
 } from '../../shared/util';
 
 type Props = Pick<CurrentRefinementsProvided, 'items' | 'refine'>;
 
 export const CurrentRefinementsComponent: React.FC<Props> = function ({
-  items,
+  items: refinements,
   refine,
 }) {
   return (
-    <ul className="flex items-center flex-wrap gap-4">
-      {items.length === 0 ? (
-        <li>Filter for courses using the menu!</li>
+    // eslint-disable-next-line react/jsx-no-useless-fragment
+    <>
+      {refinements.length === 0 ? (
+        <span className="relative">
+          <span className="absolute min-w-max">
+            Filter for courses using the menu!
+          </span>
+          <span>&nbsp;</span>
+        </span>
       ) : (
-        items.map((item) => (
-          <li key={item.label}>
+        refinements.map((item) => (
+          <Fragment key={item.label}>
             {item.items ? (
-              <div className="flex items-center">
-                <span className="font-medium">
+              <>
+                <span className="font-medium min-w-max">
                   {adjustAttr(item.attribute)}
                   :
                 </span>
-                <ul className="contents">
+                <ul className="flex flex-wrap items-center gap-2">
                   {item.items
-                    .sort(item.attribute === 'DAY_OF_WEEK' ? ((a, b) => compareWeekdays(a.label, b.label)) : ((a, b) => (a.label < b.label ? -1 : a.label > b.label ? 1 : 0)))
+                    .sort(
+                      item.attribute === 'DAY_OF_WEEK'
+                        ? compareWeekdays
+                        : compareItems,
+                    )
                     .map(({ label, value }) => (
                       <button
                         key={label}
                         type="button"
                         name={adjustLabel(label)}
                         className={classNames(
-                          'ml-2 py-1 px-2 hover-blue rounded flex items-center',
+                          'py-1 px-2 hover-blue rounded flex items-center text-sm',
                         )}
                         onClick={() => refine(value)}
                       >
@@ -43,16 +57,16 @@ export const CurrentRefinementsComponent: React.FC<Props> = function ({
                       </button>
                     ))}
                 </ul>
-              </div>
+              </>
             ) : (
               <button type="button" onClick={() => refine(item.value)}>
                 {adjustLabel(item.label)}
               </button>
             )}
-          </li>
+          </Fragment>
         ))
       )}
-    </ul>
+    </>
   );
 };
 

@@ -3,7 +3,7 @@ import React, {
 // useEffect, useRef, useState,
 } from 'react';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
-import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaArrowsAltV, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import {
   ExtendedClass,
 } from '../../shared/apiTypes';
@@ -12,6 +12,7 @@ import { classNames, getClassId } from '../../shared/util';
 import CourseCard from '../Course/CourseCard';
 import CourseDialog from '../Course/CourseDialog';
 import { useCourseDialog } from '../../src/hooks';
+import useCardStyle from '../../src/context/cardStyle';
 
 type ButtonProps = {
   onClick: () => void;
@@ -28,6 +29,8 @@ const CustomButton: React.FC<ButtonProps> = function ({
   onClick, enabled, direction,
   // setNumCols,
 }) {
+  const { isExpanded, expand } = useCardStyle();
+
   // const ref = useRef<HTMLButtonElement>(null!);
   // useEffect(() => {
   //   const observer = new ResizeObserver(([{ borderBoxSize: [{ inlineSize }] }]) => {
@@ -39,21 +42,33 @@ const CustomButton: React.FC<ButtonProps> = function ({
   // }, [setNumCols]);
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={!enabled}
+    <div className="relative">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={!enabled}
       // ref={ref}
-      className={classNames(
-        enabled ? 'bg-gray-800 hover:opacity-50' : 'bg-gray-600 cursor-not-allowed',
-        'p-2 shadow w-48 min-w-[84px] max-w-full sm:max-w-[192px] rounded text-white transition-opacity',
-        // 'resize-x overflow-auto',
-        'flex justify-center',
-      )}
-    >
-      {direction === 'up' && <FaChevronUp />}
-      {direction === 'down' && <FaChevronDown />}
-    </button>
+        className={classNames(
+          enabled ? 'bg-gray-800 hover:opacity-50' : 'bg-gray-300 cursor-not-allowed',
+          'p-2 shadow w-48 min-w-[84px] max-w-full sm:max-w-[192px] rounded text-white transition-opacity',
+          // 'resize-x overflow-auto',
+          'flex justify-center',
+        )}
+      >
+        {direction === 'up' && <FaChevronUp />}
+        {direction === 'down' && <FaChevronDown />}
+      </button>
+      <button
+        type="button"
+        onClick={() => expand(!isExpanded)}
+        className={classNames(
+          isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
+          'rounded-full hover:opacity-50 p-1 absolute inset-y-0 left-full ml-4 border',
+        )}
+      >
+        <FaArrowsAltV />
+      </button>
+    </div>
   );
 };
 
@@ -64,6 +79,7 @@ export const HitsComponent: React.FC<InfiniteHitsProvided<ExtendedClass> & { inS
   const {
     isOpen, openedCourse, closeModal, handleExpand,
   } = useCourseDialog();
+
   // const [numCols, setNumCols] = useState(getNumCols(144));
 
   return (
@@ -72,7 +88,6 @@ export const HitsComponent: React.FC<InfiniteHitsProvided<ExtendedClass> & { inS
         enabled={hasPrevious}
         onClick={refinePrevious}
         direction="up"
-        // setNumCols={setNumCols}
       />
 
       <div

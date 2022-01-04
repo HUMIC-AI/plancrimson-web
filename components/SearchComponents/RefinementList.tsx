@@ -1,64 +1,36 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import type { RefinementListProvided } from 'react-instantsearch-core';
+import React, { useState, useEffect } from 'react';
+import type {
+  RefinementListProvided,
+} from 'react-instantsearch-core';
 import { connectRefinementList } from 'react-instantsearch-dom';
-import { adjustLabel, classNames, compareWeekdays } from '../../shared/util';
+import { adjustLabel, classNames } from '../../shared/util';
+import useCardStyle from '../../src/context/cardStyle';
 
-export const RefinementListComponent: React.FC<Pick<RefinementListProvided, 'items' | 'refine'>> = function ({
-  items, refine,
+type Props = Pick<RefinementListProvided, 'items' | 'refine'>;
+
+export const RefinementListComponent: React.FC<Props> = function ({
+  items,
+  refine,
 }) {
-  const [allItems, setAllItems] = useState<Record<string, { isRefined: boolean; count: number }>>({});
-
-  useEffect(() => {
-    setAllItems((prev) => {
-      const newState = { ...prev };
-      items.forEach((item) => {
-        if (!newState[item.label]) newState[item.label] = item;
-        else newState[item.label].count = item.count;
-      });
-      return newState;
-    });
-  }, [items]);
-
-  const [allLabels, checkedLabels] = useMemo(
-    () => {
-      const labels = 'Monday' in allItems
-        ? Object.keys(allItems).sort(compareWeekdays)
-        : Object.keys(allItems).sort();
-      const checked = labels.filter((label) => allItems[label].isRefined);
-      return [labels, checked];
-    },
-    [allItems],
-  );
-
   return (
     <ul className="overflow-y-auto max-h-64">
-      {allLabels.map((label) => (
+      {items.map(({
+        label, isRefined, count, value,
+      }) => (
         <li key={label}>
           <label htmlFor={label}>
             <input
               type="checkbox"
               name={label}
               id={label}
-              checked={allItems[label].isRefined}
-              onChange={({ currentTarget: { checked } }) => {
-                const newRefinement = checked
-                  ? [...checkedLabels, label]
-                  : checkedLabels.filter((l) => l !== label);
-                refine(newRefinement);
-                setAllItems({
-                  ...allItems,
-                  [label]: {
-                    count: allItems[label].count,
-                    isRefined: checked,
-                  },
-                });
-              }}
+              checked={isRefined}
+              onChange={() => refine(value)}
             />
-            <span className={classNames('ml-2', allItems[label].isRefined && 'font-semibold')}>
+            <span className={classNames('ml-2', isRefined && 'font-semibold')}>
               {adjustLabel(label)}
               {' '}
               (
-              {allItems[label].count}
+              {count}
               )
             </span>
           </label>
@@ -68,4 +40,42 @@ export const RefinementListComponent: React.FC<Pick<RefinementListProvided, 'ite
   );
 };
 
-export default connectRefinementList(RefinementListComponent);
+const InnerWrapper: React.FC<Props> = function ({
+  items,
+  refine,
+}) {
+  const [allItems, setAllItems] = useState<typeof items>([]);
+  const { isExpanded } = useCardStyle();
+
+  // console.log('outsidefoo', isExpanded);
+
+  useEffect(() => {
+    // items only contains a list of the refined items
+    setAllItems((prev) => {
+      if (items.length > prev.length) return items;
+
+      const allChecked = items.filter((i) => i.isRefined).map((i) => i.label);
+
+      const hasLabel: Record<string, typeof items[number]> = {};
+      items.forEach((item) => {
+        hasLabel[item.label] = item;
+      });
+
+      return prev.map(
+        (oldItem) => hasLabel[oldItem.label] || {
+          ...oldItem,
+          isRefined: false,
+          value: [...allChecked, oldItem.label],
+        },
+      );
+    });
+  }, [items]);
+
+  if (isExpanded) {
+    return <RefinementListComponent items={allItems} refine={refine} />;
+  }
+
+  return null;
+};
+
+export default connectRefinementList(InnerWrapper);

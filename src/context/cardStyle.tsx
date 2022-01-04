@@ -8,7 +8,7 @@ type CardStyleContextType = {
   expand: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const CardStyleContext = createContext<CardStyleContextType>({
+export const CardStyleContext = createContext<CardStyleContextType>({
   isExpanded: true,
   expand: throwMissingContext,
 });
