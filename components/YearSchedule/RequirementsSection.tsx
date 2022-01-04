@@ -69,26 +69,34 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
         </Listbox>
 
         <FadeTransition show={notification}>
-          <div className="relative rounded-lg bg-blue-300 py-2 px-6">
-            <span className="text-sm text-left italic">
-              Remember that this is an unofficial tool
-              {' '}
-              <strong>only</strong>
-              , is still under development, and is not affiliated with Harvard. For up-to-date requirements,
-              consult the
-              {' '}
-              <ExternalLink href="https://handbook.college.harvard.edu/">Harvard College Student Handbook</ExternalLink>
-              {' '}
-              or your Advising Report, which can be found by going to
-              {' '}
-              <ExternalLink href="https://my.harvard.edu/">my.harvard</ExternalLink>
-              {' '}
-              and clicking on &ldquo;My Program&rdquo;.
-            </span>
+          <div className="relative rounded-lg bg-blue-300 py-2 lg:py-4 px-6 mx-4 md:mx-0 text-sm text-left italic">
+            <div className="flex flex-col space-y-2">
+              <span>
+                Remember that this is an unofficial tool
+                {' '}
+                <strong>only</strong>
+                , is still under development, and is not affiliated with Harvard.
+              </span>
+              <span>
+                For up-to-date requirements,
+                consult the
+                {' '}
+                <ExternalLink href="https://handbook.college.harvard.edu/">Harvard College Student Handbook</ExternalLink>
+                {' '}
+                or your Advising Report, which can be found by going to
+                {' '}
+                <ExternalLink href="https://my.harvard.edu/">my.harvard</ExternalLink>
+                {' '}
+                and clicking on &ldquo;My Program&rdquo;.
+              </span>
+              <span>
+                More concentrations and programs coming soon!
+              </span>
+            </div>
             <button
               type="button"
               onClick={() => setNotification(false)}
-              className="absolute top-2 right-2 text-xl hover:opacity-50 transition-opacity"
+              className="absolute top-2 right-2 not-italic text-xl hover:opacity-50 transition-opacity"
             >
               <FaTimes />
             </button>

@@ -7,7 +7,7 @@ import { getUniqueSemesters, getSchedulesBySemester } from '../shared/util';
 import useClassCache from '../src/context/classCache';
 import useUserData from '../src/context/userData';
 import validateSchedules, { RequirementsMet, getReqs } from '../src/requirements';
-import basicRequirements from '../src/requirements/cs/basic';
+import collegeRequirements from '../src/requirements/college';
 import { Requirement, RequirementGroup } from '../src/requirements/util';
 
 const PlanPage = function () {
@@ -15,7 +15,7 @@ const PlanPage = function () {
   // scheduleIds maps year + season to scheduleId
   const [scheduleIds, setSelectedSchedules] = useState<Record<string, string>>({});
   const [validationResults, setValidationResults] = useState<RequirementsMet>({});
-  const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(basicRequirements);
+  const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(collegeRequirements);
   const [highlightedRequirement, setHighlightedRequirement] = useState<Requirement>();
   const [notification, setNotification] = useState(true);
   const getClass = useClassCache(data);
