@@ -39,7 +39,7 @@ const Layout: React.FC<LayoutProps> = function ({
       <main className={classNames('mx-auto flex-1', size)}>{children}</main>
 
       <footer className="bg-gray-800">
-        <div className="p-4 container mx-auto text-white text-sm text-center flex flex-col gap-1">
+        <div className="p-4 container mx-auto text-white text-sm text-center flex flex-col space-y-1">
           <span>Course data last updated 2022-01-01 21:48 GMT</span>
           <span>
             &#169; 2022 Alexander Cai | alexcai [at] college |

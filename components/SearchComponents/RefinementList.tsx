@@ -3,7 +3,7 @@ import type {
   RefinementListProvided,
 } from 'react-instantsearch-core';
 import { connectRefinementList } from 'react-instantsearch-dom';
-import { adjustLabel, classNames } from '../../shared/util';
+import { termNumberToSeason, classNames } from '../../shared/util';
 import useCardStyle from '../../src/context/cardStyle';
 
 type Props = Pick<RefinementListProvided, 'items' | 'refine'>;
@@ -27,7 +27,7 @@ export const RefinementListComponent: React.FC<Props> = function ({
               onChange={() => refine(value)}
             />
             <span className={classNames('ml-2', isRefined && 'font-semibold')}>
-              {adjustLabel(label)}
+              {termNumberToSeason(label)}
               {' '}
               (
               {count}

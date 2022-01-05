@@ -6,6 +6,7 @@ import { FetchError } from '../shared/fetcher';
 
 async function main() {
   const filepath = process.argv[2];
+  if (!filepath) throw new Error('pass path to files to extend');
   const classes = JSON.parse(readFileSync(filepath).toString('utf8'));
   const data = await Promise.all(classes.map(async (cls: Class) => {
     try {

@@ -11,9 +11,9 @@ import { DragStatus } from '../Course/CourseCard';
 import SemesterDisplay from './SemesterDisplay';
 
 type Props = {
-  scheduleIds: Record<string, string>;
+  scheduleIds: Record<string, string | null>;
   highlightedRequirement: Requirement | undefined;
-  selectSchedule: (year: number, season: Season, schedule: string) => void;
+  selectSchedule: (year: number, season: Season, schedule: string | null) => void;
 };
 
 const PlanningSection: React.FC<Props> = function ({
@@ -26,9 +26,9 @@ const PlanningSection: React.FC<Props> = function ({
     dragging: false,
   });
   const { isExpanded, expand } = useCardStyle();
-  // default w-52 = 13rem = 208px
+  // default w-56 = 224px
   // the resize bar starts at w-24 = 96px
-  const [colWidth, setWidth] = useState(208);
+  const [colWidth, setWidth] = useState(224);
   const [leftIntersecting, setLeftIntersecting] = useState(false);
   const [rightIntersecting, setRightIntersecting] = useState(false);
 
@@ -39,12 +39,11 @@ const PlanningSection: React.FC<Props> = function ({
 
   useEffect(() => {
     const resizeObserver = new ResizeObserver(
-      ([
-        {
-          borderBoxSize: [{ inlineSize }],
-        },
-      ]) => {
-        setWidth(Math.max(Math.min(inlineSize + 208 - 96, 2048), 208));
+      (entries) => {
+        const newWidth = entries[0]?.borderBoxSize?.[0]?.inlineSize;
+        if (newWidth) {
+          setWidth(Math.max(Math.min(newWidth + 224 - 96, 2048), 224));
+        }
       },
     );
     resizeObserver.observe(resizeRef.current);
@@ -71,7 +70,7 @@ const PlanningSection: React.FC<Props> = function ({
 
   const totalCourses = useMemo(
     () => Object.values(scheduleIds).reduce(
-      (acc, schedule) => acc + (data.schedules[schedule]?.classes.length || 0),
+      (acc, schedule) => acc + ((schedule && data.schedules[schedule]?.classes.length) || 0),
       0,
     ),
     [data.schedules, scheduleIds],
@@ -80,7 +79,7 @@ const PlanningSection: React.FC<Props> = function ({
   return (
     <div className="relative bg-gray-800 md:p-4 md:rounded-lg md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full md:h-full">
       <div className="flex flex-col space-y-4 md:h-full">
-        <div className="text-white flex flex-col md:flex-row items-center gap-4">
+        <div className="text-white flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
           <span>
             Total courses:
             {' '}
@@ -97,7 +96,7 @@ const PlanningSection: React.FC<Props> = function ({
           </button>
           <div
             ref={resizeRef}
-            className="flex justify-center rounded py-1 w-24 min-w-[96px] resize-x bg-gray-600 overflow-auto"
+            className="flex justify-center rounded py-1 w-24 min-w-[96px] max-w-full resize-x bg-gray-600 overflow-auto"
           >
             <FaArrowsAltH />
           </div>

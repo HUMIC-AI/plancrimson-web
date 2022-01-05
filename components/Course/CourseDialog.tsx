@@ -1,9 +1,11 @@
 // code mostly taken from https://headlessui.dev/react/dialog
 import { Dialog, Transition } from '@headlessui/react';
 import React, { Fragment } from 'react';
+import qs from 'qs';
 import { FaTimes } from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
 import { getSemester } from '../../shared/util';
+import ExternalLink from '../ExternalLink';
 import Tabs from './Tabs';
 
 type Props = {
@@ -12,7 +14,41 @@ type Props = {
   course: ExtendedClass | null;
 };
 
-const CourseDialog: React.FC<Props> = function ({ isOpen, closeModal, course }) {
+const keyAttrs = [
+  'SUBJECT',
+  'CATALOG_NBR',
+  'CLASS_SECTION',
+  'CLASS_NBR',
+  'CRSE_ID',
+  'STRM',
+] as const;
+
+const getMyHarvardUrl = (course: ExtendedClass) => `https://portal.my.harvard.edu/psp/hrvihprd/EMPLOYEE/EMPL/h/?${qs.stringify({
+  tab: 'HU_CLASS_SEARCH',
+  SearchReqJSON: JSON.stringify({
+    ExcludeBracketed: true,
+    SaveRecent: true,
+    Facets: [],
+    PageNumber: 1,
+    SortOrder: ['SCORE'],
+    TopN: '',
+    PageSize: '',
+    SearchText: keyAttrs
+      .map(
+        (attr) => `(${attr}:${
+          // add strings except for CLASS_NBR
+          attr === 'CLASS_NBR' ? course[attr] : `"${course[attr]}"`
+        })`,
+      )
+      .join(' '),
+  }),
+})}`;
+
+const CourseDialog: React.FC<Props> = function ({
+  isOpen,
+  closeModal,
+  course,
+}) {
   const semester = course ? getSemester(course) : null;
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -53,26 +89,32 @@ const CourseDialog: React.FC<Props> = function ({ isOpen, closeModal, course }) 
             <div className="inline-block w-full max-w-lg my-8 overflow-hidden text-left align-middle transition-all transform bg-gray-800 shadow-xl rounded-2xl">
               {course ? (
                 <>
-                  {/* Header */}
+                  {/* header */}
                   <div className="p-6 text-white border-none">
                     <Dialog.Title
                       as="h3"
-                      className="text-xl font-medium"
+                      className="text-xl font-semibold mb-2"
                     >
                       {course.SUBJECT + course.CATALOG_NBR}
                     </Dialog.Title>
 
-                    <p className="mt-2 flex items-center justify-between">
-                      <span>
-                        {course.Title}
-                      </span>
-                      {semester && (
-                      <span>
+                    <p className="text-lg font-medium mb-2">{course.Title}</p>
+                    {semester && (
+                      <p className="text-sm">
                         {`${semester.season} ${semester.year}`}
-                      </span>
-                      )}
+                      </p>
+                    )}
+                    <p className="text-sm">
+                      <ExternalLink href={getMyHarvardUrl(course)}>
+                        my.harvard
+                      </ExternalLink>
+                      {'  '}
+                      |
+                      {'  '}
+                      <ExternalLink href={course.URL_URLNAME}>Course Site</ExternalLink>
                     </p>
                   </div>
+                  {/* end header */}
 
                   <Tabs course={course} />
                 </>

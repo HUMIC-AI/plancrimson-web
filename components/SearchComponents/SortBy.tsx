@@ -16,8 +16,8 @@ type SortByProps = {
 export const SortByComponent: React.FC<SortByProps> = function ({ items, refine }) {
   return (
     <>
-      <h3 className="font-medium min-w-max">Sort by:</h3>
-      <ul className="flex flex-wrap items-center gap-2">
+      <h3 className="font-medium md:whitespace-nowrap">Sort by:</h3>
+      <ul className="flex flex-wrap items-center gap-2 h-min">
         {items.map((item: Item) => (
           <li key={item.value} className="contents">
             <button

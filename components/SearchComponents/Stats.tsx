@@ -6,15 +6,15 @@ export const StatsComponent: React.FC<Pick<StatsProvided, 'nbHits' | 'processing
   nbHits, processingTimeMS,
 }) {
   return (
-    <div className="flex items-center gap-2 flex-wrap text-sm">
-      <p className="min-w-max">
+    <div className="flex items-center gap-2 flex-wrap">
+      <p className="whitespace-nowrap">
         Time:
         {' '}
         {processingTimeMS}
         {' '}
         ms
       </p>
-      <p className="min-w-max">
+      <p className="whitespace-nowrap">
         Results:
         {' '}
         {nbHits}

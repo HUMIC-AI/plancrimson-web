@@ -1,23 +1,14 @@
-import Link from 'next/link';
-import React, { useMemo, useRef, useState } from 'react';
-import {
-  FaCalendarWeek,
-  FaCheck,
-  FaClone,
-  FaDownload,
-  FaPencilAlt,
-  FaPlus,
-  FaSearch,
-  FaTimes,
-  FaTrash,
-} from 'react-icons/fa';
+import React, {
+  useCallback, useMemo, useRef, useState,
+} from 'react';
+import { FaCheck } from 'react-icons/fa';
 import {
   checkViable,
   classNames,
   getSchedulesBySemester,
 } from '../../shared/util';
 import useUserData from '../../src/context/userData';
-import { Schedule, Season, UserClassData } from '../../shared/firestoreTypes';
+import { Season } from '../../shared/firestoreTypes';
 import { useCourseDialog } from '../../src/hooks';
 import ScheduleSelector from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
@@ -26,10 +17,11 @@ import useClassCache from '../../src/context/classCache';
 import FadeTransition from '../FadeTransition';
 import { Viability } from '../../shared/apiTypes';
 import { Requirement } from '../../src/requirements/util';
+import ButtonMenu from './ButtonMenu';
 
 type Props = {
   selectedScheduleId: string | null;
-  selectSchedule: React.Dispatch<string>;
+  selectSchedule: React.Dispatch<string | null>;
 
   year: number;
   season: Season;
@@ -59,12 +51,7 @@ const SemesterDisplay: React.FC<Props> = function ({
   colWidth,
 }) {
   const {
-    data,
-    addCourses,
-    removeCourses,
-    createSchedule,
-    renameSchedule,
-    deleteSchedule,
+    data, addCourses, removeCourses, renameSchedule,
   } = useUserData();
   const {
     closeModal, handleExpand, isOpen, openedCourse,
@@ -72,7 +59,7 @@ const SemesterDisplay: React.FC<Props> = function ({
   const getClass = useClassCache(data);
 
   const editRef = useRef<HTMLInputElement>(null!);
-  const downloadRef = useRef<HTMLAnchorElement>(null!);
+
   // independent to sync up the transitions nicely
   const [showSelector, setShowSelector] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -99,45 +86,41 @@ const SemesterDisplay: React.FC<Props> = function ({
     [data, draggedClass, selectedSchedule],
   );
 
-  async function createNewSchedule(
-    title: string,
-    // eslint-disable-next-line @typescript-eslint/no-shadow
-    year: number,
-    // eslint-disable-next-line @typescript-eslint/no-shadow
-    season: Season,
-    classes: UserClassData[],
-    i: number = 0,
-  ): Promise<Schedule> {
-    try {
-      const newSchedule = await createSchedule(
-        `${title}${i ? ` ${i}` : ''}`,
-        year,
-        season,
-        classes,
-      );
-      return newSchedule;
-    } catch (err: any) {
-      if (err.message === 'id taken') {
-        console.error("Couldn't create schedule, retrying");
-        const newSchedule = await createNewSchedule(
-          title,
-          year,
-          season,
-          classes,
-          i + 1,
-        );
-        return newSchedule;
-      }
-      throw err;
-    }
-  }
+  const handleDrop: React.DragEventHandler<HTMLDivElement> = useCallback(
+    (ev) => {
+      ev.preventDefault();
 
-  const buttonStyles = 'p-1 rounded bg-black bg-opacity-0 hover:text-black hover:bg-opacity-50 transition-colors';
+      if (dragStatus.dragging && selectedScheduleId && viableDrop) {
+        if (viableDrop.viability === 'No') {
+          alert(viableDrop.reason);
+        } else if (selectedScheduleId !== dragStatus.data.originScheduleId) {
+          const doAdd = viableDrop.viability !== 'Unlikely'
+            // eslint-disable-next-line no-restricted-globals
+            || confirm(`${viableDrop.reason} Continue anyways?`);
+          if (doAdd) {
+            const { classId, originScheduleId } = dragStatus.data;
+            addCourses({ classId, scheduleId: selectedScheduleId });
+            removeCourses({ classId, scheduleId: originScheduleId });
+          }
+        }
+      }
+
+      setDragStatus({ dragging: false });
+    },
+    [
+      addCourses,
+      dragStatus,
+      removeCourses,
+      selectedScheduleId,
+      setDragStatus,
+      viableDrop,
+    ],
+  );
 
   return (
     <div
       className={classNames(
-        'relative md:h-full overflow-y-hidden overflow-x-visible',
+        'relative md:h-full overflow-hidden',
         dragStatus.dragging
           ? dragStatus.data.originScheduleId === selectedScheduleId
             || !viableDrop
@@ -154,31 +137,10 @@ const SemesterDisplay: React.FC<Props> = function ({
           // eslint-disable-next-line no-param-reassign
           ev.dataTransfer.dropEffect = 'move';
         }}
-        onDrop={(ev) => {
-          ev.preventDefault();
-
-          if (dragStatus.dragging && selectedScheduleId && viableDrop) {
-            if (viableDrop.viability === 'No') {
-              alert(viableDrop.reason);
-            } else if (
-              selectedScheduleId !== dragStatus.data.originScheduleId
-            ) {
-              const doAdd = viableDrop.viability !== 'Unlikely'
-                // eslint-disable-next-line no-restricted-globals
-                || confirm(`${viableDrop.reason} Continue anyways?`);
-              if (doAdd) {
-                const { classId, originScheduleId } = dragStatus.data;
-                addCourses({ classId, scheduleId: selectedScheduleId });
-                removeCourses({ classId, scheduleId: originScheduleId });
-              }
-            }
-          }
-
-          setDragStatus({ dragging: false });
-        }}
+        onDrop={handleDrop}
       >
         {/* First component of display */}
-        <div className="flex flex-col items-stretch gap-2 p-4 border-black border-b-2">
+        <div className="flex flex-col items-stretch space-y-2 p-4 border-black border-b-2">
           <h1 className="text-lg text-center min-w-max font-semibold">
             {year}
             {' '}
@@ -212,9 +174,11 @@ const SemesterDisplay: React.FC<Props> = function ({
                 type="text"
                 value={scheduleTitle}
                 onChange={({ currentTarget }) => setScheduleTitle(
-                  currentTarget.value.replace(/[^a-zA-Z0-9-_ ]/g, '').slice(0, 20),
+                  currentTarget.value
+                    .replace(/[^a-zA-Z0-9-_ ]/g, '')
+                    .slice(0, 30),
                 )}
-                className="w-full py-1 px-2 rounded focus:shadow shadow-inner border-2"
+                className="w-full py-1 pl-2 pr-7 rounded focus:shadow shadow-inner border-2"
                 ref={editRef}
               />
               <button
@@ -232,124 +196,21 @@ const SemesterDisplay: React.FC<Props> = function ({
               selectedSchedule={selectedSchedule}
               selectSchedule={(schedule) => schedule && selectSchedule(schedule.id)}
               direction="center"
+              parentWidth={`${colWidth}px`}
             />
           )}
 
-          <div className="flex mx-auto justify-center items-center flex-wrap max-w-[8rem] gap-2 mt-2 text-gray-600 text-xs">
-            {selectedSchedule && (
-              <>
-                <Link
-                  href={{
-                    pathname: '/',
-                    query: { selected: selectedSchedule.id },
-                  }}
-                >
-                  {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                  <a className={buttonStyles}>
-                    <FaSearch />
-                  </a>
-                </Link>
-                <Link
-                  href={{
-                    pathname: '/semester',
-                    query: { selected: selectedSchedule.id },
-                  }}
-                >
-                  {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                  <a className={buttonStyles}>
-                    <FaCalendarWeek />
-                  </a>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => createNewSchedule(
-                    `${selectedSchedule.id} copy`,
-                    selectedSchedule.year,
-                    selectedSchedule.season,
-                    selectedSchedule.classes,
-                  )
-                    .then((schedule) => selectSchedule(schedule.id))
-                    .catch((err) => {
-                      console.error(err);
-                      alert(
-                        "Couldn't duplicate your schedule. Please try again later.",
-                      );
-                    })}
-                  className={buttonStyles}
-                >
-                  <FaClone />
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (editing) setEditing(false);
-                    else {
-                      setScheduleTitle(selectedSchedule.id);
-                      setEditing(true);
-                      process.nextTick(() => editRef.current.focus());
-                    }
-                  }}
-                  className={buttonStyles}
-                >
-                  {editing ? <FaTimes /> : <FaPencilAlt />}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    createNewSchedule(`${season} ${year}`, year, season, [])
-                      .then((schedule) => selectSchedule(schedule.id))
-                      .catch((err) => {
-                        console.error(err);
-                        alert("Couldn't create a new schedule!");
-                      });
-                  }}
-                  className={buttonStyles}
-                >
-                  <FaPlus title="Add schedule" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    // eslint-disable-next-line no-restricted-globals
-                    const confirmDelete = confirm(
-                      `Are you sure you want to delete your schedule ${selectedSchedule.id}?`,
-                    );
-                    if (confirmDelete) {
-                      deleteSchedule(selectedSchedule.id)
-                        .then(() => selectSchedule(schedules[0].id))
-                        .catch((err) => alert(
-                          `There was a problem deleting your schedule: ${err.message}`,
-                        ));
-                    }
-                  }}
-                  className={buttonStyles}
-                >
-                  <FaTrash />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    downloadRef.current.setAttribute(
-                      'href',
-                      `data:text/json;charset=utf-8,${encodeURIComponent(
-                        JSON.stringify(selectedSchedule, null, 2),
-                      )}`,
-                    );
-                    downloadRef.current.click();
-                  }}
-                  className={buttonStyles}
-                >
-                  <FaDownload />
-                  {/* eslint-disable-next-line jsx-a11y/anchor-has-content, jsx-a11y/anchor-is-valid */}
-                  <a
-                    className="hidden"
-                    ref={downloadRef}
-                    download={`${selectedSchedule.id} (Plan Crimson).json`}
-                  />
-                </button>
-              </>
-            )}
-          </div>
+          <ButtonMenu
+            editing={editing}
+            prevScheduleId={schedules[0]?.id || null}
+            season={season}
+            year={year}
+            selectSchedule={selectSchedule}
+            selectedSchedule={selectedSchedule}
+            setEditing={setEditing}
+            focusInput={() => editRef.current.focus()}
+            setScheduleTitle={setScheduleTitle}
+          />
         </div>
 
         {/* {selectedSchedule.classes.length > 0 && (
@@ -366,7 +227,7 @@ const SemesterDisplay: React.FC<Props> = function ({
 
         {/* Second component: actual classes */}
         <div className="flex-1 p-4 md:overflow-auto">
-          <div className="flex flex-col items-stretch gap-4">
+          <div className="flex flex-col items-stretch space-y-4">
             {selectedSchedule
               && selectedSchedule.classes.map(({ classId: id }) => (id && getClass(id) ? (
                 <CourseCard
@@ -387,10 +248,7 @@ const SemesterDisplay: React.FC<Props> = function ({
                   inSearchContext={false}
                 />
               ) : (
-                <div key={id}>
-                  Could not load data for
-                  {id}
-                </div>
+                <div key={id}>Loading course data...</div>
               )))}
           </div>
         </div>

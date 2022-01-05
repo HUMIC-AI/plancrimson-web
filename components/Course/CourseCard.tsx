@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { FaInfo, FaTimes, FaPlus } from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
 import { Schedule } from '../../shared/firestoreTypes';
@@ -64,38 +64,61 @@ const CourseCard: React.FC<Props> = function ({
 
   const buttonStyles = 'bg-black bg-opacity-0 hover:bg-opacity-50 transition-colors rounded p-1';
 
+  const addClass = useCallback(() => {
+    if (!selectedSchedule) return;
+    const viability = checkViable(
+      course,
+      {
+        year: selectedSchedule.year,
+        season: selectedSchedule.season,
+      },
+      userData,
+    );
+    if (viability.viability === 'No') {
+      alert(viability.reason);
+      return;
+    }
+    if (viability.viability === 'Unlikely') {
+      // eslint-disable-next-line no-restricted-globals
+      const yn = confirm(`${viability.reason} Continue anyways?`);
+      if (!yn) return;
+    }
+    addCourses({
+      classId: getClassId(course),
+      scheduleId: selectedSchedule.id,
+    });
+  }, [addCourses, course, selectedSchedule, userData]);
+
+  const handleDragStart: React.DragEventHandler<HTMLDivElement> = (ev) => {
+    // eslint-disable-next-line no-param-reassign
+    ev.dataTransfer.dropEffect = 'move';
+    // eslint-disable-next-line no-alert
+    if (!selectedSchedule?.id) {
+      alert('Oops! An unexpected error occurred.');
+    } else {
+      setDragStatus!({
+        dragging: true,
+        data: {
+          classId: getClassId(course),
+          originScheduleId: selectedSchedule.id,
+        },
+      });
+    }
+  };
+
   return (
     // move the shadow outside to avoid it getting hidden
     <div className="shadow-lg">
       <div
         className={classNames(
-          'rounded-xl overflow-hidden border-gray-800 from-gray-800 border-4 text-left h-full',
+          'relative rounded-xl overflow-hidden border-gray-800 from-gray-800 border-4 text-left h-full',
           isExpanded
             ? 'bg-gray-800'
-            : 'relative bg-gradient-to-br',
+            : 'bg-gradient-to-br',
           isExpanded || (highlight ? 'to-blue-500' : 'to-blue-900'),
         )}
         draggable={draggable}
-        onDragStart={
-          draggable
-            ? (ev) => {
-              // eslint-disable-next-line no-param-reassign
-              ev.dataTransfer.dropEffect = 'move';
-              // eslint-disable-next-line no-alert
-              if (!selectedSchedule?.id) {
-                alert('Oops! An unexpected error occurred.');
-              } else {
-                setDragStatus({
-                  dragging: true,
-                  data: {
-                    classId: getClassId(course),
-                    originScheduleId: selectedSchedule.id,
-                  },
-                });
-              }
-            }
-            : undefined
-        }
+        onDragStart={draggable ? handleDragStart : undefined}
       >
         {/* header component */}
         <div
@@ -131,7 +154,7 @@ const CourseCard: React.FC<Props> = function ({
               </span>
 
               {/* the info and course selection buttons */}
-              <span className="flex items-center gap-2 ml-2">
+              <span className="flex items-center space-x-2 ml-2">
                 <button
                   type="button"
                   name="More info"
@@ -159,29 +182,7 @@ const CourseCard: React.FC<Props> = function ({
                       <button
                         type="button"
                         name="Add class to schedule"
-                        onClick={() => {
-                          const viability = checkViable(
-                            course,
-                            {
-                              year: selectedSchedule.year,
-                              season: selectedSchedule.season,
-                            },
-                            userData,
-                          );
-                          if (viability.viability === 'No') {
-                            alert(viability.reason);
-                            return;
-                          }
-                          if (viability.viability === 'Unlikely') {
-                            // eslint-disable-next-line no-restricted-globals
-                            const yn = confirm(`${viability.reason} Continue anyways?`);
-                            if (!yn) return;
-                          }
-                          addCourses({
-                            classId: getClassId(course),
-                            scheduleId: selectedSchedule.id,
-                          });
-                        }}
+                        onClick={addClass}
                         className={buttonStyles}
                       >
                         <FaPlus />
@@ -207,7 +208,7 @@ const CourseCard: React.FC<Props> = function ({
 
         {isExpanded && (
           <div className="p-2 bg-white h-full">
-            <div className="inline-grid grid-cols-[auto_1fr] items-center gap-y-2 gap-x-4">
+            <div className="inline-grid grid-cols-[auto_1fr] max-w-full items-center gap-y-2 gap-x-4">
               <Instructors course={course} inSearch={inSearchContext} />
               <Location course={course} inSearch={inSearchContext} />
               <DaysOfWeek course={course} inSearch={inSearchContext} />

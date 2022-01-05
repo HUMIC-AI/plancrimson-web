@@ -6,7 +6,7 @@ import {
   where,
 } from 'firebase/firestore';
 import {
-  Semester, seasonOrder, UserData, Season,
+  Semester, SEASON_ORDER, UserData, Season,
 } from './firestoreTypes';
 import {
   ATTRIBUTE_DESCRIPTIONS,
@@ -33,7 +33,8 @@ export function compareItems(a: HasLabel, b: HasLabel) {
 
 export function compareWeekdays(a: HasLabel, b: HasLabel) {
   return (
-    DAYS_OF_WEEK.indexOf(a.label as DayOfWeek) - DAYS_OF_WEEK.indexOf(b.label as DayOfWeek)
+    DAYS_OF_WEEK.indexOf(a.label as DayOfWeek)
+    - DAYS_OF_WEEK.indexOf(b.label as DayOfWeek)
   );
 }
 
@@ -77,7 +78,7 @@ export function compareSemesters(
   const aYear = parseInt(a.year as string, 10);
   const bYear = parseInt(b.year as string, 10);
   if (aYear !== bYear) return aYear - bYear;
-  const seasonDiff = seasonOrder[a.season] - seasonOrder[b.season];
+  const seasonDiff = SEASON_ORDER[a.season] - SEASON_ORDER[b.season];
   if (seasonDiff !== 0) return seasonDiff;
   if ('id' in a && 'id' in b) {
     const { id: aId } = a as any;
@@ -134,25 +135,30 @@ export function getAllClassIds(data: UserData) {
   return Object.values(data.schedules).flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
 }
 
+type ViabilityResponse = {
+  viability: Viability;
+  reason: string;
+  instructors?: { firstName: string; lastName: string }[];
+};
+
 export function checkViable(
   cls: Class,
-  semester: Semester,
+  querySemester: Semester,
   data: UserData,
-): {
-    viability: Viability;
-    reason: string;
-    instructors?: { firstName: string; lastName: string }[];
-  } {
+): ViabilityResponse {
   const { year, season } = getSemester(cls);
 
-  if (year === semester.year && season === semester.season) {
+  if (year === querySemester.year && season === querySemester.season) {
     return {
       viability: 'Yes',
-      reason: 'This course is offered this semester.',
+      reason: `This course is offered in ${querySemester.season} ${querySemester.year} in my.harvard.`,
     };
   }
 
-  if (cls.SUBJECT === 'FRSEMR' && getSchoolYear(semester, data.classYear) > 1) {
+  if (
+    cls.SUBJECT === 'FRSEMR'
+    && getSchoolYear(querySemester, data.classYear) > 1
+  ) {
     return {
       viability: 'No',
       reason: 'Freshman Seminars can only be taken in the first year.',
@@ -174,51 +180,48 @@ export function checkViable(
   if (foundInSeasPlan) {
     const matchesSemester = foundInSeasPlan.semesters.find(
       (plannedSemester) => (plannedSemester.term === 'Spring'
-          && semester.season === 'Spring'
-          && plannedSemester.academicYear + 1 === semester.year)
+          && querySemester.season === 'Spring'
+          && plannedSemester.academicYear + 1 === querySemester.year)
         || (plannedSemester.term === 'Fall'
-          && semester.season === 'Fall'
-          && plannedSemester.academicYear === semester.year),
+          && querySemester.season === 'Fall'
+          && plannedSemester.academicYear === querySemester.year),
     );
 
     if (matchesSemester?.offeredStatus === 'No') {
       return {
         viability: 'No',
-        reason: `${
-          cls.SUBJECT + cls.CATALOG_NBR
-        } will not be offered in ${season} ${year} according to the SEAS Four Year Plan.`,
+        reason: `This course will not be offered in ${querySemester.season} ${querySemester.year} according to the SEAS Four Year Plan.`,
       };
     }
 
     if (matchesSemester?.offeredStatus === 'Yes') {
       return {
         viability: 'Yes',
-        reason: 'This course is in the SEAS Four Year Plan.',
+        reason: `This course will be offered in ${querySemester.season} ${querySemester.year} according to the SEAS Four Year Plan.`,
         instructors: matchesSemester.instructors,
       };
     }
 
     return {
       viability: 'Unlikely',
-      reason:
-        "This semester is not listed in this course's offerings in the SEAS Four Year Plan.",
+      reason: `${querySemester.season} ${querySemester.year} is not listed in this course's offerings in the SEAS Four Year Plan.`,
     };
   }
 
-  if (season === semester.season) {
+  if (season === querySemester.season) {
     return {
       viability: 'Likely',
-      reason: `This course is usually offered in the ${season.toLowerCase()}.`,
+      reason: `This course is usually offered in the ${querySemester.season.toLowerCase()}.`,
     };
   }
 
   return {
     viability: 'Unlikely',
-    reason: `This course is not usually offered in the ${season.toLowerCase()}.`,
+    reason: `This course is not usually offered in the ${querySemester.season.toLowerCase()}.`,
   };
 }
 
-export function adjustLabel(label: string) {
+export function termNumberToSeason(label: string) {
   if (label === '2222') return 'Spring';
   if (label === '2218') return 'Fall';
   return label;

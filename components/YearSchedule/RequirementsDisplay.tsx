@@ -121,7 +121,7 @@ const RequirementsDisplay: React.FC<Props> = function ({
             </p>
           </Heading>
           {reqCount.total > 0 && (
-          <span className="min-w-max font-medium">
+          <span className="font-medium whitespace-nowrap">
             {reqCount.numSatisfied}
             {' '}
             /
@@ -176,7 +176,7 @@ const RequirementsDisplay: React.FC<Props> = function ({
                   <div className={classNames(
                     isHighlighted ? 'text-blue-500 font-bold'
                       : (satisfied ? 'text-green-500' : 'text-red-500'),
-                    'flex justify-between items-center gap-2 transition-colors',
+                    'flex justify-between items-center space-x-2 transition-colors',
                   )}
                   >
                     <button
@@ -186,7 +186,7 @@ const RequirementsDisplay: React.FC<Props> = function ({
                     >
                       {req.id}
                     </button>
-                    <span className="inline-flex items-center gap-1">
+                    <span className="inline-flex items-center space-x-1">
                       {satisfied
                         ? <FaCheck />
                         : <FaTimes />}

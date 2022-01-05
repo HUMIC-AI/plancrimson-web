@@ -19,7 +19,7 @@ export const FAILING_GRADES = ['E', 'ABS', 'EXL', 'EXT', 'FL', 'UNSAT'] as const
 
 export type Grade = typeof PASSING_GRADES[number] | typeof FAILING_GRADES[number];
 
-export const seasonOrder = {
+export const SEASON_ORDER = {
   Winter: 0,
   Spring: 1,
   Summer: 2,
@@ -28,7 +28,7 @@ export const seasonOrder = {
 
 export type Semester<YearType = number> = { year: YearType, season: Season };
 
-export type Season = keyof typeof seasonOrder;
+export type Season = keyof typeof SEASON_ORDER;
 
 // firestore user schema
 export interface UserData {

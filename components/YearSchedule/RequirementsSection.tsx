@@ -44,7 +44,7 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
 
   return (
     <div className="relative mb-12 md:mb-0 border-gray-300 space-y-4 md:border-2 md:rounded-lg md:shadow-lg md:max-w-xs lg:max-w-sm xl:max-w-md w-screen">
-      <div className="md:absolute md:inset-4 flex flex-col gap-4">
+      <div className="md:absolute md:inset-4 flex flex-col space-y-4">
         <Listbox
           value={selectedRequirements.groupId}
           onChange={(groupId) => setSelectedRequirements(

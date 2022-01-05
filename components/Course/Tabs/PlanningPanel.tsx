@@ -24,9 +24,9 @@ const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass; }> = fu
 
   return (
     <Fragment key={schedule.id}>
-      <span className="font-semibold">{schedule.id}</span>
+      <span className="font-semibold max-w-[12rem] sm:max-w-[24rem] overflow-hidden text-ellipsis">{schedule.id}</span>
       <span className="text-gray-600">{`${schedule.season} ${schedule.year}`}</span>
-      <div className="relative">
+      <div className="flex flex-row-reverse relative">
         {/* Code from https://headlessui.dev/react/switch */}
         <Switch
           checked={enabled}
@@ -59,12 +59,12 @@ const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass; }> = fu
             )}
           />
         </Switch>
-        <div className="group absolute inset-y-0 right-full mr-2 w-max flex flex-row-reverse items-center gap-2">
+        <div className="group mr-2 w-max flex flex-row-reverse items-center space-x-2">
           {viabilityStatus.viability === 'Yes' && <FaCheckCircle title="Offered" />}
           {viabilityStatus.viability === 'Likely' && <FaSmile title="Likely to be offered" />}
           {viabilityStatus.viability === 'Unlikely' && <FaExclamationCircle title="Unlikely to be offered" />}
           {viabilityStatus.viability === 'No' && <FaBan title="Not offered" />}
-          <p className="hidden group-hover:block bg-gray-800 text-white max-w-[16rem] p-2 rounded-md">
+          <p className="absolute inset-y-0 right-full top-1/2 transform -translate-y-1/2 -translate-x-2 hidden group-hover:block bg-gray-800 text-white w-max h-min max-w-[8rem] p-2 rounded-md">
             {viabilityStatus.reason}
           </p>
         </div>
@@ -79,7 +79,7 @@ const PlanningPanel: React.FC<{ course: ExtendedClass }> = function ({ course })
   return (
     <Tab.Panel>
       {Object.keys(userData.schedules).length > 0 ? (
-        <div className="grid grid-cols-[1fr_1fr_auto] items-center">
+        <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
           {sortSchedules(userData.schedules).map((schedule) => (
             <ScheduleRow
               key={schedule.id}

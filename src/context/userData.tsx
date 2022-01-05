@@ -6,7 +6,7 @@ import React, {
   createContext, useState, useCallback, useEffect, useMemo, useContext,
 } from 'react';
 import {
-  UserData, Season, UserClassData, Schedule,
+  UserData, Season, UserClassData, Schedule, SEASON_ORDER,
 } from '../../shared/firestoreTypes';
 import { getDefaultSemesters, throwMissingContext } from '../../shared/util';
 import { getUserRef } from '../hooks';
@@ -52,6 +52,18 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
     setUserData((prev) => {
       if (scheduleId in prev.schedules) {
         process.nextTick(() => reject(new Error('id taken')));
+        return prev;
+      }
+      if (typeof year !== 'number') {
+        process.nextTick(() => reject(new Error('year must be a valid number')));
+        return prev;
+      }
+      if (!(season in SEASON_ORDER)) {
+        process.nextTick(() => reject(new Error('season must be a valid season')));
+        return prev;
+      }
+      if (!Array.isArray(classes)) {
+        process.nextTick(() => reject(new Error('classes must be an array')));
         return prev;
       }
       const newSchedule: Schedule = {

@@ -20,9 +20,7 @@ import CurrentRefinements, {
   CurrentRefinementsComponent,
 } from '../components/SearchComponents/CurrentRefinements';
 import SortBy, { SortByComponent } from '../components/SearchComponents/SortBy';
-import Stats, { StatsComponent } from '../components/SearchComponents/Stats';
 import { DAY_SHORT } from '../shared/apiTypes';
-import StateResults from '../components/SearchComponents/StateResults';
 
 const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey());
 
@@ -30,7 +28,7 @@ const AttributeMenu = function () {
   const isLg = useLgBreakpoint();
 
   return (
-    <div className="flex-shrink-0 self-start w-64 p-2 hidden lg:flex flex-col gap-2 from-gray-800 to-blue-900 bg-gradient-to-br rounded-md">
+    <div className="flex-shrink-0 self-start w-64 p-2 hidden lg:flex flex-col space-y-2 from-gray-800 to-blue-900 bg-gradient-to-br rounded-md">
       {isLg
         && MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
           <Attribute attribute={attr} key={attr} label={adjustAttr(attr)} />
@@ -77,17 +75,6 @@ const SearchPage = function () {
                   currentRefinement="Search now"
                 />
               )}
-              <div className="flex items-center">
-                <StateResults />
-
-                <div className="hidden sm:block ml-2">
-                  {user ? (
-                    <Stats />
-                  ) : (
-                    <StatsComponent nbHits={10000} processingTimeMS={100} />
-                  )}
-                </div>
-              </div>
               <div className="grid grid-cols-[auto_1fr] gap-4">
                 {user ? (
                   <SortBy

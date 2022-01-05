@@ -6,7 +6,7 @@ import FadeTransition from '../FadeTransition';
 
 const POPUP_DURATION = 1000;
 
-const StateResults: React.FC<StateResultsProvided> = function ({
+export const StateResultsComponent: React.FC<Pick<StateResultsProvided, 'searchState'>> = function ({
   searchState,
 }) {
   const [popup, setPopup] = useState(false);
@@ -25,7 +25,7 @@ const StateResults: React.FC<StateResultsProvided> = function ({
       <button
         type="button"
         onClick={handleClick}
-        className="text-sm underline hover:opacity-50 transition-opacity"
+        className="underline hover:opacity-50 transition-opacity"
       >
         Copy search
       </button>
@@ -41,4 +41,4 @@ const StateResults: React.FC<StateResultsProvided> = function ({
   );
 };
 
-export default connectStateResults(StateResults);
+export default connectStateResults(StateResultsComponent);

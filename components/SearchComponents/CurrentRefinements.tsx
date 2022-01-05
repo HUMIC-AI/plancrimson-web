@@ -4,7 +4,7 @@ import type { CurrentRefinementsProvided } from 'react-instantsearch-core';
 import { connectCurrentRefinements } from 'react-instantsearch-dom';
 import {
   adjustAttr,
-  adjustLabel,
+  termNumberToSeason,
   classNames,
   compareItems,
   compareWeekdays,
@@ -20,22 +20,19 @@ export const CurrentRefinementsComponent: React.FC<Props> = function ({
     // eslint-disable-next-line react/jsx-no-useless-fragment
     <>
       {refinements.length === 0 ? (
-        <span className="relative">
-          <span className="absolute min-w-max">
-            Filter for courses using the menu!
-          </span>
-          <span>&nbsp;</span>
+        <span className="relative col-span-2">
+          Filter for courses using the menu!
         </span>
       ) : (
         refinements.map((item) => (
           <Fragment key={item.label}>
             {item.items ? (
               <>
-                <span className="font-medium min-w-max">
+                <span className="font-medium w-min md:min-w-max">
                   {adjustAttr(item.attribute)}
                   :
                 </span>
-                <ul className="flex flex-wrap items-center gap-2">
+                <ul className="flex flex-wrap items-center gap-2 h-min">
                   {item.items
                     .sort(
                       item.attribute === 'DAY_OF_WEEK'
@@ -46,13 +43,13 @@ export const CurrentRefinementsComponent: React.FC<Props> = function ({
                       <button
                         key={label}
                         type="button"
-                        name={adjustLabel(label)}
+                        name={termNumberToSeason(label)}
                         className={classNames(
                           'py-1 px-2 hover-blue rounded flex items-center text-sm',
                         )}
                         onClick={() => refine(value)}
                       >
-                        {adjustLabel(label)}
+                        {termNumberToSeason(label)}
                         <FaTimes className="ml-2" />
                       </button>
                     ))}
@@ -60,7 +57,7 @@ export const CurrentRefinementsComponent: React.FC<Props> = function ({
               </>
             ) : (
               <button type="button" onClick={() => refine(item.value)}>
-                {adjustLabel(item.label)}
+                {termNumberToSeason(item.label)}
               </button>
             )}
           </Fragment>

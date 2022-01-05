@@ -11,10 +11,14 @@ const SemesterSchedule: React.FC = function () {
   const { data, createSchedule } = useUserData();
   const getClass = useClassCache(data);
 
-  const newSemester: React.FormEventHandler<HTMLFormElement> = (ev) => {
+  const newSemester: React.FormEventHandler<HTMLFormElement> = async (ev) => {
     ev.preventDefault();
     const fields = ev.currentTarget.elements as any;
-    createSchedule(fields.semesterId.value, fields.year.value, fields.season.value);
+    try {
+      await createSchedule(fields.semesterId.value, parseInt(fields.year.value, 10), fields.season.value);
+    } catch (err) {
+      alert('Couldn\'t create a schedule! Make sure you provided valid values and try again.');
+    }
   };
 
   return (

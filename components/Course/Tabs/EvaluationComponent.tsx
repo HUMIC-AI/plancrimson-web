@@ -62,12 +62,12 @@ const DisclosureComponent: React.FC<DisclosureComponentProps> = function ({
         <>
           <Disclosure.Button
             name={heading}
-            className="w-full text-left flex items-center gap-2 bg-gray-600 py-1 px-4 text-white"
+            className="w-full text-left flex items-center space-x-2 bg-gray-600 py-1 px-4 text-white"
           >
             <h4 className="flex-1 text-md font-bold">{heading}</h4>
             {visibleStats && (
-              <span className="flex items-center gap-4">
-                <span className="min-w-max">
+              <span className="flex items-center space-x-4">
+                <span className="whitespace-nowrap">
                   (
                   {visibleStats.courseMean || 'NA'}
                   {' '}
@@ -82,7 +82,7 @@ const DisclosureComponent: React.FC<DisclosureComponentProps> = function ({
           </Disclosure.Button>
           <div
             className={classNames(
-              'rounded-b flex flex-col gap-4',
+              'rounded-b flex flex-col space-y-4',
               (visibleStats || open) && 'border-2 p-2',
             )}
           >
@@ -196,13 +196,13 @@ const EvaluationComponent: React.FC<{ report: Evaluation | Evaluation[] }> = fun
           <Disclosure.Button
             name={buttonTitle}
             className={classNames(
-              'w-full flex justify-between gap-2 items-center',
+              'w-full flex justify-between space-x-2 items-center',
               'bg-gray-800 text-white py-2 px-4',
               'hover:bg-opacity-70 transition-colors',
             )}
           >
             <h3 className="font-bold">{buttonTitle}</h3>
-            <span className="flex items-center gap-4">
+            <span className="flex items-center space-x-4">
               <ExternalLink href={courseEvaluation.url}>
                 <FaExternalLinkAlt title="open report page" />
               </ExternalLink>
