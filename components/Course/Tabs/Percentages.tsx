@@ -8,13 +8,14 @@ type Props = { categories: number[] | null };
 const Percentages: React.FC<Props> = function ({ categories: allCategories }) {
   if (!allCategories) return <p>Unknown</p>;
 
-  const categories = allCategories.filter((val) => val > 0);
-  const total = categories.reduce((acc, val) => acc + val, 0);
+  const total = allCategories.reduce((acc, val) => acc + val, 0);
 
   return (
     <div className="rounded h-6 flex shadow-md">
-      {categories
+      {allCategories
         .map((rec, i) => (
+          rec > 0
+          && (
           <div
             // eslint-disable-next-line react/no-array-index-key
             key={i}
@@ -35,11 +36,12 @@ const Percentages: React.FC<Props> = function ({ categories: allCategories }) {
               {' '}
               students voted
               {' '}
-              {categories.length - i}
+              {allCategories.length - i}
               /
-              {categories.length}
+              {allCategories.length}
             </span>
           </div>
+          )
         ))}
     </div>
   );
