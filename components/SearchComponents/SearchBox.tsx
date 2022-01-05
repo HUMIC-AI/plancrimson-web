@@ -91,7 +91,6 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
             selectSchedule={selectSchedule}
             selectedSchedule={selectedSchedule}
             direction="left"
-            showTerm
           />
         </div>
         <AttributeMenu />
@@ -135,7 +134,6 @@ export const SearchBoxComponent: React.FC<SearchBoxProvided> = function (
           selectSchedule={selectSchedule}
           selectedSchedule={selectedSchedule}
           direction="right"
-          showTerm
         />
       </div>
     </div>

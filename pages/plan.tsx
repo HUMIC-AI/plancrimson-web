@@ -1,10 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import {
+  useState, useEffect, useCallback, useMemo,
+} from 'react';
 import Layout from '../components/Layout/Layout';
 import PlanningSection from '../components/YearSchedule/PlanningSection';
 import RequirementsSection from '../components/YearSchedule/RequirementsSection';
 import { Season } from '../shared/firestoreTypes';
 import { getUniqueSemesters, getSchedulesBySemester, allTruthy } from '../shared/util';
 import useClassCache from '../src/context/classCache';
+import { ShowAllSchedulesContext } from '../src/context/showAllSchedules';
 import useUserData from '../src/context/userData';
 import validateSchedules, { RequirementsMet, getReqs } from '../src/requirements';
 import collegeRequirements from '../src/requirements/college';
@@ -18,6 +21,7 @@ const PlanPage = function () {
   const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(collegeRequirements);
   const [highlightedRequirement, setHighlightedRequirement] = useState<Requirement>();
   const [notification, setNotification] = useState(true);
+  const [showAllSchedules, setShowAllSchedules] = useState(false);
   const getClass = useClassCache(data);
 
   const selectSchedule = useCallback((year: number, season: Season, schedule: string | null) => {
@@ -51,29 +55,36 @@ const PlanPage = function () {
     setValidationResults(results);
   }, [scheduleIds, selectedRequirements, data, getClass]);
 
+  const context = useMemo(() => ({
+    showAllSchedules,
+    setShowAllSchedules,
+  }), [showAllSchedules, setShowAllSchedules]);
+
   return (
     <Layout size="w-full md:p-8" title="Plan">
-      <div className="grid md:grid-rows-1 min-h-screen md:grid-cols-[auto_1fr] items-stretch gap-4">
-        <RequirementsSection
-          {...{
-            selectedRequirements,
-            setSelectedRequirements,
-            highlightRequirement: setHighlightedRequirement,
-            highlightedRequirement,
-            notification,
-            setNotification,
-            validationResults,
-          }}
-        />
+      <ShowAllSchedulesContext.Provider value={context}>
+        <div className="grid md:grid-rows-1 min-h-screen md:grid-cols-[auto_1fr] items-stretch gap-4">
+          <RequirementsSection
+            {...{
+              selectedRequirements,
+              setSelectedRequirements,
+              highlightRequirement: setHighlightedRequirement,
+              highlightedRequirement,
+              notification,
+              setNotification,
+              validationResults,
+            }}
+          />
 
-        <PlanningSection
-          {...{
-            scheduleIds,
-            highlightedRequirement,
-            selectSchedule,
-          }}
-        />
-      </div>
+          <PlanningSection
+            {...{
+              scheduleIds,
+              highlightedRequirement,
+              selectSchedule,
+            }}
+          />
+        </div>
+      </ShowAllSchedulesContext.Provider>
     </Layout>
   );
 };
