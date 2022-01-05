@@ -18,6 +18,7 @@ import FadeTransition from '../FadeTransition';
 import { Viability } from '../../shared/apiTypes';
 import { Requirement } from '../../src/requirements/util';
 import ButtonMenu from './ButtonMenu';
+import useShowAllSchedules from '../../src/context/showAllSchedules';
 
 type Props = {
   selectedScheduleId: string | null;
@@ -27,6 +28,7 @@ type Props = {
   season: Season;
 
   highlightedRequirement: Requirement | undefined;
+  highlight?: string;
   dragStatus: DragStatus;
   setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>;
 
@@ -49,6 +51,7 @@ const SemesterDisplay: React.FC<Props> = function ({
   dragStatus,
   setDragStatus,
   colWidth,
+  highlight,
 }) {
   const {
     data, addCourses, removeCourses, renameSchedule,
@@ -56,6 +59,7 @@ const SemesterDisplay: React.FC<Props> = function ({
   const {
     closeModal, handleExpand, isOpen, openedCourse,
   } = useCourseDialog();
+  const { showAllSchedules } = useShowAllSchedules();
   const getClass = useClassCache(data);
 
   const editRef = useRef<HTMLInputElement>(null!);
@@ -120,7 +124,7 @@ const SemesterDisplay: React.FC<Props> = function ({
   return (
     <div
       className={classNames(
-        'relative md:h-full overflow-hidden',
+        'relative md:h-full overflow-hidden transition-colors duration-300',
         dragStatus.dragging
           ? dragStatus.data.originScheduleId === selectedScheduleId
             || !viableDrop
@@ -141,11 +145,13 @@ const SemesterDisplay: React.FC<Props> = function ({
       >
         {/* First component of display */}
         <div className="flex flex-col items-stretch space-y-2 p-4 border-black border-b-2">
+          {showAllSchedules || (
           <h1 className="text-lg text-center min-w-max font-semibold">
-            {year}
-            {' '}
             {season}
+            {' '}
+            {year}
           </h1>
+          )}
 
           <FadeTransition
             show={editing}
@@ -197,6 +203,8 @@ const SemesterDisplay: React.FC<Props> = function ({
               selectSchedule={(schedule) => schedule && selectSchedule(schedule.id)}
               direction="center"
               parentWidth={`${colWidth}px`}
+              showTerm={showAllSchedules}
+              highlight={typeof highlight !== 'undefined' && (highlight === selectedSchedule?.id)}
             />
           )}
 

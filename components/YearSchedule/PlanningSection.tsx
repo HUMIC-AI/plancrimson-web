@@ -1,10 +1,13 @@
 import React, {
   useEffect, useMemo, useRef, useState,
 } from 'react';
-import { FaArrowsAltH, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import {
+  FaArrowsAltH, FaArrowsAltV, FaChevronLeft, FaChevronRight,
+} from 'react-icons/fa';
 import { Season } from '../../shared/firestoreTypes';
-import { getUniqueSemesters } from '../../shared/util';
+import { classNames, compareSemesters, getUniqueSemesters } from '../../shared/util';
 import useCardStyle from '../../src/context/cardStyle';
+import useShowAllSchedules from '../../src/context/showAllSchedules';
 import useUserData from '../../src/context/userData';
 import { Requirement } from '../../src/requirements/util';
 import { DragStatus } from '../Course/CourseCard';
@@ -13,7 +16,62 @@ import SemesterDisplay from './SemesterDisplay';
 type Props = {
   scheduleIds: Record<string, string | null>;
   highlightedRequirement: Requirement | undefined;
-  selectSchedule: (year: number, season: Season, schedule: string | null) => void;
+  selectSchedule: (
+    year: number,
+    season: Season,
+    schedule: string | null
+  ) => void;
+};
+
+const HeaderSection: React.FC<{
+  totalCourses: number;
+  resizeRef: React.MutableRefObject<HTMLDivElement>;
+}> = function ({ totalCourses, resizeRef }) {
+  const { isExpanded, expand } = useCardStyle();
+  const { showAllSchedules, setShowAllSchedules } = useShowAllSchedules();
+
+  return (
+    <div className="text-white space-y-4">
+      <div className="flex flex-col items-center justify-center lg:flex-row xl:justify-start gap-4">
+        <span className="whitespace-nowrap">
+          Total courses:
+          {' '}
+          {totalCourses}
+          {' '}
+          / 32
+        </span>
+        <div className="flex items-center justify-center gap-4 text-sm">
+          <button
+            type="button"
+            onClick={() => expand(!isExpanded)}
+            className={classNames(
+              isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
+              'rounded-full hover:opacity-50 p-1 border',
+            )}
+          >
+            <FaArrowsAltV />
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAllSchedules(!showAllSchedules)}
+            className="py-1 px-2 bg-gray-600 hover:opacity-50 transition-opacity rounded"
+          >
+            {showAllSchedules
+              ? 'Showing all schedules'
+              : 'Showing only selected schedules'}
+          </button>
+        </div>
+      </div>
+      <div className="flex justify-center xl:justify-start">
+        <div
+          ref={resizeRef}
+          className="flex justify-center rounded py-1 w-24 min-w-[96px] max-w-full resize-x bg-gray-600 overflow-auto"
+        >
+          <FaArrowsAltH />
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const PlanningSection: React.FC<Props> = function ({
@@ -22,10 +80,10 @@ const PlanningSection: React.FC<Props> = function ({
   selectSchedule,
 }) {
   const { data } = useUserData();
+  const { showAllSchedules } = useShowAllSchedules();
   const [dragStatus, setDragStatus] = useState<DragStatus>({
     dragging: false,
   });
-  const { isExpanded, expand } = useCardStyle();
   // default w-56 = 224px
   // the resize bar starts at w-24 = 96px
   const [colWidth, setWidth] = useState(224);
@@ -38,24 +96,28 @@ const PlanningSection: React.FC<Props> = function ({
   const rightScrollRef = useRef<HTMLDivElement>(null!);
 
   useEffect(() => {
-    const resizeObserver = new ResizeObserver(
-      (entries) => {
-        const newWidth = entries[0]?.borderBoxSize?.[0]?.inlineSize;
-        if (newWidth) {
-          setWidth(Math.max(Math.min(newWidth + 224 - 96, 2048), 224));
-        }
-      },
-    );
+    const resizeObserver = new ResizeObserver((entries) => {
+      const newWidth = entries?.[0]?.borderBoxSize?.[0]?.inlineSize;
+      if (newWidth) {
+        setWidth(Math.max(Math.min(newWidth + 224 - 96, 2048), 224));
+      }
+    });
     resizeObserver.observe(resizeRef.current);
     const leftScrollObserver = new IntersectionObserver(
-      ([{ isIntersecting }]) => {
-        setLeftIntersecting(isIntersecting);
+      (entries) => {
+        const isIntersecting = entries?.[0]?.isIntersecting;
+        if (typeof isIntersecting === 'boolean') {
+          setLeftIntersecting(isIntersecting);
+        }
       },
     );
     leftScrollObserver.observe(leftScrollRef.current);
     const rightScrollObserver = new IntersectionObserver(
-      ([{ isIntersecting }]) => {
-        setRightIntersecting(isIntersecting);
+      (entries) => {
+        const isIntersecting = entries?.[0]?.isIntersecting;
+        if (typeof isIntersecting === 'boolean') {
+          setRightIntersecting(isIntersecting);
+        }
       },
     );
     rightScrollObserver.observe(rightScrollRef.current);
@@ -66,7 +128,34 @@ const PlanningSection: React.FC<Props> = function ({
     };
   }, []);
 
-  const semesters = useMemo(() => getUniqueSemesters(data), [data]);
+  const allSemesters: {
+    year: number;
+    season: Season;
+    selectedScheduleId: string | null;
+    key: string;
+    selectSchedule: React.Dispatch<string | null>;
+    highlight?: string;
+  }[] = useMemo(() => {
+    if (showAllSchedules) {
+      return Object.values(data.schedules)
+        .sort(compareSemesters)
+        .map(({ year, season, id }) => ({
+          year,
+          season,
+          selectedScheduleId: id,
+          key: id,
+          selectSchedule: (newId) => selectSchedule(year, season, newId),
+          highlight: scheduleIds[year + season] || undefined,
+        }));
+    }
+    return getUniqueSemesters(data).map(({ year, season }) => ({
+      year,
+      season,
+      selectedScheduleId: scheduleIds[year + season] || null,
+      key: year + season,
+      selectSchedule: (id) => selectSchedule(year, season, id),
+    }));
+  }, [data, scheduleIds, selectSchedule, showAllSchedules]);
 
   const totalCourses = useMemo(
     () => Object.values(scheduleIds).reduce(
@@ -79,28 +168,7 @@ const PlanningSection: React.FC<Props> = function ({
   return (
     <div className="relative bg-gray-800 md:p-4 md:rounded-lg md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full md:h-full">
       <div className="flex flex-col space-y-4 md:h-full">
-        <div className="text-white flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
-          <span>
-            Total courses:
-            {' '}
-            {totalCourses}
-            {' '}
-            / 32
-          </span>
-          <button
-            type="button"
-            onClick={() => expand(!isExpanded)}
-            className="py-2 px-4 bg-gray-600 hover:opacity-50 transition-opacity rounded"
-          >
-            {isExpanded ? 'Compact cards' : 'Expand cards'}
-          </button>
-          <div
-            ref={resizeRef}
-            className="flex justify-center rounded py-1 w-24 min-w-[96px] max-w-full resize-x bg-gray-600 overflow-auto"
-          >
-            <FaArrowsAltH />
-          </div>
-        </div>
+        <HeaderSection totalCourses={totalCourses} resizeRef={resizeRef} />
 
         <div className="relative overflow-x-auto flex-1">
           {/* on small screens, this extends as far as necessary */}
@@ -110,21 +178,32 @@ const PlanningSection: React.FC<Props> = function ({
             ref={semestersContainerRef}
           >
             <div ref={leftScrollRef} />
-            {semesters.map(({ year, season }) => (
-              <SemesterDisplay
-                key={year + season}
-                selectedScheduleId={scheduleIds[year + season] || null}
-                selectSchedule={(id) => selectSchedule(year, season, id)}
-                {...{
-                  year,
-                  season,
-                  highlightedRequirement,
-                  dragStatus,
-                  setDragStatus,
-                  colWidth,
-                }}
-              />
-            ))}
+            {allSemesters.map(
+              ({
+                year,
+                season,
+                highlight,
+                selectedScheduleId,
+                // eslint-disable-next-line @typescript-eslint/no-shadow
+                selectSchedule,
+                key,
+              }) => (
+                <SemesterDisplay
+                  {...{
+                    key,
+                    year,
+                    season,
+                    selectedScheduleId,
+                    selectSchedule,
+                    colWidth,
+                    dragStatus,
+                    setDragStatus,
+                    highlightedRequirement,
+                    highlight,
+                  }}
+                />
+              ),
+            )}
             <div ref={rightScrollRef} />
           </div>
 

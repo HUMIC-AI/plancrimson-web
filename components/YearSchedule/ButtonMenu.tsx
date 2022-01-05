@@ -78,6 +78,40 @@ const ButtonMenu: React.FC<Props> = function ({
     [createSchedule],
   );
 
+  const handleDuplicate = useCallback(async () => {
+    if (!selectedSchedule) return;
+    try {
+      const schedule = await createNewSchedule(
+        `${selectedSchedule.id} copy`,
+        selectedSchedule.year,
+        selectedSchedule.season,
+        selectedSchedule.classes,
+      );
+      selectSchedule(schedule.id);
+    } catch (err) {
+      console.error(err);
+      alert("Couldn't duplicate your schedule. Please try again later.");
+    }
+  }, [createNewSchedule, selectSchedule, selectedSchedule]);
+
+  const handleDelete = useCallback(async () => {
+    if (!selectedSchedule) return;
+    // eslint-disable-next-line no-restricted-globals
+    const confirmDelete = confirm(
+      `Are you sure you want to delete your schedule ${selectedSchedule.id}?`,
+    );
+    if (!confirmDelete) return;
+    try {
+      await deleteSchedule(selectedSchedule.id);
+      selectSchedule(prevScheduleId);
+    } catch (err) {
+      console.error(err);
+      alert(
+        'There was a problem deleting your schedule. Please try again later.',
+      );
+    }
+  }, [deleteSchedule, prevScheduleId, selectSchedule, selectedSchedule]);
+
   return (
     <div className="flex mx-auto justify-center items-center flex-wrap max-w-[8rem] gap-2 mt-2 text-gray-600 text-xs">
       {selectedSchedule && (
@@ -89,42 +123,34 @@ const ButtonMenu: React.FC<Props> = function ({
             }}
           >
             {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-            <a className={buttonStyles}>
+            <a className={buttonStyles} title="Search for classes to add">
               <FaSearch />
             </a>
           </Link>
           <Link
             href={{
-              pathname: '/semester',
+              pathname: '/schedule',
               query: { selected: selectedSchedule.id },
             }}
           >
             {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-            <a className={buttonStyles}>
+            <a className={buttonStyles} title="Go to calendar view">
               <FaCalendarWeek />
             </a>
           </Link>
           <button
             type="button"
-            onClick={() => createNewSchedule(
-              `${selectedSchedule.id} copy`,
-              selectedSchedule.year,
-              selectedSchedule.season,
-              selectedSchedule.classes,
-            )
-              .then((schedule) => selectSchedule(schedule.id))
-              .catch((err) => {
-                console.error(err);
-                alert(
-                  "Couldn't duplicate your schedule. Please try again later.",
-                );
-              })}
+            name="Duplicate schedule"
+            title="Duplicate schedule"
+            onClick={handleDuplicate}
             className={buttonStyles}
           >
             <FaClone />
           </button>
           <button
             type="button"
+            name={editing ? 'Cancel editing' : 'Edit schedule name'}
+            title={editing ? 'Cancel editing' : 'Edit schedule name'}
             onClick={async () => {
               if (editing) setEditing(false);
               else {
@@ -137,35 +163,33 @@ const ButtonMenu: React.FC<Props> = function ({
           >
             {editing ? <FaTimes /> : <FaPencilAlt />}
           </button>
+        </>
+      )}
+
+      <button
+        type="button"
+        name="Add schedule"
+        title="Add schedule"
+        onClick={() => {
+          createNewSchedule(`${season} ${year}`, year, season, [])
+            .then((schedule) => selectSchedule(schedule.id))
+            .catch((err) => {
+              console.error(err);
+              alert("Couldn't create a new schedule!");
+            });
+        }}
+        className={buttonStyles}
+      >
+        <FaPlus />
+      </button>
+
+      {selectedSchedule && (
+        <>
           <button
             type="button"
-            onClick={() => {
-              createNewSchedule(`${season} ${year}`, year, season, [])
-                .then((schedule) => selectSchedule(schedule.id))
-                .catch((err) => {
-                  console.error(err);
-                  alert("Couldn't create a new schedule!");
-                });
-            }}
-            className={buttonStyles}
-          >
-            <FaPlus title="Add schedule" />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              // eslint-disable-next-line no-restricted-globals
-              const confirmDelete = confirm(
-                `Are you sure you want to delete your schedule ${selectedSchedule.id}?`,
-              );
-              if (confirmDelete) {
-                deleteSchedule(selectedSchedule.id)
-                  .then(() => selectSchedule(prevScheduleId))
-                  .catch((err) => alert(
-                    `There was a problem deleting your schedule: ${err.message}`,
-                  ));
-              }
-            }}
+            name="Delete schedule"
+            title="Delete schedule"
+            onClick={handleDelete}
             className={buttonStyles}
           >
             <FaTrash />
@@ -189,6 +213,8 @@ const ButtonMenu: React.FC<Props> = function ({
               className="hidden"
               ref={downloadRef}
               download={`${selectedSchedule.id} (Plan Crimson).json`}
+              title="Download this schedule"
+              aria-disabled
             />
           </button>
         </>

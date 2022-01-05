@@ -71,13 +71,8 @@ export function getNumCredits(course: Class) {
   return parseInt(course.HU_UNITS_MIN, 10);
 }
 
-export function compareSemesters(
-  a: Semester<string | number>,
-  b: Semester<string | number>,
-) {
-  const aYear = parseInt(a.year as string, 10);
-  const bYear = parseInt(b.year as string, 10);
-  if (aYear !== bYear) return aYear - bYear;
+export function compareSemesters(a: Semester, b: Semester) {
+  if (a.year !== b.year) return a.year - b.year;
   const seasonDiff = SEASON_ORDER[a.season] - SEASON_ORDER[b.season];
   if (seasonDiff !== 0) return seasonDiff;
   if ('id' in a && 'id' in b) {
