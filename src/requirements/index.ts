@@ -3,7 +3,7 @@ import { Requirement, RequirementGroup } from './util';
 import fasRequirements from './degree';
 import basicRequirements from './cs/basic';
 import honorsRequirements from './cs/honors';
-import { ClassCacheContextType } from '../context/classCache';
+import { ClassCache } from '../context/classCache';
 import collegeRequirements from './college';
 
 // want to query for all people planning to take this class at a certain time
@@ -36,7 +36,7 @@ const validateSchedules = (
   schedules: Schedule[],
   allReqs: Requirement[],
   userData: UserData,
-  getClass: ClassCacheContextType['getClass'],
+  classCache: Readonly<ClassCache>,
 ): RequirementsMet => {
   const requirementsMet = {} as Record<string, any>;
   const classesUsed = {} as Record<string, string[]>;
@@ -51,12 +51,12 @@ const validateSchedules = (
   const reducerResults = schedules.reduce(
     (prev, schedule) => schedule.classes.reduce(
       (acc, cls) => {
-        if (!getClass(cls.classId)) return acc;
+        if (!classCache[cls.classId]) return acc;
         const next = {} as Record<string, any>;
         requirements.forEach((req) => {
           const newValue = req.reducer(
             acc[req.id],
-            getClass(cls.classId)!,
+            classCache[cls.classId],
             schedule,
             userData,
           );

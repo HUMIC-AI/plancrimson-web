@@ -60,7 +60,7 @@ const SemesterDisplay: React.FC<Props> = function ({
     closeModal, handleExpand, isOpen, openedCourse,
   } = useCourseDialog();
   const { showAllSchedules } = useShowAllSchedules();
-  const getClass = useClassCache(data);
+  const classCache = useClassCache(data);
 
   const editRef = useRef<HTMLInputElement>(null!);
 
@@ -74,7 +74,7 @@ const SemesterDisplay: React.FC<Props> = function ({
     ? data.schedules[selectedScheduleId]
     : null;
 
-  const draggedClass = dragStatus.dragging && getClass(dragStatus.data.classId);
+  const draggedClass = dragStatus.dragging && classCache[dragStatus.data.classId];
 
   const viableDrop = useMemo(
     () => (draggedClass && selectedSchedule
@@ -237,16 +237,16 @@ const SemesterDisplay: React.FC<Props> = function ({
         <div className="flex-1 p-4 md:overflow-auto">
           <div className="flex flex-col items-stretch space-y-4">
             {selectedSchedule
-              && selectedSchedule.classes.map(({ classId: id }) => (id && getClass(id) ? (
+              && selectedSchedule.classes.map(({ classId: id }) => (id && classCache[id] ? (
                 <CourseCard
                   key={id}
-                  course={getClass(id)!}
+                  course={classCache[id]}
                   handleExpand={handleExpand}
                   highlight={
                       highlightedRequirement
                       && highlightedRequirement.reducer(
                         highlightedRequirement.initialValue || 0,
-                        getClass(id)!,
+                        classCache[id],
                         selectedSchedule!,
                         data,
                       ) !== null

@@ -9,7 +9,7 @@ import Calendar from './Calendar';
 const SemesterSchedule: React.FC = function () {
   const { schedules, selectSchedule, selectedSchedule } = useSelectedScheduleContext();
   const { data, createSchedule } = useUserData();
-  const getClass = useClassCache(data);
+  const classCache = useClassCache(data);
 
   const newSemester: React.FormEventHandler<HTMLFormElement> = async (ev) => {
     ev.preventDefault();
@@ -57,7 +57,7 @@ const SemesterSchedule: React.FC = function () {
 
       <Calendar
         classes={selectedSchedule
-          ? selectedSchedule.classes.map(({ classId }) => getClass(classId))
+          ? selectedSchedule.classes.map(({ classId }) => classCache[classId])
           : []}
       />
 

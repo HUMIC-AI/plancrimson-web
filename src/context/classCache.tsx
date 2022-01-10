@@ -14,12 +14,12 @@ import {
 export type ClassCache = Record<string, ExtendedClass>;
 
 export type ClassCacheContextType = {
-  getClass: (classId: string) => ExtendedClass | null;
+  classCache: Readonly<ClassCache>;
   appendClasses: (classIds: string[]) => void;
 };
 
 const ClassCacheContext = createContext<ClassCacheContextType>({
-  getClass: throwMissingContext,
+  classCache: {},
   appendClasses: throwMissingContext,
 });
 
@@ -130,17 +130,15 @@ export const ClassCacheProvider: React.FC = function ({ children }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classIds, classIndex]);
 
-  const getClass = useCallback((classId: string) => classCache[classId] || null, [classCache]);
-
   const appendClasses: ClassCacheContextType['appendClasses'] = useCallback(
     (newClassIds: string[]) => setClassIds((prev) => [...prev, ...newClassIds]),
     [],
   );
 
   const context = useMemo(() => ({
-    getClass,
+    classCache,
     appendClasses,
-  }), [getClass, appendClasses]);
+  }), [classCache, appendClasses]);
 
   return (
     <ClassCacheContext.Provider value={context}>
@@ -151,9 +149,9 @@ export const ClassCacheProvider: React.FC = function ({ children }) {
 };
 
 const useClassCache = (data: UserData) => {
-  const { appendClasses, getClass } = useContext(ClassCacheContext);
-  useEffect(() => appendClasses(getAllClassIds(data)), [data, appendClasses]);
-  return getClass;
+  const { appendClasses, classCache } = useContext(ClassCacheContext);
+  useEffect(() => appendClasses(getAllClassIds(data)), [data]);
+  return Object.freeze(classCache);
 };
 
 export default useClassCache;

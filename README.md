@@ -28,12 +28,3 @@ The way it was reverse engineered:
 
 upcoming features:
 
-- on the search page, if the user is logged in as admin, there should be a button saying "upload documents to search database"
-- on click, this should:
-    - send a single request to `/api/search`
-    - on the response, check the number of pages
-    - for each page
-        - send a new request
-        - when the request is received, add the documents to meili search via MeiliClient
-
-

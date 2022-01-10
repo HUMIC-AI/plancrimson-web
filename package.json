@@ -39,6 +39,7 @@
     "@types/react-instantsearch-dom": "^6.12.1",
     "@typescript-eslint/eslint-plugin": "^5.6.0",
     "@typescript-eslint/parser": "^5.6.0",
+    "@welldone-software/why-did-you-render": "^6.2.3",
     "algoliasearch": "^4.11.0",
     "autoprefixer": "^10.4.0",
     "eslint": "^8.4.1",

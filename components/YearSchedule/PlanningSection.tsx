@@ -14,13 +14,7 @@ import { DragStatus } from '../Course/CourseCard';
 import SemesterDisplay from './SemesterDisplay';
 
 type Props = {
-  scheduleIds: Record<string, string | null>;
   highlightedRequirement: Requirement | undefined;
-  selectSchedule: (
-    year: number,
-    season: Season,
-    schedule: string | null
-  ) => void;
 };
 
 const HeaderSection: React.FC<{
@@ -75,11 +69,11 @@ const HeaderSection: React.FC<{
 };
 
 const PlanningSection: React.FC<Props> = function ({
-  scheduleIds,
   highlightedRequirement,
-  selectSchedule,
 }) {
-  const { data } = useUserData();
+  // eslint-disable-next-line no-console
+  // console.log('rerendering PLANNING');
+  const { data, selectSchedule } = useUserData();
   const { showAllSchedules } = useShowAllSchedules();
   const [dragStatus, setDragStatus] = useState<DragStatus>({
     dragging: false,
@@ -95,6 +89,8 @@ const PlanningSection: React.FC<Props> = function ({
   const leftScrollRef = useRef<HTMLDivElement>(null!);
   const rightScrollRef = useRef<HTMLDivElement>(null!);
 
+  // conditionally show the left and right scroll bars
+  // based on the user's current scroll position
   useEffect(() => {
     const resizeObserver = new ResizeObserver((entries) => {
       const newWidth = entries?.[0]?.borderBoxSize?.[0]?.inlineSize;
@@ -145,24 +141,24 @@ const PlanningSection: React.FC<Props> = function ({
           selectedScheduleId: id,
           key: id,
           selectSchedule: (newId) => selectSchedule(year, season, newId),
-          highlight: scheduleIds[year + season] || undefined,
+          highlight: data.selectedSchedules[`${year}${season}`] || undefined,
         }));
     }
-    return getUniqueSemesters(data).map(({ year, season }) => ({
+    return getUniqueSemesters(data.classYear, Object.values(data.schedules)).map(({ year, season }) => ({
       year,
       season,
-      selectedScheduleId: scheduleIds[year + season] || null,
+      selectedScheduleId: data.selectedSchedules[`${year}${season}`] || null,
       key: year + season,
       selectSchedule: (id) => selectSchedule(year, season, id),
     }));
-  }, [data, scheduleIds, selectSchedule, showAllSchedules]);
+  }, [data, selectSchedule, showAllSchedules]);
 
   const totalCourses = useMemo(
-    () => Object.values(scheduleIds).reduce(
-      (acc, schedule) => acc + ((schedule && data.schedules[schedule]?.classes.length) || 0),
+    () => Object.values(data.selectedSchedules).reduce(
+      (acc, scheduleId) => acc + ((scheduleId && data.schedules[scheduleId]?.classes.length) || 0),
       0,
     ),
-    [data.schedules, scheduleIds],
+    [data.schedules, data.selectedSchedules],
   );
 
   return (
@@ -236,5 +232,7 @@ const PlanningSection: React.FC<Props> = function ({
     </div>
   );
 };
+
+PlanningSection.whyDidYouRender = true;
 
 export default PlanningSection;
