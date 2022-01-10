@@ -6,6 +6,7 @@ import {
   getDoc,
   serverTimestamp,
   DocumentSnapshot,
+  updateDoc,
 } from 'firebase/firestore';
 import React, {
   createContext,
@@ -135,7 +136,8 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
         };
 
         if (user) {
-          setDoc(getUserRef(user.uid), { schedules }, { merge: true })
+          // @ts-expect-error
+          updateDoc(getUserRef(user.uid), { schedules })
             .then(() => resolve(newSchedule))
             .catch((err) => reject(err));
         } else {
@@ -166,7 +168,8 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
           [newId]: newSchedule,
         };
         if (user) {
-          setDoc(getUserRef(user.uid), { schedules }, { merge: true })
+          // @ts-expect-error
+          updateDoc(getUserRef(user.uid), { schedules })
             .then(() => resolve(newSchedule))
             .catch((err) => reject(err));
         } else {
@@ -188,7 +191,8 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
         // eslint-disable-next-line @typescript-eslint/naming-convention
         const { [scheduleId]: _, ...schedules } = prev.schedules;
         if (user) {
-          setDoc(getUserRef(user.uid), { schedules }, { merge: true })
+          // @ts-expect-error
+          updateDoc(getUserRef(user.uid), { schedules })
             .then(() => resolve())
             .catch((err) => reject(err));
         } else {
@@ -212,7 +216,8 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
           }
         });
         if (user) {
-          setDoc(getUserRef(user.uid), firestoreUpdate, { merge: true });
+          // @ts-expect-error
+          updateDoc(getUserRef(user.uid), firestoreUpdate);
         }
         return { ...prev };
       });
@@ -253,7 +258,8 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
         );
 
         if (user) {
-          setDoc(getUserRef(user.uid), firestoreUpdate, { merge: true })
+          // @ts-expect-error
+          updateDoc(getUserRef(user.uid), firestoreUpdate)
             .then(() => resolve(newState.schedules))
             .catch(reject);
         } else {
@@ -269,12 +275,17 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
   const selectSchedule: UserDataContextType['selectSchedule'] = useCallback(
     (year: number, season: Season, scheduleId: string | null) => new Promise<void>((resolve, reject) => {
       setUserData((prev) => {
+        // if scheduleId is falsy, that means we delete the data
         if (!scheduleId) {
+          const newSelectedSchedules = {
+            ...prev.selectedSchedules,
+            [year + season]: null,
+          };
           if (user) {
             setDoc(
               getUserRef(user.uid),
               {
-                [`selectedSchedules.${year}${season}`]: null,
+                selectedSchedules: newSelectedSchedules,
               },
               { merge: true },
             )
@@ -284,10 +295,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
           process.nextTick(resolve);
           return {
             ...prev,
-            selectedSchedules: {
-              ...prev.selectedSchedules,
-              [year + season]: null,
-            },
+            selectedSchedules: newSelectedSchedules,
           };
         }
 
@@ -297,13 +305,18 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
           return prev;
         }
 
+        const newSelectedSchedules = {
+          ...prev.selectedSchedules,
+          [year + season]: scheduleId,
+        };
+
         if (user) {
-          setDoc(
+          updateDoc(
             getUserRef(user.uid),
+            // @ts-expect-error
             {
-              [`selectedSchedules.${year}${season}`]: schedule,
+              selectedSchedules: newSelectedSchedules,
             },
-            { merge: true },
           )
             .then(resolve)
             .catch(reject);
@@ -312,10 +325,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
         process.nextTick(resolve);
         return {
           ...prev,
-          selectedSchedules: {
-            ...prev.selectedSchedules,
-            [year + season]: schedule,
-          },
+          selectedSchedules: newSelectedSchedules,
         };
       });
     }),
