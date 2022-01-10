@@ -126,8 +126,8 @@ export function getSchedulesBySemester(
   );
 }
 
-export function getAllClassIds(data: UserData) {
-  return Object.values(data.schedules).flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
+export function getAllClassIds(schedules: UserData['schedules']) {
+  return Object.values(schedules).flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
 }
 
 type ViabilityResponse = {

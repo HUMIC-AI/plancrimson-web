@@ -98,11 +98,12 @@ const ErrorDialog: React.FC<DialogProps> = function ({ isOpen, closeDialog, erro
 
 export const ClassCacheProvider: React.FC = function ({ children }) {
   const [classIndex, setClassIndex] = useState<Index<ExtendedClass> | null>(null);
-  const [classIds, setClassIds] = useState<string[]>([]);
+  const [classIds, setClassIds] = useState<Set<string>>(new Set());
   const [classCache, setClassCache] = useState<ClassCache>({});
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
   const [fetchClassError, setFetchClassError] = useState<string | null>(null);
 
+  // initialize the search client
   useEffect(() => {
     const index = new MeiliSearch({
       host: getMeiliHost(),
@@ -115,12 +116,16 @@ export const ClassCacheProvider: React.FC = function ({ children }) {
   useEffect(() => {
     if (!classIndex) return;
 
-    Promise.all(classIds.map(async (id) => {
+    const promises: Promise<Record<string, ExtendedClass>>[] = [];
+    classIds.forEach((id) => {
       if (classCache[id]) {
-        return { [id]: classCache[id] };
+        promises.push(Promise.resolve({ [id]: classCache[id] }));
+      } else {
+        promises.push(classIndex.getDocument(id).then((doc) => ({ [id]: doc })));
       }
-      return { [id]: await classIndex.getDocument(id) };
-    }))
+    });
+
+    Promise.all(promises)
       .then((results) => {
         const updatedCache = Object.assign({}, ...results);
         process.nextTick(() => setClassCache(updatedCache));
@@ -131,7 +136,10 @@ export const ClassCacheProvider: React.FC = function ({ children }) {
   }, [classIds, classIndex]);
 
   const appendClasses: ClassCacheContextType['appendClasses'] = useCallback(
-    (newClassIds: string[]) => setClassIds((prev) => [...prev, ...newClassIds]),
+    (newClassIds: string[]) => setClassIds((prev) => {
+      newClassIds.forEach((id) => prev.add(id));
+      return new Set(prev);
+    }),
     [],
   );
 
@@ -150,7 +158,12 @@ export const ClassCacheProvider: React.FC = function ({ children }) {
 
 const useClassCache = (data: UserData) => {
   const { appendClasses, classCache } = useContext(ClassCacheContext);
-  useEffect(() => appendClasses(getAllClassIds(data)), [data]);
+  useEffect(() => {
+    const classIds = getAllClassIds(data.schedules);
+    if (classIds.some((id) => !classCache[id])) {
+      appendClasses(classIds);
+    }
+  }, [data.schedules, classCache, appendClasses]);
   return Object.freeze(classCache);
 };
 
