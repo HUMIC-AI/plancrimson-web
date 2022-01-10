@@ -99,17 +99,17 @@ export function getDefaultSemesters(classYear: number) {
   return schedules;
 }
 
-export function getUniqueSemesters(data: UserData) {
-  const semesters = getDefaultSemesters(data.classYear);
-  Object.values(data.schedules).forEach(({ year, season }) => {
+export function getUniqueSemesters(classYear: number, semesters: Semester[]) {
+  const defaultSemesters = getDefaultSemesters(classYear);
+  semesters.forEach(({ year, season }) => {
     // if this semester has not yet been added
     if (
-      !semesters.find(({ year: y, season: s }) => year === y && season === s)
+      !defaultSemesters.find(({ year: y, season: s }) => year === y && season === s)
     ) {
-      semesters.push({ year, season });
+      defaultSemesters.push({ year, season });
     }
   });
-  return semesters.sort(compareSemesters);
+  return defaultSemesters.sort(compareSemesters);
 }
 
 export function sortSchedules(schedules: UserData['schedules']) {
