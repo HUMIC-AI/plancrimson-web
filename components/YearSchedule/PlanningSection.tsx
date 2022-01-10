@@ -71,8 +71,6 @@ const HeaderSection: React.FC<{
 const PlanningSection: React.FC<Props> = function ({
   highlightedRequirement,
 }) {
-  // eslint-disable-next-line no-console
-  // console.log('rerendering PLANNING');
   const { data, selectSchedule } = useUserData();
   const { showAllSchedules } = useShowAllSchedules();
   const [dragStatus, setDragStatus] = useState<DragStatus>({

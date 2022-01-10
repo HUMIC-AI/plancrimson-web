@@ -100,8 +100,6 @@ const UserDataContext = createContext<UserDataContextType>({
  * If the user is logged in, userData will be an up-to-date view of their Firestore document.
  */
 export const UserDataProvider: React.FC<{ user: User | null | undefined }> = function ({ children, user }) {
-  // eslint-disable-next-line no-console
-  console.log('rerendering provider', user);
   const [userData, setUserData] = useState<UserData>(defaultUserData);
   const [error, setError] = useState<FirestoreError | undefined>();
 
