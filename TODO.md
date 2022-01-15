@@ -1,6 +1,5 @@
 # TODO
 
-
 ## testing
 
 - Testing with the [Firebase Emulator Suite](https://firebase.google.com/docs/emulator-suite)
@@ -12,41 +11,6 @@
       - Creating a new schedule via the schedule page
       - Creating a new schedule via the planning page
 
-
-## contact form
-
-### concentration request page
-
-- On the planning page, create a link "suggest a concentration"
-  - Your request has been received! You can view which concentrations have been suggested
-
-
-ui: a list of suggested concentrations with the data below
-- number of users requested
-- upvote button: click toggles
-
-```ts
-updateDoc(doc(`concentrationRequests/${concentration}`), {
-  userEmails: arrayToggle(user.email) // or something
-})
-```
-
-the `concentrationRequests` collection in firestore
-
-id is the concentration
-
-(where get concentrations from?)
-- does my.harvard have a list? check application
-- if not, can copy+paste from handbook
-
-```ts
-type Suggestion = {
-  userEmails: string[]; // array of users who voted
-  suggestedConcentration: string;
-  status: 'Received' | 'Done' | 'In progress';
-  completionDate?: Date;
-}
-```
 
 
 ## store things in `localStorage` (Web Storage API)

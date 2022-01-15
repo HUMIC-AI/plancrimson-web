@@ -60,7 +60,7 @@ const SemesterDisplay: React.FC<Props> = function ({
     closeModal, handleExpand, isOpen, openedCourse,
   } = useCourseDialog();
   const { showAllSchedules } = useShowAllSchedules();
-  const classCache = useClassCache(data);
+  const classCache = useClassCache(data.schedules);
 
   const editRef = useRef<HTMLInputElement>(null!);
 

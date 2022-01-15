@@ -90,27 +90,27 @@ export const HitsComponent: React.FC<InfiniteHitsProvided<ExtendedClass> & { inS
         direction="up"
       />
 
-      <div
-        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
-        // style={{
-        //   gridTemplateColumns: `repeat(${numCols}, minmax(0, 1fr))`,
-        // }}
-      >
-        {hits.map((hit) => (
-          <CourseCard
-            key={getClassId(hit)}
-            course={hit}
-            selectedSchedule={selectedSchedule}
-            handleExpand={handleExpand}
-            inSearchContext={inSearch}
-          />
-        ))}
-        <CourseDialog
-          isOpen={isOpen}
-          course={openedCourse}
-          closeModal={closeModal}
-        />
-      </div>
+      {hits.length === 0 ? <div className="animate-pulse py-2 px-4 rounded-full bg-gray-300">Loading results...</div>
+        : (
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
+          >
+            {hits.map((hit) => (
+              <CourseCard
+                key={getClassId(hit)}
+                course={hit}
+                selectedSchedule={selectedSchedule}
+                handleExpand={handleExpand}
+                inSearchContext={inSearch}
+              />
+            ))}
+            <CourseDialog
+              isOpen={isOpen}
+              course={openedCourse}
+              closeModal={closeModal}
+            />
+          </div>
+        )}
 
       <CustomButton
         enabled={hasMore}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
 import { Configure, InstantSearch } from 'react-instantsearch-dom';
-import { useRouter } from 'next/router';
+import qs from 'qs';
 import { adjustAttr, getMeiliApiKey, getMeiliHost } from '../shared/util';
 import MEILI_ATTRIBUTES from '../shared/meiliAttributes.json';
 import { useLgBreakpoint } from '../src/hooks';
@@ -44,12 +44,13 @@ const AttributeMenu = function () {
 // but do not allow them to send requests to the database
 const SearchPage = function () {
   const { user } = useUser();
-  const { query } = useRouter();
-  const [searchState, setSearchState] = useState(query);
+  const [searchState, setSearchState] = useState({});
 
   useEffect(() => {
-    setSearchState(query);
-  }, [query]);
+    if (!user || typeof window === 'undefined') return;
+    const stateFromQuery = qs.parse(window.location.search.slice(1));
+    process.nextTick(() => setSearchState(stateFromQuery));
+  }, [user]);
 
   return (
     <Layout>

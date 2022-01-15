@@ -28,10 +28,12 @@ export const CurrentRefinementsComponent: React.FC<Props> = function ({
           <Fragment key={item.label}>
             {item.items ? (
               <>
-                <span className="font-medium w-min md:min-w-max">
-                  {adjustAttr(item.attribute)}
-                  :
-                </span>
+                <h4 className="font-medium w-min md:min-w-max">
+                  <button type="button" className="hover:line-through" onClick={() => refine(item.value)}>
+                    {adjustAttr(item.attribute)}
+                    :
+                  </button>
+                </h4>
                 <ul className="flex flex-wrap items-center gap-2 h-min">
                   {item.items
                     .sort(

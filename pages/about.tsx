@@ -22,10 +22,26 @@ const siteInfoLinks = [
   ['Vercel', 'https://vercel.com/'],
 ];
 
-const ResourcesPage: React.FC = function () {
+const AboutPage: React.FC = function () {
   return (
     <Layout>
       <div className="max-w-md mx-auto space-y-4">
+        <h1 className="text-2xl leading-loose font-semibold">About this site</h1>
+        <p>Here&apos;s some of the tech this site was built with:</p>
+        <ul className="list-disc list-inside">
+          {siteInfoLinks.map(([name, href]) => (
+            <li key={href}>
+              <ExternalLink href={href}>
+                {name}
+              </ExternalLink>
+            </li>
+          ))}
+        </ul>
+        <p>I am not affiliated with any of the above organizations.</p>
+        <p>
+          Thanks for using Plan Crimson! Reach out with any feedback, questions, bug reports, requests, etc. at
+          alexcai [at] college [dot] harvard [dot] edu.
+        </p>
         <h1 className="text-2xl leading-loose font-semibold">Other Resources</h1>
         <p>
           The data for Plan Crimson is taken from the
@@ -51,25 +67,9 @@ const ResourcesPage: React.FC = function () {
             </li>
           ))}
         </ul>
-        <h1 className="text-2xl leading-loose font-semibold">About this site</h1>
-        <p>Here&apos;s some of the tech this site was built with:</p>
-        <ul className="list-disc list-inside">
-          {siteInfoLinks.map(([name, href]) => (
-            <li key={href}>
-              <ExternalLink href={href}>
-                {name}
-              </ExternalLink>
-            </li>
-          ))}
-        </ul>
-        <p>I am not affiliated with any of the above organizations.</p>
-        <p>
-          Thanks for using Plan Crimson! Reach out with any feedback, questions, bug reports, requests, etc. at
-          alexcai [at] college [dot] harvard [dot] edu.
-        </p>
       </div>
     </Layout>
   );
 };
 
-export default ResourcesPage;
+export default AboutPage;
