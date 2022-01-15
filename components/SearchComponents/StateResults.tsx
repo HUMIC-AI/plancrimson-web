@@ -13,9 +13,7 @@ export const StateResultsComponent: React.FC<Pick<StateResultsProvided, 'searchS
 
   const handleClick = useCallback(() => {
     navigator.clipboard.writeText(
-      `${window.location.origin + window.location.pathname}?${qs.stringify(
-        searchState,
-      )}`,
+      `${window.location.origin + window.location.pathname}?${qs.stringify(searchState)}`,
     );
     setPopup(true);
   }, [searchState]);

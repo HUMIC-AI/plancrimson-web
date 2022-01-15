@@ -20,7 +20,7 @@ const PlanPage = function () {
   const [highlightedRequirement, setHighlightedRequirement] = useState<Requirement>();
   const [notification, setNotification] = useState(true);
   const [showAllSchedules, setShowAllSchedules] = useState(false);
-  const getClass = useClassCache(data);
+  const getClass = useClassCache(data.schedules);
 
   useEffect(() => {
     getUniqueSemesters(data.classYear, Object.values(data.schedules)).forEach(({ year, season }) => {

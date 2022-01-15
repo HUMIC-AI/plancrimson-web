@@ -26,5 +26,26 @@ The way it was reverse engineered:
 - this calls IS.S2.SES.Search(el, searchObj (which is undefined), IS.SCL)
 - which is a really big function defined in `https://portal.my.harvard.edu/cs/hrvihprd/cache_85811/IS_S2_SES_BASE_JS_MIN_10.js`, but using IS.SCL gets the values for IS.SCL.Config.AdvancedFields
 
-upcoming features:
+## Code overview
+
+Below is a brief overview of the codebase. Check it out if you're interested in contributing or learning more about these technologies!
+
+To see the number of lines in each of the relevant code files, run:
+
+```bash
+find . \( -name "*.tsx" -o -name "*.ts" \) \
+    -not -path '*/node_modules/*' \
+    -exec wc -l {} \; | sort
+```
+
+Below is a walkthrough of the project and some notable files.
+
+`/components/` contains most of the UI. Each file seeks to export a single component by default with the same name as the file.
+
+
+## Search UI
+
+The search UI is built with [Instant MeiliSearch](https://github.com/meilisearch/instant-meilisearch) and the [InstantSearch API from Algolia](https://www.algolia.com/doc/api-reference/widgets/react/). The [MeiliSearch React GitHub repository](https://github.com/meilisearch/meilisearch-react/) describes how these technologies work together.
+
+- `SearchComponents/` contains a number of widgets built using the 
 

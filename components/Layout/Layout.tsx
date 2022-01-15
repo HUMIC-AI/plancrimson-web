@@ -40,7 +40,7 @@ const Layout: React.FC<LayoutProps> = function ({
 
       <footer className="bg-gray-800">
         <div className="p-4 container mx-auto text-white text-sm text-center flex flex-col space-y-1">
-          <span>Course data last updated 2022-01-01 21:48 GMT</span>
+          <span>Course data last updated 2022-01-15</span>
           <span>
             &#169; 2022 Alexander Cai | alexcai [at] college |
             {' '}

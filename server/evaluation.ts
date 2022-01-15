@@ -9,7 +9,7 @@ import { Season } from '../shared/firestoreTypes';
 
 type Scraper<T> = ($: CheerioAPI, el: BasicAcceptedElems<Node>) => T;
 
-export async function getEvaluationsServer(courseName: string): Promise<ApiTypes.Evaluation[]> {
+async function fetchEvaluations(courseName: string): Promise<ApiTypes.Evaluation[]> {
   const db = getFirestore();
   const evaluations = await db.collection('evaluations')
     .where('courseName', '==', courseName).get();
@@ -39,46 +39,45 @@ export async function extendClass(cls: ApiTypes.Class, withEvals = true) {
     id: getClassId(cls),
     textDescription: getDescriptionText(cls),
   };
-  if (withEvals) {
-    try {
-      const evals = await getEvaluationsServer(cls.SUBJECT + cls.CATALOG_NBR);
-      console.error(`found ${evals.length} evaluations for ${cls.SUBJECT}${cls.CATALOG_NBR}`);
-      if (evals.length === 0) return ret;
+  if (!withEvals) return ret;
+  try {
+    const evals = await fetchEvaluations(cls.SUBJECT + cls.CATALOG_NBR);
+    console.error(`found ${evals.length} evaluations for ${cls.SUBJECT}${cls.CATALOG_NBR}`);
+    if (evals.length === 0) return ret;
 
-      const classSizes = allTruthy(evals.map((evl) => evl['Course Response Rate']?.invited));
-      if (classSizes.length > 0) {
-        ret.meanClassSize = classSizes.reduce((acc, val) => acc + val, 0) / classSizes.length;
-      }
-
-      const ratings = allTruthy(evals.map((evl) => {
-        const data = evl['Course General Questions']?.['Evaluate the course overall.'];
-        if (!data?.courseMean) return null;
-        return { mean: data.courseMean, count: data.count };
-      }));
-      if (ratings.length > 0) {
-        ret.meanRating = calcMean(ratings);
-      }
-
-      const recommendations = evals.map((evl) => evl['How strongly would you recommend this course to your peers?']).filter((val) => val?.mean && val.count);
-      if (recommendations.length > 0) {
-        ret.meanRecommendation = calcMean(recommendations as Mean[]);
-      }
-
-      const hours = evals.map((evl) => evl['On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.']).filter((val) => val?.mean && val.count);
-      if (hours.length > 0) {
-        ret.meanHours = calcMean(hours as Mean[]);
-      }
-    } catch (err) {
-      const { message } = err as Error;
-      throw new FetchError(
-        `error fetching evaluations for class ${cls.SUBJECT + cls.CATALOG_NBR}`,
-        0,
-        {
-          error: message,
-          data: ret,
-        },
-      );
+    const classSizes = allTruthy(evals.map((evl) => evl['Course Response Rate']?.invited));
+    if (classSizes.length > 0) {
+      ret.meanClassSize = classSizes.reduce((acc, val) => acc + val, 0) / classSizes.length;
     }
+
+    const ratings = allTruthy(evals.map((evl) => {
+      const data = evl['Course General Questions']?.['Evaluate the course overall.'];
+      if (!data?.courseMean) return null;
+      return { mean: data.courseMean, count: data.count };
+    }));
+    if (ratings.length > 0) {
+      ret.meanRating = calcMean(ratings);
+    }
+
+    const recommendations = evals.map((evl) => evl['How strongly would you recommend this course to your peers?']).filter((val) => val?.mean && val.count);
+    if (recommendations.length > 0) {
+      ret.meanRecommendation = calcMean(recommendations as Mean[]);
+    }
+
+    const hours = evals.map((evl) => evl['On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.']).filter((val) => val?.mean && val.count);
+    if (hours.length > 0) {
+      ret.meanHours = calcMean(hours as Mean[]);
+    }
+  } catch (err) {
+    const { message } = err as Error;
+    throw new FetchError(
+      `error fetching evaluations for class ${cls.SUBJECT + cls.CATALOG_NBR}`,
+      0,
+      {
+        error: message,
+        data: ret,
+      },
+    );
   }
   return ret;
 }

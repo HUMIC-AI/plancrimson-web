@@ -67,6 +67,10 @@ export function getClassId(course: Class) {
   return course.Key.replace(/[^a-zA-Z0-9-_]/g, '-');
 }
 
+export function getCourseName(course: Class) {
+  return course.SUBJECT + course.CATALOG_NBR;
+}
+
 export function getNumCredits(course: Class) {
   return parseInt(course.HU_UNITS_MIN, 10);
 }
@@ -236,6 +240,12 @@ export async function getEvaluations(courseName: string) {
   return evaluations.docs.map((doc) => doc.data() as Evaluation);
 }
 
+/**
+ * This CANNOT be modified since existing evaluations are already mapped
+ * according to this function.
+ * @returns the unique Firestore-valid ID of an evaluation based on
+ * the course name, instructor name, year, and season
+ */
 export function getEvaluationId(evaluation: Evaluation) {
   return [
     evaluation.courseName,

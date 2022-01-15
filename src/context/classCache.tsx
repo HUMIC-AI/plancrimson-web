@@ -156,14 +156,14 @@ export const ClassCacheProvider: React.FC = function ({ children }) {
   );
 };
 
-const useClassCache = (data: UserData) => {
+const useClassCache = (schedules: UserData['schedules']) => {
   const { appendClasses, classCache } = useContext(ClassCacheContext);
   useEffect(() => {
-    const classIds = getAllClassIds(data.schedules);
+    const classIds = getAllClassIds(schedules);
     if (classIds.some((id) => !classCache[id])) {
       appendClasses(classIds);
     }
-  }, [data.schedules, classCache, appendClasses]);
+  }, [schedules, classCache, appendClasses]);
   return Object.freeze(classCache);
 };
 

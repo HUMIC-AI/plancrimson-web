@@ -9,7 +9,7 @@ import Calendar from './Calendar';
 const SemesterSchedule: React.FC = function () {
   const { schedules, selectSchedule, selectedSchedule } = useSelectedScheduleContext();
   const { data, createSchedule } = useUserData();
-  const classCache = useClassCache(data);
+  const classCache = useClassCache(data.schedules);
 
   const newSemester: React.FormEventHandler<HTMLFormElement> = async (ev) => {
     ev.preventDefault();

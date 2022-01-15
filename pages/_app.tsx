@@ -2,6 +2,8 @@ import '../src/wdyr';
 import 'tailwindcss/tailwind.css';
 import type { AppProps } from 'next/app';
 import { getApps, initializeApp } from 'firebase/app';
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
+// import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { UserContext, UserProvider } from '../src/context/user';
 import { UserDataProvider } from '../src/context/userData';
 import { ClassCacheProvider } from '../src/context/classCache';
@@ -21,6 +23,15 @@ const firebaseConfig = {
 
 if (getApps().length === 0) {
   initializeApp(firebaseConfig);
+
+  // connect to emulators in development mode
+  // check /firebase.json for port numbers
+  if (process.env.NODE_ENV === 'development') {
+    // const auth = getAuth();
+    // connectAuthEmulator(auth, 'http://127.0.0.1:9099');
+    const db = getFirestore();
+    connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  }
 }
 
 const MyApp = function ({ Component, pageProps }: AppProps) {

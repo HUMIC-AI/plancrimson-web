@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable no-await-in-loop */
 import cheerio from 'cheerio';
+import inquirer from 'inquirer';
 import '../server/initFirebase';
 import fs, { readFileSync } from 'fs';
 import { getEvaluation } from '../server/evaluation';
@@ -16,7 +17,7 @@ if (!Q_REPORTS_COOKIE || !BLUERA_COOKIE) {
 
 const batchSize = 480;
 
-const terms = ['2021 Spring', '2020 Fall', '2019 Fall'];
+const terms = ['2021 Fall', '2021 Spring', '2020 Fall', '2019 Fall'];
 
 const baseUrl = 'https://qreports.fas.harvard.edu/browse/index';
 
@@ -33,9 +34,18 @@ async function downloadEvaluations() {
 
   if (!fs.existsSync(exportPath)) fs.mkdirSync(exportPath);
 
+  const selectedTerms = (await inquirer.prompt([
+    {
+      type: 'checkbox',
+      name: 'selectedTerms',
+      message: 'Which terms do you want to download?',
+      choices: terms,
+    },
+  ])).selectedTerms as string[];
+
   const evaluationUrls = urlsPath
     ? JSON.parse(readFileSync(urlsPath).toString('utf8')) as string[]
-    : await Promise.all(terms.map((term) => fetcher({
+    : await Promise.all(selectedTerms.map((term) => fetcher({
       url: baseUrl,
       method: 'GET',
       params: { calTerm: term },
@@ -47,8 +57,11 @@ async function downloadEvaluations() {
       return $('#bluecourses a').map((_, a) => $(a).attr('href')).toArray();
     })));
 
-  if (evaluationUrls.some((u) => typeof u !== 'string')) {
-    throw new Error('urls need to be strings');
+  const invalidUrls = typeof evaluationUrls[0] === 'string'
+    ? (evaluationUrls as string[]).filter((u) => typeof u !== 'string')
+    : (evaluationUrls as string[][]).flatMap((u) => u.filter((v) => typeof v !== 'string'));
+  if (invalidUrls.length > 0) {
+    throw new Error(`urls need to be strings but received ${JSON.stringify(invalidUrls)}`);
   }
 
   const allUrls = evaluationUrls.flat();
@@ -60,13 +73,15 @@ async function downloadEvaluations() {
     console.log(`loading ${urls.length} evaluations (${batchNumber}/${Math.ceil(allUrls.length / batchSize)})`);
 
     const evls = await Promise.all(urls
-      .map(async (url) => {
+      .map(async (url, j) => {
         try {
+          // rate limit ourselves to one request per 200ms
+          // eslint-disable-next-line no-promise-executor-return
+          await new Promise((resolve) => setTimeout(resolve, 200 * j));
           const evl = await getEvaluation(url, { auth: BLUERA_COOKIE });
           return evl;
         } catch (err: any) {
-          console.error(`skipping evaluation at ${url}`);
-          console.error(err.message);
+          console.error(`skipping evaluation at ${url}: ${err.message}`);
           return null;
         }
       }));
