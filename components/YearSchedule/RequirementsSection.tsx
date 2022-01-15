@@ -69,7 +69,7 @@ function SuggestionForm() {
           suggestions: arrayUnion(program),
           userEmail: user?.email,
         }, { merge: true });
-        setSuggestion(`Suggestion successfully recorded! (${(suggestions?.length || 0) + 1} / 10)`);
+        setSuggestion(`Suggestion successfully recorded! (${(suggestions?.length || 0) + 1}/10)`);
       }
     } catch (err) {
       console.error('error updating suggestion', err);
@@ -162,7 +162,7 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
         </Listbox>
         <Disclosure>
           <Disclosure.Button className="leading-none text-sm underline text-gray-600 pl-2 hover:opacity-50 transition-opacity">
-            Suggest new programs
+            Suggest new programs and concentrations
           </Disclosure.Button>
           <FadeTransition>
             <Disclosure.Panel className="px-4">
