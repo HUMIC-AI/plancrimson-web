@@ -1,8 +1,9 @@
 /* eslint-disable no-console */
-const axios = require('axios').default;
-const cheerio = require('cheerio');
+import axios from 'axios';
+import cheerio from 'cheerio';
+import { writeFileSync } from 'fs';
 
-async function main() {
+export default async function fetchCsTags(filePath: string) {
   const response = await axios.get(
     'https://csadvising.seas.harvard.edu/concentration/courses/tags/',
   );
@@ -25,7 +26,5 @@ async function main() {
     })
     .toArray();
 
-  console.log(JSON.stringify(allTags, null, 2));
+  writeFileSync(filePath, JSON.stringify(allTags, null, 2));
 }
-
-main();

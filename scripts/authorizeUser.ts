@@ -2,24 +2,18 @@
 import '../server/initFirebase';
 import { getAuth } from 'firebase-admin/auth';
 
-async function main() {
-  if (process.argv.length < 3) {
-    throw new Error('pass the email or uid to make admin');
-  }
-
+export default async function authorizeUser(emailOrUid: string) {
   const auth = getAuth();
   const claims = {
     admin: true,
   };
   try {
-    const user = await auth.getUser(process.argv[2]);
+    const user = await auth.getUser(emailOrUid);
     auth.setCustomUserClaims(user.uid, claims);
     console.log(`successfully set ${user.uid} claims to ${claims}`);
   } catch (err) {
-    const user = await auth.getUserByEmail(process.argv[2]);
+    const user = await auth.getUserByEmail(emailOrUid);
     getAuth().setCustomUserClaims(user.uid, claims);
     console.log(`successfully set ${user.uid} claims to ${claims}`);
   }
 }
-
-main();

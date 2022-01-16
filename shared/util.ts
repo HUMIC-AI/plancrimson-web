@@ -108,7 +108,9 @@ export function getUniqueSemesters(classYear: number, semesters: Semester[]) {
   semesters.forEach(({ year, season }) => {
     // if this semester has not yet been added
     if (
-      !defaultSemesters.find(({ year: y, season: s }) => year === y && season === s)
+      !defaultSemesters.find(
+        ({ year: y, season: s }) => year === y && season === s,
+      )
     ) {
       defaultSemesters.push({ year, season });
     }

@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 import '../server/initFirebase';
 import { getFirestore } from 'firebase-admin/firestore';
-import fs from 'fs';
 import { Evaluation } from '../shared/apiTypes';
 import { getEvaluationId } from '../shared/util';
 
@@ -24,16 +23,4 @@ export default async function uploadEvaluations(evaluations: Evaluation[], start
     allResults.push(...results);
   }
   return allResults;
-}
-
-if (require.main === module) {
-  const filePath = process.argv[2];
-  if (!filePath) throw new Error('must specify path to load evaluations from');
-  const data = fs.readFileSync(filePath).toString('utf8');
-  const evaluations = JSON.parse(data);
-  console.log(`uploading ${evaluations.length} total evaluations`);
-  const startBatch = parseInt(process.argv[3], 10) || 1;
-  uploadEvaluations(evaluations, startBatch)
-    .then((results) => console.log(`wrote ${results.length} results`))
-    .catch((err) => console.error(err));
 }

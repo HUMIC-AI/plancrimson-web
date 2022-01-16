@@ -6,7 +6,8 @@
     "build": "next build",
     "build:output": "tsc --noEmit false --outDir build --module commonjs",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "script": "npm run build:output && node build/scripts"
   },
   "dependencies": {
     "@headlessui/react": "^1.4.2",
