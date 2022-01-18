@@ -18,7 +18,9 @@ const BATCH_SIZE = 100;
 async function main() {
   const courseIdsFile = process.argv[2];
   const outDir = process.argv[3];
-  if (!courseIdsFile || !outDir) { throw new Error('pass course ids json file and output directory'); }
+  if (!courseIdsFile || !outDir) {
+    throw new Error('pass course ids json file and output directory');
+  }
   if (!existsSync(outDir)) mkdirSync(outDir);
   const ids = readFileSync(courseIdsFile);
   const courseIds: string[] = JSON.parse(ids.toString('utf8'));

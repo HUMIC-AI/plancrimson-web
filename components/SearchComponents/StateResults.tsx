@@ -6,14 +6,16 @@ import FadeTransition from '../FadeTransition';
 
 const POPUP_DURATION = 1000;
 
-export const StateResultsComponent: React.FC<Pick<StateResultsProvided, 'searchState'>> = function ({
-  searchState,
-}) {
+export const StateResultsComponent: React.FC<
+Pick<StateResultsProvided, 'searchState'>
+> = function ({ searchState }) {
   const [popup, setPopup] = useState(false);
 
   const handleClick = useCallback(() => {
     navigator.clipboard.writeText(
-      `${window.location.origin + window.location.pathname}?${qs.stringify(searchState)}`,
+      `${window.location.origin + window.location.pathname}?${qs.stringify(
+        searchState,
+      )}`,
     );
     setPopup(true);
   }, [searchState]);

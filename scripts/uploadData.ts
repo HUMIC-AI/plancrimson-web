@@ -23,12 +23,14 @@ function getHeaders(meiliRequired: boolean): AxiosRequestHeaders {
 }
 
 export default async function uploadData(data: ExtendedClass[]) {
-  const { meiliUrl } = await inquirer.prompt([{
-    type: 'input',
-    name: 'meiliUrl',
-    message: 'URL of the MeiliSearch database:',
-    default: defaultMeiliUrl,
-  }]);
+  const { meiliUrl } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'meiliUrl',
+      message: 'URL of the MeiliSearch database:',
+      default: defaultMeiliUrl,
+    },
+  ]);
 
   axios({
     url: path.join(meiliUrl, 'indexes/courses/documents'),

@@ -13,7 +13,10 @@ type SortByProps = {
   refine: (value: string) => any;
 };
 
-export const SortByComponent: React.FC<SortByProps> = function ({ items, refine }) {
+export const SortByComponent: React.FC<SortByProps> = function ({
+  items,
+  refine,
+}) {
   return (
     <>
       <h3 className="font-medium md:whitespace-nowrap">Sort by:</h3>

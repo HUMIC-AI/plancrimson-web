@@ -12,7 +12,9 @@ const Q_REPORTS_COOKIE = process.env.Q_REPORTS_COOKIE!;
 const BLUERA_COOKIE = process.env.BLUERA_COOKIE!;
 
 if (!Q_REPORTS_COOKIE || !BLUERA_COOKIE) {
-  throw new Error('ensure the Q_REPORTS_COOKIE and BLUERA_COOKIE env variables are set (see https://qreports.fas.harvard.edu/browse/index)');
+  throw new Error(
+    'ensure the Q_REPORTS_COOKIE and BLUERA_COOKIE env variables are set (see https://qreports.fas.harvard.edu/browse/index)',
+  );
 }
 
 const batchSize = 480;
@@ -34,34 +36,42 @@ async function downloadEvaluations() {
 
   if (!fs.existsSync(exportPath)) fs.mkdirSync(exportPath);
 
-  const selectedTerms = (await inquirer.prompt([
-    {
-      type: 'checkbox',
-      name: 'selectedTerms',
-      message: 'Which terms do you want to download?',
-      choices: terms,
-    },
-  ])).selectedTerms as string[];
+  const selectedTerms = (
+    await inquirer.prompt([
+      {
+        type: 'checkbox',
+        name: 'selectedTerms',
+        message: 'Which terms do you want to download?',
+        choices: terms,
+      },
+    ])
+  ).selectedTerms as string[];
 
   const evaluationUrls = urlsPath
-    ? JSON.parse(readFileSync(urlsPath).toString('utf8')) as string[]
-    : await Promise.all(selectedTerms.map((term) => fetcher({
-      url: baseUrl,
-      method: 'GET',
-      params: { calTerm: term },
-      headers: {
-        Cookie: Q_REPORTS_COOKIE,
-      },
-    }).then((html) => {
-      const $ = cheerio.load(html);
-      return $('#bluecourses a').map((_, a) => $(a).attr('href')).toArray();
-    })));
+    ? (JSON.parse(readFileSync(urlsPath).toString('utf8')) as string[])
+    : await Promise.all(
+      selectedTerms.map((term) => fetcher({
+        url: baseUrl,
+        method: 'GET',
+        params: { calTerm: term },
+        headers: {
+          Cookie: Q_REPORTS_COOKIE,
+        },
+      }).then((html) => {
+        const $ = cheerio.load(html);
+        return $('#bluecourses a')
+          .map((_, a) => $(a).attr('href'))
+          .toArray();
+      })),
+    );
 
   const invalidUrls = typeof evaluationUrls[0] === 'string'
     ? (evaluationUrls as string[]).filter((u) => typeof u !== 'string')
     : (evaluationUrls as string[][]).flatMap((u) => u.filter((v) => typeof v !== 'string'));
   if (invalidUrls.length > 0) {
-    throw new Error(`urls need to be strings but received ${JSON.stringify(invalidUrls)}`);
+    throw new Error(
+      `urls need to be strings but received ${JSON.stringify(invalidUrls)}`,
+    );
   }
 
   const allUrls = evaluationUrls.flat();
@@ -70,10 +80,14 @@ async function downloadEvaluations() {
   for (let i = 0; i < allUrls.length; i += batchSize) {
     const urls = allUrls.slice(i, i + batchSize);
     const batchNumber = i / batchSize + 1;
-    console.log(`loading ${urls.length} evaluations (${batchNumber}/${Math.ceil(allUrls.length / batchSize)})`);
+    console.log(
+      `loading ${urls.length} evaluations (${batchNumber}/${Math.ceil(
+        allUrls.length / batchSize,
+      )})`,
+    );
 
-    const evls = await Promise.all(urls
-      .map(async (url, j) => {
+    const evls = await Promise.all(
+      urls.map(async (url, j) => {
         try {
           // rate limit ourselves to one request per 200ms
           // eslint-disable-next-line no-promise-executor-return
@@ -84,10 +98,14 @@ async function downloadEvaluations() {
           console.error(`skipping evaluation at ${url}: ${err.message}`);
           return null;
         }
-      }));
+      }),
+    );
 
     const loadedEvls = allTruthy(evls);
-    fs.writeFileSync(`${exportPath}/batch-${batchNumber}.json`, JSON.stringify(loadedEvls));
+    fs.writeFileSync(
+      `${exportPath}/batch-${batchNumber}.json`,
+      JSON.stringify(loadedEvls),
+    );
     console.log(`done loading ${loadedEvls.length}/${urls.length} evaluations`);
   }
 }

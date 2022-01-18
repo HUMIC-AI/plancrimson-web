@@ -24,6 +24,30 @@ import { DAY_SHORT } from '../shared/apiTypes';
 
 const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey());
 
+const SORT_INDEXES = [
+  { label: 'Relevant', value: 'courses' },
+  {
+    label: 'Catalog number',
+    value: 'courses:CATALOG_NBR:asc',
+  },
+  {
+    label: 'Popularity',
+    value: 'courses:meanClassSize:desc',
+  },
+  {
+    label: 'Light Workload',
+    value: 'courses:meanClassSize:asc',
+  },
+  {
+    label: 'Highly Recommended',
+    value: 'courses:meanRecommendation:desc',
+  },
+  {
+    label: 'Highly Rated',
+    value: 'courses:meanRating:desc',
+  },
+];
+
 const AttributeMenu = function () {
   const isLg = useLgBreakpoint();
 
@@ -78,62 +102,13 @@ const SearchPage = function () {
               )}
               <div className="grid grid-cols-[auto_1fr] gap-4">
                 {user ? (
-                  <SortBy
-                    defaultRefinement="courses"
-                    items={[
-                      { label: 'Relevant', value: 'courses' },
-                      {
-                        label: 'Catalog number',
-                        value: 'courses:CATALOG_NBR:asc',
-                      },
-                      {
-                        label: 'Popularity',
-                        value: 'courses:meanClassSize:desc',
-                      },
-                      {
-                        label: 'Light Workload',
-                        value: 'courses:meanClassSize:asc',
-                      },
-                      {
-                        label: 'Highly Recommended',
-                        value: 'courses:meanRecommendation:desc',
-                      },
-                      {
-                        label: 'Highly Rated',
-                        value: 'courses:meanRating:desc',
-                      },
-                    ]}
-                  />
+                  <SortBy defaultRefinement="courses" items={SORT_INDEXES} />
                 ) : (
                   <SortByComponent
-                    items={[
-                      { label: 'Relevant', value: 'courses', isRefined: true },
-                      {
-                        label: 'Catalog number',
-                        value: 'courses:CATALOG_NBR:asc',
-                        isRefined: false,
-                      },
-                      {
-                        label: 'Popularity',
-                        value: 'courses:meanClassSize:desc',
-                        isRefined: false,
-                      },
-                      {
-                        label: 'Light Workload',
-                        value: 'courses:meanClassSize:asc',
-                        isRefined: false,
-                      },
-                      {
-                        label: 'Highly Recommended',
-                        value: 'courses:meanRecommendation:desc',
-                        isRefined: false,
-                      },
-                      {
-                        label: 'Highly Rated',
-                        value: 'courses:meanRating:desc',
-                        isRefined: false,
-                      },
-                    ]}
+                    items={SORT_INDEXES.map((val, i) => ({
+                      ...val,
+                      isRefined: i === 0,
+                    }))}
                     refine={alertSignIn}
                   />
                 )}

@@ -42,14 +42,20 @@ const ButtonTitle: React.FC<{
 
   const TitleComponent: React.FC<React.HTMLAttributes<unknown>> = useCallback(
     ({ children, ...props }) => {
-      if (showAllSchedules) {
-        return (
-          <button type="button" onClick={() => selectSchedule!(selectedSchedule)} {...props}>
-            {children}
-          </button>
-        );
+      // if we're showing all schedules, click on the title to select schedule
+      // otherwise selection is handled by ScheduleSelector
+      if (showAllSchedules !== 'all') {
+        return <span {...props}>{children}</span>;
       }
-      return <span {...props}>{children}</span>;
+      return (
+        <button
+          type="button"
+          onClick={() => selectSchedule!(selectedSchedule)}
+          {...props}
+        >
+          {children}
+        </button>
+      );
     },
     [selectSchedule, selectedSchedule, showAllSchedules],
   );
@@ -93,7 +99,7 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
   const optionStyles = 'flex space-x-2 w-min max-w-full';
   const { showAllSchedules } = useShowAllSchedules();
 
-  if (showAllSchedules) {
+  if (showAllSchedules === 'all') {
     return (
       <ButtonTitle
         parentWidth={`${parentWidth} + 2rem`}
@@ -167,7 +173,10 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
                     </Listbox.Option>
                   ))
                 ) : (
-                  <Listbox.Option value={null} className="w-full py-1.5 px-2 whitespace-nowrap bg-white">
+                  <Listbox.Option
+                    value={null}
+                    className="w-full py-1.5 px-2 whitespace-nowrap bg-white"
+                  >
                     No schedules
                   </Listbox.Option>
                 )}

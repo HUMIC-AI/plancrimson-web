@@ -7,7 +7,9 @@ export class FetchError<Info = any> extends Error {
   }
 }
 
-export default async function fetcher<Data = any>(config: AxiosRequestConfig<Data>) {
+export default async function fetcher<Data = any>(
+  config: AxiosRequestConfig<Data>,
+) {
   try {
     const { data } = await axios(config);
     return data;

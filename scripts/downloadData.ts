@@ -96,8 +96,6 @@ export default async function downloadData(baseDir: string) {
     cookie: MY_HARVARD_COOKIE,
   });
 
-  console.log(firstPage);
-
   const { TotalPages, HitCount, PageSize } = (
     firstPage as MyHarvardResponse
   )[2];

@@ -39,12 +39,13 @@ type UserDataContextType = {
   removeCourses: (
     ...courses: { classId: string; scheduleId?: string }[]
   ) => Promise<UserData['schedules']>;
-  createSchedule: (
-    scheduleId: string,
-    year: number,
-    season: Season,
-    classes?: UserClassData[]
-  ) => Promise<Schedule>;
+  createSchedule: (obj: {
+    id: string;
+    year: number;
+    season: Season;
+    classes?: UserClassData[];
+    force?: boolean;
+  }) => Promise<Schedule>;
   renameSchedule: (scheduleId: string, newId: string) => Promise<Schedule>;
   deleteSchedule: (scheduleId: string) => Promise<void>;
   selectSchedule: (
@@ -104,9 +105,11 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
   const [error, setError] = useState<FirestoreError | undefined>();
 
   const createSchedule: UserDataContextType['createSchedule'] = useCallback(
-    (scheduleId, year, season, classes = []) => new Promise<Schedule>((resolve, reject) => {
+    ({
+      id, year, season, classes = [], force = false,
+    }) => new Promise<Schedule>((resolve, reject) => {
       setUserData((prev) => {
-        if (scheduleId in prev.schedules) {
+        if (id in prev.schedules && !force) {
           process.nextTick(() => reject(new Error('id taken')));
           return prev;
         }
@@ -122,15 +125,23 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
           process.nextTick(() => reject(new Error('classes must be an array')));
           return prev;
         }
+        let newScheduleId = id;
+        if (force) {
+          let i = 1;
+          while (newScheduleId in prev.schedules) {
+            newScheduleId = `${id} (${i})`;
+            i += 1;
+          }
+        }
         const newSchedule: Schedule = {
-          id: scheduleId,
+          id: newScheduleId,
           season,
           year,
           classes,
         };
         const schedules = {
           ...prev.schedules,
-          [scheduleId]: newSchedule,
+          [newScheduleId]: newSchedule,
         };
 
         if (user) {

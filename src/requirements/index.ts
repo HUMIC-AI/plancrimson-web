@@ -1,10 +1,18 @@
-import { Schedule, UserData } from '../../shared/firestoreTypes';
-import { Requirement, RequirementGroup } from './util';
-import fasRequirements from './degree';
-import basicRequirements from './cs/basic';
-import honorsRequirements from './cs/honors';
+import { ExtendedClass } from '../../shared/apiTypes';
+import { ClassId, Schedule, UserData } from '../../shared/firestoreTypes';
+import { allTruthy, getClassId } from '../../shared/util';
 import { ClassCache } from '../context/classCache';
 import collegeRequirements from './college';
+import basicRequirements from './cs/basic';
+import honorsRequirements from './cs/honors';
+import fasRequirements from './degree';
+import {
+  ChildResults,
+  GroupResult,
+  ReqResult,
+  Requirement,
+  RequirementGroup,
+} from './util';
 
 // want to query for all people planning to take this class at a certain time
 
@@ -18,13 +26,6 @@ export const getReqs = (reqs: Requirement[] | RequirementGroup) => {
   return ret;
 };
 
-export type RequirementsMet = {
-  [requirementId: string]: {
-    satisfied: boolean;
-    classes?: string[];
-  };
-};
-
 export const allRequirements = [
   fasRequirements,
   collegeRequirements,
@@ -32,57 +33,94 @@ export const allRequirements = [
   honorsRequirements,
 ];
 
-const validateSchedules = (
-  schedules: Schedule[],
-  allReqs: Requirement[],
+function validateSchedule<Accumulator>(
+  initialValue: Accumulator,
+  req: Requirement<Accumulator>,
+  schedule: Schedule,
   userData: UserData,
   classCache: Readonly<ClassCache>,
-): RequirementsMet => {
-  const requirementsMet = {} as Record<string, any>;
-  const classesUsed = {} as Record<string, string[]>;
-
-  const requirements = allReqs.filter((req) => typeof req.validate !== 'undefined');
-
-  requirements.forEach((req) => {
-    requirementsMet[req.id] = req.initialValue || 0;
-    classesUsed[req.id] = [];
-  });
-
-  const reducerResults = schedules.reduce(
-    (prev, schedule) => schedule.classes.reduce(
-      (acc, cls) => {
-        if (!classCache[cls.classId]) return acc;
-        const next = {} as Record<string, any>;
-        requirements.forEach((req) => {
-          const newValue = req.reducer(
-            acc[req.id],
-            classCache[cls.classId],
-            schedule,
-            userData,
-          );
-          if (newValue !== null) {
-            next[req.id] = newValue;
-            classesUsed[req.id].push(cls.classId);
-          } else {
-            next[req.id] = acc[req.id];
-          }
-        });
-        return next;
-      },
-      prev,
-    ),
-    requirementsMet,
+) {
+  const allClasses: ExtendedClass[] = allTruthy(
+    schedule.classes.map(({ classId }) => classCache[classId]),
   );
+  const usedClasses: ClassId[] = [];
+  const validationResult = allClasses.reduce((acc, cls) => {
+    const result = req.reducer(acc, cls, schedule, userData);
+    if (result === null) return acc;
+    usedClasses.push(getClassId(cls));
+    return result;
+  }, initialValue);
+  return [validationResult, usedClasses] as const;
+}
 
-  const results: RequirementsMet = {};
-  requirements.forEach((req) => {
-    results[req.id] = {
-      satisfied: req.validate!(reducerResults[req.id]),
-      classes: classesUsed[req.id],
-    };
+function validateReq(
+  req: Requirement,
+  schedules: Schedule[],
+  userData: UserData,
+  classCache: Readonly<ClassCache>,
+): ReqResult {
+  if (typeof req.validate === 'undefined') {
+    throw new Error('requirement with no validator');
+  }
+  const classes: ClassId[] = [];
+  const reducerResults = schedules.reduce((acc, schedule) => {
+    const [value, usedClasses] = validateSchedule(
+      acc,
+      req,
+      schedule,
+      userData,
+      classCache,
+    );
+    classes.push(...usedClasses);
+    return value;
+  }, req.initialValue || 0);
+  return {
+    type: 'req',
+    satisfied: req.validate(reducerResults),
+    classes,
+  };
+}
+
+/**
+ * Validate a list of schedules based on a {@link RequirementGroup}.
+ * @param group the requirement group to validate based on
+ * @param schedules the list of schedules to check
+ * @returns a {@link GroupResult}
+ */
+function validateSchedules(
+  group: RequirementGroup,
+  schedules: Schedule[],
+  userData: UserData,
+  classCache: Readonly<ClassCache>,
+): GroupResult {
+  const childResults: ChildResults = {};
+
+  group.requirements.forEach((reqOrGroup) => {
+    if ('groupId' in reqOrGroup) {
+      childResults[reqOrGroup.groupId] = validateSchedules(
+        reqOrGroup,
+        schedules,
+        userData,
+        classCache,
+      );
+    } else if (typeof reqOrGroup.validate !== 'undefined') {
+      childResults[reqOrGroup.id] = validateReq(
+        reqOrGroup,
+        schedules,
+        userData,
+        classCache,
+      );
+    }
   });
 
-  return results;
-};
+  return {
+    type: 'group',
+    satisfied:
+      typeof group.validate !== 'undefined'
+        ? group.validate(childResults)
+        : Object.values(childResults).every((val) => val.satisfied),
+    childResults,
+  };
+}
 
 export default validateSchedules;

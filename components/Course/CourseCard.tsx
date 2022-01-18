@@ -10,6 +10,8 @@ import {
   checkViable,
 } from '../../shared/util';
 import useCardStyle from '../../src/context/cardStyle';
+import useClassCache from '../../src/context/classCache';
+import useShowAllSchedules from '../../src/context/showAllSchedules';
 import useUserData from '../../src/context/userData';
 import {
   ClassTime,
@@ -52,7 +54,9 @@ const CourseCard: React.FC<Props> = function ({
   inSearchContext = true,
 }) {
   const { data: userData, addCourses, removeCourses } = useUserData();
+  const classCache = useClassCache(Object.values(userData.schedules));
   const { isExpanded } = useCardStyle();
+  const { showAllSchedules } = useShowAllSchedules();
   const draggable = typeof setDragStatus !== 'undefined';
   const [semester, department] = useMemo(
     () => [
@@ -73,6 +77,7 @@ const CourseCard: React.FC<Props> = function ({
         season: selectedSchedule.season,
       },
       userData,
+      classCache,
     );
     if (viability.viability === 'No') {
       alert(viability.reason);
@@ -87,7 +92,7 @@ const CourseCard: React.FC<Props> = function ({
       classId: getClassId(course),
       scheduleId: selectedSchedule.id,
     });
-  }, [addCourses, course, selectedSchedule, userData]);
+  }, [addCourses, classCache, course, selectedSchedule, userData]);
 
   const handleDragStart: React.DragEventHandler<HTMLDivElement> = (ev) => {
     // eslint-disable-next-line no-param-reassign
@@ -112,9 +117,7 @@ const CourseCard: React.FC<Props> = function ({
       <div
         className={classNames(
           'relative rounded-xl overflow-hidden border-gray-800 from-gray-800 border-4 text-left h-full',
-          isExpanded
-            ? 'bg-gray-800'
-            : 'bg-gradient-to-br',
+          isExpanded ? 'bg-gray-800' : 'bg-gradient-to-br',
           isExpanded || (highlight ? 'to-blue-500' : 'to-blue-900'),
         )}
         draggable={draggable}
@@ -163,7 +166,9 @@ const CourseCard: React.FC<Props> = function ({
                 >
                   <FaInfo />
                 </button>
+
                 {selectedSchedule
+                  && showAllSchedules !== 'sample'
                   && (selectedSchedule.classes.find(
                     (cls) => cls.classId === getClassId(course),
                   ) ? (

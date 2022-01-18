@@ -1,16 +1,27 @@
+import { Dialog } from '@headlessui/react';
 import React, {
   useEffect, useMemo, useRef, useState,
 } from 'react';
 import {
-  FaArrowsAltH, FaArrowsAltV, FaChevronLeft, FaChevronRight,
+  FaArrowsAltH,
+  FaArrowsAltV,
+  FaChevronLeft,
+  FaChevronRight,
 } from 'react-icons/fa';
-import { Season } from '../../shared/firestoreTypes';
-import { classNames, compareSemesters, getUniqueSemesters } from '../../shared/util';
+import { DownloadPlan, Season } from '../../shared/firestoreTypes';
+import {
+  allTruthy,
+  classNames,
+  compareSemesters,
+  getUniqueSemesters,
+} from '../../shared/util';
 import useCardStyle from '../../src/context/cardStyle';
 import useShowAllSchedules from '../../src/context/showAllSchedules';
 import useUserData from '../../src/context/userData';
+import { downloadJson } from '../../src/hooks';
 import { Requirement } from '../../src/requirements/util';
 import { DragStatus } from '../Course/CourseCard';
+import CustomDialog from '../CustomDialog';
 import SemesterDisplay from './SemesterDisplay';
 
 type Props = {
@@ -20,9 +31,35 @@ type Props = {
 const HeaderSection: React.FC<{
   totalCourses: number;
   resizeRef: React.MutableRefObject<HTMLDivElement>;
-}> = function ({ totalCourses, resizeRef }) {
+  downloadData: any;
+}> = function ({ totalCourses, resizeRef, downloadData }) {
+  const { createSchedule } = useUserData();
+  const [showDialog, setShowDialog] = useState(false);
   const { isExpanded, expand } = useCardStyle();
   const { showAllSchedules, setShowAllSchedules } = useShowAllSchedules();
+
+  const handleUpload: React.FormEventHandler<HTMLFormElement> = async (ev) => {
+    ev.preventDefault();
+    const data = new FormData(ev.currentTarget);
+    const file = data.get('plan')?.valueOf() as File;
+    if (!file) {
+      alert('Please upload a file!');
+    }
+    try {
+      const text = await file.text();
+      const { id, schedules }: DownloadPlan = JSON.parse(text);
+      await Promise.all(
+        schedules.map((schedule) => createSchedule({
+          ...schedule,
+          id: `${schedule.id} (sample ${id})`,
+          force: true,
+        })),
+      );
+      setShowDialog(false);
+    } catch (err) {
+      alert('Invalid file format. Please try again.');
+    }
+  };
 
   return (
     <div className="text-white space-y-4">
@@ -45,14 +82,58 @@ const HeaderSection: React.FC<{
           >
             <FaArrowsAltV />
           </button>
+          {showAllSchedules !== 'sample' && (
+            <button
+              type="button"
+              onClick={() => setShowAllSchedules(
+                showAllSchedules === 'all' ? 'selected' : 'all',
+              )}
+              className="py-1 px-2 bg-gray-600 hover:opacity-50 transition-opacity rounded"
+            >
+              {showAllSchedules === 'all'
+                ? 'Showing all schedules'
+                : 'Showing only selected schedules'}
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => setShowAllSchedules(!showAllSchedules)}
-            className="py-1 px-2 bg-gray-600 hover:opacity-50 transition-opacity rounded"
+            className="hover:opacity-50 transition-opacity underline"
+            onClick={() => downloadJson('Selected Schedules (Plan Crimson)', downloadData)}
           >
-            {showAllSchedules
-              ? 'Showing all schedules'
-              : 'Showing only selected schedules'}
+            Download all
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowDialog(!showDialog)}
+            className="hover:opacity-50 transition-opacity underline"
+          >
+            Upload plan
+            <CustomDialog
+              open={showDialog}
+              closeModal={() => setShowDialog(false)}
+              title="Upload plan"
+            >
+              <form
+                className="bg-white p-6 flex flex-col items-start space-y-4"
+                onSubmit={handleUpload}
+              >
+                <Dialog.Description>Upload a plan</Dialog.Description>
+                <input
+                  type="file"
+                  name="plan"
+                  id="planFile"
+                  accept="application/json"
+                  className="mt-4"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="bg-gray-400 py-2 px-4 rounded-md hover:opacity-50 transition-opacity"
+                >
+                  Submit
+                </button>
+              </form>
+            </CustomDialog>
           </button>
         </div>
       </div>
@@ -68,11 +149,18 @@ const HeaderSection: React.FC<{
   );
 };
 
-const PlanningSection: React.FC<Props> = function ({
-  highlightedRequirement,
-}) {
+interface SemesterDisplayInfo {
+  year: number;
+  season: Season;
+  selectedScheduleId: string | null;
+  key: string;
+  selectSchedule: React.Dispatch<string | null>;
+  highlight?: string;
+}
+
+const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
   const { data, selectSchedule } = useUserData();
-  const { showAllSchedules } = useShowAllSchedules();
+  const { showAllSchedules, sampleSchedule } = useShowAllSchedules();
   const [dragStatus, setDragStatus] = useState<DragStatus>({
     dragging: false,
   });
@@ -97,23 +185,19 @@ const PlanningSection: React.FC<Props> = function ({
       }
     });
     resizeObserver.observe(resizeRef.current);
-    const leftScrollObserver = new IntersectionObserver(
-      (entries) => {
-        const isIntersecting = entries?.[0]?.isIntersecting;
-        if (typeof isIntersecting === 'boolean') {
-          setLeftIntersecting(isIntersecting);
-        }
-      },
-    );
+    const leftScrollObserver = new IntersectionObserver((entries) => {
+      const isIntersecting = entries?.[0]?.isIntersecting;
+      if (typeof isIntersecting === 'boolean') {
+        setLeftIntersecting(isIntersecting);
+      }
+    });
     leftScrollObserver.observe(leftScrollRef.current);
-    const rightScrollObserver = new IntersectionObserver(
-      (entries) => {
-        const isIntersecting = entries?.[0]?.isIntersecting;
-        if (typeof isIntersecting === 'boolean') {
-          setRightIntersecting(isIntersecting);
-        }
-      },
-    );
+    const rightScrollObserver = new IntersectionObserver((entries) => {
+      const isIntersecting = entries?.[0]?.isIntersecting;
+      if (typeof isIntersecting === 'boolean') {
+        setRightIntersecting(isIntersecting);
+      }
+    });
     rightScrollObserver.observe(rightScrollRef.current);
     return () => {
       resizeObserver.disconnect();
@@ -122,47 +206,81 @@ const PlanningSection: React.FC<Props> = function ({
     };
   }, []);
 
-  const allSemesters: {
-    year: number;
-    season: Season;
-    selectedScheduleId: string | null;
-    key: string;
-    selectSchedule: React.Dispatch<string | null>;
-    highlight?: string;
-  }[] = useMemo(() => {
-    if (showAllSchedules) {
-      return Object.values(data.schedules)
-        .sort(compareSemesters)
-        .map(({ year, season, id }) => ({
+  const allSemesters: SemesterDisplayInfo[] = useMemo(() => {
+    switch (showAllSchedules) {
+      case 'sample':
+        return (
+          sampleSchedule?.schedules.map(({ year, season, id }) => ({
+            year,
+            season,
+            selectSchedule: (newId) => selectSchedule(year, season, newId),
+            key: id,
+            selectedScheduleId: id,
+            highlight: false,
+          })) || []
+        );
+      case 'selected':
+        return getUniqueSemesters(
+          data.classYear,
+          Object.values(data.schedules),
+        ).map(({ year, season }) => ({
           year,
           season,
-          selectedScheduleId: id,
-          key: id,
-          selectSchedule: (newId) => selectSchedule(year, season, newId),
-          highlight: data.selectedSchedules[`${year}${season}`] || undefined,
+          selectedScheduleId:
+            data.selectedSchedules[`${year}${season}`] || null,
+          key: year + season,
+          selectSchedule: (id) => selectSchedule(year, season, id),
         }));
+      case 'all':
+        return Object.values(data.schedules)
+          .sort(compareSemesters)
+          .map(({ year, season, id }) => ({
+            year,
+            season,
+            selectedScheduleId: id,
+            key: id,
+            selectSchedule: (newId) => selectSchedule(year, season, newId),
+            highlight: data.selectedSchedules[`${year}${season}`] || undefined,
+          }));
+      default:
+        return [];
     }
-    return getUniqueSemesters(data.classYear, Object.values(data.schedules)).map(({ year, season }) => ({
-      year,
-      season,
-      selectedScheduleId: data.selectedSchedules[`${year}${season}`] || null,
-      key: year + season,
-      selectSchedule: (id) => selectSchedule(year, season, id),
-    }));
-  }, [data, selectSchedule, showAllSchedules]);
+  }, [
+    data.classYear,
+    data.schedules,
+    data.selectedSchedules,
+    sampleSchedule?.schedules,
+    selectSchedule,
+    showAllSchedules,
+  ]);
 
   const totalCourses = useMemo(
     () => Object.values(data.selectedSchedules).reduce(
-      (acc, scheduleId) => acc + ((scheduleId && data.schedules[scheduleId]?.classes.length) || 0),
+      (acc, scheduleId) => acc
+          + ((scheduleId && data.schedules[scheduleId]?.classes.length) || 0),
       0,
     ),
     [data.schedules, data.selectedSchedules],
   );
 
+  const downloadData: DownloadPlan = {
+    id:
+      showAllSchedules === 'sample'
+        ? sampleSchedule!.id
+        : Math.random().toString(16).slice(0, 4),
+    schedules: allTruthy(
+      allSemesters.map(({ selectedScheduleId }) => (selectedScheduleId ? data.schedules[selectedScheduleId] : null)),
+    ),
+  };
+
   return (
     <div className="relative bg-gray-800 md:p-4 md:rounded-lg md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full md:h-full">
       <div className="flex flex-col space-y-4 md:h-full">
-        <HeaderSection totalCourses={totalCourses} resizeRef={resizeRef} />
+        <HeaderSection
+          totalCourses={totalCourses}
+          resizeRef={resizeRef}
+          downloadData={downloadData}
+        />
 
         <div className="relative overflow-x-auto flex-1">
           {/* on small screens, this extends as far as necessary */}
@@ -172,32 +290,17 @@ const PlanningSection: React.FC<Props> = function ({
             ref={semestersContainerRef}
           >
             <div ref={leftScrollRef} />
-            {allSemesters.map(
-              ({
-                year,
-                season,
-                highlight,
-                selectedScheduleId,
-                // eslint-disable-next-line @typescript-eslint/no-shadow
-                selectSchedule,
-                key,
-              }) => (
-                <SemesterDisplay
-                  {...{
-                    key,
-                    year,
-                    season,
-                    selectedScheduleId,
-                    selectSchedule,
-                    colWidth,
-                    dragStatus,
-                    setDragStatus,
-                    highlightedRequirement,
-                    highlight,
-                  }}
-                />
-              ),
-            )}
+            {allSemesters.map((props) => (
+              <SemesterDisplay
+                {...{
+                  ...props,
+                  colWidth,
+                  dragStatus,
+                  setDragStatus,
+                  highlightedRequirement,
+                }}
+              />
+            ))}
             <div ref={rightScrollRef} />
           </div>
 
@@ -231,6 +334,6 @@ const PlanningSection: React.FC<Props> = function ({
   );
 };
 
-PlanningSection.whyDidYouRender = true;
+// PlanningSection.whyDidYouRender = true;
 
 export default PlanningSection;

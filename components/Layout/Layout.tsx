@@ -55,9 +55,7 @@ const Layout: React.FC<LayoutProps> = function ({
               &#169; 2018 FontAwesome
             </ExternalLink>
             {' '}
-            |
-            {' '}
-            Images from
+            | Images from
             {' '}
             <ExternalLink href={`https://unsplash.com/${unsplashParams}`}>
               Unsplash

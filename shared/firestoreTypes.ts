@@ -15,9 +15,18 @@ export const PASSING_GRADES = [
   'SAT', // A to C-
 ] as const;
 
-export const FAILING_GRADES = ['E', 'ABS', 'EXL', 'EXT', 'FL', 'UNSAT'] as const;
+export const FAILING_GRADES = [
+  'E',
+  'ABS',
+  'EXL',
+  'EXT',
+  'FL',
+  'UNSAT',
+] as const;
 
-export type Grade = typeof PASSING_GRADES[number] | typeof FAILING_GRADES[number];
+export type Grade =
+  | typeof PASSING_GRADES[number]
+  | typeof FAILING_GRADES[number];
 
 export const SEASON_ORDER = {
   Winter: 0,
@@ -26,11 +35,13 @@ export const SEASON_ORDER = {
   Fall: 3,
 } as const;
 
-export type Semester = { year: number, season: Season };
+export type Semester = { year: number; season: Season };
 
 export type Season = keyof typeof SEASON_ORDER;
 
 export type Term = `${number}${Season}`;
+
+export type ClassId = string;
 
 // firestore user schema
 export interface UserData {
@@ -41,7 +52,7 @@ export interface UserData {
   };
   selectedSchedules: {
     [term: Term]: string | null;
-  }
+  };
 }
 
 export interface Schedule {
@@ -55,4 +66,9 @@ export interface Schedule {
 export interface UserClassData {
   classId: string;
   grade?: Grade;
+}
+
+export interface DownloadPlan {
+  id: string;
+  schedules: Schedule[];
 }

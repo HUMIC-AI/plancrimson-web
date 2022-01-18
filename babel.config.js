@@ -1,6 +1,13 @@
 module.exports = function (api) {
   const isServer = api.caller((caller) => caller?.isServer);
   const isCallerDevelopment = api.caller((caller) => caller?.isDev);
+  const isTest = api.env('test');
+
+  if (isTest) {
+    return {
+      presets: [['@babel/preset-env', { targets: { node: 'current' } }]],
+    };
+  }
 
   const presets = [
     [
@@ -8,9 +15,9 @@ module.exports = function (api) {
       {
         'preset-react': {
           importSource:
-              !isServer && isCallerDevelopment
-                ? '@welldone-software/why-did-you-render'
-                : 'react',
+            !isServer && isCallerDevelopment
+              ? '@welldone-software/why-did-you-render'
+              : 'react',
         },
       },
     ],

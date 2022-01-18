@@ -92,8 +92,7 @@ function getMedian(freqs: Distribution, useOldWorkload = false) {
           return (
             (useOldWorkload
               ? OLD_WORKLOAD_DISTRIBUTION[i] + OLD_WORKLOAD_DISTRIBUTION[j]
-              : 5 - i + 5 - j)
-              / 2
+              : 5 - i + 5 - j) / 2
           );
         }
       }
@@ -258,10 +257,7 @@ async function getComments(placeholderUrl: string): Promise<string[] | null> {
   return comments;
 }
 
-function getWorkload(
-  row: Row,
-  invited: number,
-): HoursStats {
+function getWorkload(row: Row, invited: number): HoursStats {
   const { votes, count, courseMean } = loadRow(row, true);
 
   if (!votes) {
@@ -443,8 +439,7 @@ export default async function fetchOldEvaluations(
   const startIndex = years.indexOf(startTerm);
   let endIndex: number | undefined = years.indexOf(endTerm);
   endIndex = endIndex >= 0 ? endIndex : undefined;
-  console.log(startIndex, endIndex);
-  // eslint-disable-next-line no-restricted-syntax
+
   for (const yearterm of years.slice(startIndex, endIndex)) {
     const response = await axios({
       method: 'GET',
@@ -467,7 +462,6 @@ export default async function fetchOldEvaluations(
       fs.mkdirSync(`${baseDir}/${yearterm}`);
     }
 
-    // eslint-disable-next-line no-restricted-syntax
     for (const department of departments) {
       console.error(
         `==================== loading department ${department} ====================`,

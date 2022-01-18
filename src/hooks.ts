@@ -1,6 +1,4 @@
-import {
-  useEffect, useState,
-} from 'react';
+import { useEffect, useState } from 'react';
 import { getFirestore, DocumentReference, doc } from 'firebase/firestore';
 import { ExtendedClass } from '../shared/apiTypes';
 import { UserData } from '../shared/firestoreTypes';
@@ -9,6 +7,19 @@ const LG_BREAKPOINT = 1024;
 
 export function getUserRef(uid: string) {
   return doc(getFirestore(), 'users', uid) as DocumentReference<UserData>;
+}
+
+export function downloadJson(filename: string, data: object) {
+  if (typeof window === 'undefined') return;
+  const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(
+    JSON.stringify(data),
+  )}`;
+  const a = document.createElement('a');
+  a.setAttribute('href', dataStr);
+  a.setAttribute('download', `${filename}.json`);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 export function useCourseDialog() {
@@ -23,7 +34,10 @@ export function useCourseDialog() {
   const closeModal = () => setIsOpen(false);
 
   return {
-    isOpen, openedCourse, handleExpand, closeModal,
+    isOpen,
+    openedCourse,
+    handleExpand,
+    closeModal,
   };
 }
 

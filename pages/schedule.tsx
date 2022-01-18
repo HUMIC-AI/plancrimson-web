@@ -1,16 +1,121 @@
-import React from 'react';
 import Layout from '../components/Layout/Layout';
-import SemesterSchedule from '../components/SemesterSchedule/SemesterSchedule';
-import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
+import ScheduleSelector from '../components/ScheduleSelector';
+import Calendar from '../components/SemesterSchedule/Calendar';
+import { Season, SEASON_ORDER } from '../shared/firestoreTypes';
+import { classNames, findConflicts } from '../shared/util';
+import useClassCache from '../src/context/classCache';
+import useSelectedScheduleContext, {
+  SelectedScheduleProvider,
+} from '../src/context/selectedSchedule';
+import useUserData from '../src/context/userData';
 
-const SchedulePage: React.FC = function () {
+const SchedulePageComponent: React.FC = function () {
+  const { schedules, selectSchedule, selectedSchedule } = useSelectedScheduleContext();
+  const { data, createSchedule } = useUserData();
+  const classCache = useClassCache(Object.values(data.schedules));
+
+  const newSemester: React.FormEventHandler<HTMLFormElement> = async (ev) => {
+    ev.preventDefault();
+    const fields = new FormData(ev.currentTarget);
+    try {
+      const season = fields.get('season');
+      if (typeof season !== 'string' || !(season in SEASON_ORDER)) {
+        throw new Error('Invalid season');
+      }
+      await createSchedule({
+        id: fields.get('semesterId') as string,
+        year: parseInt(fields.get('year') as string, 10),
+        season: season as Season,
+      });
+    } catch (err) {
+      alert(
+        "Couldn't create a schedule! Make sure you provided valid values and try again.",
+      );
+      console.error(err);
+    }
+  };
+
   return (
     <Layout>
-      <SelectedScheduleProvider>
-        <SemesterSchedule />
-      </SelectedScheduleProvider>
+      <div className="sm:space-y-4">
+        <ScheduleSelector
+          schedules={schedules}
+          selectSchedule={selectSchedule}
+          selectedSchedule={selectedSchedule}
+          direction="center"
+        />
+
+        <form
+          onSubmit={newSemester}
+          className="sm:rounded-lg sm:max-w-md mx-auto p-2 bg-gray-300 flex flex-col sm:flex-row flex-wrap gap-2"
+        >
+          <input
+            type="text"
+            name="semesterId"
+            placeholder="Schedule name"
+            className="focus:ring-blue-700 rounded py-2 px-3 flex-1"
+          />
+          <input
+            type="number"
+            name="year"
+            placeholder="Year"
+            className="focus:ring-blue-700 sm:max-w-xs rounded py-2 px-3 flex-shrink"
+          />
+          <select name="season" className="rounded py-2 pl-2 pr-6 flex-1">
+            {['Spring', 'Fall'].map((season) => (
+              <option key={season} value={season}>
+                {season}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            className={classNames(
+              'flex-1 py-2 px-3 font-semibold hover-blue min-w-max',
+            )}
+          >
+            Add new schedule
+          </button>
+        </form>
+
+        <Calendar
+          classes={
+            selectedSchedule
+              ? selectedSchedule.classes.map(
+                ({ classId }) => classCache[classId],
+              )
+              : []
+          }
+        />
+
+        {selectedSchedule && (
+          <button
+            type="button"
+            // eslint-disable-next-line no-console
+            onClick={() => console.log(
+              findConflicts(
+                selectedSchedule.classes.map(
+                  ({ classId }) => classCache[classId],
+                ),
+              ),
+            )}
+          >
+            Check conflicts
+          </button>
+        )}
+
+        <p className="text-center my-4 sm:my-0">
+          Export functionality coming soon!
+        </p>
+      </div>
     </Layout>
   );
 };
 
-export default SchedulePage;
+export default function SchedulePage() {
+  return (
+    <SelectedScheduleProvider>
+      <SchedulePageComponent />
+    </SelectedScheduleProvider>
+  );
+}

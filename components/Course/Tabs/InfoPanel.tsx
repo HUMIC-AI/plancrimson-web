@@ -1,12 +1,27 @@
 import React from 'react';
 import { Tab } from '@headlessui/react';
 import {
-  FaBook, FaUserGraduate, FaClipboardCheck, FaUserLock, FaSchool, FaBuilding, FaCoins, FaStar, FaUserClock, FaHourglassEnd, FaExchangeAlt,
+  FaBook,
+  FaUserGraduate,
+  FaClipboardCheck,
+  FaUserLock,
+  FaSchool,
+  FaBuilding,
+  FaCoins,
+  FaStar,
+  FaUserClock,
+  FaHourglassEnd,
+  FaExchangeAlt,
 } from 'react-icons/fa';
 import { ExtendedClass } from '../../../shared/apiTypes';
 import {
-  Instructors, DaysOfWeek, ClassTime, Location,
+  Instructors,
+  DaysOfWeek,
+  ClassTime,
+  Location,
 } from '../CourseComponents';
+import departments from '../../../src/departments.json';
+import Tooltip from '../../Tooltip';
 
 const InfoPanel: React.FC<{ course: ExtendedClass }> = function ({ course }) {
   return (
@@ -29,10 +44,41 @@ const InfoPanel: React.FC<{ course: ExtendedClass }> = function ({ course }) {
         <FaSchool title="School" />
         <span>{course.IS_SCL_DESCR_IS_SCL_DESCRB}</span>
         <FaBuilding title="Department(s)" />
-        <span>{typeof course.ACAD_ORG === 'string' ? course.ACAD_ORG : course.ACAD_ORG.join(', ')}</span>
+        <span>
+          {typeof course.ACAD_ORG === 'string' ? (
+            course.ACAD_ORG in departments ? (
+              <Tooltip
+                text={departments[course.ACAD_ORG as keyof typeof departments]}
+                direction="bottom"
+              >
+                {course.ACAD_ORG}
+              </Tooltip>
+            ) : (
+              course.ACAD_ORG
+            )
+          ) : (
+            course.ACAD_ORG.map((org, i) => (
+              <>
+                {i > 0 && ', '}
+                {org in departments ? (
+                  <Tooltip
+                    text={departments[org as keyof typeof departments]}
+                    direction="bottom"
+                  >
+                    {org}
+                  </Tooltip>
+                ) : (
+                  org
+                )}
+              </>
+            ))
+          )}
+        </span>
         <FaCoins title="Credits" />
         <span>
-          {course.HU_UNITS_MIN === course.HU_UNITS_MAX ? course.HU_UNITS_MIN : `${course.HU_UNITS_MIN}–${course.HU_UNITS_MAX}`}
+          {course.HU_UNITS_MIN === course.HU_UNITS_MAX
+            ? course.HU_UNITS_MIN
+            : `${course.HU_UNITS_MIN}–${course.HU_UNITS_MAX}`}
           {' '}
           credits
         </span>

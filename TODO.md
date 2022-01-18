@@ -11,16 +11,14 @@
       - Creating a new schedule via the schedule page
       - Creating a new schedule via the planning page
 
-
-
 ## store things in `localStorage` (Web Storage API)
 
 what should stay the same between user logins?
-  - search state
-  - selected schedule on schedule page
-  - When user navigates between pages, it should save their search state
-    - Could just put this in context served from app
 
+- search state
+- selected schedule on schedule page
+- When user navigates between pages, it should save their search state
+  - Could just put this in context served from app
 
 ## search page
 
@@ -36,7 +34,6 @@ what should stay the same between user logins?
       - query Firestore:
         - collection users where Object.values(user.schedule).some((schedule) => schedule.classes.includes(classId))
 
-
 ## planning page
 
 - resizable requirements section
@@ -46,7 +43,6 @@ what should stay the same between user logins?
 - handle gened edge case
 - search by requirement
 - selected schedules should be saved in firestore
-
 
 ## schedule page
 

@@ -10,7 +10,12 @@ type Props = {
 };
 
 const FadeTransition: React.FC<Props> = function ({
-  children, unmount, show, beforeEnter, afterEnter, afterLeave,
+  children,
+  unmount,
+  show,
+  beforeEnter,
+  afterEnter,
+  afterLeave,
 }) {
   return (
     <Transition
