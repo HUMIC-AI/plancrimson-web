@@ -43,6 +43,23 @@ export type Term = `${number}${Season}`;
 
 export type ClassId = string;
 
+// also used for sorting
+export const DAYS_OF_WEEK = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+] as const;
+
+export const DAY_SHORT = ['MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT'] as const;
+
+export type Viability = 'Yes' | 'Likely' | 'Unlikely' | 'No';
+
+export type DayOfWeek = typeof DAYS_OF_WEEK[number];
+
 // firestore user schema
 export interface UserData {
   classYear: number;
@@ -53,6 +70,11 @@ export interface UserData {
   selectedSchedules: {
     [term: Term]: string | null;
   };
+  customTimes: Record<ClassId, {
+    pattern: DayOfWeek[],
+    start: number; // decimal hour
+    end: number; // decimal hour
+  }>;
 }
 
 export interface Schedule {

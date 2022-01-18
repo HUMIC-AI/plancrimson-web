@@ -1,8 +1,9 @@
+import { useMemo } from 'react';
 import Layout from '../components/Layout/Layout';
 import ScheduleSelector from '../components/ScheduleSelector';
 import Calendar from '../components/SemesterSchedule/Calendar';
 import { Season, SEASON_ORDER } from '../shared/firestoreTypes';
-import { classNames, findConflicts } from '../shared/util';
+import { allTruthy, classNames, findConflicts } from '../shared/util';
 import useClassCache from '../src/context/classCache';
 import useSelectedScheduleContext, {
   SelectedScheduleProvider,
@@ -34,6 +35,15 @@ const SchedulePageComponent: React.FC = function () {
       console.error(err);
     }
   };
+
+  const conflicts = useMemo(() => (selectedSchedule ? findConflicts(
+    allTruthy(selectedSchedule.classes.map(
+      ({ classId }) => classCache[classId],
+    )),
+  ) : null), [classCache, selectedSchedule]);
+
+  // eslint-disable-next-line no-void
+  void conflicts;
 
   return (
     <Layout>
@@ -80,29 +90,13 @@ const SchedulePageComponent: React.FC = function () {
 
         <Calendar
           classes={
-            selectedSchedule
+            allTruthy(selectedSchedule
               ? selectedSchedule.classes.map(
                 ({ classId }) => classCache[classId],
               )
-              : []
+              : [])
           }
         />
-
-        {selectedSchedule && (
-          <button
-            type="button"
-            // eslint-disable-next-line no-console
-            onClick={() => console.log(
-              findConflicts(
-                selectedSchedule.classes.map(
-                  ({ classId }) => classCache[classId],
-                ),
-              ),
-            )}
-          >
-            Check conflicts
-          </button>
-        )}
 
         <p className="text-center my-4 sm:my-0">
           Export functionality coming soon!

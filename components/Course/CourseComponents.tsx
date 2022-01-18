@@ -2,7 +2,8 @@ import React, { Fragment } from 'react';
 import {
   FaUser, FaMapMarkerAlt, FaCalendarDay, FaClock,
 } from 'react-icons/fa';
-import { DAYS_OF_WEEK, ExtendedClass } from '../../shared/apiTypes';
+import { ExtendedClass } from '../../shared/apiTypes';
+import { DAYS_OF_WEEK } from '../../shared/firestoreTypes';
 import { classNames } from '../../shared/util';
 import Highlight from '../SearchComponents/Highlight';
 

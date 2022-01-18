@@ -1,4 +1,4 @@
-import { Season } from './firestoreTypes';
+import { DayOfWeek, Season } from './firestoreTypes';
 
 export type SearchParams = Partial<{
   search: string;
@@ -35,23 +35,6 @@ export type ExtendedClass = Class & {
   meanRecommendation?: number;
   meanHours?: number;
 };
-
-// also used for sorting
-export const DAYS_OF_WEEK = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
-] as const;
-
-export const DAY_SHORT = ['MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT'] as const;
-
-export type DayOfWeek = typeof DAYS_OF_WEEK[number];
-
-export type Viability = 'Yes' | 'Likely' | 'Unlikely' | 'No';
 
 // ==================== FOUR YEAR PLAN RESPONSES ====================
 

@@ -1,8 +1,11 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import { Disclosure } from '@headlessui/react';
 import React from 'react';
-import { DAYS_OF_WEEK, DAY_SHORT, ExtendedClass } from '../../shared/apiTypes';
-import { allTruthy } from '../../shared/util';
+import { useForm, FieldValues } from 'react-hook-form';
+import { ExtendedClass } from '../../shared/apiTypes';
+import { DAYS_OF_WEEK, DAY_SHORT } from '../../shared/firestoreTypes';
+import { allTruthy, getClassId } from '../../shared/util';
+import useUserData from '../../src/context/userData';
 
 const dayStartTime = 8; // time to start the calendar at
 
@@ -11,7 +14,7 @@ function toPercent(time: number) {
 }
 
 type CalendarProps = {
-  classes: (ExtendedClass | null)[];
+  classes: ExtendedClass[];
 };
 
 type TimeData = {
@@ -29,7 +32,7 @@ type ExtendedTimeData = TimeData & {
 
 const getCalendarClasses = (classes: ExtendedClass[]) => {
   const validClasses: TimeData[][] = new Array(7).fill(null).map(() => []);
-  const otherClasses: string[] = [];
+  const otherClasses: ExtendedClass[] = [];
 
   const addClass = ({
     pattern,
@@ -58,8 +61,9 @@ const getCalendarClasses = (classes: ExtendedClass[]) => {
     const startTime = cls.IS_SCL_STRT_TM_DEC;
     const endTime = cls.IS_SCL_END_TM_DEC;
     const meetingPattern = cls.IS_SCL_MEETING_PAT;
+
     if (!startTime || !meetingPattern || !endTime || meetingPattern === 'TBA') {
-      otherClasses.push(title);
+      otherClasses.push(cls);
       return;
     }
 
@@ -91,15 +95,99 @@ const getCalendarClasses = (classes: ExtendedClass[]) => {
     }).some((val) => val);
 
     if (!added) {
-      otherClasses.push(title);
+      otherClasses.push(cls);
     }
   });
 
   return [validClasses, otherClasses] as const;
 };
 
+function MissingClass({ cls }: { cls: ExtendedClass }) {
+  const { setCustomTime } = useUserData();
+  const { register, handleSubmit } = useForm();
+
+  const onSubmit = (data: FieldValues) => {
+    const [h1, m1] = data.startTime.split(':').map(parseFloat);
+    const [h2, m2] = data.endTime.split(':').map(parseFloat);
+    if ([h1, m1, h2, m2].some(Number.isNaN)) {
+      alert('Invalid time. Please try again.');
+    } else {
+      setCustomTime(
+        getClassId(cls),
+        data.daysOfWeek,
+        h1 + m1 / 60,
+        h2 + m2 / 60,
+      ).then(() => alert('done'));
+    }
+  };
+
+  return (
+    <>
+      <h4 className="inline-block">
+        {`${cls.SUBJECT + cls.CATALOG_NBR} | ${cls.Title}`}
+      </h4>
+      <Disclosure as="div">
+        <Disclosure.Button className="hover:opacity-50 font-bold underline transition-opacity">
+          Add time
+        </Disclosure.Button>
+        <Disclosure.Panel>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div>
+              <select multiple {...register('daysOfWeek')}>
+                {DAYS_OF_WEEK.slice(0, 5).map((day) => (
+                  <option key={day} value={day}>
+                    {day}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="startTime">Start time:</label>
+              <input type="time" {...register('startTime')} />
+            </div>
+            <div>
+              <label htmlFor="endTime">End time:</label>
+              <input type="time" {...register('endTime')} />
+            </div>
+            <button type="submit">Save</button>
+          </form>
+        </Disclosure.Panel>
+      </Disclosure>
+    </>
+  );
+}
+
+function decToStr(dec: number) {
+  const hours = Math.floor(dec);
+  return `${hours.toString().padStart(2, '0')}:${(dec - hours)
+    .toFixed(2)
+    .slice(2)}`;
+}
+
 const Calendar: React.FC<CalendarProps> = function ({ classes }) {
-  const [validClasses, otherClasses] = getCalendarClasses(allTruthy(classes));
+  const {
+    data: { customTimes },
+  } = useUserData();
+
+  const [validClasses, otherClasses] = getCalendarClasses(
+    allTruthy(
+      classes.map((cls) => {
+        const classId = getClassId(cls);
+        if (classId in customTimes) {
+          const result: ExtendedClass = {
+            ...cls,
+            IS_SCL_MEETING_PAT: customTimes[classId].pattern
+              .map((a) => a.slice(0, 2))
+              .join(' '),
+            IS_SCL_STRT_TM_DEC: decToStr(customTimes[classId].start),
+            IS_SCL_END_TM_DEC: decToStr(customTimes[classId].end),
+          };
+          return result;
+        }
+        return cls;
+      }),
+    ),
+  );
 
   return (
     <div className="sm:rounded-lg border-gray-800 sm:border-4 shadow-lg">
@@ -179,21 +267,8 @@ const Calendar: React.FC<CalendarProps> = function ({ classes }) {
           <h2 className="text-lg font-semibold">Other classes</h2>
           <ul className="list-disc list-inside">
             {otherClasses.map((cls) => (
-              <li key={cls}>
-                <div>
-                  <h4>{cls}</h4>
-                  <Disclosure>
-                    <Disclosure.Button>Add time</Disclosure.Button>
-                    <Disclosure.Panel>
-                      <form>
-                        <label htmlFor="startTime">Start time:</label>
-                        <input type="time" name="startTime" id="startTime" />
-                        <label htmlFor="endTime">End time:</label>
-                        <input type="time" name="endTime" id="endTime" />
-                      </form>
-                    </Disclosure.Panel>
-                  </Disclosure>
-                </div>
+              <li key={cls.Key}>
+                <MissingClass cls={cls} />
               </li>
             ))}
           </ul>

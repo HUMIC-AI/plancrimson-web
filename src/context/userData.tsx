@@ -23,6 +23,7 @@ import {
   Schedule,
   SEASON_ORDER,
   Term,
+  DayOfWeek,
 } from '../../shared/firestoreTypes';
 import {
   getDefaultSemesters,
@@ -53,10 +54,11 @@ type UserDataContextType = {
     season: Season,
     schedule: string | null
   ) => void;
+  setCustomTime: (classId: string, pattern: DayOfWeek[], start: number, end: number) => Promise<void>;
   error?: FirestoreError;
 };
 
-function getUserDataFromSnapshot(snap: DocumentSnapshot<UserData> | null) {
+function getUserDataFromSnapshot(snap: DocumentSnapshot<UserData> | null): UserData {
   const now = new Date();
   const data = snap?.data();
   const classYear = data?.classYear || now.getFullYear() + (now.getMonth() > 5 ? 4 : 3);
@@ -77,6 +79,7 @@ function getUserDataFromSnapshot(snap: DocumentSnapshot<UserData> | null) {
     lastLoggedIn: snap?.get('lastLoggedIn') || now,
     schedules,
     selectedSchedules,
+    customTimes: data?.customTimes || {},
   };
 }
 
@@ -90,6 +93,7 @@ const UserDataContext = createContext<UserDataContextType>({
   renameSchedule: throwMissingContext,
   deleteSchedule: throwMissingContext,
   selectSchedule: throwMissingContext,
+  setCustomTime: throwMissingContext,
 });
 
 /**
@@ -300,8 +304,10 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
             )
               .then(resolve)
               .catch(reject);
+          } else {
+            process.nextTick(resolve);
           }
-          process.nextTick(resolve);
+
           return {
             ...prev,
             selectedSchedules: newSelectedSchedules,
@@ -329,9 +335,10 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
           )
             .then(resolve)
             .catch(reject);
+        } else {
+          process.nextTick(resolve);
         }
 
-        process.nextTick(resolve);
         return {
           ...prev,
           selectedSchedules: newSelectedSchedules,
@@ -340,6 +347,30 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
     }),
     [user],
   );
+
+  const setCustomTime: UserDataContextType['setCustomTime'] = useCallback((classId: string, pattern: DayOfWeek[], start: number, end: number) => new Promise((resolve, reject) => {
+    setUserData((prev) => {
+      const newCustomTimes = {
+        ...prev.customTimes,
+        [classId]: { pattern, start, end },
+      };
+
+      if (user) {
+        updateDoc(
+          getUserRef(user.uid),
+          // @ts-expect-error
+          { customTimes: newCustomTimes },
+        ).then(resolve).catch(reject);
+      } else {
+        process.nextTick(resolve);
+      }
+
+      return {
+        ...prev,
+        customTimes: newCustomTimes,
+      };
+    });
+  }), [user]);
 
   // listen to user firestore document
   useEffect(() => {
@@ -395,6 +426,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
       renameSchedule,
       deleteSchedule,
       selectSchedule,
+      setCustomTime,
       error,
     }),
     [
@@ -404,6 +436,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
       createSchedule,
       renameSchedule,
       deleteSchedule,
+      setCustomTime,
       selectSchedule,
       error,
     ],

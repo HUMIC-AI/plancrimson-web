@@ -12,18 +12,14 @@ import {
   Season,
   ClassId,
   Schedule,
-} from './firestoreTypes';
-import {
-  ATTRIBUTE_DESCRIPTIONS,
-  Class,
   DayOfWeek,
   DAYS_OF_WEEK,
-  Evaluation,
   Viability,
-} from './apiTypes';
+} from './firestoreTypes';
 import seasPlan from './seasPlan.json';
 import { getSchoolYear } from '../src/requirements/util';
 import type { ClassCache } from '../src/context/classCache';
+import { Class, ATTRIBUTE_DESCRIPTIONS, Evaluation } from './apiTypes';
 
 export const unsplashParams = '?utm_source=Plan+Crimson&utm_medium=referral';
 
@@ -176,16 +172,14 @@ export function findConflicts(classes: Class[]): Record<ClassId, ClassId[]> {
     conflicts[getClassId(cls)] = [];
   });
 
-  classes.forEach((cls) => {
-    classes
-      .filter((c) => c.Key !== cls.Key)
-      .forEach((other) => {
-        if (doesConflict(cls, other)) {
-          const [id1, id2] = [cls, other].map(getClassId);
-          conflicts[id1].push(id2);
-          conflicts[id2].push(id1);
-        }
-      });
+  classes.forEach((cls, i) => {
+    classes.slice(i + 1).forEach((other) => {
+      if (doesConflict(cls, other)) {
+        const [id1, id2] = [cls, other].map(getClassId);
+        conflicts[id1].push(id2);
+        conflicts[id2].push(id1);
+      }
+    });
   });
 
   return conflicts;
@@ -198,6 +192,26 @@ export function checkViable(
   classCache: ClassCache,
 ): ViabilityResponse {
   const { year, season } = getSemester(cls);
+
+  const selectedSchedule = data.selectedSchedules[`${querySemester.year}${querySemester.season}`];
+  if (selectedSchedule && data.schedules[selectedSchedule]) {
+    const conflicts = findConflicts([
+      cls,
+      ...data.schedules[selectedSchedule].classes.map(
+        ({ classId }) => classCache[classId],
+      ),
+    ]);
+
+    const classConflicts = conflicts[getClassId(cls)];
+    if (classConflicts && classConflicts.length > 0) {
+      return {
+        viability: 'Unlikely',
+        reason: `This course conflicts with these courses in your schedule: ${classConflicts
+          .map((id) => classCache[id].SUBJECT + classCache[id].CATALOG_NBR)
+          .join(', ')}.`,
+      };
+    }
+  }
 
   if (year === querySemester.year && season === querySemester.season) {
     return {
@@ -227,26 +241,6 @@ export function checkViable(
     ({ prefix, courseNumber }) => searchSubjects.includes(prefix.replace('AC', 'APCOMP'))
       && catalogNumberRegExp.test(courseNumber),
   );
-
-  const selectedSchedule = data.selectedSchedules[`${querySemester.year}${querySemester.season}`];
-  if (selectedSchedule && data.schedules[selectedSchedule]) {
-    const conflicts = findConflicts([
-      cls,
-      ...data.schedules[selectedSchedule].classes.map(
-        ({ classId }) => classCache[classId],
-      ),
-    ]);
-
-    const classConflicts = conflicts[getClassId(cls)];
-    if (classConflicts && classConflicts.length > 0) {
-      return {
-        viability: 'Unlikely',
-        reason: `This course conflicts with these courses in your schedule: ${classConflicts
-          .map((id) => classCache[id].SUBJECT + classCache[id].CATALOG_NBR)
-          .join(', ')}.`,
-      };
-    }
-  }
 
   if (foundInSeasPlan) {
     const matchesSemester = foundInSeasPlan.semesters.find(

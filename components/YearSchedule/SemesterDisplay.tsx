@@ -224,7 +224,7 @@ const SemesterDisplay: React.FC<Props> = function ({
           {showAllSchedules !== 'sample' && (
             <ButtonMenu
               editing={editing}
-              prevScheduleId={schedules[0]?.id || null}
+              prevScheduleId={schedules[0]?.id === selectedSchedule?.id ? null : (schedules[0]?.id || null)}
               season={season}
               year={year}
               selectSchedule={selectSchedule}
