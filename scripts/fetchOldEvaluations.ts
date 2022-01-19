@@ -2,6 +2,8 @@
 import axios from 'axios';
 import cheerio, { CheerioAPI } from 'cheerio';
 import fs from 'fs';
+import inquirer from 'inquirer';
+import qs from 'qs';
 import {
   CourseGeneralQuestions,
   Evaluation,
@@ -11,8 +13,10 @@ import {
 } from '../shared/apiTypes';
 import { Season } from '../shared/firestoreTypes';
 import { allTruthy } from '../shared/util';
+import { getFilePath } from './util';
 
 const baseUrl = 'https://course-evaluation-reports.fas.harvard.edu/fas';
+const COMMENTS_URL = 'https://course-evaluation-reports.fas.harvard.edu/fas/view_comments.html';
 const years: string[] = [];
 
 for (let i = 2006; i <= 2018; i += 1) {
@@ -56,7 +60,11 @@ const NO_STATISTICS = {
 // but gets reversed since distribution goes from highest to lowest
 const OLD_WORKLOAD_DISTRIBUTION = [16.5, 12.5, 8.5, 4.5, 0.5] as const;
 
-function loadRow(row: Row, useOldWorkload = false) {
+function valueOfIndex(i: number, isWorkload: boolean) {
+  return isWorkload ? OLD_WORKLOAD_DISTRIBUTION[i] : 5 - i;
+}
+
+function loadRow(row: Row, isWorkload = false) {
   if (!row.img) {
     return NO_STATISTICS;
   }
@@ -66,7 +74,7 @@ function loadRow(row: Row, useOldWorkload = false) {
   // opposite direction from Q Guides, goes from 1 to 5
   const mean = total > 0
     ? votes.reduce(
-      (acc, val, i) => acc + val * (useOldWorkload ? OLD_WORKLOAD_DISTRIBUTION[i] : 5 - i),
+      (acc, val, i) => acc + val * valueOfIndex(i, isWorkload),
       0,
     ) / total
     : null;
@@ -78,21 +86,19 @@ function loadRow(row: Row, useOldWorkload = false) {
   } as const;
 }
 
-function getMedian(freqs: Distribution, useOldWorkload = false) {
+function getMedian(freqs: Distribution, isWorkload = false) {
   const count = freqs.reduce((acc, val) => acc + val, 0);
   let acc = 0;
   for (let i = 0; i < freqs.length; i += 1) {
     acc += freqs[i];
     if (acc > count / 2) {
-      return useOldWorkload ? OLD_WORKLOAD_DISTRIBUTION[i] : 5 - i;
+      return valueOfIndex(i, isWorkload);
     }
     if (acc === count / 2) {
       for (let j = i + 1; j < freqs.length; j += 1) {
         if (freqs[j] !== 0) {
           return (
-            (useOldWorkload
-              ? OLD_WORKLOAD_DISTRIBUTION[i] + OLD_WORKLOAD_DISTRIBUTION[j]
-              : 5 - i + 5 - j) / 2
+            (valueOfIndex(i, isWorkload) + valueOfIndex(j, isWorkload)) / 2
           );
         }
       }
@@ -105,19 +111,30 @@ function getMedian(freqs: Distribution, useOldWorkload = false) {
  * @param freqs see {@link getDistributionFromImage}
  * @returns the standard deviation of freqs
  */
-function getStdev(freqs: Distribution, useOldWorkload = false) {
+function getStdev(freqs: Distribution, isWorkload = false) {
   const count = freqs.reduce((acc, freq) => acc + freq, 0);
   const mean = freqs.reduce(
-    (acc, freq, i) => acc + freq * (useOldWorkload ? OLD_WORKLOAD_DISTRIBUTION[i] : 5 - i),
+    (acc, freq, i) => acc + freq * valueOfIndex(i, isWorkload),
     0,
   ) / count;
   let total = 0;
   for (let i = 0; i < freqs.length; i += 1) {
-    total
-      += freqs[i]
-      * ((useOldWorkload ? OLD_WORKLOAD_DISTRIBUTION[i] : 5 - i) - mean) ** 2;
+    total += freqs[i] * (valueOfIndex(i, isWorkload) - mean) ** 2;
   }
   return total / count;
+}
+
+function getMode(votes: Distribution, isWorkload = false) {
+  const initialValue = {
+    value: -1,
+    maxCount: -1,
+  };
+  return votes.reduce(
+    (acc, count, i) => (count > acc.maxCount
+      ? { value: valueOfIndex(i, isWorkload), maxCount: count }
+      : acc),
+    initialValue,
+  ).value;
 }
 
 function getReasons(reasons: Row[]): ReasonsForEnrolling {
@@ -243,20 +260,6 @@ async function getInstructor(url: string): Promise<{
   };
 }
 
-async function getComments(placeholderUrl: string): Promise<string[] | null> {
-  const placeholderResult = await axios.get(placeholderUrl);
-  const newUrl = cheerio
-    .load(placeholderResult.data)('.reportContent a')
-    .attr('href');
-  if (!newUrl) return null;
-  const commentsPage = await axios.get(`${baseUrl}/${newUrl}`);
-  const $ = cheerio.load(commentsPage.data);
-  const comments = $('.responseBlock p')
-    .toArray()
-    .map((p) => $(p).text().replace(/\s+/g, ' ').trim());
-  return comments;
-}
-
 function getWorkload(row: Row, invited: number): HoursStats {
   const { votes, count, courseMean } = loadRow(row, true);
 
@@ -273,19 +276,25 @@ function getWorkload(row: Row, invited: number): HoursStats {
 
   return {
     count,
+    ratio: count / invited,
     mean: courseMean,
     median: getMedian(votes, true),
-    ratio: count / invited,
-    mode:
-      votes.reduce(
-        (acc, val, i) => (val > acc.max ? { index: i, max: val } : acc),
-        {
-          index: -1,
-          max: -1,
-        },
-      ).index + 1,
+    mode: getMode(votes, true),
     stdev: getStdev(votes, true),
   };
+}
+
+async function getComments(courseId: string): Promise<string[]> {
+  const response = await axios.get(COMMENTS_URL, {
+    params: { qid: 1487, course_id: courseId },
+  });
+
+  const $ = cheerio.load(response.data);
+  const data = allTruthy($('.response')
+    .map((_, el) => $(el).text().replace(/\s+/g, ' ').trim())
+    .toArray());
+
+  return data;
 }
 
 async function parseEvaluation(url: string, year: number, season: Season) {
@@ -355,8 +364,8 @@ async function parseEvaluation(url: string, year: number, season: Season) {
     `${baseUrl}/${instructorUrl!}`,
   );
 
-  const commentsUrl = $('#tabNav > li:nth-child(3) > a').attr('href');
-  const comments = await getComments(`${baseUrl}/${commentsUrl}`);
+  const courseId = qs.parse(url.slice(url.indexOf('?') + 1)).course_id as string;
+  const comments = courseId ? await getComments(courseId) : null;
 
   const ret: Evaluation = {
     url,
@@ -403,7 +412,7 @@ function loadEvaluations(urls: string[], year: number, term: Season) {
     urls.map(
       (url, i) => new Promise<Evaluation | null>((resolve, reject) => {
         setTimeout(() => {
-          console.error(
+          console.log(
             `parsing evaluation ${i + 1}/${urls.length} ${baseUrl}/${url}`,
           );
           parseEvaluation(`${baseUrl}/${url}`, year, term)
@@ -414,7 +423,7 @@ function loadEvaluations(urls: string[], year: number, term: Season) {
               // eslint-disable-next-line prefer-promise-reject-errors
               reject({ url });
             });
-        }, i * 750);
+        }, i * 200);
       }),
     ),
   );
@@ -423,7 +432,7 @@ function loadEvaluations(urls: string[], year: number, term: Season) {
 /**
  * Main function to parse all evaluations from https://course-evaluation-reports.fas.harvard.edu/fas/list
  */
-export default async function fetchOldEvaluations(
+async function fetchOldEvaluations(
   startTerm: TermString,
   endTerm: TermString,
   baseDir: string,
@@ -503,3 +512,33 @@ export default async function fetchOldEvaluations(
     }
   }
 }
+
+export default {
+  label: 'Fetch all old course evaluations (<= Spring 2019)',
+  async run() {
+    const { startTerm, endTerm } = await inquirer.prompt([
+      {
+        name: 'startTerm',
+        type: 'input',
+        message:
+          'Start term in the format {academic year}_{1 or 2}, e.g. 2006_2 is the spring of 2007:',
+        default: '2006_1',
+      },
+      {
+        name: 'endTerm',
+        type: 'input',
+        message:
+          'End term in the same format, exclusive (leave empty to continue until end):',
+      },
+    ]);
+    const baseDir = await getFilePath(
+      'Enter the path to save the downloaded evaluations in:',
+      'data/evaluations/evaluations',
+    );
+    return fetchOldEvaluations(
+      startTerm as TermString,
+      endTerm as TermString,
+      baseDir,
+    );
+  },
+};

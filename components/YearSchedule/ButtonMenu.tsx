@@ -9,10 +9,11 @@ import {
   FaPlus,
   FaTrash,
   FaDownload,
+  FaEraser,
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
 import { Schedule, Season } from '../../shared/firestoreTypes';
-import useUserData from '../../src/context/userData';
+import useUserData, { clearSchedule } from '../../src/context/userData';
 import { downloadJson } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 
@@ -90,7 +91,7 @@ const ButtonMenu: React.FC<Props> = function ({
   season,
   prevScheduleId,
 }) {
-  const { createSchedule, deleteSchedule } = useUserData();
+  const { createSchedule, deleteSchedule, removeCourses } = useUserData();
 
   const handleEditing = async () => {
     if (!selectedSchedule) return;
@@ -143,7 +144,7 @@ const ButtonMenu: React.FC<Props> = function ({
               name="Add courses"
               isLink
               scheduleId={selectedSchedule.id}
-              pathname="/"
+              pathname="/search"
               Icon={FaSearch}
             />
 
@@ -165,6 +166,12 @@ const ButtonMenu: React.FC<Props> = function ({
               name={editing ? 'Cancel editing' : 'Edit name'}
               onClick={handleEditing}
               Icon={editing ? FaTimes : FaPencilAlt}
+            />
+
+            <CustomButton
+              name="Clear"
+              onClick={() => clearSchedule(removeCourses, selectedSchedule)}
+              Icon={FaEraser}
             />
           </>
         )}

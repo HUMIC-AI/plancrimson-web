@@ -14,14 +14,16 @@ import {
   GroupResult,
   Requirement,
   RequirementGroup,
+  SampleSchedule,
 } from '../../src/requirements/util';
 import ExternalLink from '../ExternalLink';
 import FadeTransition from '../FadeTransition';
-import RequirementsDisplay from './RequirementsDisplay';
+import RequirementGroupComponent from './RequirementsDisplay';
 import { classNames } from '../../shared/util';
 import useUser from '../../src/context/user';
 import useShowAllSchedules from '../../src/context/showAllSchedules';
 import { allRequirements } from '../../src/requirements';
+import useUserData from '../../src/context/userData';
 
 interface RequirementsSectionProps {
   selectedRequirements: RequirementGroup;
@@ -139,6 +141,72 @@ function SuggestionForm() {
   );
 }
 
+interface SampleScheduleEntryProps {
+  schedule: SampleSchedule;
+}
+
+function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
+  const { setShowAllSchedules, sampleSchedule, setSampleSchedule } = useShowAllSchedules();
+  const { createSchedule, selectSchedule } = useUserData();
+
+  const isSelected = sampleSchedule?.name === schedule.name;
+
+  return (
+    <div className="flex items-center space-x-4">
+      <button
+        type="button"
+        className={classNames(
+          isSelected && 'font-bold',
+          'text-left hover:opacity-50 transition-opacity',
+        )}
+        onClick={() => {
+          if (isSelected) {
+            setShowAllSchedules('selected');
+            setSampleSchedule(null);
+          } else {
+            setShowAllSchedules('sample');
+            setSampleSchedule(schedule);
+          }
+        }}
+      >
+        {schedule.name}
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          Promise.all(
+            schedule.schedules.map((s) => createSchedule({
+              ...s,
+              id: `${s.id} (${schedule.id})`,
+              force: true,
+            })),
+          )
+            .then((schedules) => {
+              setShowAllSchedules('selected');
+              schedules.forEach((s) => selectSchedule(s.year, s.season, s.id));
+              alert('Cloned successfully!');
+            })
+            .catch((err) => {
+              console.error(err);
+              alert('An unexpected error occurred when cloning the sample schedule. Please try again later.');
+            });
+        }}
+        className="font-medium hover:opacity-50 transition-opacity"
+      >
+        Clone
+      </button>
+      <a
+        href={schedule.source}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-medium hover:opacity-50 transition-opacity"
+      >
+        Source
+      </a>
+    </div>
+  );
+}
+
 const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
   selectedRequirements: selectedReqGroup,
   setSelectedRequirements,
@@ -152,7 +220,6 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
   const bottomRef = useRef<HTMLDivElement>(null!);
   const [topIntersecting, setTopIntersecting] = useState(false);
   const [bottomIntersecting, setBottomIntersecting] = useState(false);
-  const { setShowAllSchedules, sampleSchedule, setSampleSchedule } = useShowAllSchedules();
 
   useEffect(() => {
     const topObserver = new IntersectionObserver(([{ isIntersecting }]) => {
@@ -170,7 +237,7 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
   }, []);
 
   return (
-    <div className="relative mb-12 md:mb-0 border-gray-300 space-y-4 md:border-2 md:rounded-lg md:shadow-lg md:max-w-xs lg:max-w-sm xl:max-w-md w-screen overflow-auto resize-x">
+    <div className="relative mb-12 md:mb-0 border-gray-300 space-y-4 md:border-2 md:rounded-lg md:shadow-lg md:max-w-xs lg:max-w-sm xl:max-w-md w-screen sm:overflow-auto sm:resize-x">
       <div className="md:absolute md:inset-4 flex flex-col space-y-4">
         <Listbox
           value={selectedReqGroup.groupId}
@@ -221,33 +288,8 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
               <Disclosure.Panel className="px-4 text-sm">
                 <ul>
                   {selectedReqGroup.sampleSchedules.map((schedule) => (
-                    <li key={schedule.name} className="flex items-center">
-                      <button
-                        type="button"
-                        className={classNames(
-                          sampleSchedule?.name === schedule.name && 'font-bold',
-                          'text-left',
-                        )}
-                        onClick={() => {
-                          if (sampleSchedule?.name === schedule.name) {
-                            setShowAllSchedules('selected');
-                            setSampleSchedule(null);
-                          } else {
-                            setShowAllSchedules('sample');
-                            setSampleSchedule(schedule);
-                          }
-                        }}
-                      >
-                        {schedule.name}
-                      </button>
-                      <a
-                        href={schedule.source}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-bold hover:opacity-50 ml-2"
-                      >
-                        Link
-                      </a>
+                    <li key={schedule.name}>
+                      <SampleScheduleEntry schedule={schedule} />
                     </li>
                   ))}
                 </ul>
@@ -302,7 +344,7 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
             )}
           >
             <div ref={topRef} id="topIntersection" />
-            <RequirementsDisplay
+            <RequirementGroupComponent
               depth={0}
               requirements={selectedReqGroup}
               validationResults={validationResults}

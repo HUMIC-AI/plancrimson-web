@@ -1,7 +1,10 @@
 import React from 'react';
 import { classNames } from '../shared/util';
 
-type Props = { text: string; direction: 'bottom' | 'left' };
+type Props = {
+  text: string;
+  direction: 'bottom' | 'left';
+};
 
 export default function Tooltip({
   text,
@@ -13,7 +16,7 @@ export default function Tooltip({
       {children}
       <span
         className={classNames(
-          'absolute',
+          'absolute z-10',
           direction === 'left'
             && 'right-full mr-2 top-1/2 transform -translate-y-1/2 w-max',
           direction === 'bottom'

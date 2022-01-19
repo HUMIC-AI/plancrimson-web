@@ -9,14 +9,13 @@ import {
   getSchedulesBySemester,
 } from '../../shared/util';
 import useUserData from '../../src/context/userData';
-import { Season } from '../../shared/firestoreTypes';
+import { Season, Viability } from '../../shared/firestoreTypes';
 import { useCourseDialog } from '../../src/hooks';
 import ScheduleSelector from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
 import CourseDialog from '../Course/CourseDialog';
 import useClassCache, { ClassCache } from '../../src/context/classCache';
 import FadeTransition from '../FadeTransition';
-import { Viability } from '../../shared/apiTypes';
 import { Requirement } from '../../src/requirements/util';
 import ButtonMenu from './ButtonMenu';
 import useShowAllSchedules from '../../src/context/showAllSchedules';
@@ -43,7 +42,7 @@ const VIABILITY_COLORS: Record<Viability, string> = {
   No: 'bg-red-300',
 };
 
-const SemesterDisplay: React.FC<Props> = function ({
+const SemesterComponent: React.FC<Props> = function ({
   year,
   season,
   selectedScheduleId,
@@ -218,6 +217,7 @@ const SemesterDisplay: React.FC<Props> = function ({
                 typeof highlight !== 'undefined'
                 && highlight === selectedSchedule?.id
               }
+              onPlanningPage
             />
           )}
 
@@ -249,8 +249,8 @@ const SemesterDisplay: React.FC<Props> = function ({
         )} */}
 
         {/* Second component: actual classes */}
-        <div className="flex-1 p-4 md:overflow-auto">
-          <div className="flex flex-col items-stretch space-y-4">
+        <div className="flex-1 p-4 md:overflow-auto h-max">
+          <div className="flex flex-col items-stretch min-h-[12rem] space-y-4">
             {selectedSchedule
               && selectedSchedule.classes.map(({ classId: id }) => (id && classCache[id] ? (
                 <CourseCard
@@ -288,4 +288,4 @@ const SemesterDisplay: React.FC<Props> = function ({
   );
 };
 
-export default SemesterDisplay;
+export default SemesterComponent;

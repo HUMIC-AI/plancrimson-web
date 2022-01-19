@@ -4,9 +4,7 @@ import PlanningSection from '../components/YearSchedule/PlanningSection';
 import RequirementsSection from '../components/YearSchedule/RequirementsSection';
 import { getUniqueSemesters, allTruthy } from '../shared/util';
 import useClassCache from '../src/context/classCache';
-import useShowAllSchedules, {
-  SchedulesDisplayProvider,
-} from '../src/context/showAllSchedules';
+import useShowAllSchedules from '../src/context/showAllSchedules';
 import useUserData from '../src/context/userData';
 import validateSchedules from '../src/requirements';
 import collegeRequirements from '../src/requirements/college';
@@ -67,7 +65,7 @@ const PlanPageComponent = function () {
   ]);
 
   return (
-    <div className="grid md:grid-rows-1 min-h-screen md:grid-cols-[auto_1fr] items-stretch gap-4">
+    <div className="grid md:grid-rows-1 min-h-screen py-8 md:grid-cols-[auto_1fr] items-stretch gap-4">
       <RequirementsSection
         {...{
           selectedRequirements,
@@ -92,10 +90,8 @@ const PlanPageComponent = function () {
 
 export default function PlanPage() {
   return (
-    <Layout size="w-full md:p-8" title="Plan">
-      <SchedulesDisplayProvider>
-        <PlanPageComponent />
-      </SchedulesDisplayProvider>
+    <Layout size="w-full md:px-8" title="Plan">
+      <PlanPageComponent />
     </Layout>
   );
 }

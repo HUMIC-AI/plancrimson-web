@@ -1,10 +1,16 @@
 /* eslint-disable no-console */
 import '../server/initFirebase';
 import { getFirestore } from 'firebase-admin/firestore';
+import inquirer from 'inquirer';
+import {
+  existsSync, lstatSync, readdirSync, readFileSync,
+} from 'fs';
+import { join } from 'path';
 import { Evaluation } from '../shared/apiTypes';
 import { getEvaluationId } from '../shared/util';
+import { getFilePath } from './util';
 
-export default async function uploadEvaluations(
+async function uploadEvaluations(
   evaluations: Evaluation[],
   startBatch: number = 0,
 ) {
@@ -32,3 +38,44 @@ export default async function uploadEvaluations(
   }
   return allResults;
 }
+
+function getAllEvaluations(filepath: string): Evaluation[] {
+  if (!existsSync(filepath)) throw new Error(`Path ${filepath} does not exist`);
+  const data = lstatSync(filepath);
+  if (data.isDirectory()) {
+    return readdirSync(filepath).flatMap((nestedPath) => getAllEvaluations(join(filepath, nestedPath)));
+  }
+  if (data.isFile()) {
+    // hopefully this is an evaluation, we only check if it's an array
+    const evaluations: Evaluation[] = JSON.parse(readFileSync(filepath).toString('utf8'));
+    if (!Array.isArray(evaluations)) throw new Error(`The file at ${filepath} is not a JSON array`);
+    return evaluations;
+  }
+  throw new Error(`Unrecognized file ${filepath}`);
+}
+
+export default {
+  label: 'Upload evaluations from a file to firestore',
+  async run() {
+    if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+      throw new Error('Set the GOOGLE_APPLICATION_CREDENTIALS env variable');
+    }
+    const filePath = await getFilePath(
+      'File path to evaluations to read from:',
+      'data/evaluations/evaluations',
+      true,
+    );
+    const evaluations: Evaluation[] = getAllEvaluations(filePath);
+    console.log(`uploading ${evaluations.length} total evaluations`);
+    const { startBatch } = await inquirer.prompt([
+      {
+        name: 'startBatch',
+        type: 'number',
+        message: 'Batch to start at:',
+        default: 1,
+      },
+    ]);
+    const results = await uploadEvaluations(evaluations, startBatch);
+    console.log(`wrote ${results.length} results`);
+  },
+};

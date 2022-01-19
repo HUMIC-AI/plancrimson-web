@@ -60,6 +60,12 @@ export type Viability = 'Yes' | 'Likely' | 'Unlikely' | 'No';
 
 export type DayOfWeek = typeof DAYS_OF_WEEK[number];
 
+export interface CustomTimeRecord {
+  pattern: DayOfWeek[],
+  start: number; // decimal hour
+  end: number; // decimal hour
+}
+
 // firestore user schema
 export interface UserData {
   classYear: number;
@@ -70,11 +76,19 @@ export interface UserData {
   selectedSchedules: {
     [term: Term]: string | null;
   };
-  customTimes: Record<ClassId, {
-    pattern: DayOfWeek[],
-    start: number; // decimal hour
-    end: number; // decimal hour
-  }>;
+  customTimes: Record<ClassId, CustomTimeRecord>;
+
+  // for each requirement,
+  // if waivedRequirements[requirement.id].waived is set to true,
+  // we just take the user's word for it and don't do any checking
+  // if waived is set to false,
+  // then we include the classes given when passing through the reducer
+  waivedRequirements: {
+    [requirementId: string]: {
+      waived: boolean;
+      classes: ClassId[];
+    };
+  }
 }
 
 export interface Schedule {

@@ -3,19 +3,11 @@
 import cheerio from 'cheerio';
 import inquirer from 'inquirer';
 import '../server/initFirebase';
-import fs, { readFileSync } from 'fs';
+import fs from 'fs';
 import { getEvaluation } from '../server/evaluation';
 import fetcher from '../shared/fetcher';
 import { allTruthy } from '../shared/util';
-
-const Q_REPORTS_COOKIE = process.env.Q_REPORTS_COOKIE!;
-const BLUERA_COOKIE = process.env.BLUERA_COOKIE!;
-
-if (!Q_REPORTS_COOKIE || !BLUERA_COOKIE) {
-  throw new Error(
-    'ensure the Q_REPORTS_COOKIE and BLUERA_COOKIE env variables are set (see https://qreports.fas.harvard.edu/browse/index)',
-  );
-}
+import { getFilePath } from './util';
 
 const batchSize = 480;
 
@@ -23,19 +15,7 @@ const terms = ['2021 Fall', '2021 Spring', '2020 Fall', '2019 Fall'];
 
 const baseUrl = 'https://qreports.fas.harvard.edu/browse/index';
 
-/**
- * Prints a list of JSON objects to the console
- * which can be joined together using `jq --slurp` on the command line.
- */
-async function downloadEvaluations() {
-  const exportPath = process.argv[2];
-  const urlsPath = process.argv[3];
-  if (!exportPath) {
-    throw new Error('pass the directory name to save the results in');
-  }
-
-  if (!fs.existsSync(exportPath)) fs.mkdirSync(exportPath);
-
+async function defaultUrls() {
   const selectedTerms = (
     await inquirer.prompt([
       {
@@ -47,42 +27,51 @@ async function downloadEvaluations() {
     ])
   ).selectedTerms as string[];
 
-  const evaluationUrls = urlsPath
-    ? (JSON.parse(readFileSync(urlsPath).toString('utf8')) as string[])
-    : await Promise.all(
-      selectedTerms.map((term) => fetcher({
-        url: baseUrl,
-        method: 'GET',
-        params: { calTerm: term },
-        headers: {
-          Cookie: Q_REPORTS_COOKIE,
-        },
-      }).then((html) => {
-        const $ = cheerio.load(html);
-        return $('#bluecourses a')
-          .map((_, a) => $(a).attr('href'))
-          .toArray();
-      })),
-    );
+  const urls = await Promise.all(
+    selectedTerms.map((term) => fetcher({
+      url: baseUrl,
+      method: 'GET',
+      params: { calTerm: term },
+      headers: {
+        Cookie: process.env.Q_REPORTS_COOKIE!,
+      },
+    }).then((html) => {
+      const $ = cheerio.load(html);
+      return $('#bluecourses a')
+        .map((_, a) => $(a).attr('href')!)
+        .toArray();
+    })),
+  );
 
-  const invalidUrls = typeof evaluationUrls[0] === 'string'
-    ? (evaluationUrls as string[]).filter((u) => typeof u !== 'string')
-    : (evaluationUrls as string[][]).flatMap((u) => u.filter((v) => typeof v !== 'string'));
+  return urls.flat();
+}
+
+/**
+ * Prints a list of JSON objects to the console
+ * which can be joined together using `jq --slurp` on the command line.
+ */
+async function downloadEvaluations(exportPath: string, evaluationUrls?: string[]) {
+  if (!evaluationUrls) {
+    // eslint-disable-next-line no-param-reassign
+    evaluationUrls = await defaultUrls();
+  }
+
+  const invalidUrls = evaluationUrls.filter((u) => typeof u !== 'string');
+
   if (invalidUrls.length > 0) {
     throw new Error(
       `urls need to be strings but received ${JSON.stringify(invalidUrls)}`,
     );
   }
 
-  const allUrls = evaluationUrls.flat();
-  console.log(`found ${allUrls.length} evaluations`);
+  console.log(`found ${evaluationUrls.length} evaluations`);
 
-  for (let i = 0; i < allUrls.length; i += batchSize) {
-    const urls = allUrls.slice(i, i + batchSize);
+  for (let i = 0; i < evaluationUrls.length; i += batchSize) {
+    const urls = evaluationUrls.slice(i, i + batchSize);
     const batchNumber = i / batchSize + 1;
     console.log(
       `loading ${urls.length} evaluations (${batchNumber}/${Math.ceil(
-        allUrls.length / batchSize,
+        evaluationUrls.length / batchSize,
       )})`,
     );
 
@@ -92,7 +81,7 @@ async function downloadEvaluations() {
           // rate limit ourselves to one request per 200ms
           // eslint-disable-next-line no-promise-executor-return
           await new Promise((resolve) => setTimeout(resolve, 200 * j));
-          const evl = await getEvaluation(url, { auth: BLUERA_COOKIE });
+          const evl = await getEvaluation(url, { auth: process.env.BLUERA_COOKIE! });
           return evl;
         } catch (err: any) {
           console.error(`skipping evaluation at ${url}: ${err.message}`);
@@ -110,4 +99,15 @@ async function downloadEvaluations() {
   }
 }
 
-downloadEvaluations();
+export default {
+  label: 'Fetch Q Reports',
+  async run() {
+    if (!process.env.Q_REPORTS_COOKIE || !process.env.BLUERA_COOKIE) {
+      throw new Error(
+        'ensure the Q_REPORTS_COOKIE and BLUERA_COOKIE env variables are set (see https://qreports.fas.harvard.edu/browse/index)',
+      );
+    }
+    const filepath = await getFilePath('Directory to store results in:', 'data/evaluations/qreports');
+    await downloadEvaluations(filepath);
+  },
+};

@@ -18,7 +18,7 @@ import useUser from '../../src/context/user';
 
 const paths = [
   {
-    href: '/',
+    href: '/search',
     name: 'Search',
   },
   {
@@ -92,7 +92,12 @@ const UserMenu = function () {
                     provider.setCustomParameters({
                       hd: 'college.harvard.edu',
                     });
-                    await signInWithPopup(getAuth(), provider);
+                    try {
+                      await signInWithPopup(getAuth(), provider);
+                    } catch (err) {
+                      console.error(err);
+                      alert('Failed to sign in. Please try again later.');
+                    }
                   }
                 }}
               >
@@ -132,11 +137,15 @@ const Navbar = function () {
 
               <div className="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex-shrink-0 flex items-center text-white">
-                  <FaCalendarCheck className="block lg:hidden h-8 w-auto" />
-                  <div className="hidden lg:flex items-center gap-4">
-                    <FaCalendarCheck className="h-8 w-auto" />
-                    <h1 className="text-lg">Plan Crimson</h1>
-                  </div>
+                  <Link href="/">
+                    <a>
+                      <FaCalendarCheck className="block lg:hidden h-8 w-auto" />
+                      <div className="hidden lg:flex items-center gap-4">
+                        <FaCalendarCheck className="h-8 w-auto" />
+                        <h1 className="text-lg">Plan Crimson</h1>
+                      </div>
+                    </a>
+                  </Link>
                 </div>
                 <div className="hidden sm:block sm:ml-6">
                   <div className="flex space-x-4">
@@ -174,8 +183,9 @@ const Navbar = function () {
             </div>
           </div>
 
+          {/* The version on small screens */}
           <Disclosure.Panel className="sm:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1">
+            <div className="px-4 pb-4 flex justify-center">
               {paths.map((item) => (
                 <Disclosure.Button
                   key={item.name}

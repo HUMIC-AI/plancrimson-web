@@ -33,7 +33,7 @@ const divisionalDistribution = (
 });
 
 const genedRequirements: RequirementGroup = {
-  groupId: 'General Education requirement',
+  groupId: 'General Education',
   description: (
     <div className="space-y-2">
       <p>
@@ -103,7 +103,7 @@ const genedRequirements: RequirementGroup = {
 };
 
 const distributionRequirement: RequirementGroup = {
-  groupId: 'Distribution requirement',
+  groupId: 'Distribution',
   description: (
     <div className="space-y-2">
       <p>
@@ -274,7 +274,7 @@ const exposRequirement: Requirement = {
 };
 
 const languageRequirement: Requirement = {
-  id: 'Language requirement',
+  id: 'Language',
   sourcePage: 14,
   description: (
     <div className="space-y-2">

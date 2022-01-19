@@ -1,4 +1,5 @@
 import axios, { AxiosRequestHeaders } from 'axios';
+import { existsSync, readFileSync } from 'fs';
 import inquirer from 'inquirer';
 import path from 'path/posix';
 import { ExtendedClass } from '../shared/apiTypes';
@@ -22,7 +23,7 @@ function getHeaders(meiliRequired: boolean): AxiosRequestHeaders {
   };
 }
 
-export default async function uploadData(data: ExtendedClass[]) {
+async function uploadData(data: ExtendedClass[]) {
   const { meiliUrl } = await inquirer.prompt([
     {
       type: 'input',
@@ -38,3 +39,20 @@ export default async function uploadData(data: ExtendedClass[]) {
     data,
   });
 }
+
+export default {
+  label: 'Upload course data from a file to MeiliSearch',
+  async run() {
+    const { filepath } = await inquirer.prompt([
+      {
+        name: 'filepath',
+        message: 'Which file would you like to upload to MeiliSearch?',
+        type: 'input',
+      },
+    ]);
+    if (!existsSync(filepath)) {
+      throw new Error('file does not exist');
+    }
+    await uploadData(JSON.parse(readFileSync(filepath).toString('utf8')));
+  },
+};

@@ -115,7 +115,7 @@ const exceptions: Requirement = {
 };
 
 const creditRequirement: RequirementGroup = {
-  groupId: 'Credit requirements',
+  groupId: 'Credit',
   sourcePage: 9,
   requirements: [
     totalCredits,
@@ -128,7 +128,7 @@ const creditRequirement: RequirementGroup = {
 };
 
 const residencyRequirement: RequirementGroup = {
-  groupId: 'Residency requirement',
+  groupId: 'Residency',
   sourcePage: 10,
   requirements: [
     {

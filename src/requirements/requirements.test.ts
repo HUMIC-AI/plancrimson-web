@@ -32,6 +32,7 @@ describe('Requirements', () => {
           lastLoggedIn: new Date(),
           schedules: mockSchedules,
           selectedSchedules: {},
+          customTimes: {},
         },
         {},
       ).satisfied,

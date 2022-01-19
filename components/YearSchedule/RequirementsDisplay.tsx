@@ -107,7 +107,7 @@ function countSatisfiedRequirements(result: GroupResult): [number, number] {
   );
 }
 
-const RequirementsDisplay: React.FC<Props> = function ({
+const RequirementGroupComponent: React.FC<Props> = function ({
   depth,
   requirements: reqGroup,
   validationResults,
@@ -162,7 +162,8 @@ const RequirementsDisplay: React.FC<Props> = function ({
       defaultOpen={depth === 0}
       as="div"
       className={classNames(
-        'overflow-hidden mt-4',
+        'overflow-hidden',
+        depth > 0 && 'mt-4',
         depth > 1 ? 'rounded-lg' : 'sm:rounded-lg',
         borderStyles,
       )}
@@ -177,10 +178,7 @@ const RequirementsDisplay: React.FC<Props> = function ({
           <Heading>{reqGroup.groupId}</Heading>
           {total > 0 && (
             <span className="font-medium whitespace-nowrap">
-              {numSatisfied}
-              {' '}
-              /
-              {total}
+              {`${numSatisfied} / ${total}`}
             </span>
           )}
         </div>
@@ -204,7 +202,7 @@ const RequirementsDisplay: React.FC<Props> = function ({
           <ul className="space-y-4 text-sm">
             {reqGroup.requirements.map((req) => ('groupId' in req ? (
               <li key={req.groupId}>
-                <RequirementsDisplay
+                <RequirementGroupComponent
                   depth={depth + 1}
                   key={req.groupId}
                   requirements={req}
@@ -245,4 +243,4 @@ const RequirementsDisplay: React.FC<Props> = function ({
   );
 };
 
-export default RequirementsDisplay;
+export default RequirementGroupComponent;

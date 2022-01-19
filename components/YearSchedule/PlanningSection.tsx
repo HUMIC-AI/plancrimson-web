@@ -1,4 +1,3 @@
-import { Dialog } from '@headlessui/react';
 import React, {
   useEffect, useMemo, useRef, useState,
 } from 'react';
@@ -17,12 +16,12 @@ import {
 } from '../../shared/util';
 import useCardStyle from '../../src/context/cardStyle';
 import useShowAllSchedules from '../../src/context/showAllSchedules';
-import useUserData from '../../src/context/userData';
+import useUserData, { clearSchedule } from '../../src/context/userData';
 import { downloadJson } from '../../src/hooks';
 import { Requirement } from '../../src/requirements/util';
 import { DragStatus } from '../Course/CourseCard';
-import CustomDialog from '../CustomDialog';
-import SemesterDisplay from './SemesterDisplay';
+import UploadPlan from '../UploadPlan';
+import SemesterComponent from './SemesterDisplay';
 
 type Props = {
   highlightedRequirement: Requirement | undefined;
@@ -33,33 +32,9 @@ const HeaderSection: React.FC<{
   resizeRef: React.MutableRefObject<HTMLDivElement>;
   downloadData: any;
 }> = function ({ totalCourses, resizeRef, downloadData }) {
-  const { createSchedule } = useUserData();
-  const [showDialog, setShowDialog] = useState(false);
   const { isExpanded, expand } = useCardStyle();
-  const { showAllSchedules, setShowAllSchedules } = useShowAllSchedules();
-
-  const handleUpload: React.FormEventHandler<HTMLFormElement> = async (ev) => {
-    ev.preventDefault();
-    const data = new FormData(ev.currentTarget);
-    const file = data.get('plan')?.valueOf() as File;
-    if (!file) {
-      alert('Please upload a file!');
-    }
-    try {
-      const text = await file.text();
-      const { id, schedules }: DownloadPlan = JSON.parse(text);
-      await Promise.all(
-        schedules.map((schedule) => createSchedule({
-          ...schedule,
-          id: `${schedule.id} (sample ${id})`,
-          force: true,
-        })),
-      );
-      setShowDialog(false);
-    } catch (err) {
-      alert('Invalid file format. Please try again.');
-    }
-  };
+  const { showAllSchedules, setShowAllSchedules, sampleSchedule } = useShowAllSchedules();
+  const { data, removeCourses } = useUserData();
 
   return (
     <div className="text-white space-y-4">
@@ -71,7 +46,7 @@ const HeaderSection: React.FC<{
           {' '}
           / 32
         </span>
-        <div className="flex items-center justify-center gap-4 text-sm">
+        <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
           <button
             type="button"
             onClick={() => expand(!isExpanded)}
@@ -98,43 +73,35 @@ const HeaderSection: React.FC<{
           <button
             type="button"
             className="hover:opacity-50 transition-opacity underline"
-            onClick={() => downloadJson('Selected Schedules (Plan Crimson)', downloadData)}
+            onClick={() => downloadJson(
+              showAllSchedules === 'sample'
+                ? `Sample ${sampleSchedule?.id} - Plan Crimson`
+                : 'Selected schedules - Plan Crimson',
+              downloadData,
+            )}
           >
             Download all
           </button>
-          <button
-            type="button"
-            onClick={() => setShowDialog(!showDialog)}
-            className="hover:opacity-50 transition-opacity underline"
-          >
-            Upload plan
-            <CustomDialog
-              open={showDialog}
-              closeModal={() => setShowDialog(false)}
-              title="Upload plan"
+          <UploadPlan />
+          {showAllSchedules !== 'sample' && (
+            <button
+              type="button"
+              className="hover:opacity-50 transition-opacity underline"
+              onClick={() => {
+                // eslint-disable-next-line no-restricted-globals
+                const yn = confirm(
+                  'Are you sure? This will remove all courses from all selected schedules!',
+                );
+                if (yn) {
+                  allTruthy(
+                    Object.values(data.selectedSchedules).map((id) => (id ? data.schedules[id] : null)),
+                  ).forEach((schedule) => clearSchedule(removeCourses, schedule));
+                }
+              }}
             >
-              <form
-                className="bg-white p-6 flex flex-col items-start space-y-4"
-                onSubmit={handleUpload}
-              >
-                <Dialog.Description>Upload a plan</Dialog.Description>
-                <input
-                  type="file"
-                  name="plan"
-                  id="planFile"
-                  accept="application/json"
-                  className="mt-4"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="bg-gray-400 py-2 px-4 rounded-md hover:opacity-50 transition-opacity"
-                >
-                  Submit
-                </button>
-              </form>
-            </CustomDialog>
-          </button>
+              Reset all
+            </button>
+          )}
         </div>
       </div>
       <div className="flex justify-center xl:justify-start">
@@ -267,7 +234,7 @@ const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
     id:
       showAllSchedules === 'sample'
         ? sampleSchedule!.id
-        : Math.random().toString(16).slice(0, 4),
+        : Math.random().toString(16).slice(2, 18),
     schedules: allTruthy(
       allSemesters.map(({ selectedScheduleId }) => (selectedScheduleId ? data.schedules[selectedScheduleId] : null)),
     ),
@@ -291,7 +258,7 @@ const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
           >
             <div ref={leftScrollRef} />
             {allSemesters.map((props) => (
-              <SemesterDisplay
+              <SemesterComponent
                 {...{
                   ...props,
                   colWidth,

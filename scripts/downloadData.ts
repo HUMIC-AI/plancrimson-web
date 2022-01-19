@@ -7,6 +7,7 @@ import { extendClass } from '../server/evaluation';
 import { Class, ExtendedClass, MyHarvardResponse } from '../shared/apiTypes';
 import { FetchError } from '../shared/fetcher';
 import { allTruthy } from '../shared/util';
+import { getFilePath } from './util';
 
 // number of my.harvard pages in a batch
 const BATCH_SIZE = 15;
@@ -72,7 +73,7 @@ async function downloadPage(
   return classes;
 }
 
-export default async function downloadData(baseDir: string) {
+async function downloadData(baseDir: string) {
   const MY_HARVARD_COOKIE = process.env.MY_HARVARD_COOKIE!;
   const GOOGLE_APPLICATION_CREDENTIALS = process.env.GOOGLE_APPLICATION_CREDENTIALS!;
   if (!MY_HARVARD_COOKIE || !GOOGLE_APPLICATION_CREDENTIALS) {
@@ -158,3 +159,18 @@ to be loaded in ${nBatches} batches of ${BATCH_SIZE} pages each`);
     console.error(JSON.stringify(rejected, null, 2));
   }
 }
+
+export default {
+  label: 'Download course data from my.harvard',
+  async run() {
+    const filePath = await getFilePath(
+      'Path to directory to download into:',
+      'data/courses/courses',
+    );
+    try {
+      await downloadData(filePath);
+    } catch (err) {
+      console.error(err);
+    }
+  },
+};

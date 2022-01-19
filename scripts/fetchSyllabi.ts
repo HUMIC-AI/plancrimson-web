@@ -3,7 +3,9 @@ import axios from 'axios';
 import {
   createWriteStream, existsSync, mkdirSync, writeFileSync,
 } from 'fs';
+import inquirer from 'inquirer';
 import subjects from '../src/subjects.json';
+import { getFilePath } from './util';
 
 const BASE_URL = 'https://syllabus-api.tlt.harvard.edu/search';
 const COURSE_URL = 'https://syllabus-api.tlt.harvard.edu/course';
@@ -140,7 +142,7 @@ function downloadFiles(course: CourseResponse<FullInstance>, dirPath: string) {
   );
 }
 
-export default async function fetchSyllabi(
+async function fetchSyllabi(
   dirPath: string,
   startIndex: number,
   endIndex: number | undefined,
@@ -177,3 +179,33 @@ export default async function fetchSyllabi(
     console.log(`done subject ${subject} with ${results.length} courses`);
   }
 }
+
+export default {
+  label: 'Fetch syllabi from Harvard Syllabus Explorer',
+  async run() {
+    const baseDir = await getFilePath(
+      'File path to save syllabi in:',
+      'data/syllabi',
+    );
+    const subjectAbbreviations = Object.keys(subjects).sort();
+    const { startIndex, endIndex } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'startIndex',
+        message: 'Start with subject:',
+        choices: subjectAbbreviations,
+      },
+      {
+        type: 'list',
+        name: 'endIndex',
+        message: 'End with subject (exclusive):',
+        choices: ['None', ...subjectAbbreviations],
+      },
+    ]);
+    await fetchSyllabi(
+      baseDir,
+      subjectAbbreviations.indexOf(startIndex),
+      endIndex === 'None' ? undefined : subjectAbbreviations.indexOf(endIndex),
+    );
+  },
+};
