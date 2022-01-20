@@ -1,12 +1,8 @@
 import { connectInfiniteHits } from 'react-instantsearch-dom';
-import React, {
-// useEffect, useRef, useState,
-} from 'react';
+import React from 'react'; // useEffect, useRef, useState,
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { FaArrowsAltV, FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import {
-  ExtendedClass,
-} from '../../shared/apiTypes';
+import { ExtendedClass } from '../../shared/apiTypes';
 import useSelectedScheduleContext from '../../src/context/selectedSchedule';
 import { classNames, getClassId } from '../../shared/util';
 import CourseCard from '../Course/CourseCard';
@@ -26,7 +22,9 @@ type ButtonProps = {
 // }
 
 const CustomButton: React.FC<ButtonProps> = function ({
-  onClick, enabled, direction,
+  onClick,
+  enabled,
+  direction,
   // setNumCols,
 }) {
   const { isExpanded, expand } = useCardStyle();
@@ -47,9 +45,11 @@ const CustomButton: React.FC<ButtonProps> = function ({
         type="button"
         onClick={onClick}
         disabled={!enabled}
-      // ref={ref}
+        // ref={ref}
         className={classNames(
-          enabled ? 'bg-gray-800 hover:opacity-50' : 'bg-gray-300 cursor-not-allowed',
+          enabled
+            ? 'bg-gray-800 hover:opacity-50'
+            : 'bg-gray-300 cursor-not-allowed',
           'p-2 shadow w-48 min-w-[84px] max-w-full sm:max-w-[192px] rounded text-white transition-opacity',
           // 'resize-x overflow-auto',
           'flex justify-center',
@@ -72,8 +72,15 @@ const CustomButton: React.FC<ButtonProps> = function ({
   );
 };
 
-export const HitsComponent: React.FC<InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }> = function ({
-  hits, hasPrevious, hasMore, refinePrevious, refineNext, inSearch = true,
+export const HitsComponent: React.FC<
+InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
+> = function ({
+  hits,
+  hasPrevious,
+  hasMore,
+  refinePrevious,
+  refineNext,
+  inSearch = true,
 }) {
   const { selectedSchedule } = useSelectedScheduleContext();
   const {
@@ -90,27 +97,29 @@ export const HitsComponent: React.FC<InfiniteHitsProvided<ExtendedClass> & { inS
         direction="up"
       />
 
-      {hits.length === 0 ? <div className="animate-pulse py-2 px-4 rounded-full bg-gray-300">Loading results...</div>
-        : (
-          <div
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
-          >
-            {hits.map((hit) => (
-              <CourseCard
-                key={getClassId(hit)}
-                course={hit}
-                selectedSchedule={selectedSchedule}
-                handleExpand={handleExpand}
-                inSearchContext={inSearch}
-              />
-            ))}
-            <CourseDialog
-              isOpen={isOpen}
-              course={openedCourse}
-              closeModal={closeModal}
+      {hits.length === 0 ? (
+        // <div className="animate-pulse py-2 px-4 rounded-full bg-gray-300">
+        //   Loading results...
+        // </div>
+        <span>No results found</span>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+          {hits.map((hit) => (
+            <CourseCard
+              key={getClassId(hit)}
+              course={hit}
+              selectedSchedule={selectedSchedule}
+              handleExpand={handleExpand}
+              inSearchContext={inSearch}
             />
-          </div>
-        )}
+          ))}
+          <CourseDialog
+            isOpen={isOpen}
+            course={openedCourse}
+            closeModal={closeModal}
+          />
+        </div>
+      )}
 
       <CustomButton
         enabled={hasMore}

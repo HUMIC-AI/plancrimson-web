@@ -18,7 +18,7 @@ import useUser from '../../src/context/user';
 
 const paths = [
   {
-    href: '/',
+    href: '/search',
     name: 'Search',
   },
   {
@@ -42,7 +42,10 @@ const UserMenu = function () {
   return (
     <Menu as="div" className="ml-3 relative z-50">
       <div>
-        <Menu.Button name="Open user menu" className="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+        <Menu.Button
+          name="Open user menu"
+          className="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+        >
           <span className="sr-only">Open user menu</span>
           {user?.photoURL ? (
             <Image
@@ -86,7 +89,15 @@ const UserMenu = function () {
                   } else {
                     // we don't need any additional scopes
                     const provider = new GoogleAuthProvider();
-                    await signInWithPopup(getAuth(), provider);
+                    provider.setCustomParameters({
+                      hd: 'college.harvard.edu',
+                    });
+                    try {
+                      await signInWithPopup(getAuth(), provider);
+                    } catch (err) {
+                      console.error(err);
+                      alert('Failed to sign in. Please try again later.');
+                    }
                   }
                 }}
               >
@@ -111,7 +122,10 @@ const Navbar = function () {
             <div className="relative flex items-center justify-between h-16">
               {/* Mobile menu button */}
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
-                <Disclosure.Button name="Open main menu" className="inline-flex items-center justify-center p-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                <Disclosure.Button
+                  name="Open main menu"
+                  className="inline-flex items-center justify-center p-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+                >
                   <span className="sr-only">Open main menu</span>
                   {open ? (
                     <FaTimes className="block h-6 w-6" aria-hidden="true" />
@@ -123,11 +137,15 @@ const Navbar = function () {
 
               <div className="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex-shrink-0 flex items-center text-white">
-                  <FaCalendarCheck className="block lg:hidden h-8 w-auto" />
-                  <div className="hidden lg:flex items-center gap-4">
-                    <FaCalendarCheck className="h-8 w-auto" />
-                    <h1 className="text-lg">Plan Crimson</h1>
-                  </div>
+                  <Link href="/">
+                    <a>
+                      <FaCalendarCheck className="block lg:hidden h-8 w-auto" />
+                      <div className="hidden lg:flex items-center gap-4">
+                        <FaCalendarCheck className="h-8 w-auto" />
+                        <h1 className="text-lg">Plan Crimson</h1>
+                      </div>
+                    </a>
+                  </Link>
                 </div>
                 <div className="hidden sm:block sm:ml-6">
                   <div className="flex space-x-4">
@@ -165,8 +183,9 @@ const Navbar = function () {
             </div>
           </div>
 
+          {/* The version on small screens */}
           <Disclosure.Panel className="sm:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1">
+            <div className="px-4 pb-4 flex justify-center">
               {paths.map((item) => (
                 <Disclosure.Button
                   key={item.name}

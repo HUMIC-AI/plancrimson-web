@@ -9,7 +9,7 @@
 - search for a given course, e.g. my.harvard
 - more convenient interface than my.harvard
 - more detailed prerequisite or related courses chart
-    - "students also took:"
+  - "students also took:"
 
 This project is mostly reverse engineered from the `my.harvard` portal via analyzing requests through the `Network` tab in Chrome Dev Tools and filtering by Fetch/XHR
 
@@ -42,10 +42,8 @@ Below is a walkthrough of the project and some notable files.
 
 `/components/` contains most of the UI. Each file seeks to export a single component by default with the same name as the file.
 
-
 ## Search UI
 
 The search UI is built with [Instant MeiliSearch](https://github.com/meilisearch/instant-meilisearch) and the [InstantSearch API from Algolia](https://www.algolia.com/doc/api-reference/widgets/react/). The [MeiliSearch React GitHub repository](https://github.com/meilisearch/meilisearch-react/) describes how these technologies work together.
 
-- `SearchComponents/` contains a number of widgets built using the 
-
+- `SearchComponents/` contains a number of widgets built using the

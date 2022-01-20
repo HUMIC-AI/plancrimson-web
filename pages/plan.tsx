@@ -1,82 +1,97 @@
-import {
-  useState, useEffect, useMemo,
-} from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout/Layout';
 import PlanningSection from '../components/YearSchedule/PlanningSection';
 import RequirementsSection from '../components/YearSchedule/RequirementsSection';
 import { getUniqueSemesters, allTruthy } from '../shared/util';
 import useClassCache from '../src/context/classCache';
-import { ShowAllSchedulesContext } from '../src/context/showAllSchedules';
+import useShowAllSchedules from '../src/context/showAllSchedules';
 import useUserData from '../src/context/userData';
-import validateSchedules, { RequirementsMet, getReqs } from '../src/requirements';
+import validateSchedules from '../src/requirements';
 import collegeRequirements from '../src/requirements/college';
-import { Requirement, RequirementGroup } from '../src/requirements/util';
+import {
+  GroupResult,
+  Requirement,
+  RequirementGroup,
+} from '../src/requirements/util';
 
-const PlanPage = function () {
+const PlanPageComponent = function () {
   const { data, selectSchedule } = useUserData();
   // scheduleIds maps year + season to scheduleId
-  const [validationResults, setValidationResults] = useState<RequirementsMet>({});
+  const { showAllSchedules, sampleSchedule } = useShowAllSchedules();
+  const [validationResults, setValidationResults] = useState<GroupResult | null>(null);
   const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(collegeRequirements);
   const [highlightedRequirement, setHighlightedRequirement] = useState<Requirement>();
   const [notification, setNotification] = useState(true);
-  const [showAllSchedules, setShowAllSchedules] = useState(false);
-  const getClass = useClassCache(data.schedules);
+  const classCache = useClassCache(
+    Object.values(data.schedules).concat(
+      sampleSchedule ? sampleSchedule.schedules : [],
+    ),
+  );
 
   useEffect(() => {
-    getUniqueSemesters(data.classYear, Object.values(data.schedules)).forEach(({ year, season }) => {
-      if (!data.selectedSchedules[`${year}${season}`]) {
-        // selectSchedule(
-        //   year,
-        //   season,
-        //   getSchedulesBySemester(data, year, season)[0]?.id || null,
-        // );
-      }
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    getUniqueSemesters(data.classYear, Object.values(data.schedules)).forEach(
+      ({ year, season }) => {
+        if (!data.selectedSchedules[`${year}${season}`]) {
+          // selectSchedule(
+          //   year,
+          //   season,
+          //   getSchedulesBySemester(data, year, season)[0]?.id || null,
+          // );
+        }
+      },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   useEffect(() => {
-    const schedules = allTruthy(Object.values(data.selectedSchedules).map((id) => (id ? data.schedules[id] : null)));
+    const schedules = showAllSchedules === 'sample'
+      ? sampleSchedule!.schedules
+      : allTruthy(
+        Object.values(data.selectedSchedules).map((id) => (id ? data.schedules[id] : null)),
+      );
     const results = validateSchedules(
+      selectedRequirements,
       schedules,
-      getReqs(selectedRequirements),
       data,
-      getClass,
+      classCache,
     );
     setValidationResults(results);
-  }, [selectedRequirements, data, getClass]);
-
-  const context = useMemo(() => ({
+  }, [
+    selectedRequirements,
+    data,
+    classCache,
     showAllSchedules,
-    setShowAllSchedules,
-  }), [showAllSchedules, setShowAllSchedules]);
+    sampleSchedule,
+  ]);
 
   return (
-    <Layout size="w-full md:p-8" title="Plan">
-      <ShowAllSchedulesContext.Provider value={context}>
-        <div className="grid md:grid-rows-1 min-h-screen md:grid-cols-[auto_1fr] items-stretch gap-4">
-          <RequirementsSection
-            {...{
-              selectedRequirements,
-              setSelectedRequirements,
-              highlightRequirement: setHighlightedRequirement,
-              highlightedRequirement,
-              notification,
-              setNotification,
-              validationResults,
-            }}
-          />
+    <div className="grid md:grid-rows-1 min-h-screen py-8 md:grid-cols-[auto_1fr] items-stretch gap-4">
+      <RequirementsSection
+        {...{
+          selectedRequirements,
+          setSelectedRequirements,
+          highlightRequirement: setHighlightedRequirement,
+          highlightedRequirement,
+          notification,
+          setNotification,
+          validationResults,
+        }}
+      />
 
-          <PlanningSection
-            {...{
-              highlightedRequirement,
-              selectSchedule,
-            }}
-          />
-        </div>
-      </ShowAllSchedulesContext.Provider>
-    </Layout>
+      <PlanningSection
+        {...{
+          highlightedRequirement,
+          selectSchedule,
+        }}
+      />
+    </div>
   );
 };
 
-export default PlanPage;
+export default function PlanPage() {
+  return (
+    <Layout size="w-full md:px-8" title="Plan">
+      <PlanPageComponent />
+    </Layout>
+  );
+}

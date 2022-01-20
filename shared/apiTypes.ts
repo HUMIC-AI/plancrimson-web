@@ -1,4 +1,4 @@
-import { Season } from './firestoreTypes';
+import { DayOfWeek, Season } from './firestoreTypes';
 
 export type SearchParams = Partial<{
   search: string;
@@ -6,23 +6,28 @@ export type SearchParams = Partial<{
   facets: Array<string>;
   searchQuery: string;
   includeEvals: boolean;
-  updateDb: boolean
+  updateDb: boolean;
 }>;
 
-export type FailedClasses = Record<string, {
+export type FailedClasses = Record<
+string,
+{
   error: string;
-}>;
+}
+>;
 
-export type SearchResults = {
-  classes: ExtendedClass[];
-  facets: Facet[];
-  searchProperties: SearchProperties;
-  failedClasses?: FailedClasses;
-} | {
-  error: string;
-};
+export type SearchResults =
+  | {
+    classes: ExtendedClass[];
+    facets: Facet[];
+    searchProperties: SearchProperties;
+    failedClasses?: FailedClasses;
+  }
+  | {
+    error: string;
+  };
 
-export type ExtendedClass = Class & {
+export type ExtendedClass<PatternType = string | string[], TimeType = string | string[]> = Class<PatternType, TimeType> & {
   id: string; // for meilisearch
   textDescription: string;
   meanClassSize?: number;
@@ -31,31 +36,36 @@ export type ExtendedClass = Class & {
   meanHours?: number;
 };
 
-// also used for sorting
-export const DAYS_OF_WEEK = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
-] as const;
-
-export const DAY_SHORT = ['MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT'] as const;
-
-export type DayOfWeek = typeof DAYS_OF_WEEK[number];
-
-export type Viability = 'Yes' | 'Likely' | 'Unlikely' | 'No';
-
 // ==================== FOUR YEAR PLAN RESPONSES ====================
 
-type SeasArea = 'ACS' | 'AP' | 'AM' | 'EE' | 'BE' | 'CS' | 'ESE' | 'General' | 'Mat & ME' | 'MSMBA' | 'SEM';
+type SeasArea =
+  | 'ACS'
+  | 'AP'
+  | 'AM'
+  | 'EE'
+  | 'BE'
+  | 'CS'
+  | 'ESE'
+  | 'General'
+  | 'Mat & ME'
+  | 'MSMBA'
+  | 'SEM';
 
-type Prefix = 'AC' | 'AM' | 'AP' | 'BE' | 'CS' | 'EPS' | 'ES' | 'ESE' | 'FRSEMR' | 'GENED' | 'Gen' | 'SEMINAR';
+type Prefix =
+  | 'AC'
+  | 'AM'
+  | 'AP'
+  | 'BE'
+  | 'CS'
+  | 'EPS'
+  | 'ES'
+  | 'ESE'
+  | 'FRSEMR'
+  | 'GENED'
+  | 'Gen'
+  | 'SEMINAR';
 
 export namespace SeasPlan {
-
   export interface SeasScheduleInfo {
     area: SeasArea;
     courseNumber: string;
@@ -77,7 +87,6 @@ export namespace SeasPlan {
     firstName: string;
     lastName: string;
   }
-
 }
 
 // ==================== MY.HARVARD AND COURSE EVALUATION TYPES BELOW ====================
@@ -94,7 +103,7 @@ export type MyHarvardResponse = [
   SearchProperties,
 ];
 
-export interface Class {
+export interface Class<PatternType = string | string[], TimeType = string | string[]> {
   URL_URLNAME: string; // course website, eg "https://locator.tlt.harvard.edu/course/colgsas-125374/2021/spring/14433"
 
   // identical
@@ -107,11 +116,11 @@ export interface Class {
   // organizational info
   ACAD_ORG: string | string[]; // organizations, eg ["APMA", "CS", "APPHYS", "ENGSCI"]
   ACAD_ORG_PRIMARY_ORG: string; // primary organization, eg "CS"
+  IS_SCL_DESCR_IS_SCL_DESCRJ: string; // department full name, eg "Computer Science"
   HU_ALIAS?: string; // see ACAD_ORG_PRIMARY_ORG, eg "CS"
   PARENT_NODE_NAME: string; // used for filtering on my.harvard, eg "SEAS"
   SUBJECT: string; // subject, eg "ENG-SCI" or "COMPSCI"
-  IS_SCL_DESCR_IS_SCL_DESCRJ: string; // eg "Computer Science"
-  IS_SCL_DESCR_IS_SCL_DESCRD: string; // full organization, eg "Engineering Sciences"
+  IS_SCL_DESCR_IS_SCL_DESCRD: string; // subject full name, eg "Engineering Sciences"
 
   // catalog number
   CATALOG_NBR: string; // catalog number, eg " 301" or " 109B"
@@ -132,7 +141,7 @@ export interface Class {
   Modified: string; // latest date modified, eg "2021-12-11 23:34:23.000000"
 
   DAY_OF_WEEK?: DayOfWeek | DayOfWeek[]; // days of the week, eg ["Monday", "Wednesday", "Friday"]
-  IS_SCL_MEETING_PAT: string | string[]; // see DAY_OF_WEEK, eg "Th"
+  IS_SCL_MEETING_PAT: PatternType; // see DAY_OF_WEEK, eg "Th"
   // "Y" or "N"
   MON: 'Y' | 'N';
   TUES: 'Y' | 'N';
@@ -150,10 +159,12 @@ export interface Class {
 
   ACAD_YEAR: string; // academic year, eg "2022" (note that if in fall, this will be one higher than chronological year)
   IS_SCL_DESCR_IS_SCL_DESCRH: string; // semester, eg "2022 Spring"
-  IS_SCL_TIME_START: string | string[]; // time start, eg "3:45pm"
-  IS_SCL_TIME_END: string | string[]; // time end, eg "6:30pm"
-  IS_SCL_STRT_TM_DEC: string; // time start in decimal, eg "15.7500"
-  IS_SCL_END_TM_DEC: string; // time end in decimal, eg "18.5000"
+
+  // if IS_SCL_MEETING_PAT is a string, then the below will all have the same type
+  IS_SCL_TIME_START: PatternType extends string ? TimeType : (string | string[]); // time start, eg "3:45pm"
+  IS_SCL_TIME_END: PatternType extends string ? TimeType : (string | string[]); // time end, eg "6:30pm"
+  IS_SCL_STRT_TM_DEC: PatternType extends string ? TimeType : (string | string[]); // time start in decimal, eg "15.7500" or an array thereof
+  IS_SCL_END_TM_DEC: PatternType extends string ? TimeType : (string | string[]); // time end in decimal, eg "18.5000"
 
   IS_SCL_DESCR_HU_SCL_EXAM_GROUP: string; // exam date, eg "12/15/2021 9:00 AM"
 
@@ -181,10 +192,10 @@ export interface Class {
   | 'Reading and Research'
   | 'Project';
 
-  IS_SCL_DESCR_IS_SCL_DESCRL: string | string[]; // instructor name, eg "Ariel Procaccia"
+  IS_SCL_DESCR_IS_SCL_DESCRL: string | string[]; // instructor name, eg "Ariel Procaccia" or array thereof
   LAST_NAME: string | string[]; // last name of instructor or array of them, eg ["Protopapas", "Glickman"]
 
-  LOCATION_DESCR_LOCATION: string // eg "Cambridge Campus"
+  LOCATION_DESCR_LOCATION: string; // eg "Cambridge Campus"
   IS_SCL_DESCR_IS_SCL_DESCRG: string; // detailed location, eg "SEC 1.321 Lecture Hall"
 
   // which courses this counts for, eg ["Faculty of Arts & Sciences}{2218}{12284}{STAT}{121A", "Faculty of Arts & Sciences}{2218}{13626}{APCOMP}{209A"]
@@ -209,10 +220,7 @@ export interface Class {
   | 'Histories, Societies, Individuals'
   | 'Ethics and Civics';
   CRSE_ATTR_VALUE_HU_GE_ATTR?: // see above
-  | 'A&C'
-  | 'STS'
-  | 'HSI'
-  | 'E&C';
+  'A&C' | 'STS' | 'HSI' | 'E&C';
   IS_SCL_DESCR100_HU_SCL_ATTR_LDD?: // divisional distribution
   | 'Science & Engineering & Applied Science'
   | 'Arts and Humanities'
@@ -378,10 +386,12 @@ export interface Evaluation {
   'What would you like to tell future students about this class?'?: string;
 }
 
-export type PossibleEvaluationResponse = Evaluation | {
-  url: string;
-  error: string
-};
+export type PossibleEvaluationResponse =
+  | Evaluation
+  | {
+    url: string;
+    error: string;
+  };
 
 export interface CourseGeneralQuestions {
   'Evaluate the course overall.': EvaluationStatistics;

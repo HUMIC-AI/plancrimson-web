@@ -15,6 +15,7 @@ export interface ScheduleSelectorProps {
   showTerm?: boolean;
   parentWidth?: string;
   highlight?: boolean;
+  onPlanningPage?: boolean;
 }
 
 function titleContainsTerm(title: string, term: Semester) {
@@ -25,31 +26,40 @@ function titleContainsTerm(title: string, term: Semester) {
   );
 }
 
-const ButtonTitle: React.FC<{
-  parentWidth: string | undefined;
-  showTerm: boolean | undefined;
-  highlight: boolean;
-  selectedSchedule: Schedule | null;
-  selectSchedule?: React.Dispatch<Schedule | null>;
-}> = function ({
+/**
+ * The component inside the Listbox in the ScheduleSelector
+ */
+function ButtonTitle({
   parentWidth,
   showTerm,
   selectedSchedule,
   highlight,
   selectSchedule,
+}: {
+  parentWidth: string | undefined;
+  showTerm: boolean | undefined;
+  highlight: boolean;
+  selectedSchedule: Schedule | null;
+  selectSchedule?: React.Dispatch<Schedule | null>;
 }) {
   const { showAllSchedules } = useShowAllSchedules();
 
   const TitleComponent: React.FC<React.HTMLAttributes<unknown>> = useCallback(
     ({ children, ...props }) => {
-      if (showAllSchedules) {
-        return (
-          <button type="button" onClick={() => selectSchedule!(selectedSchedule)} {...props}>
-            {children}
-          </button>
-        );
+      // if we're showing all schedules, click on the title to select schedule
+      // otherwise selection is handled by ScheduleSelector
+      if (showAllSchedules !== 'all') {
+        return <span {...props}>{children}</span>;
       }
-      return <span {...props}>{children}</span>;
+      return (
+        <button
+          type="button"
+          onClick={() => selectSchedule!(selectedSchedule)}
+          {...props}
+        >
+          {children}
+        </button>
+      );
     },
     [selectSchedule, selectedSchedule, showAllSchedules],
   );
@@ -58,7 +68,7 @@ const ButtonTitle: React.FC<{
     <span className="flex flex-col items-center space-y-1">
       <TitleComponent
         className={classNames(
-          'text-sm md:text-base font-medium truncate',
+          'text-sm md:text-base font-medium whitespace-nowrap overflow-auto',
           highlight && 'bg-gray-800 rounded text-white px-1',
         )}
         style={{
@@ -79,7 +89,7 @@ const ButtonTitle: React.FC<{
       )}
     </span>
   );
-};
+}
 
 const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
   schedules,
@@ -89,11 +99,14 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
   showTerm,
   parentWidth,
   highlight = false,
+  onPlanningPage = false,
 }) {
   const optionStyles = 'flex space-x-2 w-min max-w-full';
   const { showAllSchedules } = useShowAllSchedules();
 
-  if (showAllSchedules) {
+  // if we're showing all schedules, don't render a dropdown menu
+  // instead just have the title be clickable to select
+  if (onPlanningPage && showAllSchedules === 'all') {
     return (
       <ButtonTitle
         parentWidth={`${parentWidth} + 2rem`}
@@ -155,7 +168,7 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
                       className="odd:bg-gray-200 even:bg-white cursor-default py-1.5 px-3"
                     >
                       <span className={optionStyles}>
-                        <span className="flex-grow truncate">
+                        <span className="flex-grow whitespace-nowrap overflow-auto">
                           {schedule.id}
                         </span>
                         <span>
@@ -167,7 +180,10 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
                     </Listbox.Option>
                   ))
                 ) : (
-                  <Listbox.Option value={null} className="w-full py-1.5 px-2 whitespace-nowrap bg-white">
+                  <Listbox.Option
+                    value={null}
+                    className="w-full py-1.5 px-2 whitespace-nowrap bg-white"
+                  >
                     No schedules
                   </Listbox.Option>
                 )}

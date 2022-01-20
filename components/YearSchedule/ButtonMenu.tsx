@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import React, { useRef, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import {
   FaSearch,
   FaCalendarWeek,
@@ -9,90 +9,133 @@ import {
   FaPlus,
   FaTrash,
   FaDownload,
+  FaEraser,
 } from 'react-icons/fa';
-import { Schedule, Season, UserClassData } from '../../shared/firestoreTypes';
-import useUserData from '../../src/context/userData';
+import type { IconType } from 'react-icons/lib';
+import { Schedule, Season } from '../../shared/firestoreTypes';
+import useUserData, { clearSchedule } from '../../src/context/userData';
+import { downloadJson } from '../../src/hooks';
+import Tooltip from '../Tooltip';
 
-const buttonStyles = 'p-1 rounded bg-black bg-opacity-0 hover:text-black hover:bg-opacity-50 transition-colors';
-
-type Props = {
+interface BaseButtonMenuProps {
   selectedSchedule: Schedule | null;
   selectSchedule: React.Dispatch<string | null>;
+  year: number;
+  season: Season;
+  prevScheduleId: string | null;
+}
+
+interface EditingProps {
+  selectedSchedule: Schedule | null;
   editing: boolean;
   setEditing: React.Dispatch<boolean>;
   setScheduleTitle: React.Dispatch<string>;
   focusInput: () => void;
+}
 
-  year: number;
-  season: Season;
-  prevScheduleId: string | null;
+type ButtonMenuProps =
+  | BaseButtonMenuProps
+  | (BaseButtonMenuProps & EditingProps);
+
+const buttonStyles = 'inline-block p-1 rounded bg-black bg-opacity-0 hover:text-black hover:bg-opacity-50 transition-colors';
+
+type BaseButtonProps = {
+  name: string;
+  Icon: IconType;
 };
 
-const ButtonMenu: React.FC<Props> = function ({
-  selectedSchedule,
-  selectSchedule,
+type ButtonProps = BaseButtonProps & {
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
+};
+
+type LinkProps = BaseButtonProps & {
+  isLink: true;
+  scheduleId: string;
+  pathname: string;
+};
+
+function CustomButton({ name, Icon, ...rest }: ButtonProps | LinkProps) {
+  if ('isLink' in rest) {
+    return (
+      <Tooltip text={name} direction="bottom">
+        <Link
+          href={{
+            pathname: rest.pathname,
+            query: { selected: rest.scheduleId },
+          }}
+        >
+          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+          <a className={buttonStyles}>
+            <Icon />
+          </a>
+        </Link>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Tooltip text={name} direction="bottom">
+      <button
+        type="button"
+        name={name}
+        onClick={rest.onClick}
+        className={buttonStyles}
+      >
+        <Icon />
+      </button>
+    </Tooltip>
+  );
+}
+
+function EditingButton({
   editing,
   setEditing,
   setScheduleTitle,
   focusInput,
+  selectedSchedule,
+}: EditingProps) {
+  const handleEditing = async () => {
+    if (!selectedSchedule) return;
+    if (editing) setEditing(false);
+    else {
+      setScheduleTitle(selectedSchedule.id);
+      setEditing(true);
+      process.nextTick(focusInput);
+    }
+  };
+
+  return (
+    <CustomButton
+      name={editing ? 'Cancel editing' : 'Edit name'}
+      onClick={handleEditing}
+      Icon={editing ? FaTimes : FaPencilAlt}
+    />
+  );
+}
+
+const ButtonMenu: React.FC<ButtonMenuProps> = function ({
+  selectedSchedule,
+  selectSchedule,
   year,
   season,
   prevScheduleId,
+  ...rest
 }) {
-  const { createSchedule, deleteSchedule } = useUserData();
-  const downloadRef = useRef<HTMLAnchorElement>(null!);
-
-  const createNewSchedule = useCallback(
-    async (
-      title: string,
-      // eslint-disable-next-line @typescript-eslint/no-shadow
-      year: number,
-      // eslint-disable-next-line @typescript-eslint/no-shadow
-      season: Season,
-      classes: UserClassData[],
-      i: number = 0,
-    ): Promise<Schedule> => {
-      try {
-        const newSchedule = await createSchedule(
-          `${title}${i ? ` ${i}` : ''}`,
-          year,
-          season,
-          classes,
-        );
-        return newSchedule;
-      } catch (err: any) {
-        if (err.message === 'id taken') {
-          console.error("Couldn't create schedule, retrying");
-          const newSchedule = await createNewSchedule(
-            title,
-            year,
-            season,
-            classes,
-            i + 1,
-          );
-          return newSchedule;
-        }
-        throw err;
-      }
-    },
-    [createSchedule],
-  );
+  const { createSchedule, deleteSchedule, removeCourses } = useUserData();
 
   const handleDuplicate = useCallback(async () => {
     if (!selectedSchedule) return;
     try {
-      const schedule = await createNewSchedule(
-        `${selectedSchedule.id} copy`,
-        selectedSchedule.year,
-        selectedSchedule.season,
-        selectedSchedule.classes,
-      );
+      const schedule = await createSchedule({
+        ...selectedSchedule,
+        force: true,
+      });
       selectSchedule(schedule.id);
     } catch (err) {
       console.error(err);
       alert("Couldn't duplicate your schedule. Please try again later.");
     }
-  }, [createNewSchedule, selectSchedule, selectedSchedule]);
+  }, [createSchedule, selectSchedule, selectedSchedule]);
 
   const handleDelete = useCallback(async () => {
     if (!selectedSchedule) return;
@@ -113,112 +156,76 @@ const ButtonMenu: React.FC<Props> = function ({
   }, [deleteSchedule, prevScheduleId, selectSchedule, selectedSchedule]);
 
   return (
-    <div className="flex mx-auto justify-center items-center flex-wrap max-w-[8rem] gap-2 mt-2 text-gray-600 text-xs">
-      {selectedSchedule && (
-        <>
-          <Link
-            href={{
-              pathname: '/',
-              query: { selected: selectedSchedule.id },
-            }}
-          >
-            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-            <a className={buttonStyles} title="Search for classes to add">
-              <FaSearch />
-            </a>
-          </Link>
-          <Link
-            href={{
-              pathname: '/schedule',
-              query: { selected: selectedSchedule.id },
-            }}
-          >
-            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-            <a className={buttonStyles} title="Go to calendar view">
-              <FaCalendarWeek />
-            </a>
-          </Link>
-          <button
-            type="button"
-            name="Duplicate schedule"
-            title="Duplicate schedule"
-            onClick={handleDuplicate}
-            className={buttonStyles}
-          >
-            <FaClone />
-          </button>
-          <button
-            type="button"
-            name={editing ? 'Cancel editing' : 'Edit schedule name'}
-            title={editing ? 'Cancel editing' : 'Edit schedule name'}
-            onClick={async () => {
-              if (editing) setEditing(false);
-              else {
-                setScheduleTitle(selectedSchedule.id);
-                setEditing(true);
-                process.nextTick(focusInput);
-              }
-            }}
-            className={buttonStyles}
-          >
-            {editing ? <FaTimes /> : <FaPencilAlt />}
-          </button>
-        </>
-      )}
-
-      <button
-        type="button"
-        name="Add schedule"
-        title="Add schedule"
-        onClick={() => {
-          createNewSchedule(`${season} ${year}`, year, season, [])
-            .then((schedule) => selectSchedule(schedule.id))
-            .catch((err) => {
-              console.error(err);
-              alert("Couldn't create a new schedule!");
-            });
-        }}
-        className={buttonStyles}
-      >
-        <FaPlus />
-      </button>
-
-      {selectedSchedule && (
-        <>
-          <button
-            type="button"
-            name="Delete schedule"
-            title="Delete schedule"
-            onClick={handleDelete}
-            className={buttonStyles}
-          >
-            <FaTrash />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              downloadRef.current.setAttribute(
-                'href',
-                `data:text/json;charset=utf-8,${encodeURIComponent(
-                  JSON.stringify(selectedSchedule, null, 2),
-                )}`,
-              );
-              downloadRef.current.click();
-            }}
-            className={buttonStyles}
-          >
-            <FaDownload />
-            {/* eslint-disable-next-line jsx-a11y/anchor-has-content, jsx-a11y/anchor-is-valid */}
-            <a
-              className="hidden"
-              ref={downloadRef}
-              download={`${selectedSchedule.id} (Plan Crimson).json`}
-              title="Download this schedule"
-              aria-disabled
+    <div className="flex flex-col space-y-2 w-full">
+      <div className="self-center flex justify-center items-center flex-wrap max-w-[8rem] gap-2 mt-2 text-gray-600 text-xs">
+        {selectedSchedule && (
+          <>
+            <CustomButton
+              name="Add courses"
+              isLink
+              scheduleId={selectedSchedule.id}
+              pathname="/search"
+              Icon={FaSearch}
             />
-          </button>
-        </>
-      )}
+
+            <CustomButton
+              name="Calendar view"
+              isLink
+              scheduleId={selectedSchedule.id}
+              Icon={FaCalendarWeek}
+              pathname="/schedule"
+            />
+
+            <CustomButton
+              name="Duplicate"
+              onClick={handleDuplicate}
+              Icon={FaClone}
+            />
+
+            {'editing' in rest && (
+              <EditingButton selectedSchedule={selectedSchedule} {...rest} />
+            )}
+
+            <CustomButton
+              name="Clear"
+              onClick={() => clearSchedule(removeCourses, selectedSchedule)}
+              Icon={FaEraser}
+            />
+          </>
+        )}
+
+        <CustomButton
+          name="New schedule"
+          onClick={() => {
+            createSchedule({
+              id: `${season} ${year}`,
+              year,
+              season,
+              force: true,
+            })
+              .then((schedule) => selectSchedule(schedule.id))
+              .catch((err) => {
+                console.error(err);
+                alert("Couldn't create a new schedule!");
+              });
+          }}
+          Icon={FaPlus}
+        />
+
+        {selectedSchedule && (
+          <>
+            <CustomButton name="Delete" onClick={handleDelete} Icon={FaTrash} />
+            <CustomButton
+              name="Download schedule"
+              onClick={() => downloadJson(
+                `${selectedSchedule.id} (Plan Crimson)`,
+                { schedules: [selectedSchedule] },
+              )}
+              Icon={FaDownload}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 };

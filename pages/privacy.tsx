@@ -24,7 +24,9 @@ const PrivacyPage = function () {
           Harvard College students and uniquely identify users. No other user
           information is collected.
         </p>
-        <h1 className="text-2xl leading-loose font-semibold">Image Attributions</h1>
+        <h1 className="text-2xl leading-loose font-semibold">
+          Image Attributions
+        </h1>
         <p>
           All images are used with permission from
           {' '}
@@ -34,8 +36,12 @@ const PrivacyPage = function () {
           {' '}
           under the
           {' '}
-          <ExternalLink href={`https://unsplash.com/license${unsplashParams}`}>Unsplash License</ExternalLink>
-          . Images are listed next to their department below. If you believe an image has been used that does not properly represent the respective department, please contact me at alexcai [at] college.
+          <ExternalLink href={`https://unsplash.com/license${unsplashParams}`}>
+            Unsplash License
+          </ExternalLink>
+          . Images are listed next to their department below. If you believe an
+          image has been used that does not properly represent the respective
+          department, please contact me at alexcai [at] college.
         </p>
         <ul className="space-y-1 list-disc list-inside">
           {Object.keys(departmentImages)
@@ -46,15 +52,15 @@ const PrivacyPage = function () {
                 <li key={department}>
                   Photo for
                   {' '}
-                  <ExternalLink href={`https://unsplash.com/photos/${id}${unsplashParams}`}>
+                  <ExternalLink
+                    href={`https://unsplash.com/photos/${id}${unsplashParams}`}
+                  >
                     {department}
                   </ExternalLink>
                   {' '}
                   by
                   {' '}
-                  <ExternalLink
-                    href={`${user.links.html}${unsplashParams}`}
-                  >
+                  <ExternalLink href={`${user.links.html}${unsplashParams}`}>
                     {user.name}
                   </ExternalLink>
                 </li>

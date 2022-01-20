@@ -2,75 +2,139 @@
 import axios from 'axios';
 import cheerio, { CheerioAPI } from 'cheerio';
 import fs from 'fs';
+import inquirer from 'inquirer';
+import qs from 'qs';
 import {
   CourseGeneralQuestions,
-  Evaluation, EvaluationStatistics, GeneralInstructorQuestions, ReasonsForEnrolling,
+  Evaluation,
+  GeneralInstructorQuestions,
+  HoursStats,
+  ReasonsForEnrolling,
 } from '../shared/apiTypes';
 import { Season } from '../shared/firestoreTypes';
 import { allTruthy } from '../shared/util';
-
-const cookie = process.env.EVALUATIONS_COOKIE;
-
-if (!cookie) throw new Error('must provide EVALUATIONS_COOKIE env variable');
-
-// https://course-evaluation-reports.fas.harvard.edu/fas/list
-axios.defaults.headers.common.Cookie = cookie;
+import { getFilePath } from './util';
 
 const baseUrl = 'https://course-evaluation-reports.fas.harvard.edu/fas';
+const COMMENTS_URL = 'https://course-evaluation-reports.fas.harvard.edu/fas/view_comments.html';
 const years: string[] = [];
 
 for (let i = 2006; i <= 2018; i += 1) {
   years.push(`${i}_1`, `${i}_2`);
 }
 
-// https://course-evaluation-reports.fas.harvard.edu/fas/guide_dept?dept=AFRO&term=1&year=2006
-
 type Row = {
   elements: string[];
   img: string | undefined;
 };
 
-function loadRow(row: Row): EvaluationStatistics {
-  const votes = row.img
-    ? row.img.slice(12, -4).split('-').map((val) => parseInt(val, 10)).reverse()
-    : null;
-  return {
-    count: parseInt(row.elements[2], 10),
-    courseMean: parseFloat(row.elements[3]),
-    votes,
-    fasMean: null,
-  };
+type Distribution = [number, number, number, number, number];
+
+export type TermString = `${number}_${1 | 2}`;
+
+// ==================== utility functions for statistics ====================
+
+/**
+ * @param img a string of the form "../histobar-a-b-c-d-e.png", where a..e are the number of students who voted
+ * 1..5 respectively
+ * @returns an array containing [e,d,c,b,a], that is, in the order corresponding to categories 5..1 as it is shown on Q Reports
+ */
+function getDistributionFromImage(img: string) {
+  const vals = img
+    .slice(12, -4)
+    .split('-')
+    .map((val) => parseInt(val, 10) || 0)
+    .reverse();
+  if (vals.length !== 5) throw new Error('invalid image to parse');
+  return vals as Distribution;
 }
 
-function getMedian(freqs: number[]) {
-  if (freqs.length === 0) throw new Error('cannot get median of empty array');
+const NO_STATISTICS = {
+  count: 0,
+  courseMean: null,
+  votes: null,
+  fasMean: null,
+} as const;
+
+// <3, 3-6, 7-10, 11-14, >14
+// but gets reversed since distribution goes from highest to lowest
+const OLD_WORKLOAD_DISTRIBUTION = [16.5, 12.5, 8.5, 4.5, 0.5] as const;
+
+function valueOfIndex(i: number, isWorkload: boolean) {
+  return isWorkload ? OLD_WORKLOAD_DISTRIBUTION[i] : 5 - i;
+}
+
+function loadRow(row: Row, isWorkload = false) {
+  if (!row.img) {
+    return NO_STATISTICS;
+  }
+
+  const votes = getDistributionFromImage(row.img);
+  const total = votes.reduce((acc, val) => acc + val, 0);
+  // opposite direction from Q Guides, goes from 1 to 5
+  const mean = total > 0
+    ? votes.reduce(
+      (acc, val, i) => acc + val * valueOfIndex(i, isWorkload),
+      0,
+    ) / total
+    : null;
+  return {
+    count: total,
+    courseMean: mean,
+    votes,
+    fasMean: null,
+  } as const;
+}
+
+function getMedian(freqs: Distribution, isWorkload = false) {
   const count = freqs.reduce((acc, val) => acc + val, 0);
   let acc = 0;
   for (let i = 0; i < freqs.length; i += 1) {
     acc += freqs[i];
     if (acc > count / 2) {
-      return i + 1;
+      return valueOfIndex(i, isWorkload);
     }
     if (acc === count / 2) {
       for (let j = i + 1; j < freqs.length; j += 1) {
         if (freqs[j] !== 0) {
-          return (i + j) / 2 + 1;
+          return (
+            (valueOfIndex(i, isWorkload) + valueOfIndex(j, isWorkload)) / 2
+          );
         }
       }
     }
   }
-  return freqs.length; // something wrong happened
+  throw new Error(`Error calculating the median of ${freqs}`); // something wrong happened
 }
 
-function getStdev(freqs: number[]) {
-  // "5-i" is since frequencies are in reverse order and should end up from 1 to 5
+/**
+ * @param freqs see {@link getDistributionFromImage}
+ * @returns the standard deviation of freqs
+ */
+function getStdev(freqs: Distribution, isWorkload = false) {
   const count = freqs.reduce((acc, freq) => acc + freq, 0);
-  const mean = freqs.reduce((acc, freq, i) => acc + freq * (5 - i), 0) / count;
+  const mean = freqs.reduce(
+    (acc, freq, i) => acc + freq * valueOfIndex(i, isWorkload),
+    0,
+  ) / count;
   let total = 0;
   for (let i = 0; i < freqs.length; i += 1) {
-    total += freqs[i] * (5 - i - mean) ** 2;
+    total += freqs[i] * (valueOfIndex(i, isWorkload) - mean) ** 2;
   }
-  return total / (count - 1);
+  return total / count;
+}
+
+function getMode(votes: Distribution, isWorkload = false) {
+  const initialValue = {
+    value: -1,
+    maxCount: -1,
+  };
+  return votes.reduce(
+    (acc, count, i) => (count > acc.maxCount
+      ? { value: valueOfIndex(i, isWorkload), maxCount: count }
+      : acc),
+    initialValue,
+  ).value;
 }
 
 function getReasons(reasons: Row[]): ReasonsForEnrolling {
@@ -128,10 +192,14 @@ function getReasons(reasons: Row[]): ReasonsForEnrolling {
 }
 
 function getGraphs($: CheerioAPI) {
-  return $('.graphReport').toArray()
-    .map((table) => $('tbody tr', table).toArray()
+  return $('.graphReport')
+    .toArray()
+    .map((table) => $('tbody tr', table)
+      .toArray()
       .map((tr) => ({
-        elements: $(tr).children().toArray()
+        elements: $(tr)
+          .children()
+          .toArray()
           .map((td) => $(td).text().replace(/\s+/g, ' ')),
         img: $('img', $(tr).children()[1]).attr('src'),
       })));
@@ -143,7 +211,12 @@ async function getInstructor(url: string): Promise<{
 }> {
   const result = await axios.get(url);
   const $ = cheerio.load(result.data);
-  const [lastName, firstName] = $('select[name="current_instructor_or_tf_huid_param"] > option[selected]').text().trim().split(', ');
+  const [lastName, firstName] = $(
+    'select[name="current_instructor_or_tf_huid_param"] > option[selected]',
+  )
+    .text()
+    .trim()
+    .split(', ');
   const instructorName = `${firstName} ${lastName}`;
   const [graph] = getGraphs($);
   if (!graph) return { instructorName };
@@ -160,7 +233,9 @@ async function getInstructor(url: string): Promise<{
         data['Gives effective lectures or presentations, if applicable'] = loadRow(row);
         break;
       case 'Accessible Outside Class':
-        data['Is accessible outside of class (including after class, office hours, e-mail, etc.)'] = loadRow(row);
+        data[
+          'Is accessible outside of class (including after class, office hours, e-mail, etc.)'
+        ] = loadRow(row);
         break;
       case 'Generates Enthusiasm':
         data['Generates enthusiasm for the subject matter'] = loadRow(row);
@@ -185,14 +260,41 @@ async function getInstructor(url: string): Promise<{
   };
 }
 
-async function getComments(placeholderUrl: string): Promise<string[] | null> {
-  const placeholderResult = await axios.get(placeholderUrl);
-  const newUrl = cheerio.load(placeholderResult.data)('.reportContent a').attr('href');
-  if (!newUrl) return null;
-  const commentsPage = await axios.get(`${baseUrl}/${newUrl}`);
-  const $ = cheerio.load(commentsPage.data);
-  const comments = $('.responseBlock p').toArray().map((p) => $(p).text().replace(/\s+/g, ' ').trim());
-  return comments;
+function getWorkload(row: Row, invited: number): HoursStats {
+  const { votes, count, courseMean } = loadRow(row, true);
+
+  if (!votes) {
+    return {
+      count: 0,
+      mean: null,
+      median: null,
+      mode: null,
+      stdev: null,
+      ratio: 0,
+    };
+  }
+
+  return {
+    count,
+    ratio: count / invited,
+    mean: courseMean,
+    median: getMedian(votes, true),
+    mode: getMode(votes, true),
+    stdev: getStdev(votes, true),
+  };
+}
+
+async function getComments(courseId: string): Promise<string[]> {
+  const response = await axios.get(COMMENTS_URL, {
+    params: { qid: 1487, course_id: courseId },
+  });
+
+  const $ = cheerio.load(response.data);
+  const data = allTruthy($('.response')
+    .map((_, el) => $(el).text().replace(/\s+/g, ' ').trim())
+    .toArray());
+
+  return data;
 }
 
 async function parseEvaluation(url: string, year: number, season: Season) {
@@ -201,7 +303,10 @@ async function parseEvaluation(url: string, year: number, season: Season) {
 
   const title = $('#page-content > h1').text();
   const courseName = title.slice(0, title.indexOf(':'));
-  const [, enrolment,, evaluations] = $('#summaryStats').text().trim().split(/\s+/g);
+  const [, enrolment, , evaluations] = $('#summaryStats')
+    .text()
+    .trim()
+    .split(/\s+/g);
   const invited = parseInt(enrolment, 10);
   const [general, workload, recommend, reasons]: Row[][] = getGraphs($);
 
@@ -216,13 +321,19 @@ async function parseEvaluation(url: string, year: number, season: Season) {
         generalData['Evaluate the course overall.'] = loadRow(row);
         break;
       case 'Materials':
-        generalData['Course materials (readings, audio-visual materials, textbooks, lab manuals, website, etc.)'] = loadRow(row);
+        generalData[
+          'Course materials (readings, audio-visual materials, textbooks, lab manuals, website, etc.)'
+        ] = loadRow(row);
         break;
       case 'Assignments':
-        generalData['Assignments (exams, essays, problem sets, language homework, etc.)'] = loadRow(row);
+        generalData[
+          'Assignments (exams, essays, problem sets, language homework, etc.)'
+        ] = loadRow(row);
         break;
       case 'Feedback':
-        generalData['Feedback you received on work you produced in this course'] = loadRow(row);
+        generalData[
+          'Feedback you received on work you produced in this course'
+        ] = loadRow(row);
         break;
       case 'Section':
         generalData['Section component of the course'] = loadRow(row);
@@ -246,15 +357,15 @@ async function parseEvaluation(url: string, year: number, season: Season) {
   // const [, overall, materials, assignments, feedback, section] = general;
 
   const recommendRow = loadRow(recommend[1]);
-  const recommendations = recommendRow.votes?.map((v) => v || 0) || null;
-  const workloadRow = loadRow(workload[1]);
-  const workloadVals = workloadRow.votes?.map((v) => v || 0) || null;
+  const recommendations = recommendRow.votes;
 
   const instructorUrl = $('#tabNav > li:nth-child(2) > a').attr('href');
-  const { instructorName, data: instructorFeedback } = await getInstructor(`${baseUrl}/${instructorUrl!}`);
+  const { instructorName, data: instructorFeedback } = await getInstructor(
+    `${baseUrl}/${instructorUrl!}`,
+  );
 
-  const commentsUrl = $('#tabNav > li:nth-child(3) > a').attr('href');
-  const comments = await getComments(`${baseUrl}/${commentsUrl}`);
+  const courseId = qs.parse(url.slice(url.indexOf('?') + 1)).course_id as string;
+  const comments = courseId ? await getComments(courseId) : null;
 
   const ret: Evaluation = {
     url,
@@ -271,24 +382,16 @@ async function parseEvaluation(url: string, year: number, season: Season) {
     'General Instructor Questions': instructorFeedback,
     'How strongly would you recommend this course to your peers?': {
       count: recommendRow.count,
-      mean: recommendRow.courseMean!,
+      mean: recommendRow.courseMean,
       median: recommendations ? getMedian(recommendations) : null,
       ratio: recommendRow.count / invited,
-      recommendations,
       stdev: recommendations ? getStdev(recommendations) : null,
+      recommendations,
     },
-    'On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.': {
-      count: workloadRow.count,
-      mean: workloadRow.courseMean!,
-      median: workloadVals ? getMedian(workloadVals) : null,
-      ratio: workloadRow.count / invited,
-      mode: workloadVals ? workloadVals.reduce((acc, val, i) => (val > acc.max ? { index: i, max: val } : acc), {
-        index: -1,
-        max: -1,
-      }).index + 1 : null,
-      stdev: workloadVals ? getStdev(workloadVals) : null,
-    },
-    'What was/were your reason(s) for enrolling in this course? (Please check all that apply)': getReasons(reasons),
+    'On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.':
+      getWorkload(workload[1], invited),
+    'What was/were your reason(s) for enrolling in this course? (Please check all that apply)':
+      getReasons(reasons),
   };
 
   return ret;
@@ -299,32 +402,54 @@ async function getEvaluationLinks(dept: string, year: string, term: string) {
     params: { dept: decodeURIComponent(dept), year, term },
   });
   const $ = cheerio.load(response.data);
-  return $('a').map((_, a) => $(a).attr('href')).toArray();
+  return $('a')
+    .map((_, a) => $(a).attr('href'))
+    .toArray();
 }
 
 function loadEvaluations(urls: string[], year: number, term: Season) {
-  return Promise.allSettled(urls.map((url, i) => new Promise<Evaluation | null>((resolve, reject) => {
-    setTimeout(() => {
-      console.error(`parsing evaluation ${i + 1}/${urls.length} ${baseUrl}/${url}`);
-      parseEvaluation(`${baseUrl}/${url}`, year, term)
-        .then((result) => resolve(result))
-        .catch((err) => {
-          console.error(`error loading ${url}:`);
-          console.error(err.message);
-          // eslint-disable-next-line prefer-promise-reject-errors
-          reject({ url });
-        });
-    }, i * 750);
-  })));
+  return Promise.allSettled(
+    urls.map(
+      (url, i) => new Promise<Evaluation | null>((resolve, reject) => {
+        setTimeout(() => {
+          console.log(
+            `parsing evaluation ${i + 1}/${urls.length} ${baseUrl}/${url}`,
+          );
+          parseEvaluation(`${baseUrl}/${url}`, year, term)
+            .then((result) => resolve(result))
+            .catch((err) => {
+              console.error(`error loading ${url}:`);
+              console.error(err.message);
+              // eslint-disable-next-line prefer-promise-reject-errors
+              reject({ url });
+            });
+        }, i * 200);
+      }),
+    ),
+  );
 }
 
-async function main() {
-  const baseDir = process.argv[2];
-  if (!baseDir) throw new Error('specify a directory to store the data in');
+/**
+ * Main function to parse all evaluations from https://course-evaluation-reports.fas.harvard.edu/fas/list
+ */
+async function fetchOldEvaluations(
+  startTerm: TermString,
+  endTerm: TermString,
+  baseDir: string,
+) {
+  const cookie = process.env.EVALUATIONS_COOKIE;
+
+  if (!cookie) throw new Error('must provide EVALUATIONS_COOKIE env variable');
+
+  axios.defaults.headers.common.Cookie = cookie;
+
   if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir);
 
-  // eslint-disable-next-line no-restricted-syntax
-  for (const yearterm of years.slice(21)) {
+  const startIndex = years.indexOf(startTerm);
+  let endIndex: number | undefined = years.indexOf(endTerm);
+  endIndex = endIndex >= 0 ? endIndex : undefined;
+
+  for (const yearterm of years.slice(startIndex, endIndex)) {
     const response = await axios({
       method: 'GET',
       url: 'https://course-evaluation-reports.fas.harvard.edu/fas/list',
@@ -332,40 +457,88 @@ async function main() {
         yearterm,
       },
     });
-    console.error(`==================== LOADING YEAR ${yearterm} ====================`);
+    console.error(
+      `==================== LOADING YEAR ${yearterm} ====================`,
+    );
 
     const $ = cheerio.load(response.data);
-    const departments = $('.course-block-head > .remove_link > span').map((_, span) => $(span).attr('title_abbrev')).toArray();
+    const departments = $('.course-block-head > .remove_link > span')
+      .map((_, span) => $(span).attr('title_abbrev'))
+      .toArray();
     const [schoolYear, termNumber] = yearterm.split('_');
 
     if (!fs.existsSync(`${baseDir}/${yearterm}`)) {
       fs.mkdirSync(`${baseDir}/${yearterm}`);
     }
 
-    // eslint-disable-next-line no-restricted-syntax
     for (const department of departments) {
-      console.error(`==================== loading department ${department} ====================`);
+      console.error(
+        `==================== loading department ${department} ====================`,
+      );
       const urls = await getEvaluationLinks(department, schoolYear, termNumber);
       const [year, term]: [number, Season] = parseInt(termNumber, 10) === 1
         ? [parseInt(schoolYear, 10), 'Fall']
         : [parseInt(schoolYear, 10) + 1, 'Spring'];
       const results = await loadEvaluations(urls, year, term);
-      const successes = allTruthy(results.map((result) => (result.status === 'fulfilled' ? result.value : null)));
-      console.error(`===== loaded ${successes.length}/${urls.length} evaluations for department ${department} =====`);
+      const successes = allTruthy(
+        results.map((result) => (result.status === 'fulfilled' ? result.value : null)),
+      );
+      console.error(
+        `===== loaded ${successes.length}/${urls.length} evaluations for department ${department} =====`,
+      );
 
       // retry failed requests once
-      const failures = allTruthy(results.map((result) => (result.status === 'rejected' ? result.reason : null)));
+      const failures = allTruthy(
+        results.map((result) => (result.status === 'rejected' ? result.reason : null)),
+      );
       if (failures.length > 0) {
         console.error(`===== retrying ${failures.length} evaluations =====`);
-        const retryResults = await loadEvaluations(failures.map((reason: { url: string }) => reason.url), year, term);
-        const retrySuccesses = allTruthy(retryResults.map((result) => (result.status === 'fulfilled' ? result.value : null)));
+        const retryResults = await loadEvaluations(
+          failures.map((reason: { url: string }) => reason.url),
+          year,
+          term,
+        );
+        const retrySuccesses = allTruthy(
+          retryResults.map((result) => (result.status === 'fulfilled' ? result.value : null)),
+        );
         console.error(`${retrySuccesses.length} successes on retry`);
         successes.push(...retrySuccesses);
       }
 
-      fs.writeFileSync(`${baseDir}/${yearterm}/${decodeURIComponent(department)}.json`, JSON.stringify(successes));
+      fs.writeFileSync(
+        `${baseDir}/${yearterm}/${decodeURIComponent(department)}.json`,
+        JSON.stringify(successes),
+      );
     }
   }
 }
 
-main();
+export default {
+  label: 'Fetch all old course evaluations (<= Spring 2019)',
+  async run() {
+    const { startTerm, endTerm } = await inquirer.prompt([
+      {
+        name: 'startTerm',
+        type: 'input',
+        message:
+          'Start term in the format {academic year}_{1 or 2}, e.g. 2006_2 is the spring of 2007:',
+        default: '2006_1',
+      },
+      {
+        name: 'endTerm',
+        type: 'input',
+        message:
+          'End term in the same format, exclusive (leave empty to continue until end):',
+      },
+    ]);
+    const baseDir = await getFilePath(
+      'Enter the path to save the downloaded evaluations in:',
+      'data/evaluations/evaluations',
+    );
+    return fetchOldEvaluations(
+      startTerm as TermString,
+      endTerm as TermString,
+      baseDir,
+    );
+  },
+};

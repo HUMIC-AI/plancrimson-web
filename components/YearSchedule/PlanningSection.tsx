@@ -2,16 +2,26 @@ import React, {
   useEffect, useMemo, useRef, useState,
 } from 'react';
 import {
-  FaArrowsAltH, FaArrowsAltV, FaChevronLeft, FaChevronRight,
+  FaArrowsAltH,
+  FaArrowsAltV,
+  FaChevronLeft,
+  FaChevronRight,
 } from 'react-icons/fa';
-import { Season } from '../../shared/firestoreTypes';
-import { classNames, compareSemesters, getUniqueSemesters } from '../../shared/util';
+import { DownloadPlan, Season } from '../../shared/firestoreTypes';
+import {
+  allTruthy,
+  classNames,
+  compareSemesters,
+  getUniqueSemesters,
+} from '../../shared/util';
 import useCardStyle from '../../src/context/cardStyle';
 import useShowAllSchedules from '../../src/context/showAllSchedules';
-import useUserData from '../../src/context/userData';
+import useUserData, { clearSchedule } from '../../src/context/userData';
+import { downloadJson } from '../../src/hooks';
 import { Requirement } from '../../src/requirements/util';
 import { DragStatus } from '../Course/CourseCard';
-import SemesterDisplay from './SemesterDisplay';
+import UploadPlan from '../UploadPlan';
+import SemesterComponent from './SemesterDisplay';
 
 type Props = {
   highlightedRequirement: Requirement | undefined;
@@ -20,9 +30,11 @@ type Props = {
 const HeaderSection: React.FC<{
   totalCourses: number;
   resizeRef: React.MutableRefObject<HTMLDivElement>;
-}> = function ({ totalCourses, resizeRef }) {
+  downloadData: any;
+}> = function ({ totalCourses, resizeRef, downloadData }) {
   const { isExpanded, expand } = useCardStyle();
-  const { showAllSchedules, setShowAllSchedules } = useShowAllSchedules();
+  const { showAllSchedules, setShowAllSchedules, sampleSchedule } = useShowAllSchedules();
+  const { data, removeCourses } = useUserData();
 
   return (
     <div className="text-white space-y-4">
@@ -34,7 +46,7 @@ const HeaderSection: React.FC<{
           {' '}
           / 32
         </span>
-        <div className="flex items-center justify-center gap-4 text-sm">
+        <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
           <button
             type="button"
             onClick={() => expand(!isExpanded)}
@@ -45,15 +57,51 @@ const HeaderSection: React.FC<{
           >
             <FaArrowsAltV />
           </button>
+          {showAllSchedules !== 'sample' && (
+            <button
+              type="button"
+              onClick={() => setShowAllSchedules(
+                showAllSchedules === 'all' ? 'selected' : 'all',
+              )}
+              className="py-1 px-2 bg-gray-600 hover:opacity-50 transition-opacity rounded"
+            >
+              {showAllSchedules === 'all'
+                ? 'Showing all schedules'
+                : 'Showing only selected schedules'}
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => setShowAllSchedules(!showAllSchedules)}
-            className="py-1 px-2 bg-gray-600 hover:opacity-50 transition-opacity rounded"
+            className="hover:opacity-50 transition-opacity underline"
+            onClick={() => downloadJson(
+              showAllSchedules === 'sample'
+                ? `Sample ${sampleSchedule?.id} - Plan Crimson`
+                : 'Selected schedules - Plan Crimson',
+              downloadData,
+            )}
           >
-            {showAllSchedules
-              ? 'Showing all schedules'
-              : 'Showing only selected schedules'}
+            Download all
           </button>
+          <UploadPlan />
+          {showAllSchedules !== 'sample' && (
+            <button
+              type="button"
+              className="hover:opacity-50 transition-opacity underline"
+              onClick={() => {
+                // eslint-disable-next-line no-restricted-globals
+                const yn = confirm(
+                  'Are you sure? This will remove all courses from all selected schedules!',
+                );
+                if (yn) {
+                  allTruthy(
+                    Object.values(data.selectedSchedules).map((id) => (id ? data.schedules[id] : null)),
+                  ).forEach((schedule) => clearSchedule(removeCourses, schedule));
+                }
+              }}
+            >
+              Reset all
+            </button>
+          )}
         </div>
       </div>
       <div className="flex justify-center xl:justify-start">
@@ -68,11 +116,18 @@ const HeaderSection: React.FC<{
   );
 };
 
-const PlanningSection: React.FC<Props> = function ({
-  highlightedRequirement,
-}) {
+interface SemesterDisplayInfo {
+  year: number;
+  season: Season;
+  selectedScheduleId: string | null;
+  key: string;
+  selectSchedule: React.Dispatch<string | null>;
+  highlight?: string;
+}
+
+const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
   const { data, selectSchedule } = useUserData();
-  const { showAllSchedules } = useShowAllSchedules();
+  const { showAllSchedules, sampleSchedule } = useShowAllSchedules();
   const [dragStatus, setDragStatus] = useState<DragStatus>({
     dragging: false,
   });
@@ -97,23 +152,19 @@ const PlanningSection: React.FC<Props> = function ({
       }
     });
     resizeObserver.observe(resizeRef.current);
-    const leftScrollObserver = new IntersectionObserver(
-      (entries) => {
-        const isIntersecting = entries?.[0]?.isIntersecting;
-        if (typeof isIntersecting === 'boolean') {
-          setLeftIntersecting(isIntersecting);
-        }
-      },
-    );
+    const leftScrollObserver = new IntersectionObserver((entries) => {
+      const isIntersecting = entries?.[0]?.isIntersecting;
+      if (typeof isIntersecting === 'boolean') {
+        setLeftIntersecting(isIntersecting);
+      }
+    });
     leftScrollObserver.observe(leftScrollRef.current);
-    const rightScrollObserver = new IntersectionObserver(
-      (entries) => {
-        const isIntersecting = entries?.[0]?.isIntersecting;
-        if (typeof isIntersecting === 'boolean') {
-          setRightIntersecting(isIntersecting);
-        }
-      },
-    );
+    const rightScrollObserver = new IntersectionObserver((entries) => {
+      const isIntersecting = entries?.[0]?.isIntersecting;
+      if (typeof isIntersecting === 'boolean') {
+        setRightIntersecting(isIntersecting);
+      }
+    });
     rightScrollObserver.observe(rightScrollRef.current);
     return () => {
       resizeObserver.disconnect();
@@ -122,47 +173,81 @@ const PlanningSection: React.FC<Props> = function ({
     };
   }, []);
 
-  const allSemesters: {
-    year: number;
-    season: Season;
-    selectedScheduleId: string | null;
-    key: string;
-    selectSchedule: React.Dispatch<string | null>;
-    highlight?: string;
-  }[] = useMemo(() => {
-    if (showAllSchedules) {
-      return Object.values(data.schedules)
-        .sort(compareSemesters)
-        .map(({ year, season, id }) => ({
+  const allSemesters: SemesterDisplayInfo[] = useMemo(() => {
+    switch (showAllSchedules) {
+      case 'sample':
+        return (
+          sampleSchedule?.schedules.map(({ year, season, id }) => ({
+            year,
+            season,
+            selectSchedule: (newId) => selectSchedule(year, season, newId),
+            key: id,
+            selectedScheduleId: id,
+            highlight: false,
+          })) || []
+        );
+      case 'selected':
+        return getUniqueSemesters(
+          data.classYear,
+          Object.values(data.schedules),
+        ).map(({ year, season }) => ({
           year,
           season,
-          selectedScheduleId: id,
-          key: id,
-          selectSchedule: (newId) => selectSchedule(year, season, newId),
-          highlight: data.selectedSchedules[`${year}${season}`] || undefined,
+          selectedScheduleId:
+            data.selectedSchedules[`${year}${season}`] || null,
+          key: year + season,
+          selectSchedule: (id) => selectSchedule(year, season, id),
         }));
+      case 'all':
+        return Object.values(data.schedules)
+          .sort(compareSemesters)
+          .map(({ year, season, id }) => ({
+            year,
+            season,
+            selectedScheduleId: id,
+            key: id,
+            selectSchedule: (newId) => selectSchedule(year, season, newId),
+            highlight: data.selectedSchedules[`${year}${season}`] || undefined,
+          }));
+      default:
+        return [];
     }
-    return getUniqueSemesters(data.classYear, Object.values(data.schedules)).map(({ year, season }) => ({
-      year,
-      season,
-      selectedScheduleId: data.selectedSchedules[`${year}${season}`] || null,
-      key: year + season,
-      selectSchedule: (id) => selectSchedule(year, season, id),
-    }));
-  }, [data, selectSchedule, showAllSchedules]);
+  }, [
+    data.classYear,
+    data.schedules,
+    data.selectedSchedules,
+    sampleSchedule?.schedules,
+    selectSchedule,
+    showAllSchedules,
+  ]);
 
   const totalCourses = useMemo(
     () => Object.values(data.selectedSchedules).reduce(
-      (acc, scheduleId) => acc + ((scheduleId && data.schedules[scheduleId]?.classes.length) || 0),
+      (acc, scheduleId) => acc
+          + ((scheduleId && data.schedules[scheduleId]?.classes.length) || 0),
       0,
     ),
     [data.schedules, data.selectedSchedules],
   );
 
+  const downloadData: DownloadPlan = {
+    id:
+      showAllSchedules === 'sample'
+        ? sampleSchedule!.id
+        : Math.random().toString(16).slice(2, 18),
+    schedules: allTruthy(
+      allSemesters.map(({ selectedScheduleId }) => (selectedScheduleId ? data.schedules[selectedScheduleId] : null)),
+    ),
+  };
+
   return (
     <div className="relative bg-gray-800 md:p-4 md:rounded-lg md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full md:h-full">
       <div className="flex flex-col space-y-4 md:h-full">
-        <HeaderSection totalCourses={totalCourses} resizeRef={resizeRef} />
+        <HeaderSection
+          totalCourses={totalCourses}
+          resizeRef={resizeRef}
+          downloadData={downloadData}
+        />
 
         <div className="relative overflow-x-auto flex-1">
           {/* on small screens, this extends as far as necessary */}
@@ -172,32 +257,17 @@ const PlanningSection: React.FC<Props> = function ({
             ref={semestersContainerRef}
           >
             <div ref={leftScrollRef} />
-            {allSemesters.map(
-              ({
-                year,
-                season,
-                highlight,
-                selectedScheduleId,
-                // eslint-disable-next-line @typescript-eslint/no-shadow
-                selectSchedule,
-                key,
-              }) => (
-                <SemesterDisplay
-                  {...{
-                    key,
-                    year,
-                    season,
-                    selectedScheduleId,
-                    selectSchedule,
-                    colWidth,
-                    dragStatus,
-                    setDragStatus,
-                    highlightedRequirement,
-                    highlight,
-                  }}
-                />
-              ),
-            )}
+            {allSemesters.map((props) => (
+              <SemesterComponent
+                {...{
+                  ...props,
+                  colWidth,
+                  dragStatus,
+                  setDragStatus,
+                  highlightedRequirement,
+                }}
+              />
+            ))}
             <div ref={rightScrollRef} />
           </div>
 
@@ -231,6 +301,6 @@ const PlanningSection: React.FC<Props> = function ({
   );
 };
 
-PlanningSection.whyDidYouRender = true;
+// PlanningSection.whyDidYouRender = true;
 
 export default PlanningSection;

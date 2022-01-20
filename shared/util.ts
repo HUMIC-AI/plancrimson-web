@@ -6,18 +6,20 @@ import {
   where,
 } from 'firebase/firestore';
 import {
-  Semester, SEASON_ORDER, UserData, Season,
-} from './firestoreTypes';
-import {
-  ATTRIBUTE_DESCRIPTIONS,
-  Class,
+  Semester,
+  SEASON_ORDER,
+  UserData,
+  Season,
+  ClassId,
+  Schedule,
   DayOfWeek,
   DAYS_OF_WEEK,
-  Evaluation,
   Viability,
-} from './apiTypes';
+} from './firestoreTypes';
 import seasPlan from './seasPlan.json';
 import { getSchoolYear } from '../src/requirements/util';
+import type { ClassCache } from '../src/context/classCache';
+import { Class, ATTRIBUTE_DESCRIPTIONS, Evaluation } from './apiTypes';
 
 export const unsplashParams = '?utm_source=Plan+Crimson&utm_medium=referral';
 
@@ -63,7 +65,7 @@ export function allTruthy<T>(list: T[]) {
   return list.filter(Boolean).map((val) => val!);
 }
 
-export function getClassId(course: Class) {
+export function getClassId(course: Class): ClassId {
   return course.Key.replace(/[^a-zA-Z0-9-_]/g, '-');
 }
 
@@ -108,7 +110,9 @@ export function getUniqueSemesters(classYear: number, semesters: Semester[]) {
   semesters.forEach(({ year, season }) => {
     // if this semester has not yet been added
     if (
-      !defaultSemesters.find(({ year: y, season: s }) => year === y && season === s)
+      !defaultSemesters.find(
+        ({ year: y, season: s }) => year === y && season === s,
+      )
     ) {
       defaultSemesters.push({ year, season });
     }
@@ -130,8 +134,8 @@ export function getSchedulesBySemester(
   );
 }
 
-export function getAllClassIds(schedules: UserData['schedules']) {
-  return Object.values(schedules).flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
+export function getAllClassIds(schedules: Schedule[]) {
+  return schedules.flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
 }
 
 type ViabilityResponse = {
@@ -140,12 +144,74 @@ type ViabilityResponse = {
   instructors?: { firstName: string; lastName: string }[];
 };
 
+function mapSome(val: string | string[], fn: (arg: string) => boolean) {
+  return typeof val === 'string' ? fn(val) : val.some(fn);
+}
+
+function doesConflict(class1: Class, class2: Class) {
+  return DAYS_OF_WEEK.some((day) => {
+    if (
+      // if neither class takes place on this day, continue
+      !mapSome(class1.IS_SCL_MEETING_PAT, (str) => str.includes(day.slice(0, 2)))
+      || !mapSome(class2.IS_SCL_MEETING_PAT, (str) => str.includes(day.slice(0, 2)))
+    ) {
+      return false;
+    }
+    // a little bit gross, to handle since each field can be a string or an array of strings
+    return mapSome(class1.IS_SCL_STRT_TM_DEC, (st1) => mapSome(class1.IS_SCL_END_TM_DEC, (end1) => mapSome(class2.IS_SCL_STRT_TM_DEC, (st2) => mapSome(class2.IS_SCL_END_TM_DEC, (end2) => {
+      const [s1, e1, s2, e2] = [st1, end1, st2, end2].map(parseFloat);
+      if (e1 < s2 || s1 > e2) return false;
+      return true;
+    }))));
+  });
+}
+
+export function findConflicts(classes: Class[]): Record<ClassId, ClassId[]> {
+  const conflicts: Record<ClassId, ClassId[]> = {};
+  classes.forEach((cls) => {
+    conflicts[getClassId(cls)] = [];
+  });
+
+  classes.forEach((cls, i) => {
+    classes.slice(i + 1).forEach((other) => {
+      if (doesConflict(cls, other)) {
+        const [id1, id2] = [cls, other].map(getClassId);
+        conflicts[id1].push(id2);
+        conflicts[id2].push(id1);
+      }
+    });
+  });
+
+  return conflicts;
+}
+
 export function checkViable(
   cls: Class,
   querySemester: Semester,
   data: UserData,
+  classCache: ClassCache,
 ): ViabilityResponse {
   const { year, season } = getSemester(cls);
+
+  const selectedSchedule = data.selectedSchedules[`${querySemester.year}${querySemester.season}`];
+  if (selectedSchedule && data.schedules[selectedSchedule]) {
+    const conflicts = findConflicts([
+      cls,
+      ...data.schedules[selectedSchedule].classes.map(
+        ({ classId }) => classCache[classId],
+      ),
+    ]);
+
+    const classConflicts = conflicts[getClassId(cls)];
+    if (classConflicts && classConflicts.length > 0) {
+      return {
+        viability: 'Unlikely',
+        reason: `This course conflicts with these courses in your schedule: ${classConflicts
+          .map((id) => classCache[id].SUBJECT + classCache[id].CATALOG_NBR)
+          .join(', ')}.`,
+      };
+    }
+  }
 
   if (year === querySemester.year && season === querySemester.season) {
     return {

@@ -77,7 +77,9 @@ const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = functio
                 attribute === 'DAY_OF_WEEK' ? compareWeekdays : compareItems,
               )}
             />
-          ) : DemoElement}
+          ) : (
+            DemoElement
+          )}
         </div>
       </Disclosure.Panel>
     </CardStyleContext.Provider>

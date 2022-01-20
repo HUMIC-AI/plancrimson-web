@@ -1,179 +1,59 @@
-import React, { useEffect, useState } from 'react';
-import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
-import { Configure, InstantSearch } from 'react-instantsearch-dom';
-import qs from 'qs';
-import { adjustAttr, getMeiliApiKey, getMeiliHost } from '../shared/util';
-import MEILI_ATTRIBUTES from '../shared/meiliAttributes.json';
-import { useLgBreakpoint } from '../src/hooks';
-import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
-import useUser, { alertSignIn } from '../src/context/user';
-import sampleCourses from '../components/SearchComponents/sampleCourses.json';
-
-// components
+import Image from 'next/image';
+import Link from 'next/link';
 import Layout from '../components/Layout/Layout';
-import Attribute from '../components/SearchComponents/Attribute';
-import SearchBox, {
-  SearchBoxComponent,
-} from '../components/SearchComponents/SearchBox';
-import Hits, { HitsComponent } from '../components/SearchComponents/Hits';
-import CurrentRefinements, {
-  CurrentRefinementsComponent,
-} from '../components/SearchComponents/CurrentRefinements';
-import SortBy, { SortByComponent } from '../components/SearchComponents/SortBy';
-import { DAY_SHORT } from '../shared/apiTypes';
+import demoImg from '../public/demo.png';
+import searchImg from '../public/search.png';
+import evaluationImg from '../public/evaluation.png';
 
-const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey());
-
-const AttributeMenu = function () {
-  const isLg = useLgBreakpoint();
-
+export default function LandingPage() {
   return (
-    <div className="flex-shrink-0 self-start w-64 p-2 hidden lg:flex flex-col space-y-2 from-gray-800 to-blue-900 bg-gradient-to-br rounded-md">
-      {isLg
-        && MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
-          <Attribute attribute={attr} key={attr} label={adjustAttr(attr)} />
-        ))}
-      <span className="text-white text-xs p-1">
-        If filters are not showing up, clear your search and try again.
-      </span>
-    </div>
-  );
-};
+    <Layout size="w-full from-gray-800 to-blue-900 bg-gradient-to-br text-white flex flex-col items-center px-8 sm:px-24 py-24">
+      {/* <div className="absolute inset-0 bg-blue-900">Hi</div> */}
+      <h1 className="text-5xl sm:text-6xl uppercase tracking-wider font-black text-center">Plan Crimson</h1>
+      <p className="italic text-xl text-center mt-8">Make the most of your Harvard education</p>
+      <Link href="/search">
+        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+        <a className="inline-block text-center mt-8 py-4 px-8 font-bold bg-white text-blue-900 text-2xl rounded-md hover:opacity-50 transition-all shadow-md hover:shadow-xl">
+          Get started now
+        </a>
+      </Link>
 
-// we show a demo if the user is not logged in,
-// but do not allow them to send requests to the database
-const SearchPage = function () {
-  const { user } = useUser();
-  const [searchState, setSearchState] = useState({});
-
-  useEffect(() => {
-    if (!user || typeof window === 'undefined') return;
-    const stateFromQuery = qs.parse(window.location.search.slice(1));
-    process.nextTick(() => setSearchState(stateFromQuery));
-  }, [user]);
-
-  return (
-    <Layout>
-      <InstantSearch
-        indexName="courses"
-        searchClient={meiliSearchClient}
-        searchState={searchState}
-        onSearchStateChange={(newState) => setSearchState(newState)}
-        stalledSearchDelay={500}
-      >
-        {user && <Configure hitsPerPage={12} />}
-        <div className="flex gap-4">
-          <AttributeMenu />
-
-          <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 rounded-lg space-y-4">
-            <SelectedScheduleProvider>
-              {user ? (
-                <SearchBox />
-              ) : (
-                <SearchBoxComponent
-                  isSearchStalled={false}
-                  refine={alertSignIn}
-                  currentRefinement="Search now"
-                />
-              )}
-              <div className="grid grid-cols-[auto_1fr] gap-4">
-                {user ? (
-                  <SortBy
-                    defaultRefinement="courses"
-                    items={[
-                      { label: 'Relevant', value: 'courses' },
-                      {
-                        label: 'Catalog number',
-                        value: 'courses:CATALOG_NBR:asc',
-                      },
-                      {
-                        label: 'Popularity',
-                        value: 'courses:meanClassSize:desc',
-                      },
-                      {
-                        label: 'Light Workload',
-                        value: 'courses:meanClassSize:asc',
-                      },
-                      {
-                        label: 'Highly Recommended',
-                        value: 'courses:meanRecommendation:desc',
-                      },
-                      {
-                        label: 'Highly Rated',
-                        value: 'courses:meanRating:desc',
-                      },
-                    ]}
-                  />
-                ) : (
-                  <SortByComponent
-                    items={[
-                      { label: 'Relevant', value: 'courses', isRefined: true },
-                      {
-                        label: 'Catalog number',
-                        value: 'courses:CATALOG_NBR:asc',
-                        isRefined: false,
-                      },
-                      {
-                        label: 'Popularity',
-                        value: 'courses:meanClassSize:desc',
-                        isRefined: false,
-                      },
-                      {
-                        label: 'Light Workload',
-                        value: 'courses:meanClassSize:asc',
-                        isRefined: false,
-                      },
-                      {
-                        label: 'Highly Recommended',
-                        value: 'courses:meanRecommendation:desc',
-                        isRefined: false,
-                      },
-                      {
-                        label: 'Highly Rated',
-                        value: 'courses:meanRating:desc',
-                        isRefined: false,
-                      },
-                    ]}
-                    refine={alertSignIn}
-                  />
-                )}
-                {user ? (
-                  <CurrentRefinements />
-                ) : (
-                  <CurrentRefinementsComponent
-                    items={[]}
-                    refine={alertSignIn}
-                  />
-                )}
-              </div>
-              {user ? (
-                <Hits />
-              ) : (
-                <HitsComponent
-                  hits={sampleCourses
-                    // oh, the things i do for typescript
-                    .map((course) => ({
-                      ...course,
-                      ...Object.assign(
-                        {},
-                        ...DAY_SHORT.map((attr) => ({
-                          [attr]: course[attr] as 'Y' | 'N',
-                        })),
-                      ),
-                    }))}
-                  hasMore
-                  hasPrevious={false}
-                  refineNext={alertSignIn}
-                  refinePrevious={alertSignIn}
-                  inSearch={false}
-                />
-              )}
-            </SelectedScheduleProvider>
-          </div>
+      <div className="flex flex-col sm:flex-row items-center sm:space-x-12 mt-24 text-center sm:text-right">
+        <div className="max-w-sm">
+          <h2 className="text-4xl font-bold">Search and sort courses by the metrics you care about</h2>
+          <p className="text-xl mt-8">Sort by popularity, workload, recommendations, and more, all from up-to-date data</p>
         </div>
-      </InstantSearch>
+        <div className="max-w-4xl mt-8 mx-4 sm:mt-0">
+          <Image src={searchImg} alt="courses and requirements" className="rounded-xl" />
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-center sm:space-x-12 mt-24 text-center sm:text-right">
+        <div className="max-w-sm">
+          <h2 className="text-4xl font-bold">View evaluations from all past years in one place</h2>
+          <p className="text-xl mt-8">No more back-and-forth between my.harvard, Q Reports, and Course Evaluations — see what past students have to say</p>
+        </div>
+        <div className="max-w-xl mt-8 mx-4 sm:mt-0">
+          <Image src={evaluationImg} alt="courses and requirements" className="rounded-[2rem]" />
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-center sm:space-x-12 mt-24 text-center sm:text-right">
+        <div className="max-w-sm">
+          <h2 className="text-4xl font-bold">Verify your program requirements</h2>
+          <p className="text-xl mt-8">Easily view information from the Student Handbook, with more programs and concentrations coming soon</p>
+        </div>
+        <div className="max-w-4xl mt-8 mx-4 sm:mt-0">
+          <Image src={demoImg} alt="courses and requirements" className="rounded-xl" />
+        </div>
+      </div>
+
+      <Link href="/search">
+        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+        <a className="inline-block mt-24 py-4 px-8 font-bold bg-white text-blue-900 text-2xl rounded-md hover:opacity-50 transition-all shadow-md hover:shadow-xl">
+          Get started now
+        </a>
+      </Link>
     </Layout>
   );
-};
-
-export default SearchPage;
+}

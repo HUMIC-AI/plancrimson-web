@@ -23,6 +23,7 @@ import {
   Schedule,
   SEASON_ORDER,
   Term,
+  DayOfWeek,
 } from '../../shared/firestoreTypes';
 import {
   getDefaultSemesters,
@@ -39,12 +40,13 @@ type UserDataContextType = {
   removeCourses: (
     ...courses: { classId: string; scheduleId?: string }[]
   ) => Promise<UserData['schedules']>;
-  createSchedule: (
-    scheduleId: string,
-    year: number,
-    season: Season,
-    classes?: UserClassData[]
-  ) => Promise<Schedule>;
+  createSchedule: (obj: {
+    id: string;
+    year: number;
+    season: Season;
+    classes?: UserClassData[];
+    force?: boolean;
+  }) => Promise<Schedule>;
   renameSchedule: (scheduleId: string, newId: string) => Promise<Schedule>;
   deleteSchedule: (scheduleId: string) => Promise<void>;
   selectSchedule: (
@@ -52,10 +54,20 @@ type UserDataContextType = {
     season: Season,
     schedule: string | null
   ) => void;
+  setCustomTime: (
+    classId: string,
+    pattern: DayOfWeek[],
+    start: number,
+    end: number,
+    startDate: string,
+    endDate: string
+  ) => Promise<void>;
   error?: FirestoreError;
 };
 
-function getUserDataFromSnapshot(snap: DocumentSnapshot<UserData> | null) {
+function getUserDataFromSnapshot(
+  snap: DocumentSnapshot<UserData> | null,
+): UserData {
   const now = new Date();
   const data = snap?.data();
   const classYear = data?.classYear || now.getFullYear() + (now.getMonth() > 5 ? 4 : 3);
@@ -76,6 +88,8 @@ function getUserDataFromSnapshot(snap: DocumentSnapshot<UserData> | null) {
     lastLoggedIn: snap?.get('lastLoggedIn') || now,
     schedules,
     selectedSchedules,
+    customTimes: data?.customTimes || {},
+    waivedRequirements: data?.waivedRequirements || {},
   };
 }
 
@@ -89,6 +103,7 @@ const UserDataContext = createContext<UserDataContextType>({
   renameSchedule: throwMissingContext,
   deleteSchedule: throwMissingContext,
   selectSchedule: throwMissingContext,
+  setCustomTime: throwMissingContext,
 });
 
 /**
@@ -104,9 +119,11 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
   const [error, setError] = useState<FirestoreError | undefined>();
 
   const createSchedule: UserDataContextType['createSchedule'] = useCallback(
-    (scheduleId, year, season, classes = []) => new Promise<Schedule>((resolve, reject) => {
+    ({
+      id, year, season, classes = [], force = false,
+    }) => new Promise<Schedule>((resolve, reject) => {
       setUserData((prev) => {
-        if (scheduleId in prev.schedules) {
+        if (id in prev.schedules && !force) {
           process.nextTick(() => reject(new Error('id taken')));
           return prev;
         }
@@ -122,15 +139,23 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
           process.nextTick(() => reject(new Error('classes must be an array')));
           return prev;
         }
+        let newScheduleId = id;
+        if (force) {
+          let i = 1;
+          while (newScheduleId in prev.schedules) {
+            newScheduleId = `${id} (${i})`;
+            i += 1;
+          }
+        }
         const newSchedule: Schedule = {
-          id: scheduleId,
+          id: newScheduleId,
           season,
           year,
           classes,
         };
         const schedules = {
           ...prev.schedules,
-          [scheduleId]: newSchedule,
+          [newScheduleId]: newSchedule,
         };
 
         if (user) {
@@ -227,20 +252,21 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
   const removeCourses: UserDataContextType['removeCourses'] = useCallback(
     (...classesToRemove) => new Promise<UserData['schedules']>((resolve, reject) => {
       setUserData((prev) => {
+        if (classesToRemove.length === 0) return prev;
         const firestoreUpdate = {} as Record<string, UserClassData[]>;
         const newState: UserData = JSON.parse(JSON.stringify(prev));
 
         classesToRemove.forEach(
           ({ classId, scheduleId: fromScheduleId }) => {
             if (fromScheduleId) {
-              const updatedClasses = prev.schedules[
-                fromScheduleId
-              ].classes.filter(({ classId: id }) => id !== classId);
-              newState.schedules[fromScheduleId].classes = updatedClasses;
-              firestoreUpdate[`schedules.${fromScheduleId}.classes`] = updatedClasses;
+              const newSchedule = newState.schedules[fromScheduleId];
+              newSchedule.classes = newSchedule.classes.filter(
+                ({ classId: id }) => id !== classId,
+              );
+              firestoreUpdate[`schedules.${fromScheduleId}.classes`] = newSchedule.classes;
             } else {
               // remove from all schedules
-              Object.entries(prev.schedules).forEach(
+              Object.entries(newState.schedules).forEach(
                 ([scheduleId, schedule]) => {
                   const updatedClasses = schedule.classes.filter(
                     ({ classId: id }) => id !== classId,
@@ -289,8 +315,10 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
             )
               .then(resolve)
               .catch(reject);
+          } else {
+            process.nextTick(resolve);
           }
-          process.nextTick(resolve);
+
           return {
             ...prev,
             selectedSchedules: newSelectedSchedules,
@@ -318,12 +346,48 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
           )
             .then(resolve)
             .catch(reject);
+        } else {
+          process.nextTick(resolve);
         }
 
-        process.nextTick(resolve);
         return {
           ...prev,
           selectedSchedules: newSelectedSchedules,
+        };
+      });
+    }),
+    [user],
+  );
+
+  const setCustomTime: UserDataContextType['setCustomTime'] = useCallback(
+    (classId, pattern, start, end, startDate, endDate) => new Promise((resolve, reject) => {
+      setUserData((prev) => {
+        const newCustomTimes = {
+          ...prev.customTimes,
+          [classId]: {
+            pattern,
+            start,
+            end,
+            startDate,
+            endDate,
+          },
+        };
+
+        if (user) {
+          updateDoc(
+            getUserRef(user.uid),
+            // @ts-expect-error
+            { customTimes: newCustomTimes },
+          )
+            .then(resolve)
+            .catch(reject);
+        } else {
+          process.nextTick(resolve);
+        }
+
+        return {
+          ...prev,
+          customTimes: newCustomTimes,
         };
       });
     }),
@@ -384,6 +448,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
       renameSchedule,
       deleteSchedule,
       selectSchedule,
+      setCustomTime,
       error,
     }),
     [
@@ -393,6 +458,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
       createSchedule,
       renameSchedule,
       deleteSchedule,
+      setCustomTime,
       selectSchedule,
       error,
     ],
@@ -408,3 +474,15 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
 const useUserData = () => useContext(UserDataContext);
 
 export default useUserData;
+
+export function clearSchedule(
+  removeCourses: UserDataContextType['removeCourses'],
+  schedule: Schedule,
+) {
+  removeCourses(
+    ...schedule.classes.map(({ classId }) => ({
+      classId,
+      scheduleId: schedule.id,
+    })),
+  );
+}

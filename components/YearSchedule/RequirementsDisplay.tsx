@@ -2,14 +2,27 @@ import { Disclosure } from '@headlessui/react';
 import React, { Fragment, useMemo } from 'react';
 import { FaCheck, FaTimes } from 'react-icons/fa';
 import { classNames } from '../../shared/util';
-import { RequirementsMet } from '../../src/requirements';
-import { Requirement, RequirementGroup } from '../../src/requirements/util';
+import {
+  GroupResult,
+  ReqResult,
+  Requirement,
+  RequirementGroup,
+} from '../../src/requirements/util';
 import FadeTransition from '../FadeTransition';
 
-const Description: React.FC<{ description: React.ReactNode; }> = function ({ description }) {
+interface HighlightedState {
+  highlightRequirement: React.Dispatch<
+  React.SetStateAction<Requirement | undefined>
+  >;
+  highlightedRequirement: Requirement | undefined;
+}
+
+const Description: React.FC<{ description: React.ReactNode }> = function ({
+  description,
+}) {
   return (
     <Disclosure>
-      {(({ open }) => (
+      {({ open }) => (
         <>
           <Disclosure.Button className="font-medium text-gray-300 hover:text-gray-800">
             {open ? 'Hide details' : 'Show details'}
@@ -18,40 +31,83 @@ const Description: React.FC<{ description: React.ReactNode; }> = function ({ des
             <p>{description}</p>
           </Disclosure.Panel>
         </>
-      ))}
+      )}
     </Disclosure>
   );
 };
 
-type Props = {
-  depth: number;
-  requirements: RequirementGroup;
-  validationResults: RequirementsMet;
-  highlightRequirement: React.Dispatch<React.SetStateAction<Requirement | undefined>>;
-  highlightedRequirement: Requirement | undefined;
-};
-
-function getNumSatisfied(group: RequirementGroup, results: RequirementsMet): {
-  numSatisfied: number;
-  total: number;
-} {
-  return group.requirements.reduce((acc, req) => {
-    if ('groupId' in req) {
-      const nestedResults = getNumSatisfied(req, results);
-      return {
-        numSatisfied: acc.numSatisfied + nestedResults.numSatisfied,
-        total: acc.total + nestedResults.total,
-      };
-    }
-    if (typeof req.validate === 'undefined') return acc;
-    return {
-      numSatisfied: results[req.id]?.satisfied ? acc.numSatisfied + 1 : acc.numSatisfied,
-      total: acc.total + 1,
-    };
-  }, { numSatisfied: 0, total: 0 });
+interface RequirementComponentProps extends HighlightedState {
+  req: Requirement;
+  result: ReqResult | null;
 }
 
-const RequirementsDisplay: React.FC<Props> = function ({
+function RequirementComponent({
+  req,
+  result,
+  highlightRequirement,
+  highlightedRequirement,
+}: RequirementComponentProps) {
+  if (typeof req.validate === 'undefined') {
+    return (
+      <>
+        <div>{req.id}</div>
+        {req.description && <Description description={req.description} />}
+      </>
+    );
+  }
+
+  const isHighlighted = highlightedRequirement?.id === req.id;
+  return (
+    <>
+      <div
+        className={classNames(
+          isHighlighted
+            ? 'text-blue-500 font-bold'
+            : result?.satisfied
+              ? 'text-green-500'
+              : 'text-red-500',
+          'flex justify-between items-center space-x-2 transition-colors',
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => highlightRequirement(isHighlighted ? undefined : req)}
+          className={classNames(
+            isHighlighted ? 'font-bold' : 'font-medium',
+            'text-left',
+          )}
+        >
+          {req.id}
+        </button>
+        <span className="inline-flex items-center space-x-1">
+          {result?.satisfied ? <FaCheck /> : <FaTimes />}
+          {result?.classes && `(${result.classes.length})`}
+        </span>
+      </div>
+      {req.description && <Description description={req.description} />}
+    </>
+  );
+}
+
+interface Props extends HighlightedState {
+  depth: number;
+  requirements: RequirementGroup;
+  validationResults: GroupResult | null;
+}
+
+function countSatisfiedRequirements(result: GroupResult): [number, number] {
+  return Object.values(result.childResults).reduce(
+    ([count, total], reqOrGroup) => {
+      const [nestedCount, nestedTotal] = reqOrGroup.type === 'group'
+        ? countSatisfiedRequirements(reqOrGroup)
+        : [reqOrGroup.satisfied ? 1 : 0, 1];
+      return [count + nestedCount, total + nestedTotal];
+    },
+    [0, 0],
+  );
+}
+
+const RequirementGroupComponent: React.FC<Props> = function ({
   depth,
   requirements: reqGroup,
   validationResults,
@@ -98,107 +154,88 @@ const RequirementsDisplay: React.FC<Props> = function ({
       break;
   }
 
-  const reqCount = getNumSatisfied(reqGroup, validationResults);
+  const [numSatisfied, total] = validationResults
+    ? countSatisfiedRequirements(validationResults)
+    : [0, 0];
   return (
     <Disclosure
       defaultOpen={depth === 0}
       as="div"
       className={classNames(
-        'overflow-hidden mt-4',
+        'overflow-hidden',
+        depth > 0 && 'mt-4',
         depth > 1 ? 'rounded-lg' : 'sm:rounded-lg',
         borderStyles,
       )}
     >
-      <Disclosure.Button className={classNames(
-        'text-left text-white p-2 w-full hover:opacity-80 transition-opacity focus:ring-white focus:outline-none focus:bg-blue-600',
-        color,
-      )}
+      <Disclosure.Button
+        className={classNames(
+          'text-left text-white p-2 w-full hover:opacity-80 transition-opacity focus:ring-white focus:outline-none focus:bg-blue-400',
+          color,
+        )}
       >
         <div className="flex justify-between items-center gap-4">
-          <Heading>
-            <p>
-              {reqGroup.groupId}
-            </p>
-          </Heading>
-          {reqCount.total > 0 && (
-          <span className="font-medium whitespace-nowrap">
-            {reqCount.numSatisfied}
-            {' '}
-            /
-            {' '}
-            {reqCount.total}
-          </span>
+          <Heading>{reqGroup.groupId}</Heading>
+          {total > 0 && (
+            <span className="font-medium whitespace-nowrap">
+              {`${numSatisfied} / ${total}`}
+            </span>
           )}
         </div>
 
         {reqGroup.subheading && (
-        <p className={depth === 0 ? 'text-gray-800 text-sm' : 'text-gray-300 text-sm'}>
-          {reqGroup.subheading}
-        </p>
+          <p
+            className={
+              depth === 0 ? 'text-gray-800 text-sm' : 'text-gray-300 text-sm'
+            }
+          >
+            {reqGroup.subheading}
+          </p>
         )}
       </Disclosure.Button>
       <FadeTransition>
         <Disclosure.Panel className={depth > 0 ? 'p-2 space-y-4' : 'space-y-4'}>
-          {reqGroup.description && <Description description={reqGroup.description} />}
+          {reqGroup.description && (
+            <Description description={reqGroup.description} />
+          )}
 
           <ul className="space-y-4 text-sm">
-            {reqGroup.requirements.map((req) => {
-              if ('groupId' in req) {
-                return (
-                  <li key={req.groupId}>
-                    <RequirementsDisplay
-                      depth={depth + 1}
-                      key={req.groupId}
-                      requirements={req}
-                      validationResults={validationResults}
-                      highlightRequirement={highlightRequirement}
-                      highlightedRequirement={highlightedRequirement}
-                    />
-                  </li>
-                );
-              }
-
-              if (typeof req.validate === 'undefined') {
-                return (
-                  <li key={req.id} className="px-4 sm:px-0">
-                    <div>{req.id}</div>
-                    {req.description && <Description description={req.description} />}
-                  </li>
-                );
-              }
-
-              const satisfied = validationResults[req.id]?.satisfied || false;
-              const classes = validationResults[req.id]?.classes || [];
-              const isHighlighted = highlightedRequirement?.id === req.id;
-              // a single requirement
-              return (
-                <li key={req.id} className="px-4 sm:px-0">
-                  <div className={classNames(
-                    isHighlighted ? 'text-blue-500 font-bold'
-                      : (satisfied ? 'text-green-500' : 'text-red-500'),
-                    'flex justify-between items-center space-x-2 transition-colors',
-                  )}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => highlightRequirement(isHighlighted ? undefined : req)}
-                      className={classNames(isHighlighted && 'font-bold', 'text-left')}
-                    >
-                      {req.id}
-                    </button>
-                    <span className="inline-flex items-center space-x-1">
-                      {satisfied
-                        ? <FaCheck />
-                        : <FaTimes />}
-                      (
-                      {classes.length}
-                      )
-                    </span>
-                  </div>
-                  {req.description && <Description description={req.description} />}
-                </li>
-              );
-            })}
+            {reqGroup.requirements.map((req) => ('groupId' in req ? (
+              <li key={req.groupId}>
+                <RequirementGroupComponent
+                  depth={depth + 1}
+                  key={req.groupId}
+                  requirements={req}
+                  validationResults={
+                      validationResults
+                        ? (validationResults.childResults[
+                          req.groupId
+                        ] as GroupResult)
+                        : null
+                    }
+                  highlightRequirement={highlightRequirement}
+                  highlightedRequirement={highlightedRequirement}
+                />
+              </li>
+            ) : (
+              <li
+                key={req.id}
+                className={classNames(
+                  depth === 0 && 'p-2 border-gray-900 border-2 rounded-md',
+                )}
+              >
+                <RequirementComponent
+                  highlightRequirement={highlightRequirement}
+                  highlightedRequirement={highlightedRequirement}
+                  req={req}
+                  result={
+                      validationResults
+                        ? (validationResults.childResults[req.id] as ReqResult)
+                        : null
+                    }
+                />
+              </li>
+            )))}
           </ul>
         </Disclosure.Panel>
       </FadeTransition>
@@ -206,4 +243,4 @@ const RequirementsDisplay: React.FC<Props> = function ({
   );
 };
 
-export default RequirementsDisplay;
+export default RequirementGroupComponent;

@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import React, { useCallback, useMemo } from 'react';
-import { FaInfo, FaTimes, FaPlus } from 'react-icons/fa';
+import {
+  FaInfo, FaTimes, FaPlus, FaExclamationTriangle,
+} from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
 import { Schedule } from '../../shared/firestoreTypes';
 import {
@@ -10,7 +12,10 @@ import {
   checkViable,
 } from '../../shared/util';
 import useCardStyle from '../../src/context/cardStyle';
+import useClassCache from '../../src/context/classCache';
+import useShowAllSchedules from '../../src/context/showAllSchedules';
 import useUserData from '../../src/context/userData';
+import Tooltip from '../Tooltip';
 import {
   ClassTime,
   DaysOfWeek,
@@ -27,6 +32,7 @@ type Props = {
   highlight?: boolean;
   inSearchContext?: boolean;
   setDragStatus?: React.Dispatch<React.SetStateAction<DragStatus>>;
+  warnings?: string;
 };
 
 type Department = keyof typeof departmentImages;
@@ -50,9 +56,12 @@ const CourseCard: React.FC<Props> = function ({
   highlight,
   setDragStatus,
   inSearchContext = true,
+  warnings,
 }) {
   const { data: userData, addCourses, removeCourses } = useUserData();
+  const classCache = useClassCache(Object.values(userData.schedules));
   const { isExpanded } = useCardStyle();
+  const { showAllSchedules } = useShowAllSchedules();
   const draggable = typeof setDragStatus !== 'undefined';
   const [semester, department] = useMemo(
     () => [
@@ -73,6 +82,7 @@ const CourseCard: React.FC<Props> = function ({
         season: selectedSchedule.season,
       },
       userData,
+      classCache,
     );
     if (viability.viability === 'No') {
       alert(viability.reason);
@@ -87,7 +97,7 @@ const CourseCard: React.FC<Props> = function ({
       classId: getClassId(course),
       scheduleId: selectedSchedule.id,
     });
-  }, [addCourses, course, selectedSchedule, userData]);
+  }, [addCourses, classCache, course, selectedSchedule, userData]);
 
   const handleDragStart: React.DragEventHandler<HTMLDivElement> = (ev) => {
     // eslint-disable-next-line no-param-reassign
@@ -112,9 +122,7 @@ const CourseCard: React.FC<Props> = function ({
       <div
         className={classNames(
           'relative rounded-xl overflow-hidden border-gray-800 from-gray-800 border-4 text-left h-full',
-          isExpanded
-            ? 'bg-gray-800'
-            : 'bg-gradient-to-br',
+          isExpanded ? 'bg-gray-800' : 'bg-gradient-to-br',
           isExpanded || (highlight ? 'to-blue-500' : 'to-blue-900'),
         )}
         draggable={draggable}
@@ -154,7 +162,7 @@ const CourseCard: React.FC<Props> = function ({
               </span>
 
               {/* the info and course selection buttons */}
-              <span className="flex items-center space-x-2 ml-2">
+              <span className="flex items-center space-x-1 ml-2">
                 <button
                   type="button"
                   name="More info"
@@ -163,7 +171,15 @@ const CourseCard: React.FC<Props> = function ({
                 >
                   <FaInfo />
                 </button>
+
+                {warnings && (
+                  <Tooltip text={warnings} direction="bottom">
+                    <FaExclamationTriangle color="yellow" />
+                  </Tooltip>
+                )}
+
                 {selectedSchedule
+                  && showAllSchedules !== 'sample'
                   && (selectedSchedule.classes.find(
                     (cls) => cls.classId === getClassId(course),
                   ) ? (

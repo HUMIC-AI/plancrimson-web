@@ -3,19 +3,20 @@ import React, {
 } from 'react';
 import { FaCheck } from 'react-icons/fa';
 import {
+  allTruthy,
   checkViable,
   classNames,
+  findConflicts,
   getSchedulesBySemester,
 } from '../../shared/util';
 import useUserData from '../../src/context/userData';
-import { Season } from '../../shared/firestoreTypes';
+import { Season, Viability } from '../../shared/firestoreTypes';
 import { useCourseDialog } from '../../src/hooks';
 import ScheduleSelector from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
 import CourseDialog from '../Course/CourseDialog';
-import useClassCache from '../../src/context/classCache';
+import useClassCache, { ClassCache } from '../../src/context/classCache';
 import FadeTransition from '../FadeTransition';
-import { Viability } from '../../shared/apiTypes';
 import { Requirement } from '../../src/requirements/util';
 import ButtonMenu from './ButtonMenu';
 import useShowAllSchedules from '../../src/context/showAllSchedules';
@@ -42,7 +43,7 @@ const VIABILITY_COLORS: Record<Viability, string> = {
   No: 'bg-red-300',
 };
 
-const SemesterDisplay: React.FC<Props> = function ({
+const SemesterComponent: React.FC<Props> = function ({
   year,
   season,
   selectedScheduleId,
@@ -59,8 +60,7 @@ const SemesterDisplay: React.FC<Props> = function ({
   const {
     closeModal, handleExpand, isOpen, openedCourse,
   } = useCourseDialog();
-  const { showAllSchedules } = useShowAllSchedules();
-  const classCache = useClassCache(data.schedules);
+  const { showAllSchedules, sampleSchedule } = useShowAllSchedules();
 
   const editRef = useRef<HTMLInputElement>(null!);
 
@@ -70,9 +70,19 @@ const SemesterDisplay: React.FC<Props> = function ({
   const [scheduleTitle, setScheduleTitle] = useState<string>();
 
   const schedules = getSchedulesBySemester(data, year, season);
-  const selectedSchedule = selectedScheduleId
-    ? data.schedules[selectedScheduleId]
-    : null;
+  const selectedSchedule = showAllSchedules === 'sample'
+    ? sampleSchedule?.schedules.find(
+      (schedule) => schedule.id === selectedScheduleId,
+    )!
+    : selectedScheduleId
+      ? data.schedules[selectedScheduleId]
+      : null;
+
+  const classCache: Readonly<ClassCache> = useClassCache(
+    allTruthy([selectedSchedule]),
+  );
+
+  const conflicts = selectedSchedule ? findConflicts(allTruthy(selectedSchedule.classes.map(({ classId }) => classCache[classId]))) : null;
 
   const draggedClass = dragStatus.dragging && classCache[dragStatus.data.classId];
 
@@ -85,9 +95,10 @@ const SemesterDisplay: React.FC<Props> = function ({
           season: selectedSchedule.season,
         },
         data,
+        classCache,
       )
       : null),
-    [data, draggedClass, selectedSchedule],
+    [classCache, data, draggedClass, selectedSchedule],
   );
 
   const handleDrop: React.DragEventHandler<HTMLDivElement> = useCallback(
@@ -145,12 +156,13 @@ const SemesterDisplay: React.FC<Props> = function ({
       >
         {/* First component of display */}
         <div className="flex flex-col items-stretch space-y-2 p-4 border-black border-b-2">
-          {showAllSchedules || (
-          <h1 className="text-lg text-center min-w-max font-semibold">
-            {season}
-            {' '}
-            {year}
-          </h1>
+          {/* only show */}
+          {showAllSchedules !== 'all' && (
+            <h1 className="text-lg text-center min-w-max font-semibold">
+              {season}
+              {' '}
+              {year}
+            </h1>
           )}
 
           <FadeTransition
@@ -196,29 +208,35 @@ const SemesterDisplay: React.FC<Props> = function ({
             </form>
           </FadeTransition>
 
-          {showSelector && (
+          {showAllSchedules !== 'sample' && showSelector && (
             <ScheduleSelector
               schedules={schedules}
               selectedSchedule={selectedSchedule}
               selectSchedule={(schedule) => schedule && selectSchedule(schedule.id)}
               direction="center"
               parentWidth={`${colWidth}px`}
-              showTerm={showAllSchedules}
-              highlight={typeof highlight !== 'undefined' && (highlight === selectedSchedule?.id)}
+              showTerm={showAllSchedules === 'all'}
+              highlight={
+                typeof highlight !== 'undefined'
+                && highlight === selectedSchedule?.id
+              }
+              onPlanningPage
             />
           )}
 
-          <ButtonMenu
-            editing={editing}
-            prevScheduleId={schedules[0]?.id || null}
-            season={season}
-            year={year}
-            selectSchedule={selectSchedule}
-            selectedSchedule={selectedSchedule}
-            setEditing={setEditing}
-            focusInput={() => editRef.current.focus()}
-            setScheduleTitle={setScheduleTitle}
-          />
+          {showAllSchedules !== 'sample' && (
+            <ButtonMenu
+              editing={editing}
+              prevScheduleId={schedules[0]?.id === selectedSchedule?.id ? null : (schedules[0]?.id || null)}
+              season={season}
+              year={year}
+              selectSchedule={selectSchedule}
+              selectedSchedule={selectedSchedule}
+              setEditing={setEditing}
+              focusInput={() => editRef.current.focus()}
+              setScheduleTitle={setScheduleTitle}
+            />
+          )}
         </div>
 
         {/* {selectedSchedule.classes.length > 0 && (
@@ -234,8 +252,8 @@ const SemesterDisplay: React.FC<Props> = function ({
         )} */}
 
         {/* Second component: actual classes */}
-        <div className="flex-1 p-4 md:overflow-auto">
-          <div className="flex flex-col items-stretch space-y-4">
+        <div className="flex-1 p-4 md:overflow-auto h-max">
+          <div className="flex flex-col items-stretch min-h-[12rem] space-y-4">
             {selectedSchedule
               && selectedSchedule.classes.map(({ classId: id }) => (id && classCache[id] ? (
                 <CourseCard
@@ -252,8 +270,11 @@ const SemesterDisplay: React.FC<Props> = function ({
                       ) !== null
                     }
                   selectedSchedule={selectedSchedule}
-                  setDragStatus={setDragStatus}
+                  setDragStatus={
+                      showAllSchedules === 'sample' ? undefined : setDragStatus
+                    }
                   inSearchContext={false}
+                  warnings={(conflicts?.[id]?.length || 0) > 0 ? `This class conflicts with: ${conflicts![id].map((i) => classCache[i].SUBJECT + classCache[i].CATALOG_NBR).join(', ')}` : undefined}
                 />
               ) : (
                 <div key={id}>Loading course data...</div>
@@ -271,4 +292,4 @@ const SemesterDisplay: React.FC<Props> = function ({
   );
 };
 
-export default SemesterDisplay;
+export default SemesterComponent;

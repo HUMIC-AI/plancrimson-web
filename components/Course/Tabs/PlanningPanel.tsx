@@ -2,29 +2,39 @@ import { Tab, Switch } from '@headlessui/react';
 import Link from 'next/link';
 import React, { Fragment, useMemo } from 'react';
 import {
-  FaBan, FaCheckCircle, FaExclamationCircle, FaSmile,
+  FaBan,
+  FaCheckCircle,
+  FaExclamationCircle,
+  FaSmile,
 } from 'react-icons/fa';
 import { ExtendedClass } from '../../../shared/apiTypes';
 import { Schedule } from '../../../shared/firestoreTypes';
 import {
-  sortSchedules, getClassId, classNames, checkViable,
+  sortSchedules,
+  getClassId,
+  classNames,
+  checkViable,
 } from '../../../shared/util';
+import useClassCache from '../../../src/context/classCache';
 import useUserData from '../../../src/context/userData';
+import Tooltip from '../../Tooltip';
 
-const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass; }> = function ({ schedule, course }) {
+const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass }> = function ({ schedule, course }) {
   const { data, addCourses, removeCourses } = useUserData();
-  const enabled = !!schedule.classes.find(({ classId }) => classId === getClassId(course));
-  const viabilityStatus = useMemo(
-    () => {
-      const semester = { year: schedule.year, season: schedule.season };
-      return checkViable(course, semester, data);
-    },
-    [schedule, course, data],
+  const classCache = useClassCache(Object.values(data.schedules));
+  const enabled = !!schedule.classes.find(
+    ({ classId }) => classId === getClassId(course),
   );
+  const viabilityStatus = useMemo(() => {
+    const semester = { year: schedule.year, season: schedule.season };
+    return checkViable(course, semester, data, classCache);
+  }, [schedule, course, data, classCache]);
 
   return (
     <Fragment key={schedule.id}>
-      <span className="font-semibold max-w-[12rem] sm:max-w-[24rem] overflow-hidden text-ellipsis">{schedule.id}</span>
+      <span className="font-semibold max-w-[12rem] sm:max-w-[24rem] overflow-hidden text-ellipsis">
+        {schedule.id}
+      </span>
       <span className="text-gray-600">{`${schedule.season} ${schedule.year}`}</span>
       <div className="flex flex-row-reverse relative">
         {/* Code from https://headlessui.dev/react/switch */}
@@ -35,10 +45,16 @@ const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass; }> = fu
               if (viabilityStatus.viability === 'No') {
                 alert('This course is not being offered in this semester!');
               } else {
-                addCourses({ classId: getClassId(course), scheduleId: schedule.id });
+                addCourses({
+                  classId: getClassId(course),
+                  scheduleId: schedule.id,
+                });
               }
             } else {
-              removeCourses({ classId: getClassId(course), scheduleId: schedule.id });
+              removeCourses({
+                classId: getClassId(course),
+                scheduleId: schedule.id,
+              });
             }
           }}
           className={classNames(
@@ -59,21 +75,30 @@ const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass; }> = fu
             )}
           />
         </Switch>
-        <div className="group mr-2 w-max flex flex-row-reverse items-center space-x-2">
-          {viabilityStatus.viability === 'Yes' && <FaCheckCircle title="Offered" />}
-          {viabilityStatus.viability === 'Likely' && <FaSmile title="Likely to be offered" />}
-          {viabilityStatus.viability === 'Unlikely' && <FaExclamationCircle title="Unlikely to be offered" />}
-          {viabilityStatus.viability === 'No' && <FaBan title="Not offered" />}
-          <p className="absolute inset-y-0 right-full top-1/2 transform -translate-y-1/2 -translate-x-2 hidden group-hover:block bg-gray-800 text-white w-max h-min max-w-[8rem] p-2 rounded-md">
-            {viabilityStatus.reason}
-          </p>
+        <div className="mr-2 flex items-center">
+          <Tooltip text={viabilityStatus.reason} direction="left">
+            {viabilityStatus.viability === 'Yes' && (
+            <FaCheckCircle title="Offered" />
+            )}
+            {viabilityStatus.viability === 'Likely' && (
+            <FaSmile title="Likely to be offered" />
+            )}
+            {viabilityStatus.viability === 'Unlikely' && (
+            <FaExclamationCircle title="Unlikely to be offered" />
+            )}
+            {viabilityStatus.viability === 'No' && (
+            <FaBan title="Not offered" />
+            )}
+          </Tooltip>
         </div>
       </div>
     </Fragment>
   );
 };
 
-const PlanningPanel: React.FC<{ course: ExtendedClass }> = function ({ course }) {
+const PlanningPanel: React.FC<{ course: ExtendedClass }> = function ({
+  course,
+}) {
   const { data: userData } = useUserData();
 
   return (

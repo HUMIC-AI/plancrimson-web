@@ -8,6 +8,8 @@ import { UserContext, UserProvider } from '../src/context/user';
 import { UserDataProvider } from '../src/context/userData';
 import { ClassCacheProvider } from '../src/context/classCache';
 import { CardStyleProvider } from '../src/context/cardStyle';
+import { SearchStateProvider } from '../src/context/searchState';
+import { SchedulesDisplayProvider } from '../src/context/showAllSchedules';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -42,7 +44,11 @@ const MyApp = function ({ Component, pageProps }: AppProps) {
           <UserDataProvider user={user}>
             <ClassCacheProvider>
               <CardStyleProvider>
-                <Component {...pageProps} />
+                <SearchStateProvider>
+                  <SchedulesDisplayProvider>
+                    <Component {...pageProps} />
+                  </SchedulesDisplayProvider>
+                </SearchStateProvider>
               </CardStyleProvider>
             </ClassCacheProvider>
           </UserDataProvider>

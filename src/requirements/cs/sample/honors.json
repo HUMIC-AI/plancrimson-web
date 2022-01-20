@@ -1,0 +1,104 @@
+[
+  {
+    "id": "cs-honors-12",
+    "source": "https://docs.google.com/spreadsheets/d/1BD3oy0TV3sbOH3ByJH0BwKyQlg2zTsKwy57Us8O7TH8/edit#gid=685413653",
+    "name": "Advanced Programming Background, Honors Plan, Maximize electives, Loves AI",
+    "schedules": [
+      {
+        "year": 2021,
+        "season": "Fall",
+        "id": "Fall 2021",
+        "classes": [
+          {
+            "classId": "subject-MATH-catnbr--20-2022A-classsection-001-classnbr-12584-crseid-207485-strm-2218"
+          },
+          {
+            "classId": "subject-COMPSCI-catnbr--20153-classsection-001-classnbr-17030-crseid-131493-strm-2218"
+          }
+        ]
+      },
+      {
+        "year": 2022,
+        "season": "Spring",
+        "id": "Spring 2022",
+        "classes": [
+          {
+            "classId": "subject-COMPSCI-catnbr--20-2020-classsection-001-classnbr-13723-crseid-128073-strm-2222"
+          },
+          {
+            "classId": "subject-COMPSCI-catnbr--20161-classsection-001-classnbr-13745-crseid-113847-strm-2222"
+          }
+        ]
+      },
+      {
+        "year": 2022,
+        "season": "Fall",
+        "id": "Fall 2022",
+        "classes": [
+          {
+            "classId": "subject-STAT-catnbr--20110-classsection-001-classnbr-11153-crseid-110766-strm-2218"
+          },
+          {
+            "classId": "subject-COMPSCI-catnbr--20121-classsection-001-classnbr-13716-crseid-119064-strm-2218"
+          }
+        ]
+      },
+      {
+        "year": 2023,
+        "season": "Spring",
+        "id": "Spring 2023",
+        "classes": [
+          {
+            "classId": "subject-COMPSCI-catnbr--20124-classsection-001-classnbr-13726-crseid-115384-strm-2222"
+          },
+          {
+            "classId": "subject-COMPSCI-catnbr--20181-classsection-001-classnbr-13729-crseid-148156-strm-2222"
+          }
+        ]
+      },
+      {
+        "year": 2023,
+        "season": "Fall",
+        "id": "Fall 2023",
+        "classes": [
+          {
+            "classId": "subject-COMPSCI-catnbr--20136-classsection-001-classnbr-16839-crseid-128164-strm-2218"
+          },
+          {
+            "classId": "subject-COMPSCI-catnbr--20182-classsection-001-classnbr-14058-crseid-110661-strm-2218"
+          }
+        ]
+      },
+      {
+        "year": 2024,
+        "season": "Spring",
+        "id": "Spring 2024",
+        "classes": [
+          {
+            "classId": "subject-APMTH-catnbr--20120-classsection-001-classnbr-13653-crseid-113876-strm-2222"
+          }
+        ]
+      },
+      {
+        "year": 2024,
+        "season": "Fall",
+        "id": "Fall 2024",
+        "classes": [
+          {
+            "classId": "subject-COMPSCI-catnbr--20187-classsection-001-classnbr-14061-crseid-117372-strm-2218"
+          }
+        ]
+      },
+      {
+        "year": 2025,
+        "season": "Spring",
+        "id": "Spring 2025",
+        "classes": [
+          {
+            "classId": "subject-STAT-catnbr--20195-classsection-001-classnbr-17520-crseid-207703-strm-2222"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -4,25 +4,38 @@ import React, {
 import { Disclosure, Listbox } from '@headlessui/react';
 import { FaChevronDown, FaEnvelope, FaTimes } from 'react-icons/fa';
 import {
-  arrayUnion, doc, getDoc, getFirestore, setDoc,
+  arrayUnion,
+  doc,
+  getDoc,
+  getFirestore,
+  setDoc,
 } from 'firebase/firestore';
-import { RequirementsMet, allRequirements } from '../../src/requirements';
-import { Requirement, RequirementGroup } from '../../src/requirements/util';
+import {
+  GroupResult,
+  Requirement,
+  RequirementGroup,
+  SampleSchedule,
+} from '../../src/requirements/util';
 import ExternalLink from '../ExternalLink';
 import FadeTransition from '../FadeTransition';
-import RequirementsDisplay from './RequirementsDisplay';
+import RequirementGroupComponent from './RequirementsDisplay';
 import { classNames } from '../../shared/util';
 import useUser from '../../src/context/user';
+import useShowAllSchedules from '../../src/context/showAllSchedules';
+import { allRequirements } from '../../src/requirements';
+import useUserData from '../../src/context/userData';
 
-type RequirementsSectionProps = {
+interface RequirementsSectionProps {
   selectedRequirements: RequirementGroup;
   setSelectedRequirements: React.Dispatch<RequirementGroup>;
-  validationResults: RequirementsMet;
+  validationResults: GroupResult | null;
   highlightedRequirement: Requirement | undefined;
-  highlightRequirement: React.Dispatch<React.SetStateAction<Requirement | undefined>>;
+  highlightRequirement: React.Dispatch<
+  React.SetStateAction<Requirement | undefined>
+  >;
   notification: boolean;
   setNotification: React.Dispatch<React.SetStateAction<boolean>>;
-};
+}
 
 function SuggestionForm() {
   const { user } = useUser();
@@ -41,50 +54,64 @@ function SuggestionForm() {
     }, 2000) as unknown as number;
   }, []);
 
-  const submitSuggestion = useCallback(async (ev) => {
-    ev.preventDefault();
-    // only allow user to submit every 2 seconds
-    if (typeof timeoutRef.current !== 'undefined') return;
-    if (!user?.email) {
-      setSuggestion('You must be logged in to give suggestions!');
-      showMessage();
-      return;
-    }
-
-    const program = new FormData(ev.currentTarget).get('program')?.toString()
-      .trim()
-      .toLowerCase();
-    if (!program) return;
-
-    const db = getFirestore();
-    try {
-      const existing = await getDoc(doc(db, 'suggestions', user.uid));
-      const suggestions: string[] | undefined = existing.get('suggestions');
-      if (suggestions && suggestions.length >= 10) {
-        setSuggestion('You may only make up to ten suggestions. Please check back later.');
-      } else if (suggestions?.includes(program)) {
-        setSuggestion('You have already suggested that program!');
-      } else {
-        await setDoc(existing.ref, {
-          suggestions: arrayUnion(program),
-          userEmail: user?.email,
-        }, { merge: true });
-        setSuggestion(`Suggestion successfully recorded! (${(suggestions?.length || 0) + 1}/10)`);
+  const submitSuggestion = useCallback(
+    async (ev) => {
+      ev.preventDefault();
+      // only allow user to submit every 2 seconds
+      if (typeof timeoutRef.current !== 'undefined') return;
+      if (!user?.email) {
+        setSuggestion('You must be logged in to give suggestions!');
+        showMessage();
+        return;
       }
-    } catch (err) {
-      console.error('error updating suggestion', err);
-      setSuggestion('There was an error recording your suggestion. Please try again.');
-    } finally {
-      showMessage();
-    }
-  }, [showMessage, user]);
+
+      const program = new FormData(ev.currentTarget)
+        .get('program')
+        ?.toString()
+        .trim()
+        .toLowerCase();
+      if (!program) return;
+
+      const db = getFirestore();
+      try {
+        const existing = await getDoc(doc(db, 'suggestions', user.uid));
+        const suggestions: string[] | undefined = existing.get('suggestions');
+        if (suggestions && suggestions.length >= 10) {
+          setSuggestion(
+            'You may only make up to ten suggestions. Please check back later.',
+          );
+        } else if (suggestions?.includes(program)) {
+          setSuggestion('You have already suggested that program!');
+        } else {
+          await setDoc(
+            existing.ref,
+            {
+              suggestions: arrayUnion(program),
+              userEmail: user?.email,
+            },
+            { merge: true },
+          );
+          setSuggestion(
+            `Suggestion successfully recorded! (${
+              (suggestions?.length || 0) + 1
+            }/10)`,
+          );
+        }
+      } catch (err) {
+        console.error('error updating suggestion', err);
+        setSuggestion(
+          'There was an error recording your suggestion. Please try again.',
+        );
+      } finally {
+        showMessage();
+      }
+    },
+    [showMessage, user],
+  );
 
   return (
     <div>
-      <form
-        className="flex justify-center"
-        onSubmit={submitSuggestion}
-      >
+      <form className="flex justify-center" onSubmit={submitSuggestion}>
         <input
           type="text"
           name="program"
@@ -95,7 +122,10 @@ function SuggestionForm() {
             'focus:outline-none focus:shadow-lg shadow transition-shadow max-w-[16rem]',
           )}
         />
-        <button type="submit" className="ml-2 p-2 rounded bg-black bg-opacity-30 hover:bg-opacity-50 transition-colors relative group">
+        <button
+          type="submit"
+          className="ml-2 p-2 rounded bg-black bg-opacity-30 hover:bg-opacity-50 transition-colors relative group"
+        >
           <FaEnvelope />
           <span className="hidden text-sm group-hover:block absolute top-full mt-2 right-0 bg-black bg-opacity-80 text-white z-10 w-32 p-2 rounded">
             Your email will be recorded when making a suggestion.
@@ -111,9 +141,80 @@ function SuggestionForm() {
   );
 }
 
+interface SampleScheduleEntryProps {
+  schedule: SampleSchedule;
+}
+
+function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
+  const { setShowAllSchedules, sampleSchedule, setSampleSchedule } = useShowAllSchedules();
+  const { createSchedule, selectSchedule } = useUserData();
+
+  const isSelected = sampleSchedule?.name === schedule.name;
+
+  return (
+    <div className="flex items-center space-x-4">
+      <button
+        type="button"
+        className={classNames(
+          isSelected && 'font-bold',
+          'text-left hover:opacity-50 transition-opacity',
+        )}
+        onClick={() => {
+          if (isSelected) {
+            setShowAllSchedules('selected');
+            setSampleSchedule(null);
+          } else {
+            setShowAllSchedules('sample');
+            setSampleSchedule(schedule);
+          }
+        }}
+      >
+        {schedule.name}
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          Promise.all(
+            schedule.schedules.map((s) => createSchedule({
+              ...s,
+              id: `${s.id} (${schedule.id})`,
+              force: true,
+            })),
+          )
+            .then((schedules) => {
+              setShowAllSchedules('selected');
+              schedules.forEach((s) => selectSchedule(s.year, s.season, s.id));
+              alert('Cloned successfully!');
+            })
+            .catch((err) => {
+              console.error(err);
+              alert('An unexpected error occurred when cloning the sample schedule. Please try again later.');
+            });
+        }}
+        className="font-medium hover:opacity-50 transition-opacity"
+      >
+        Clone
+      </button>
+      <a
+        href={schedule.source}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-medium hover:opacity-50 transition-opacity"
+      >
+        Source
+      </a>
+    </div>
+  );
+}
+
 const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
-  selectedRequirements, setSelectedRequirements, validationResults,
-  highlightedRequirement, highlightRequirement, notification, setNotification,
+  selectedRequirements: selectedReqGroup,
+  setSelectedRequirements,
+  validationResults,
+  highlightedRequirement,
+  highlightRequirement,
+  notification,
+  setNotification,
 }) {
   const topRef = useRef<HTMLDivElement>(null!);
   const bottomRef = useRef<HTMLDivElement>(null!);
@@ -136,30 +237,37 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
   }, []);
 
   return (
-    <div className="relative mb-12 md:mb-0 border-gray-300 space-y-4 md:border-2 md:rounded-lg md:shadow-lg md:max-w-xs lg:max-w-sm xl:max-w-md w-screen overflow-auto resize-x">
+    <div className="relative mb-12 md:mb-0 border-gray-300 space-y-4 md:border-2 md:rounded-lg md:shadow-lg md:max-w-xs lg:max-w-sm xl:max-w-md w-screen sm:overflow-auto sm:resize-x">
       <div className="md:absolute md:inset-4 flex flex-col space-y-4">
         <Listbox
-          value={selectedRequirements.groupId}
+          value={selectedReqGroup.groupId}
           onChange={(groupId) => setSelectedRequirements(
-            allRequirements.find((requirements) => requirements.groupId === groupId)!,
+            allRequirements.find(
+              (requirements) => requirements.groupId === groupId,
+            )!,
           )}
           as="div"
           className="relative"
         >
           <Listbox.Button className="shadow py-2 px-3 border-2 rounded w-full text-left flex justify-between items-center font-medium">
-            {selectedRequirements.groupId}
+            {selectedReqGroup.groupId}
             <FaChevronDown />
           </Listbox.Button>
           <FadeTransition>
             <Listbox.Options className="absolute w-full bg-gray-800 rounded-b-lg overflow-hidden shadow border z-20">
               {allRequirements.map(({ groupId }) => (
-                <Listbox.Option key={groupId} value={groupId} className="odd:bg-gray-300 even:bg-white hover:opacity-50 transition-opacity py-2 px-4 font-medium cursor-pointer">
+                <Listbox.Option
+                  key={groupId}
+                  value={groupId}
+                  className="odd:bg-gray-300 even:bg-white hover:opacity-50 transition-opacity py-2 px-4 cursor-pointer"
+                >
                   {groupId}
                 </Listbox.Option>
               ))}
             </Listbox.Options>
           </FadeTransition>
         </Listbox>
+
         <Disclosure>
           <Disclosure.Button className="leading-none text-sm underline text-gray-600 pl-2 hover:opacity-50 transition-opacity">
             Suggest new programs and concentrations
@@ -171,6 +279,25 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
           </FadeTransition>
         </Disclosure>
 
+        {selectedReqGroup.sampleSchedules && (
+          <Disclosure>
+            <Disclosure.Button className="leading-none text-sm underline text-gray-600 pl-2 hover:opacity-50 transition-opacity">
+              Sample schedules
+            </Disclosure.Button>
+            <FadeTransition>
+              <Disclosure.Panel className="px-4 text-sm">
+                <ul>
+                  {selectedReqGroup.sampleSchedules.map((schedule) => (
+                    <li key={schedule.name}>
+                      <SampleScheduleEntry schedule={schedule} />
+                    </li>
+                  ))}
+                </ul>
+              </Disclosure.Panel>
+            </FadeTransition>
+          </Disclosure>
+        )}
+
         <FadeTransition show={notification}>
           <div className="relative rounded-lg bg-blue-300 py-2 lg:py-4 px-6 mx-4 md:mx-0 text-sm text-left italic">
             <div className="flex flex-col space-y-2">
@@ -178,23 +305,25 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
                 Remember that this is an unofficial tool
                 {' '}
                 <strong>only</strong>
-                , is still under development, and is not affiliated with Harvard.
+                ,
+                is still under development, and is not affiliated with Harvard.
               </span>
               <span>
-                For up-to-date requirements,
-                consult the
+                For up-to-date requirements, consult the
                 {' '}
-                <ExternalLink href="https://handbook.college.harvard.edu/">Harvard College Student Handbook</ExternalLink>
+                <ExternalLink href="https://handbook.college.harvard.edu/">
+                  Harvard College Student Handbook
+                </ExternalLink>
                 {' '}
                 or your Advising Report, which can be found by going to
                 {' '}
-                <ExternalLink href="https://my.harvard.edu/">my.harvard</ExternalLink>
+                <ExternalLink href="https://my.harvard.edu/">
+                  my.harvard
+                </ExternalLink>
                 {' '}
                 and clicking on &ldquo;My Program&rdquo;.
               </span>
-              <span>
-                More concentrations and programs coming soon!
-              </span>
+              <span>More concentrations and programs coming soon!</span>
             </div>
             <button
               type="button"
@@ -207,16 +336,17 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
         </FadeTransition>
 
         <div className="flex-1 relative">
-          <div className={classNames(
-            'md:absolute md:inset-0 overflow-y-auto box-content md:border-black md:border-dashed',
-            !topIntersecting && 'md:border-t-2',
-            !bottomIntersecting && 'md:border-b-2',
-          )}
+          <div
+            className={classNames(
+              'md:absolute md:inset-0 overflow-y-auto box-content md:border-black md:border-dashed',
+              !topIntersecting && 'md:border-t-2',
+              !bottomIntersecting && 'md:border-b-2',
+            )}
           >
             <div ref={topRef} id="topIntersection" />
-            <RequirementsDisplay
+            <RequirementGroupComponent
               depth={0}
-              requirements={selectedRequirements}
+              requirements={selectedReqGroup}
               validationResults={validationResults}
               highlightRequirement={highlightRequirement}
               highlightedRequirement={highlightedRequirement}

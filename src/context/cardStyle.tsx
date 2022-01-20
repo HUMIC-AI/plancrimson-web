@@ -16,10 +16,13 @@ export const CardStyleContext = createContext<CardStyleContextType>({
 export const CardStyleProvider: React.FC = function ({ children }) {
   const [isExpanded, expand] = useState(true);
 
-  const context = useMemo(() => ({
-    isExpanded,
-    expand,
-  }), [isExpanded, expand]);
+  const context = useMemo(
+    () => ({
+      isExpanded,
+      expand,
+    }),
+    [isExpanded, expand],
+  );
 
   return (
     <CardStyleContext.Provider value={context}>

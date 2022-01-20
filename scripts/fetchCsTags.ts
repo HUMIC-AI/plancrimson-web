@@ -1,8 +1,10 @@
 /* eslint-disable no-console */
-const axios = require('axios').default;
-const cheerio = require('cheerio');
+import axios from 'axios';
+import cheerio from 'cheerio';
+import { writeFileSync } from 'fs';
+import { getFilePath } from './util';
 
-async function main() {
+async function fetchCsTags(filePath: string) {
   const response = await axios.get(
     'https://csadvising.seas.harvard.edu/concentration/courses/tags/',
   );
@@ -25,7 +27,13 @@ async function main() {
     })
     .toArray();
 
-  console.log(JSON.stringify(allTags, null, 2));
+  writeFileSync(filePath, JSON.stringify(allTags, null, 2));
 }
 
-main();
+export default {
+  label: 'Download CS course tags',
+  async run() {
+    const filePath = await getFilePath('File path to save JSON file to:', 'src/requirements/cs/tags');
+    await fetchCsTags(filePath);
+  },
+};

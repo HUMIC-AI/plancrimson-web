@@ -29,7 +29,11 @@ export const CurrentRefinementsComponent: React.FC<Props> = function ({
             {item.items ? (
               <>
                 <h4 className="font-medium w-min md:min-w-max">
-                  <button type="button" className="hover:line-through" onClick={() => refine(item.value)}>
+                  <button
+                    type="button"
+                    className="hover:line-through"
+                    onClick={() => refine(item.value)}
+                  >
                     {adjustAttr(item.attribute)}
                     :
                   </button>

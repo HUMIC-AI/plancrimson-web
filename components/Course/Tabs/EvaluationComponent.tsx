@@ -5,6 +5,7 @@ import { Evaluation, EvaluationStatistics } from '../../../shared/apiTypes';
 import { classNames } from '../../../shared/util';
 import ExternalLink from '../../ExternalLink';
 import FadeTransition from '../../FadeTransition';
+import Tooltip from '../../Tooltip';
 import Percentages from './Percentages';
 
 const Section: React.FC<{ title: string }> = function ({ title, children }) {
@@ -33,7 +34,9 @@ const GridHeading: React.FC<GridProps> = function ({ title, data }) {
           {' '}
           /
           {' '}
-          {data.fasMean?.toFixed(2) || 'NA'}
+          <Tooltip text="FAS mean" direction="bottom">
+            {data.fasMean?.toFixed(2) || 'NA'}
+          </Tooltip>
         </p>
       </div>
       <Percentages categories={data.votes || null} />
@@ -69,11 +72,13 @@ const DisclosureComponent: React.FC<DisclosureComponentProps> = function ({
               <span className="flex items-center space-x-4">
                 <span className="whitespace-nowrap">
                   (
-                  {visibleStats.courseMean || 'NA'}
+                  {visibleStats.courseMean?.toFixed(2) || 'NA'}
                   {' '}
                   /
                   {' '}
-                  {visibleStats.fasMean || 'NA'}
+                  <Tooltip text="FAS mean" direction="bottom">
+                    {visibleStats.fasMean?.toFixed(2) || 'NA'}
+                  </Tooltip>
                   )
                 </span>
                 <FaChevronDown />
