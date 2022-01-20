@@ -17,18 +17,25 @@ import useUserData, { clearSchedule } from '../../src/context/userData';
 import { downloadJson } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 
-type Props = {
+interface BaseButtonMenuProps {
   selectedSchedule: Schedule | null;
   selectSchedule: React.Dispatch<string | null>;
+  year: number;
+  season: Season;
+  prevScheduleId: string | null;
+}
+
+interface EditingProps {
+  selectedSchedule: Schedule | null;
   editing: boolean;
   setEditing: React.Dispatch<boolean>;
   setScheduleTitle: React.Dispatch<string>;
   focusInput: () => void;
+}
 
-  year: number;
-  season: Season;
-  prevScheduleId: string | null;
-};
+type ButtonMenuProps =
+  | BaseButtonMenuProps
+  | (BaseButtonMenuProps & EditingProps);
 
 const buttonStyles = 'inline-block p-1 rounded bg-black bg-opacity-0 hover:text-black hover:bg-opacity-50 transition-colors';
 
@@ -80,19 +87,13 @@ function CustomButton({ name, Icon, ...rest }: ButtonProps | LinkProps) {
   );
 }
 
-const ButtonMenu: React.FC<Props> = function ({
-  selectedSchedule,
-  selectSchedule,
+function EditingButton({
   editing,
   setEditing,
   setScheduleTitle,
   focusInput,
-  year,
-  season,
-  prevScheduleId,
-}) {
-  const { createSchedule, deleteSchedule, removeCourses } = useUserData();
-
+  selectedSchedule,
+}: EditingProps) {
   const handleEditing = async () => {
     if (!selectedSchedule) return;
     if (editing) setEditing(false);
@@ -102,6 +103,25 @@ const ButtonMenu: React.FC<Props> = function ({
       process.nextTick(focusInput);
     }
   };
+
+  return (
+    <CustomButton
+      name={editing ? 'Cancel editing' : 'Edit name'}
+      onClick={handleEditing}
+      Icon={editing ? FaTimes : FaPencilAlt}
+    />
+  );
+}
+
+const ButtonMenu: React.FC<ButtonMenuProps> = function ({
+  selectedSchedule,
+  selectSchedule,
+  year,
+  season,
+  prevScheduleId,
+  ...rest
+}) {
+  const { createSchedule, deleteSchedule, removeCourses } = useUserData();
 
   const handleDuplicate = useCallback(async () => {
     if (!selectedSchedule) return;
@@ -162,11 +182,9 @@ const ButtonMenu: React.FC<Props> = function ({
               Icon={FaClone}
             />
 
-            <CustomButton
-              name={editing ? 'Cancel editing' : 'Edit name'}
-              onClick={handleEditing}
-              Icon={editing ? FaTimes : FaPencilAlt}
-            />
+            {'editing' in rest && (
+              <EditingButton selectedSchedule={selectedSchedule} {...rest} />
+            )}
 
             <CustomButton
               name="Clear"
@@ -201,7 +219,7 @@ const ButtonMenu: React.FC<Props> = function ({
               name="Download schedule"
               onClick={() => downloadJson(
                 `${selectedSchedule.id} (Plan Crimson)`,
-                selectedSchedule,
+                { schedules: [selectedSchedule] },
               )}
               Icon={FaDownload}
             />

@@ -58,7 +58,9 @@ type UserDataContextType = {
     classId: string,
     pattern: DayOfWeek[],
     start: number,
-    end: number
+    end: number,
+    startDate: string,
+    endDate: string
   ) => Promise<void>;
   error?: FirestoreError;
 };
@@ -258,7 +260,9 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
           ({ classId, scheduleId: fromScheduleId }) => {
             if (fromScheduleId) {
               const newSchedule = newState.schedules[fromScheduleId];
-              newSchedule.classes = newSchedule.classes.filter(({ classId: id }) => id !== classId);
+              newSchedule.classes = newSchedule.classes.filter(
+                ({ classId: id }) => id !== classId,
+              );
               firestoreUpdate[`schedules.${fromScheduleId}.classes`] = newSchedule.classes;
             } else {
               // remove from all schedules
@@ -356,11 +360,17 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
   );
 
   const setCustomTime: UserDataContextType['setCustomTime'] = useCallback(
-    (classId: string, pattern: DayOfWeek[], start: number, end: number) => new Promise((resolve, reject) => {
+    (classId, pattern, start, end, startDate, endDate) => new Promise((resolve, reject) => {
       setUserData((prev) => {
         const newCustomTimes = {
           ...prev.customTimes,
-          [classId]: { pattern, start, end },
+          [classId]: {
+            pattern,
+            start,
+            end,
+            startDate,
+            endDate,
+          },
         };
 
         if (user) {
@@ -465,7 +475,10 @@ const useUserData = () => useContext(UserDataContext);
 
 export default useUserData;
 
-export function clearSchedule(removeCourses: UserDataContextType['removeCourses'], schedule: Schedule) {
+export function clearSchedule(
+  removeCourses: UserDataContextType['removeCourses'],
+  schedule: Schedule,
+) {
   removeCourses(
     ...schedule.classes.map(({ classId }) => ({
       classId,

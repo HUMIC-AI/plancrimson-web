@@ -1,19 +1,23 @@
-import { useMemo } from 'react';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
+
+// components
 import Layout from '../components/Layout/Layout';
 import ScheduleSelector from '../components/ScheduleSelector';
 import Calendar from '../components/SemesterSchedule/Calendar';
 import UploadPlan from '../components/UploadPlan';
+import ButtonMenu from '../components/YearSchedule/ButtonMenu';
 import { Season, SEASON_ORDER } from '../shared/firestoreTypes';
-import { allTruthy, classNames, findConflicts } from '../shared/util';
+import { allTruthy, classNames, sortSchedules } from '../shared/util';
 import useClassCache from '../src/context/classCache';
-import useSelectedScheduleContext, {
-  SelectedScheduleProvider,
-} from '../src/context/selectedSchedule';
 import useUserData from '../src/context/userData';
 
-const SchedulePageComponent: React.FC = function () {
-  const { schedules, selectSchedule, selectedSchedule } = useSelectedScheduleContext();
+export default function SchedulePage() {
   const { data, createSchedule } = useUserData();
+  const { query } = useRouter();
+  const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(
+    typeof query.selected === 'string' ? query.selected : null,
+  );
   const classCache = useClassCache(Object.values(data.schedules));
 
   const newSemester: React.FormEventHandler<HTMLFormElement> = async (ev) => {
@@ -24,11 +28,13 @@ const SchedulePageComponent: React.FC = function () {
       if (typeof season !== 'string' || !(season in SEASON_ORDER)) {
         throw new Error('Invalid season');
       }
-      await createSchedule({
+      const schedule = await createSchedule({
         id: fields.get('semesterId') as string,
         year: parseInt(fields.get('year') as string, 10),
         season: season as Season,
+        force: true,
       });
+      setSelectedScheduleId(schedule.id);
     } catch (err) {
       alert(
         "Couldn't create a schedule! Make sure you provided valid values and try again.",
@@ -37,14 +43,12 @@ const SchedulePageComponent: React.FC = function () {
     }
   };
 
-  const conflicts = useMemo(() => (selectedSchedule ? findConflicts(
-    allTruthy(selectedSchedule.classes.map(
-      ({ classId }) => classCache[classId],
-    )),
-  ) : null), [classCache, selectedSchedule]);
-
-  // eslint-disable-next-line no-void
-  void conflicts;
+  const selectedSchedule = (selectedScheduleId && data.schedules[selectedScheduleId]) || null;
+  const schedules = sortSchedules(data.schedules);
+  const selectedIndex = schedules.findIndex(
+    (schedule) => schedule.id === selectedScheduleId,
+  );
+  const prevScheduleId = selectedIndex > 0 ? schedules[selectedIndex - 1].id : null;
 
   return (
     <Layout>
@@ -53,12 +57,24 @@ const SchedulePageComponent: React.FC = function () {
           <div className="text-center space-y-2 mb-4 sm:mb-0">
             <ScheduleSelector
               schedules={schedules}
-              selectSchedule={selectSchedule}
+              selectSchedule={(schedule) => setSelectedScheduleId(schedule ? schedule.id : null)}
               selectedSchedule={selectedSchedule}
               direction="center"
             />
             <UploadPlan />
           </div>
+
+          {selectedSchedule && (
+            <div>
+              <ButtonMenu
+                year={selectedSchedule.year}
+                season={selectedSchedule.season}
+                selectedSchedule={selectedSchedule}
+                selectSchedule={setSelectedScheduleId}
+                prevScheduleId={prevScheduleId}
+              />
+            </div>
+          )}
 
           <form
             onSubmit={newSemester}
@@ -95,27 +111,15 @@ const SchedulePageComponent: React.FC = function () {
         </div>
 
         <Calendar
-          classes={
-            allTruthy(selectedSchedule
+          classes={allTruthy(
+            selectedSchedule
               ? selectedSchedule.classes.map(
                 ({ classId }) => classCache[classId],
               )
-              : [])
-          }
+              : [],
+          )}
         />
-
-        <p className="text-center my-4 sm:my-0">
-          Export functionality coming soon!
-        </p>
       </div>
     </Layout>
-  );
-};
-
-export default function SchedulePage() {
-  return (
-    <SelectedScheduleProvider>
-      <SchedulePageComponent />
-    </SelectedScheduleProvider>
   );
 }

@@ -27,7 +27,7 @@ export type SearchResults =
     error: string;
   };
 
-export type ExtendedClass = Class & {
+export type ExtendedClass<PatternType = string | string[], TimeType = string | string[]> = Class<PatternType, TimeType> & {
   id: string; // for meilisearch
   textDescription: string;
   meanClassSize?: number;
@@ -103,7 +103,7 @@ export type MyHarvardResponse = [
   SearchProperties,
 ];
 
-export interface Class {
+export interface Class<PatternType = string | string[], TimeType = string | string[]> {
   URL_URLNAME: string; // course website, eg "https://locator.tlt.harvard.edu/course/colgsas-125374/2021/spring/14433"
 
   // identical
@@ -141,7 +141,7 @@ export interface Class {
   Modified: string; // latest date modified, eg "2021-12-11 23:34:23.000000"
 
   DAY_OF_WEEK?: DayOfWeek | DayOfWeek[]; // days of the week, eg ["Monday", "Wednesday", "Friday"]
-  IS_SCL_MEETING_PAT: string | string[]; // see DAY_OF_WEEK, eg "Th"
+  IS_SCL_MEETING_PAT: PatternType; // see DAY_OF_WEEK, eg "Th"
   // "Y" or "N"
   MON: 'Y' | 'N';
   TUES: 'Y' | 'N';
@@ -159,10 +159,12 @@ export interface Class {
 
   ACAD_YEAR: string; // academic year, eg "2022" (note that if in fall, this will be one higher than chronological year)
   IS_SCL_DESCR_IS_SCL_DESCRH: string; // semester, eg "2022 Spring"
-  IS_SCL_TIME_START: string | string[]; // time start, eg "3:45pm"
-  IS_SCL_TIME_END: string | string[]; // time end, eg "6:30pm"
-  IS_SCL_STRT_TM_DEC: string | string[]; // time start in decimal, eg "15.7500" or an array thereof
-  IS_SCL_END_TM_DEC: string | string[]; // time end in decimal, eg "18.5000"
+
+  // if IS_SCL_MEETING_PAT is a string, then the below will all have the same type
+  IS_SCL_TIME_START: PatternType extends string ? TimeType : (string | string[]); // time start, eg "3:45pm"
+  IS_SCL_TIME_END: PatternType extends string ? TimeType : (string | string[]); // time end, eg "6:30pm"
+  IS_SCL_STRT_TM_DEC: PatternType extends string ? TimeType : (string | string[]); // time start in decimal, eg "15.7500" or an array thereof
+  IS_SCL_END_TM_DEC: PatternType extends string ? TimeType : (string | string[]); // time end in decimal, eg "18.5000"
 
   IS_SCL_DESCR_HU_SCL_EXAM_GROUP: string; // exam date, eg "12/15/2021 9:00 AM"
 

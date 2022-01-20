@@ -138,15 +138,15 @@ export const ClassTime: React.FC<CourseProps> = function ({
 }) {
   const startTime = course.IS_SCL_TIME_START;
   const endTime = course.IS_SCL_TIME_END;
-  if (typeof startTime === 'object') {
+  if (typeof startTime === 'object' || typeof endTime === 'object') {
     return (
       <>
-        {startTime.map((time, i) => (
+        {[startTime].flat().map((time, i) => (
           <Fragment key={time}>
             <FaClock title={`Class time ${i + 1}`} />
             {time}
             –
-            {endTime[i]}
+            {typeof endTime === 'string' ? endTime : endTime[i]}
           </Fragment>
         ))}
       </>

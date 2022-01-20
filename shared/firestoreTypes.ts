@@ -64,6 +64,8 @@ export interface CustomTimeRecord {
   pattern: DayOfWeek[],
   start: number; // decimal hour
   end: number; // decimal hour
+  startDate: string; // yyyy-mm-dd
+  endDate: string; // yyyy-mm-dd
 }
 
 // firestore user schema

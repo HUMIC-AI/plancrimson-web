@@ -33,6 +33,7 @@ describe('Requirements', () => {
           schedules: mockSchedules,
           selectedSchedules: {},
           customTimes: {},
+          waivedRequirements: {},
         },
         {},
       ).satisfied,

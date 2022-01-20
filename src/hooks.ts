@@ -9,14 +9,14 @@ export function getUserRef(uid: string) {
   return doc(getFirestore(), 'users', uid) as DocumentReference<UserData>;
 }
 
-export function downloadJson(filename: string, data: object) {
+export function downloadJson(filename: string, data: object | string, extension = 'json') {
   if (typeof window === 'undefined') return;
   const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(
-    JSON.stringify(data),
+    typeof data === 'string' ? data : JSON.stringify(data),
   )}`;
   const a = document.createElement('a');
   a.setAttribute('href', dataStr);
-  a.setAttribute('download', `${filename}.json`);
+  a.setAttribute('download', `${filename}.${extension}`);
   document.body.appendChild(a);
   a.click();
   a.remove();

@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import React, { useCallback, useMemo } from 'react';
-import { FaInfo, FaTimes, FaPlus } from 'react-icons/fa';
+import {
+  FaInfo, FaTimes, FaPlus, FaExclamationTriangle,
+} from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
 import { Schedule } from '../../shared/firestoreTypes';
 import {
@@ -13,6 +15,7 @@ import useCardStyle from '../../src/context/cardStyle';
 import useClassCache from '../../src/context/classCache';
 import useShowAllSchedules from '../../src/context/showAllSchedules';
 import useUserData from '../../src/context/userData';
+import Tooltip from '../Tooltip';
 import {
   ClassTime,
   DaysOfWeek,
@@ -29,6 +32,7 @@ type Props = {
   highlight?: boolean;
   inSearchContext?: boolean;
   setDragStatus?: React.Dispatch<React.SetStateAction<DragStatus>>;
+  warnings?: string;
 };
 
 type Department = keyof typeof departmentImages;
@@ -52,6 +56,7 @@ const CourseCard: React.FC<Props> = function ({
   highlight,
   setDragStatus,
   inSearchContext = true,
+  warnings,
 }) {
   const { data: userData, addCourses, removeCourses } = useUserData();
   const classCache = useClassCache(Object.values(userData.schedules));
@@ -157,7 +162,7 @@ const CourseCard: React.FC<Props> = function ({
               </span>
 
               {/* the info and course selection buttons */}
-              <span className="flex items-center space-x-2 ml-2">
+              <span className="flex items-center space-x-1 ml-2">
                 <button
                   type="button"
                   name="More info"
@@ -166,6 +171,12 @@ const CourseCard: React.FC<Props> = function ({
                 >
                   <FaInfo />
                 </button>
+
+                {warnings && (
+                  <Tooltip text={warnings} direction="bottom">
+                    <FaExclamationTriangle color="yellow" />
+                  </Tooltip>
+                )}
 
                 {selectedSchedule
                   && showAllSchedules !== 'sample'

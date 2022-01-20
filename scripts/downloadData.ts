@@ -1,6 +1,6 @@
 /* eslint-disable no-console, no-promise-executor-return */
 import axios from 'axios';
-import { rmdirSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import qs from 'qs';
 import inquirer from 'inquirer';
 import { extendClass } from '../server/evaluation';
@@ -102,7 +102,6 @@ async function downloadData(baseDir: string) {
   )[2];
 
   if (!TotalPages) {
-    rmdirSync(baseDir);
     throw new Error('could not get my.harvard information');
   }
 

@@ -6,6 +6,7 @@ import {
   allTruthy,
   checkViable,
   classNames,
+  findConflicts,
   getSchedulesBySemester,
 } from '../../shared/util';
 import useUserData from '../../src/context/userData';
@@ -80,6 +81,8 @@ const SemesterComponent: React.FC<Props> = function ({
   const classCache: Readonly<ClassCache> = useClassCache(
     allTruthy([selectedSchedule]),
   );
+
+  const conflicts = selectedSchedule ? findConflicts(allTruthy(selectedSchedule.classes.map(({ classId }) => classCache[classId]))) : null;
 
   const draggedClass = dragStatus.dragging && classCache[dragStatus.data.classId];
 
@@ -271,6 +274,7 @@ const SemesterComponent: React.FC<Props> = function ({
                       showAllSchedules === 'sample' ? undefined : setDragStatus
                     }
                   inSearchContext={false}
+                  warnings={(conflicts?.[id]?.length || 0) > 0 ? `This class conflicts with: ${conflicts![id].map((i) => classCache[i].SUBJECT + classCache[i].CATALOG_NBR).join(', ')}` : undefined}
                 />
               ) : (
                 <div key={id}>Loading course data...</div>

@@ -20,7 +20,7 @@ export default function UploadPlan() {
       const text = await file.text();
       const { schedules }: DownloadPlan = JSON.parse(text);
       if (!Array.isArray(schedules)) {
-        throw new Error('id or schedules field missing on root');
+        throw new Error('schedules field missing on root');
       }
       const results = await Promise.allSettled(
         schedules.map(async (schedule) => {
@@ -30,7 +30,7 @@ export default function UploadPlan() {
             || typeof schedule.year !== 'number'
             || !(schedule.season in SEASON_ORDER)
           ) {
-            throw new Error(`${schedule.id} missing fields`);
+            throw new Error(`${schedule.id} invalid or missing fields`);
           }
           return createSchedule({
             season: schedule.season,
