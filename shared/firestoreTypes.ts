@@ -97,6 +97,7 @@ export interface Schedule {
   id: string;
   year: number;
   season: Season;
+  hidden?: boolean;
   classes: UserClassData[];
 }
 

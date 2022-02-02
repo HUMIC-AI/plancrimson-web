@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 // components
 import Layout from '../components/Layout/Layout';
@@ -18,7 +18,9 @@ export default function SchedulePage() {
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(
     typeof query.selected === 'string' ? query.selected : null,
   );
-  const classCache = useClassCache(Object.values(data.schedules));
+
+  const cacheRequests = useMemo(() => Object.values(data.schedules), [data.schedules]);
+  const classCache = useClassCache(cacheRequests);
 
   const newSemester: React.FormEventHandler<HTMLFormElement> = async (ev) => {
     ev.preventDefault();

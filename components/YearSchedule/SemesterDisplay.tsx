@@ -1,7 +1,8 @@
 import React, {
   useCallback, useMemo, useRef, useState,
 } from 'react';
-import { FaCheck } from 'react-icons/fa';
+import { FaCheck, FaMinus } from 'react-icons/fa';
+import { updateDoc } from 'firebase/firestore';
 import {
   allTruthy,
   checkViable,
@@ -11,7 +12,7 @@ import {
 } from '../../shared/util';
 import useUserData from '../../src/context/userData';
 import { Season, Viability } from '../../shared/firestoreTypes';
-import { useCourseDialog } from '../../src/hooks';
+import { getUserRef, useCourseDialog } from '../../src/hooks';
 import ScheduleSelector from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
 import CourseDialog from '../Course/CourseDialog';
@@ -20,6 +21,7 @@ import FadeTransition from '../FadeTransition';
 import { Requirement } from '../../src/requirements/util';
 import ButtonMenu from './ButtonMenu';
 import useShowAllSchedules from '../../src/context/showAllSchedules';
+import useUser from '../../src/context/user';
 
 type Props = {
   selectedScheduleId: string | null;
@@ -43,7 +45,7 @@ const VIABILITY_COLORS: Record<Viability, string> = {
   No: 'bg-red-300',
 };
 
-const SemesterComponent: React.FC<Props> = function ({
+function SemesterComponent({
   year,
   season,
   selectedScheduleId,
@@ -53,7 +55,8 @@ const SemesterComponent: React.FC<Props> = function ({
   setDragStatus,
   colWidth,
   highlight,
-}) {
+}: Props) {
+  const { user } = useUser();
   const {
     data, addCourses, removeCourses, renameSchedule,
   } = useUserData();
@@ -78,11 +81,12 @@ const SemesterComponent: React.FC<Props> = function ({
       ? data.schedules[selectedScheduleId]
       : null;
 
-  const classCache: Readonly<ClassCache> = useClassCache(
-    allTruthy([selectedSchedule]),
-  );
+  const scheduleIds = useMemo(() => allTruthy([selectedSchedule]), [selectedSchedule]);
+  const classCache: Readonly<ClassCache> = useClassCache(scheduleIds);
 
-  const conflicts = selectedSchedule ? findConflicts(allTruthy(selectedSchedule.classes.map(({ classId }) => classCache[classId]))) : null;
+  const conflicts = selectedSchedule
+    ? findConflicts(allTruthy(selectedSchedule.classes.map(({ classId }) => classCache[classId])))
+    : null;
 
   const draggedClass = dragStatus.dragging && classCache[dragStatus.data.classId];
 
@@ -100,6 +104,16 @@ const SemesterComponent: React.FC<Props> = function ({
       : null),
     [classCache, data, draggedClass, selectedSchedule],
   );
+
+  function handleMinimize() {
+    if (!user || !selectedSchedule) return;
+    const { id, hidden } = selectedSchedule;
+    updateDoc(getUserRef(user.uid), `schedules.${id}.hidden`, !hidden)
+      .catch((err) => {
+        console.error(err);
+        alert('An unexpected error occurred. Please try again.');
+      });
+  }
 
   const handleDrop: React.DragEventHandler<HTMLDivElement> = useCallback(
     (ev) => {
@@ -132,6 +146,8 @@ const SemesterComponent: React.FC<Props> = function ({
     ],
   );
 
+  if (selectedSchedule?.hidden) return null;
+
   return (
     <div
       className={classNames(
@@ -145,6 +161,9 @@ const SemesterComponent: React.FC<Props> = function ({
       )}
       style={{ width: `${colWidth}px` }}
     >
+      <button type="button" className="absolute top-2 right-2 text-sm hover:opacity-50" onClick={handleMinimize}>
+        <FaMinus />
+      </button>
       <div
         className="flex flex-col md:h-full"
         onDragOver={(ev) => {
@@ -154,7 +173,7 @@ const SemesterComponent: React.FC<Props> = function ({
         }}
         onDrop={handleDrop}
       >
-        {/* First component of display */}
+        {/* First component of display: header */}
         <div className="flex flex-col items-stretch space-y-2 p-4 border-black border-b-2">
           {/* only show */}
           {showAllSchedules !== 'all' && (
@@ -290,6 +309,6 @@ const SemesterComponent: React.FC<Props> = function ({
       />
     </div>
   );
-};
+}
 
 export default SemesterComponent;

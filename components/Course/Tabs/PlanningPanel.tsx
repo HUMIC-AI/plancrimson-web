@@ -21,7 +21,8 @@ import Tooltip from '../../Tooltip';
 
 const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass }> = function ({ schedule, course }) {
   const { data, addCourses, removeCourses } = useUserData();
-  const classCache = useClassCache(Object.values(data.schedules));
+  const cacheRequests = useMemo(() => Object.values(data.schedules), [data.schedules]);
+  const classCache = useClassCache(cacheRequests);
   const enabled = !!schedule.classes.find(
     ({ classId }) => classId === getClassId(course),
   );
@@ -29,6 +30,24 @@ const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass }> = fun
     const semester = { year: schedule.year, season: schedule.season };
     return checkViable(course, semester, data, classCache);
   }, [schedule, course, data, classCache]);
+
+  const handleSwitch = (checked: boolean) => {
+    if (checked) {
+      if (viabilityStatus.viability === 'No') {
+        alert('This course is not being offered in this semester!');
+      } else {
+        addCourses({
+          classId: getClassId(course),
+          scheduleId: schedule.id,
+        });
+      }
+    } else {
+      removeCourses({
+        classId: getClassId(course),
+        scheduleId: schedule.id,
+      });
+    }
+  };
 
   return (
     <Fragment key={schedule.id}>
@@ -40,23 +59,7 @@ const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass }> = fun
         {/* Code from https://headlessui.dev/react/switch */}
         <Switch
           checked={enabled}
-          onChange={(checked) => {
-            if (checked) {
-              if (viabilityStatus.viability === 'No') {
-                alert('This course is not being offered in this semester!');
-              } else {
-                addCourses({
-                  classId: getClassId(course),
-                  scheduleId: schedule.id,
-                });
-              }
-            } else {
-              removeCourses({
-                classId: getClassId(course),
-                scheduleId: schedule.id,
-              });
-            }
-          }}
+          onChange={handleSwitch}
           className={classNames(
             enabled ? 'bg-teal-600' : 'bg-teal-900',
             'relative inline-flex items-center h-[28px] w-[64px]',

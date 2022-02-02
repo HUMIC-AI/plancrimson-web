@@ -230,7 +230,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
   const addCourses: UserDataContextType['addCourses'] = useCallback(
     async (...classesToAdd: ClassAndSchedule[]) => {
       setUserData((prev) => {
-        const firestoreUpdate = {} as Record<string, UserClassData[]>;
+        const firestoreUpdate: Record<string, UserClassData[]> = {};
         classesToAdd.forEach(({ classId, scheduleId }) => {
           const { classes } = prev.schedules[scheduleId];
           if (!classes.find(({ classId: id }) => id === classId)) {
@@ -253,7 +253,7 @@ export const UserDataProvider: React.FC<{ user: User | null | undefined }> = fun
     (...classesToRemove) => new Promise<UserData['schedules']>((resolve, reject) => {
       setUserData((prev) => {
         if (classesToRemove.length === 0) return prev;
-        const firestoreUpdate = {} as Record<string, UserClassData[]>;
+        const firestoreUpdate: Record<string, UserClassData[]> = {};
         const newState: UserData = JSON.parse(JSON.stringify(prev));
 
         classesToRemove.forEach(

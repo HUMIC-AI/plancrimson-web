@@ -1,7 +1,7 @@
 import axios, { AxiosRequestHeaders } from 'axios';
 import { existsSync, readFileSync } from 'fs';
 import inquirer from 'inquirer';
-import path from 'path/posix';
+import path from 'path';
 import { ExtendedClass } from '../shared/apiTypes';
 
 const defaultMeiliUrl = 'http://127.0.0.1:7700';
