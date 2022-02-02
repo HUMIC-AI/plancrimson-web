@@ -1,3 +1,4 @@
+import { updateDoc } from 'firebase/firestore';
 import React, {
   useEffect, useMemo, useRef, useState,
 } from 'react';
@@ -16,8 +17,9 @@ import {
 } from '../../shared/util';
 import useCardStyle from '../../src/context/cardStyle';
 import useShowAllSchedules from '../../src/context/showAllSchedules';
+import useUser from '../../src/context/user';
 import useUserData, { clearSchedule } from '../../src/context/userData';
-import { downloadJson } from '../../src/hooks';
+import { downloadJson, getUserRef } from '../../src/hooks';
 import { Requirement } from '../../src/requirements/util';
 import { DragStatus } from '../Course/CourseCard';
 import UploadPlan from '../UploadPlan';
@@ -126,6 +128,7 @@ interface SemesterDisplayInfo {
 }
 
 const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
+  const { user } = useUser();
   const { data, selectSchedule } = useUserData();
   const { showAllSchedules, sampleSchedule } = useShowAllSchedules();
   const [dragStatus, setDragStatus] = useState<DragStatus>({
@@ -240,6 +243,13 @@ const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
     ),
   };
 
+  const hiddenSchedules = allTruthy(allSemesters.map(({ selectedScheduleId }) => {
+    if (!selectedScheduleId) return null;
+    const schedule = data.schedules[selectedScheduleId];
+    if (!schedule?.hidden) return null;
+    return schedule.id;
+  }));
+
   return (
     <div className="relative bg-gray-800 md:p-4 md:rounded-lg md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full md:h-full">
       <div className="flex flex-col space-y-4 md:h-full">
@@ -296,6 +306,29 @@ const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
             </>
           )}
         </div>
+        {/* end semesters display */}
+
+        {hiddenSchedules.length > 0 && (
+          <div className="flex text-white items-center">
+            <h3>Hidden schedules:</h3>
+            <ul className="flex items-center">
+              {hiddenSchedules.map((id) => (
+                <li key={id} className="ml-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!user) return;
+                      updateDoc(getUserRef(user.uid), `schedules.${id}.hidden`, false);
+                    }}
+                    className="hover:opacity-50 transition-opacity"
+                  >
+                    {id}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

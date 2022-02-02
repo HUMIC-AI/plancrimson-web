@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import { Tab } from '@headlessui/react';
 import {
   FaBook,
@@ -58,7 +58,8 @@ const InfoPanel: React.FC<{ course: ExtendedClass }> = function ({ course }) {
             )
           ) : (
             course.ACAD_ORG.map((org, i) => (
-              <>
+              // eslint-disable-next-line react/no-array-index-key
+              <Fragment key={i}>
                 {i > 0 && ', '}
                 {org in departments ? (
                   <Tooltip
@@ -70,7 +71,7 @@ const InfoPanel: React.FC<{ course: ExtendedClass }> = function ({ course }) {
                 ) : (
                   org
                 )}
-              </>
+              </Fragment>
             ))
           )}
         </span>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Layout from '../components/Layout/Layout';
 import PlanningSection from '../components/YearSchedule/PlanningSection';
 import RequirementsSection from '../components/YearSchedule/RequirementsSection';
@@ -22,11 +22,12 @@ const PlanPageComponent = function () {
   const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(collegeRequirements);
   const [highlightedRequirement, setHighlightedRequirement] = useState<Requirement>();
   const [notification, setNotification] = useState(true);
-  const classCache = useClassCache(
-    Object.values(data.schedules).concat(
-      sampleSchedule ? sampleSchedule.schedules : [],
-    ),
-  );
+
+  const scheduleIds = useMemo(() => Object.values(data.schedules).concat(
+    sampleSchedule ? sampleSchedule.schedules : [],
+  ), [data.schedules, sampleSchedule]);
+
+  const classCache = useClassCache(scheduleIds);
 
   useEffect(() => {
     getUniqueSemesters(data.classYear, Object.values(data.schedules)).forEach(

@@ -59,7 +59,8 @@ const CourseCard: React.FC<Props> = function ({
   warnings,
 }) {
   const { data: userData, addCourses, removeCourses } = useUserData();
-  const classCache = useClassCache(Object.values(userData.schedules));
+  const cacheRequests = useMemo(() => Object.values(userData.schedules), [userData.schedules]);
+  const classCache = useClassCache(cacheRequests);
   const { isExpanded } = useCardStyle();
   const { showAllSchedules } = useShowAllSchedules();
   const draggable = typeof setDragStatus !== 'undefined';
@@ -71,7 +72,7 @@ const CourseCard: React.FC<Props> = function ({
     [course],
   );
 
-  const buttonStyles = 'bg-black bg-opacity-0 hover:bg-opacity-50 transition-colors rounded p-1';
+  const buttonStyles = 'bg-white text-blue-900 bg-opacity-60 hover:bg-opacity-90 transition-colors rounded-full p-1';
 
   const addClass = useCallback(() => {
     if (!selectedSchedule) return;
@@ -163,6 +164,12 @@ const CourseCard: React.FC<Props> = function ({
 
               {/* the info and course selection buttons */}
               <span className="flex items-center space-x-1 ml-2">
+                {warnings && (
+                <Tooltip text={warnings} direction="bottom">
+                  <FaExclamationTriangle color="yellow" className="text-xl" />
+                </Tooltip>
+                )}
+
                 <button
                   type="button"
                   name="More info"
@@ -171,12 +178,6 @@ const CourseCard: React.FC<Props> = function ({
                 >
                   <FaInfo />
                 </button>
-
-                {warnings && (
-                  <Tooltip text={warnings} direction="bottom">
-                    <FaExclamationTriangle color="yellow" />
-                  </Tooltip>
-                )}
 
                 {selectedSchedule
                   && showAllSchedules !== 'sample'

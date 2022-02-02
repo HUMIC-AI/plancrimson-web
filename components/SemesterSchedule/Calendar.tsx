@@ -230,82 +230,84 @@ const Calendar: React.FC<CalendarProps> = function ({ classes }) {
   );
 
   return (
-    <div className="sm:rounded-lg border-gray-800 sm:border-4 shadow-lg overflow-auto">
-      <div className="min-w-[52rem]">
-        <div className="bg-gray-800 p-4 text-center">
-          <button
-            type="button"
-            onClick={handleExport}
-            className="bg-gray-300 hover:opacity-50 transition-opacity py-2 px-4 rounded-md"
-          >
-            Export to ICS
-          </button>
-        </div>
-        <div className="pl-6 py-2 bg-gray-800 text-white grid grid-cols-5">
-          {DAY_SHORT.slice(0, 5).map((day) => (
-            <h3 key={day} className="font-semibold text-center">
-              {day}
-            </h3>
-          ))}
-        </div>
-
-        <div className="relative h-[60rem] overflow-auto">
-          {/* draw the hours on the left */}
-          <div className="absolute w-6 inset-y-0 z-10 text-center bg-gray-300">
-            {[...new Array(dayEndTime - dayStartTime)].map((_, i) => (
-              <span
-                // eslint-disable-next-line react/no-array-index-key
-                key={i}
-                style={{
-                  position: 'absolute',
-                  top: `${((i + 1) * 100) / (dayEndTime - dayStartTime + 1)}%`,
-                  transform: 'translate(-50%, -50%)',
-                }}
-              >
-                {i + dayStartTime}
-              </span>
+    <div className="border-gray-800 sm:border-4 sm:rounded-lg shadow-lg">
+      <div className="bg-gray-800 p-4 text-center">
+        <button
+          type="button"
+          onClick={handleExport}
+          className="bg-gray-300 hover:opacity-50 transition-opacity py-2 px-4 rounded-md"
+        >
+          Export to ICS
+        </button>
+      </div>
+      <div className="overflow-auto">
+        <div className="min-w-[52rem]">
+          <div className="pl-6 py-2 bg-gray-800 text-white grid grid-cols-5">
+            {DAY_SHORT.slice(0, 5).map((day) => (
+              <h3 key={day} className="font-semibold text-center">
+                {day}
+              </h3>
             ))}
           </div>
 
-          {/* central courses area */}
-          <div className="grid grid-cols-5 h-full relative ml-6">
-            {DAYS_OF_WEEK.slice(0, 5).map((day) => (
-              <DayComponent
-                events={events
-                  .filter((ev) => doesRRuleHaveDay(ev.recurrenceRule!, day))
-                  .sort(
-                    (a, b) => dateArrayToDec(a.start) - dateArrayToDec(b.start),
-                  )}
-                key={day}
-              />
-            ))}
-
-            {/* horizontal bars */}
-            {[...new Array(dayEndTime - dayStartTime)].map((_, i) => (
-              <hr
+          <div className="relative h-[60rem] overflow-auto">
+            {/* draw the hours on the left */}
+            <div className="absolute w-6 inset-y-0 z-10 text-center bg-gray-300">
+              {[...new Array(dayEndTime - dayStartTime)].map((_, i) => (
+                <span
                 // eslint-disable-next-line react/no-array-index-key
-                key={i}
-                className="absolute inset-x-0"
-                style={{
-                  top: `${((i + 1) * 100) / (dayEndTime - dayStartTime + 1)}%`,
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
-        {unscheduledClasses.length > 0 && (
-          <div className="p-6">
-            <h2 className="text-2xl font-semibold mb-4">Unscheduled classes</h2>
-            <ul className="space-y-4">
-              {unscheduledClasses.map((cls) => (
-                <li key={cls.Key}>
-                  <MissingClass cls={cls} />
-                </li>
+                  key={i}
+                  style={{
+                    position: 'absolute',
+                    top: `${((i + 1) * 100) / (dayEndTime - dayStartTime + 1)}%`,
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                >
+                  {i + dayStartTime}
+                </span>
               ))}
-            </ul>
+            </div>
+
+            {/* central courses area */}
+            <div className="grid grid-cols-5 h-full relative ml-6">
+              {DAYS_OF_WEEK.slice(0, 5).map((day) => (
+                <DayComponent
+                  events={events
+                    .filter((ev) => doesRRuleHaveDay(ev.recurrenceRule!, day))
+                    .sort(
+                      (a, b) => dateArrayToDec(a.start) - dateArrayToDec(b.start),
+                    )}
+                  key={day}
+                />
+              ))}
+
+              {/* horizontal bars */}
+              {[...new Array(dayEndTime - dayStartTime)].map((_, i) => (
+                <hr
+                // eslint-disable-next-line react/no-array-index-key
+                  key={i}
+                  className="absolute inset-x-0"
+                  style={{
+                    top: `${((i + 1) * 100) / (dayEndTime - dayStartTime + 1)}%`,
+                  }}
+                />
+              ))}
+            </div>
           </div>
-        )}
+
+          {unscheduledClasses.length > 0 && (
+            <div className="p-6">
+              <h2 className="text-2xl font-semibold mb-4">Unscheduled classes</h2>
+              <ul className="space-y-4">
+                {unscheduledClasses.map((cls) => (
+                  <li key={cls.Key}>
+                    <MissingClass cls={cls} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

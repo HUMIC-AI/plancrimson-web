@@ -195,12 +195,12 @@ export function checkViable(
 
   const selectedSchedule = data.selectedSchedules[`${querySemester.year}${querySemester.season}`];
   if (selectedSchedule && data.schedules[selectedSchedule]) {
-    const conflicts = findConflicts([
+    const conflicts = findConflicts(allTruthy([
       cls,
       ...data.schedules[selectedSchedule].classes.map(
         ({ classId }) => classCache[classId],
       ),
-    ]);
+    ]));
 
     const classConflicts = conflicts[getClassId(cls)];
     if (classConflicts && classConflicts.length > 0) {
@@ -327,7 +327,7 @@ export function getEvaluationId(evaluation: Evaluation) {
 export function getMeiliHost() {
   const host = process.env.NODE_ENV === 'production'
     ? process.env.NEXT_PUBLIC_MEILI_IP
-    : 'http://127.0.0.1:7700';
+    : (process.env.NEXT_PUBLIC_DEV_MEILI_IP || 'http://127.0.0.1:7700');
 
   if (!host) {
     throw new Error('must configure the MEILI_IP environment variable');
