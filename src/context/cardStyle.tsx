@@ -9,7 +9,7 @@ type CardStyleContextType = {
 };
 
 export const CardStyleContext = createContext<CardStyleContextType>({
-  isExpanded: true,
+  isExpanded: false,
   expand: throwMissingContext,
 });
 

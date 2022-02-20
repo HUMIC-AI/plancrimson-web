@@ -53,9 +53,10 @@ interface SearchResponse {
 }
 
 function getAuthToken() {
-  const { SYLLABI_AUTH } = process.env;
+  // eslint-disable-next-line prefer-destructuring
+  const SYLLABI_AUTH = process.env.SYLLABI_AUTH;
   if (!SYLLABI_AUTH) {
-    throw new Error('must set SYLLABUS_AUTH env variable');
+    throw new Error('must set SYLLABI_AUTH env variable');
   }
   return SYLLABI_AUTH;
 }
@@ -118,7 +119,8 @@ function downloadFiles(course: CourseResponse<FullInstance>, dirPath: string) {
   return Promise.all(
     instances.map(async ({
       instance_id, s3_filekey, my_h_id, term_name,
-    }) => {
+    }, i) => {
+      await new Promise((resolve) => { setTimeout(resolve, 100 * i); });
       const url = await getSyllabusUrl({
         courseCode: course.course_code,
         courseId: my_h_id,
@@ -167,13 +169,12 @@ async function fetchSyllabi(
       }
     }
 
-    const results = await Promise.all(
-      hits.map(async (hit) => {
-        const course = await fetchCourseData(hit);
-        await downloadFiles(course, `${dirPath}/${subject}`);
-        return course;
-      }),
-    );
+    const results = await Promise.all(hits.map(async (hit, i) => {
+      await new Promise((resolve) => { setTimeout(resolve, 100 * i); });
+      const course = await fetchCourseData(hit);
+      await downloadFiles(course, `${dirPath}/${subject}`);
+      return course;
+    }));
 
     writeFileSync(`${dirPath}/${subject}.json`, JSON.stringify(results));
     console.log(`done subject ${subject} with ${results.length} courses`);
@@ -183,6 +184,7 @@ async function fetchSyllabi(
 export default {
   label: 'Fetch syllabi from Harvard Syllabus Explorer',
   async run() {
+    getAuthToken();
     const baseDir = await getFilePath(
       'File path to save syllabi in:',
       'data/syllabi',
