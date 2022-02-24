@@ -1,10 +1,12 @@
 import { Disclosure } from '@headlessui/react';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { classNames, compareItems, compareWeekdays } from '../../shared/util';
-import { CardStyleContext } from '../../src/context/cardStyle';
-import useUser, { alertSignIn } from '../../src/context/user';
+import { useAppSelector } from '../../src/app/hooks';
+import { selectUid } from '../../src/features/userData';
 import RefinementList, { RefinementListComponent } from './RefinementList';
+
+const alertSignIn = () => alert('Sign in to search for courses!');
 
 const DemoElement = (
   <RefinementListComponent
@@ -33,15 +35,12 @@ const DemoElement = (
 type AttributeProps = { attribute: string; label: string };
 
 const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = function ({ open, attribute, label }) {
+  const user = useAppSelector(selectUid);
+
   const [operator, setOperator] = useState<'and' | 'or'>('or');
-  const context = useMemo(
-    () => ({ isExpanded: open, expand: () => null }),
-    [open],
-  );
-  const { user } = useUser();
 
   return (
-    <CardStyleContext.Provider value={context}>
+    <>
       <Disclosure.Button
         className={classNames(
           'bg-white flex justify-between items-center w-full py-2 px-3',
@@ -82,7 +81,7 @@ const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = functio
           )}
         </div>
       </Disclosure.Panel>
-    </CardStyleContext.Provider>
+    </>
   );
 };
 

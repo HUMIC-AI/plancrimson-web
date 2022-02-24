@@ -13,7 +13,8 @@ import {
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
 import { Schedule, Season } from '../../shared/firestoreTypes';
-import useUserData, { clearSchedule } from '../../src/context/userData';
+import { useAppDispatch } from '../../src/app/hooks';
+import { clearSchedule, createSchedule, deleteSchedule } from '../../src/features/schedules';
 import { downloadJson } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 
@@ -121,21 +122,24 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
   prevScheduleId,
   ...rest
 }) {
-  const { createSchedule, deleteSchedule, removeCourses } = useUserData();
+  const dispatch = useAppDispatch();
 
   const handleDuplicate = useCallback(async () => {
     if (!selectedSchedule) return;
     try {
-      const schedule = await createSchedule({
+      const schedule = await dispatch(createSchedule({
         ...selectedSchedule,
         force: true,
-      });
-      selectSchedule(schedule.id);
+      }));
+      if ('errors' in schedule.payload) {
+        throw new Error(schedule.payload.errors.join(', '));
+      }
+      selectSchedule(schedule.payload.id);
     } catch (err) {
       console.error(err);
       alert("Couldn't duplicate your schedule. Please try again later.");
     }
-  }, [createSchedule, selectSchedule, selectedSchedule]);
+  }, [selectedSchedule]);
 
   const handleDelete = useCallback(async () => {
     if (!selectedSchedule) return;
@@ -145,7 +149,7 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
     );
     if (!confirmDelete) return;
     try {
-      await deleteSchedule(selectedSchedule.id);
+      await dispatch(deleteSchedule(selectedSchedule.id));
       selectSchedule(prevScheduleId);
     } catch (err) {
       console.error(err);
@@ -188,7 +192,7 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
 
             <CustomButton
               name="Clear"
-              onClick={() => clearSchedule(removeCourses, selectedSchedule)}
+              onClick={() => dispatch(clearSchedule(selectedSchedule.id))}
               Icon={FaEraser}
             />
           </>
@@ -196,18 +200,22 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
 
         <CustomButton
           name="New schedule"
-          onClick={() => {
-            createSchedule({
+          onClick={async () => {
+            const schedule = await dispatch(createSchedule({
               id: `${season} ${year}`,
               year,
               season,
+              classes: [],
               force: true,
-            })
-              .then((schedule) => selectSchedule(schedule.id))
-              .catch((err) => {
-                console.error(err);
-                alert("Couldn't create a new schedule!");
-              });
+            }));
+            try {
+              if ('errors' in schedule.payload) {
+                throw new Error(schedule.payload.errors.join(', '));
+              }
+            } catch (err) {
+              console.error(err);
+              alert("Couldn't create a new schedule! Please try again later.");
+            }
           }}
           Icon={FaPlus}
         />

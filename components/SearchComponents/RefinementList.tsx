@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import type { RefinementListProvided } from 'react-instantsearch-core';
 import { connectRefinementList } from 'react-instantsearch-dom';
 import { termNumberToSeason, classNames } from '../../shared/util';
-import useCardStyle from '../../src/context/cardStyle';
+import { useAppSelector } from '../../src/app/hooks';
+import { selectExpandCards } from '../../src/features/semesterFormat';
 
 type Props = Pick<RefinementListProvided, 'items' | 'refine'>;
 
@@ -75,7 +76,7 @@ export const RefinementListComponent = React.memo(
  */
 const InnerWrapper: React.FC<Props> = function ({ items, refine }) {
   const [allItems, setAllItems] = useState<typeof items>([]);
-  const { isExpanded } = useCardStyle();
+  const isExpanded = useAppSelector(selectExpandCards);
 
   useEffect(() => {
     // items only contains a list of the refined items

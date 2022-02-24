@@ -1,7 +1,9 @@
 import { ExtendedClass } from '../../shared/apiTypes';
-import { ClassId, Schedule, UserData } from '../../shared/firestoreTypes';
+import {
+  ClassId, Schedule, UserDocument,
+} from '../../shared/firestoreTypes';
 import { allTruthy, getClassId } from '../../shared/util';
-import { ClassCache } from '../context/classCache';
+import { ClassCache } from '../features/classCache';
 import collegeRequirements from './college';
 import basicRequirements from './cs/basic';
 import honorsRequirements from './cs/honors';
@@ -37,7 +39,7 @@ function validateSchedule<Accumulator>(
   initialValue: Accumulator,
   req: Requirement<Accumulator>,
   schedule: Schedule,
-  userData: UserData,
+  userData: UserDocument,
   classCache: Readonly<ClassCache>,
 ) {
   const allClasses: ExtendedClass[] = allTruthy(
@@ -56,7 +58,7 @@ function validateSchedule<Accumulator>(
 function validateReq(
   req: Requirement,
   schedules: Schedule[],
-  userData: UserData,
+  userData: UserDocument,
   classCache: Readonly<ClassCache>,
 ): ReqResult {
   if (typeof req.validate === 'undefined') {
@@ -90,7 +92,7 @@ function validateReq(
 function validateSchedules(
   group: RequirementGroup,
   schedules: Schedule[],
-  userData: UserData,
+  userData: UserDocument,
   classCache: Readonly<ClassCache>,
 ): GroupResult {
   const childResults: ChildResults = {};

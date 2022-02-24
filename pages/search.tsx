@@ -6,7 +6,6 @@ import { adjustAttr, getMeiliApiKey, getMeiliHost } from '../shared/util';
 import MEILI_ATTRIBUTES from '../shared/meiliAttributes.json';
 import { useLgBreakpoint } from '../src/hooks';
 import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
-import useUser, { alertSignIn } from '../src/context/user';
 import sampleCourses from '../components/SearchComponents/sampleCourses.json';
 
 // components
@@ -22,6 +21,10 @@ import CurrentRefinements, {
 import SortBy, { SortByComponent } from '../components/SearchComponents/SortBy';
 import useSearchState from '../src/context/searchState';
 import { DAY_SHORT } from '../shared/firestoreTypes';
+import { useAppSelector } from '../src/app/hooks';
+import { selectUid } from '../src/features/userData';
+
+const alertSignIn = () => alert('Sign in to search for courses!');
 
 const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey());
 
@@ -68,7 +71,7 @@ const AttributeMenu = function () {
 // we show a demo if the user is not logged in,
 // but do not allow them to send requests to the database
 const SearchPage = function () {
-  const { user } = useUser();
+  const user = useAppSelector(selectUid);
   const { searchState, setSearchState } = useSearchState();
 
   useEffect(() => {

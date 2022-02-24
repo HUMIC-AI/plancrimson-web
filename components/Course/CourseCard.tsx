@@ -11,10 +11,11 @@ import {
   getSemester,
   checkViable,
 } from '../../shared/util';
-import useCardStyle from '../../src/context/cardStyle';
-import useClassCache from '../../src/context/classCache';
-import useShowAllSchedules from '../../src/context/showAllSchedules';
-import useUserData from '../../src/context/userData';
+import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
+import { selectClassCache } from '../../src/features/classCache';
+import { addCourse, removeCourses, selectScheduleData } from '../../src/features/schedules';
+import { selectExpandCards, selectSemesterFormat } from '../../src/features/semesterFormat';
+import { selectClassYear, selectLastLoggedIn } from '../../src/features/userData';
 import Tooltip from '../Tooltip';
 import {
   ClassTime,
@@ -58,11 +59,14 @@ const CourseCard: React.FC<Props> = function ({
   inSearchContext = true,
   warnings,
 }) {
-  const { data: userData, addCourses, removeCourses } = useUserData();
-  const cacheRequests = useMemo(() => Object.values(userData.schedules), [userData.schedules]);
-  const classCache = useClassCache(cacheRequests);
-  const { isExpanded } = useCardStyle();
-  const { showAllSchedules } = useShowAllSchedules();
+  const dispatch = useAppDispatch();
+  const classCache = useAppSelector(selectClassCache);
+  const isExpanded = useAppSelector(selectExpandCards);
+  const scheduleData = useAppSelector(selectScheduleData);
+  const classYear = useAppSelector(selectClassYear);
+  const lastLoggedIn = useAppSelector(selectLastLoggedIn);
+  const semesterFormat = useAppSelector(selectSemesterFormat);
+
   const draggable = typeof setDragStatus !== 'undefined';
   const [semester, department] = useMemo(
     () => [
@@ -76,13 +80,11 @@ const CourseCard: React.FC<Props> = function ({
 
   const addClass = useCallback(() => {
     if (!selectedSchedule) return;
+    const { year, season } = selectedSchedule;
     const viability = checkViable(
       course,
-      {
-        year: selectedSchedule.year,
-        season: selectedSchedule.season,
-      },
-      userData,
+      { year, season },
+      { ...scheduleData, classYear, lastLoggedIn },
       classCache,
     );
     if (viability.viability === 'No') {
@@ -94,11 +96,11 @@ const CourseCard: React.FC<Props> = function ({
       const yn = confirm(`${viability.reason} Continue anyways?`);
       if (!yn) return;
     }
-    addCourses({
+    dispatch(addCourse([{
       classId: getClassId(course),
       scheduleId: selectedSchedule.id,
-    });
-  }, [addCourses, classCache, course, selectedSchedule, userData]);
+    }]));
+  }, [classCache, classYear, course, lastLoggedIn, scheduleData, selectedSchedule]);
 
   const handleDragStart: React.DragEventHandler<HTMLDivElement> = (ev) => {
     // eslint-disable-next-line no-param-reassign
@@ -180,17 +182,17 @@ const CourseCard: React.FC<Props> = function ({
                 </button>
 
                 {selectedSchedule
-                  && showAllSchedules !== 'sample'
+                  && semesterFormat !== 'sample'
                   && (selectedSchedule.classes.find(
                     (cls) => cls.classId === getClassId(course),
                   ) ? (
                     <button
                       type="button"
                       name="Remove class from schedule"
-                      onClick={() => removeCourses({
+                      onClick={() => dispatch(removeCourses([{
                         classId: getClassId(course),
                         scheduleId: selectedSchedule.id,
-                      })}
+                      }]))}
                       className={buttonStyles}
                     >
                       <FaTimes />

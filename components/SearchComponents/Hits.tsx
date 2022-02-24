@@ -6,9 +6,9 @@ import { ExtendedClass } from '../../shared/apiTypes';
 import useSelectedScheduleContext from '../../src/context/selectedSchedule';
 import { classNames, getClassId } from '../../shared/util';
 import CourseCard from '../Course/CourseCard';
-import CourseDialog from '../Course/CourseDialog';
-import { useCourseDialog } from '../../src/hooks';
-import useCardStyle from '../../src/context/cardStyle';
+import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
+import { selectExpandCards, toggleExpand } from '../../src/features/semesterFormat';
+import { useModal } from '../../src/features/modal';
 
 type ButtonProps = {
   onClick: () => void;
@@ -27,7 +27,8 @@ const CustomButton: React.FC<ButtonProps> = function ({
   direction,
   // setNumCols,
 }) {
-  const { isExpanded, expand } = useCardStyle();
+  const dispatch = useAppDispatch();
+  const isExpanded = useAppSelector(selectExpandCards);
 
   // const ref = useRef<HTMLButtonElement>(null!);
   // useEffect(() => {
@@ -60,7 +61,7 @@ const CustomButton: React.FC<ButtonProps> = function ({
       </button>
       <button
         type="button"
-        onClick={() => expand(!isExpanded)}
+        onClick={() => dispatch(toggleExpand)}
         className={classNames(
           isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
           'rounded-full hover:opacity-50 p-1 absolute inset-y-0 left-full ml-4 border',
@@ -82,10 +83,8 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
   refineNext,
   inSearch = true,
 }) {
+  const { showCourse } = useModal();
   const { selectedSchedule } = useSelectedScheduleContext();
-  const {
-    isOpen, openedCourse, closeModal, handleExpand,
-  } = useCourseDialog();
 
   // const [numCols, setNumCols] = useState(getNumCols(144));
 
@@ -109,15 +108,10 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
               key={getClassId(hit)}
               course={hit}
               selectedSchedule={selectedSchedule}
-              handleExpand={handleExpand}
+              handleExpand={() => showCourse(hit)}
               inSearchContext={inSearch}
             />
           ))}
-          <CourseDialog
-            isOpen={isOpen}
-            course={openedCourse}
-            closeModal={closeModal}
-          />
         </div>
       )}
 

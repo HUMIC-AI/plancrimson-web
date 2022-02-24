@@ -19,11 +19,12 @@ import {
 import ExternalLink from '../ExternalLink';
 import FadeTransition from '../FadeTransition';
 import RequirementGroupComponent from './RequirementsDisplay';
-import { classNames } from '../../shared/util';
-import useUser from '../../src/context/user';
-import useShowAllSchedules from '../../src/context/showAllSchedules';
+import { allTruthy, classNames } from '../../shared/util';
 import { allRequirements } from '../../src/requirements';
-import useUserData from '../../src/context/userData';
+import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
+import { selectSampleSchedule, showSample, showSelected } from '../../src/features/semesterFormat';
+import { createSchedule, CreateSchedulePayload, selectSchedule } from '../../src/features/schedules';
+import { selectUid } from '../../src/features/userData';
 
 interface RequirementsSectionProps {
   selectedRequirements: RequirementGroup;
@@ -38,7 +39,11 @@ interface RequirementsSectionProps {
 }
 
 function SuggestionForm() {
-  const { user } = useUser();
+  const { uid, email } = useAppSelector((state) => ({
+    email: state.user.userInfo?.email || null,
+    uid: selectUid(state),
+  }));
+
   const timeoutRef = useRef<number>();
 
   const [suggestion, setSuggestion] = useState<string | null>(null);
@@ -59,7 +64,7 @@ function SuggestionForm() {
       ev.preventDefault();
       // only allow user to submit every 2 seconds
       if (typeof timeoutRef.current !== 'undefined') return;
-      if (!user?.email) {
+      if (!uid) {
         setSuggestion('You must be logged in to give suggestions!');
         showMessage();
         return;
@@ -74,7 +79,7 @@ function SuggestionForm() {
 
       const db = getFirestore();
       try {
-        const existing = await getDoc(doc(db, 'suggestions', user.uid));
+        const existing = await getDoc(doc(db, 'suggestions', uid));
         const suggestions: string[] | undefined = existing.get('suggestions');
         if (suggestions && suggestions.length >= 10) {
           setSuggestion(
@@ -87,7 +92,7 @@ function SuggestionForm() {
             existing.ref,
             {
               suggestions: arrayUnion(program),
-              userEmail: user?.email,
+              userEmail: email,
             },
             { merge: true },
           );
@@ -106,7 +111,7 @@ function SuggestionForm() {
         showMessage();
       }
     },
-    [showMessage, user],
+    [email, uid],
   );
 
   return (
@@ -146,8 +151,8 @@ interface SampleScheduleEntryProps {
 }
 
 function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
-  const { setShowAllSchedules, sampleSchedule, setSampleSchedule } = useShowAllSchedules();
-  const { createSchedule, selectSchedule } = useUserData();
+  const dispatch = useAppDispatch();
+  const sampleSchedule = useAppSelector(selectSampleSchedule);
 
   const isSelected = sampleSchedule?.name === schedule.name;
 
@@ -161,11 +166,9 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
         )}
         onClick={() => {
           if (isSelected) {
-            setShowAllSchedules('selected');
-            setSampleSchedule(null);
+            dispatch(showSelected());
           } else {
-            setShowAllSchedules('sample');
-            setSampleSchedule(schedule);
+            dispatch(showSample(schedule));
           }
         }}
       >
@@ -173,23 +176,30 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
       </button>
       <button
         type="button"
-        onClick={() => {
-          Promise.all(
-            schedule.schedules.map((s) => createSchedule({
-              ...s,
-              id: `${s.id} (${schedule.id})`,
-              force: true,
-            })),
-          )
-            .then((schedules) => {
-              setShowAllSchedules('selected');
-              schedules.forEach((s) => selectSchedule(s.year, s.season, s.id));
-              alert('Cloned successfully!');
-            })
-            .catch((err) => {
-              console.error(err);
-              alert('An unexpected error occurred when cloning the sample schedule. Please try again later.');
+        onClick={async () => {
+          const schedules = await Promise.all(schedule.schedules.map((s) => dispatch(createSchedule({
+            ...s,
+            id: `${s.id} (${schedule.id})`,
+            force: true,
+          }))));
+          try {
+            const errors = allTruthy(schedules.map(({ payload }) => ('errors' in payload ? payload.errors : null)));
+            if (errors.length) {
+              throw new Error(errors.map((err) => err.join(', ')).join('; '));
+            }
+            dispatch(showSelected());
+            schedules.forEach((s) => {
+              const { year, season, id } = s.payload as CreateSchedulePayload;
+              dispatch(selectSchedule({
+                term: `${year}${season}`,
+                scheduleId: id,
+              }));
             });
+            alert('Cloned successfully!');
+          } catch (err) {
+            console.error(err);
+            alert('An unexpected error occurred when cloning the sample schedule. Please try again later.');
+          }
         }}
         className="font-medium hover:opacity-50 transition-opacity"
       >

@@ -2,7 +2,8 @@ import { useRouter } from 'next/router';
 import React, { createContext, useContext, useMemo } from 'react';
 import { ScheduleSelectorProps } from '../../components/ScheduleSelector';
 import { sortSchedules } from '../../shared/util';
-import useUserData from './userData';
+import { useAppSelector } from '../app/hooks';
+import { selectSchedules } from '../features/schedules';
 
 type SelectedScheduleContextType = Omit<ScheduleSelectorProps, 'direction'>;
 
@@ -13,9 +14,7 @@ export const SelectedScheduleContext = createContext<SelectedScheduleContextType
 });
 
 export const SelectedScheduleProvider: React.FC = function ({ children }) {
-  const {
-    data: { schedules },
-  } = useUserData();
+  const schedules = useAppSelector(selectSchedules);
   const { query, pathname, replace } = useRouter();
   const { selected } = query;
 

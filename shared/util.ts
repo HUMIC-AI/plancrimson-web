@@ -8,18 +8,19 @@ import {
 import {
   Semester,
   SEASON_ORDER,
-  UserData,
   Season,
   ClassId,
   Schedule,
   DayOfWeek,
   DAYS_OF_WEEK,
   Viability,
+  Schedules,
+  UserDocument,
 } from './firestoreTypes';
 import seasPlan from './seasPlan.json';
 import { getSchoolYear } from '../src/requirements/util';
-import type { ClassCache } from '../src/context/classCache';
 import { Class, ATTRIBUTE_DESCRIPTIONS, Evaluation } from './apiTypes';
+import type { ClassCache } from '../src/features/classCache';
 
 export const unsplashParams = '?utm_source=Plan+Crimson&utm_medium=referral';
 
@@ -105,6 +106,11 @@ export function getDefaultSemesters(classYear: number) {
   return schedules;
 }
 
+/**
+ * @param classYear the user's graduation year
+ * @param semesters the list of the user's semesters
+ * @returns a set of the user's semesters
+ */
 export function getUniqueSemesters(classYear: number, semesters: Semester[]) {
   const defaultSemesters = getDefaultSemesters(classYear);
   semesters.forEach(({ year, season }) => {
@@ -120,16 +126,16 @@ export function getUniqueSemesters(classYear: number, semesters: Semester[]) {
   return defaultSemesters.sort(compareSemesters);
 }
 
-export function sortSchedules(schedules: UserData['schedules']) {
+export function sortSchedules(schedules: Schedules) {
   return Object.values(schedules).sort(compareSemesters);
 }
 
 export function getSchedulesBySemester(
-  data: UserData,
+  schedules: Schedules,
   targetYear: number,
   targetSeason: Season,
 ) {
-  return sortSchedules(data.schedules).filter(
+  return sortSchedules(schedules).filter(
     ({ year, season }) => year === targetYear && season === targetSeason,
   );
 }
@@ -185,10 +191,15 @@ export function findConflicts(classes: Class[]): Record<ClassId, ClassId[]> {
   return conflicts;
 }
 
+export interface ErrorData {
+  sender?: string;
+  errors: string[];
+}
+
 export function checkViable(
   cls: Class,
   querySemester: Semester,
-  data: UserData,
+  data: UserDocument<string>,
   classCache: ClassCache,
 ): ViabilityResponse {
   const { year, season } = getSemester(cls);

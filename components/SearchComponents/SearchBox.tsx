@@ -11,8 +11,9 @@ import { classNames } from '../../shared/util';
 import { ATTRIBUTE_DESCRIPTIONS, Class } from '../../shared/apiTypes';
 import Stats, { StatsComponent } from './Stats';
 import { useLgBreakpoint } from '../../src/hooks';
-import useUser from '../../src/context/user';
 import StateResults, { StateResultsComponent } from './StateResults';
+import { useAppSelector } from '../../src/app/hooks';
+import { selectUid } from '../../src/features/userData';
 
 const AttributeMenu = function () {
   const isLg = useLgBreakpoint();
@@ -62,7 +63,7 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
   refine,
   isSearchStalled,
 }) {
-  const { user } = useUser();
+  const user = useAppSelector(selectUid);
   const { schedules, selectSchedule, selectedSchedule } = useSelectedScheduleContext();
 
   return (
