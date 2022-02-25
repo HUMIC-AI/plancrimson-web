@@ -1,8 +1,9 @@
 import React, {
   useCallback, useMemo, useRef, useState,
 } from 'react';
-import { FaCheck, FaMinus } from 'react-icons/fa';
+import { FaCheck, FaMinus, FaPlus } from 'react-icons/fa';
 import { updateDoc } from 'firebase/firestore';
+import Link from 'next/link';
 import {
   allTruthy,
   checkViable,
@@ -235,17 +236,13 @@ function SemesterComponent({
                 typeof highlight !== 'undefined'
                 && highlight === selectedSchedule?.id
               }
-              onPlanningPage
             />
           )}
 
           {semesterFormat !== 'sample' && (
             <ButtonMenu
               prevScheduleId={schedulesBySemester[0]?.id === selectedSchedule?.id ? null : (schedulesBySemester[0]?.id || null)}
-              focusInput={() => editRef.current.focus()}
               {...{
-                editing,
-                setEditing,
                 season,
                 year,
                 selectedSchedule,
@@ -271,13 +268,23 @@ function SemesterComponent({
         {/* Second component: actual classes */}
         <div className="flex-1 p-4 md:overflow-auto h-max">
           <div className="flex flex-col items-stretch min-h-[12rem] space-y-4">
+
             {selectedSchedule
-              && selectedSchedule.classes.map(({ classId: id }) => (id && classCache[id] ? (
-                <CourseCard
-                  key={id}
-                  course={classCache[id]}
-                  handleExpand={() => showCourse(classCache[id])}
-                  highlight={
+              && (
+              <>
+                <Link href={{ pathname: '/search', query: { selected: selectedSchedule?.id } }}>
+                  {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                  <a className="flex items-center justify-center rounded-xl bg-blue-300 hover:opacity-50 transition-opacity py-2">
+                    <FaPlus />
+                  </a>
+                </Link>
+
+                {selectedSchedule.classes.map(({ classId: id }) => (id && classCache[id] ? (
+                  <CourseCard
+                    key={id}
+                    course={classCache[id]}
+                    handleExpand={() => showCourse(classCache[id])}
+                    highlight={
                       highlightedRequirement
                       && highlightedRequirement.reducer(
                         highlightedRequirement.initialValue || 0,
@@ -286,16 +293,18 @@ function SemesterComponent({
                         { ...scheduleData, classYear, lastLoggedIn },
                       ) !== null
                     }
-                  selectedSchedule={selectedSchedule}
-                  setDragStatus={
+                    selectedSchedule={selectedSchedule}
+                    setDragStatus={
                       semesterFormat === 'sample' ? undefined : setDragStatus
                     }
-                  inSearchContext={false}
-                  warnings={(conflicts?.[id]?.length || 0) > 0 ? `This class conflicts with: ${conflicts![id].map((i) => classCache[i].SUBJECT + classCache[i].CATALOG_NBR).join(', ')}` : undefined}
-                />
-              ) : (
-                <div key={id}>Loading course data...</div>
-              )))}
+                    inSearchContext={false}
+                    warnings={(conflicts?.[id]?.length || 0) > 0 ? `This class conflicts with: ${conflicts![id].map((i) => classCache[i].SUBJECT + classCache[i].CATALOG_NBR).join(', ')}` : undefined}
+                  />
+                ) : (
+                  <div key={id}>Loading course data...</div>
+                )))}
+              </>
+              )}
           </div>
         </div>
       </div>
