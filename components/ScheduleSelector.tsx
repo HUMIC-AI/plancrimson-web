@@ -32,12 +32,10 @@ function titleContainsTerm(title: string, term: Semester) {
  * The component inside the Listbox in the ScheduleSelector
  */
 function ButtonTitle({
-  parentWidth,
   showTerm,
   selectedSchedule,
   highlight,
 }: {
-  parentWidth: string | undefined;
   showTerm: boolean | undefined;
   highlight: boolean;
   selectedSchedule: Schedule | null;
@@ -45,7 +43,6 @@ function ButtonTitle({
   const dispatch = useAppDispatch();
   const [value, setValue] = useState(selectedSchedule?.id || '');
   const disabled = !selectedSchedule;
-  const { season, year } = selectedSchedule!;
 
   function saveTitle(e: any) {
     e.preventDefault();
@@ -54,21 +51,15 @@ function ButtonTitle({
   }
 
   return (
-    <span className="flex flex-col items-center space-y-1">
-      <form
-        className="flex"
-        onSubmit={saveTitle}
-      >
+    <div className="flex flex-col items-center space-y-1">
+      <form onSubmit={saveTitle} className="flex px-2 w-full">
         <input
           type="text"
           className={classNames(
-            'pl-2 text-sm md:text-base font-medium w-full whitespace-nowrap overflow-auto',
+            'pl-2 text-sm md:text-base font-medium overflow-auto text-center',
             !disabled && 'border-gray-400 hover:border-black transition-colors duration-300 border-b-4 cursor-text',
             highlight && 'bg-gray-800 rounded text-white px-1',
           )}
-          style={{
-            maxWidth: parentWidth ? `calc(${parentWidth} - 4rem)` : '8rem',
-          }}
           value={selectedSchedule ? value : 'Select a schedule'}
           onChange={(e) => {
             if (disabled) return;
@@ -77,16 +68,18 @@ function ButtonTitle({
           onBlur={saveTitle}
           disabled={disabled}
         />
+        {selectedSchedule && (
         <button
           type="button"
           className="w-4 ml-2"
           onClick={() => dispatch(selectSchedule({
-            term: `${year}${season}`,
+            term: `${selectedSchedule.year}${selectedSchedule.season}`,
             scheduleId: selectedSchedule?.id || null,
           }))}
         >
           {highlight ? <FaCheckSquare /> : <FaSquare />}
         </button>
+        )}
       </form>
 
       {showTerm !== false
@@ -94,12 +87,12 @@ function ButtonTitle({
         && (showTerm
           || !titleContainsTerm(selectedSchedule.id, selectedSchedule)) && (
           <span className="text-xs text-gray-400">
-            {season}
+            {selectedSchedule.season}
             {' '}
-            {year}
+            {selectedSchedule.year}
           </span>
       )}
-    </span>
+    </div>
   );
 }
 
@@ -121,7 +114,6 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
   if (pathname === '/plan' && semesterFormat === 'all') {
     return (
       <ButtonTitle
-        parentWidth={`${parentWidth} + 2rem`}
         selectedSchedule={selectedSchedule}
         showTerm={showTerm}
         highlight={highlight}
@@ -141,7 +133,6 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
           <>
             <div className="shadow border rounded flex items-center py-2 px-3 min-w-max space-x-2">
               <ButtonTitle
-                parentWidth={parentWidth}
                 showTerm={showTerm}
                 selectedSchedule={selectedSchedule}
                 highlight={highlight}
