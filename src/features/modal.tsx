@@ -15,6 +15,7 @@ interface CustomDialogProps {
   title: string;
   headerContent?: ReactNode;
   content: ReactNode;
+  noExit?: boolean;
 }
 
 /**

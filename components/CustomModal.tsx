@@ -11,7 +11,7 @@ export default function CustomModal() {
       <Dialog
         as="div"
         className="fixed inset-0 z-10 overflow-y-auto"
-        onClose={() => setOpen(false)}
+        onClose={() => !data?.noExit && setOpen(false)}
       >
         <div className="min-h-screen px-4 text-center">
           <Transition.Child
@@ -53,6 +53,7 @@ export default function CustomModal() {
 
               {data?.content}
 
+              {!data?.noExit && (
               <button
                 type="button"
                 name="Close dialog"
@@ -61,6 +62,7 @@ export default function CustomModal() {
               >
                 <FaTimes />
               </button>
+              )}
             </div>
           </Transition.Child>
         </div>

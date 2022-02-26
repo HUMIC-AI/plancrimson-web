@@ -8,6 +8,7 @@ interface SemesterFormat {
   sampleSchedule: SampleSchedule | null;
   expandCards: boolean;
   showAttributes: boolean;
+  showRequirements: boolean;
 }
 
 const initialState: SemesterFormat = {
@@ -15,6 +16,7 @@ const initialState: SemesterFormat = {
   sampleSchedule: null,
   expandCards: false,
   showAttributes: true,
+  showRequirements: false,
 };
 
 export const semesterFormatSlice = createSlice({
@@ -38,11 +40,14 @@ export const semesterFormatSlice = createSlice({
     setShowAttributes: (state, action: PayloadAction<boolean>) => {
       state.showAttributes = action.payload;
     },
+    setShowReqs: (state, action: PayloadAction<boolean>) => {
+      state.showRequirements = action.payload;
+    },
   },
 });
 
 export const {
-  showAll, showSelected, showSample, toggleExpand, setShowAttributes,
+  showAll, showSelected, showSample, toggleExpand, setShowAttributes, setShowReqs,
 } = semesterFormatSlice.actions;
 
 // ========================= SELECTORS =========================
@@ -51,3 +56,4 @@ export const selectSemesterFormat = (state: RootState) => state.semesterFormat.f
 export const selectSampleSchedule = (state: RootState) => state.semesterFormat.sampleSchedule;
 export const selectExpandCards = (state: RootState) => state.semesterFormat.expandCards;
 export const selectShowAttributes = (state: RootState) => state.semesterFormat.showAttributes;
+export const selectShowReqs = (state: RootState) => state.semesterFormat.showRequirements;

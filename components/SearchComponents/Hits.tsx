@@ -12,6 +12,7 @@ import sampleCourses from './sampleCourses.json';
 import { alertSignIn } from './searchUtils';
 import { DAY_SHORT } from '../../shared/firestoreTypes';
 import useSelectedScheduleContext from '../../src/context/selectedSchedule';
+import useSearchState from '../../src/context/searchState';
 
 type ButtonProps = {
   onClick: () => void;
@@ -70,6 +71,7 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
   inSearch = true,
 }) {
   const { showCourse } = useModal();
+  const { oneCol } = useSearchState();
   const { selectedSchedule } = useSelectedScheduleContext();
 
   return (
@@ -86,7 +88,7 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
         // </div>
         <span>No results found</span>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className={oneCol ? 'flex flex-col space-y-2' : 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4'}>
           {hits.map((hit) => (
             <CourseCard
               key={getClassId(hit)}

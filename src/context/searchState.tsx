@@ -6,19 +6,21 @@ import { throwMissingContext } from '../../shared/util';
 interface SearchStateContextType {
   searchState: any;
   setSearchState: React.Dispatch<React.SetStateAction<any>>;
+  oneCol: boolean;
 }
 
 const SearchStateContext = createContext<SearchStateContextType>({
   searchState: null,
   setSearchState: throwMissingContext,
+  oneCol: false,
 });
 
-export function SearchStateProvider({ children } : React.PropsWithChildren<{}>) {
+export function SearchStateProvider({ children, oneCol = false } : React.PropsWithChildren<{ oneCol?: boolean }>) {
   const [searchState, setSearchState] = useState({});
 
   const context = useMemo(() => ({
-    searchState, setSearchState,
-  }), [searchState]);
+    searchState, setSearchState, oneCol,
+  }), [oneCol, searchState]);
 
   return (
     <SearchStateContext.Provider value={context}>

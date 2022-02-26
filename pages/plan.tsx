@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import Layout from '../components/Layout/Layout';
 import PlanningSection from '../components/YearSchedule/PlanningSection';
 import RequirementsSection from '../components/YearSchedule/RequirementsSection';
-import { allTruthy } from '../shared/util';
+import { allTruthy, classNames } from '../shared/util';
 import { useAppSelector } from '../src/app/hooks';
 import { selectClassCache } from '../src/features/classCache';
-import { selectSampleSchedule, selectSemesterFormat } from '../src/features/semesterFormat';
+import { selectSampleSchedule, selectSemesterFormat, selectShowReqs } from '../src/features/semesterFormat';
 import { selectUserDocument } from '../src/features/userData';
 import validateSchedules from '../src/requirements';
 import collegeRequirements from '../src/requirements/college';
@@ -20,6 +20,7 @@ const PlanPageComponent = function () {
   const semesterFormat = useAppSelector(selectSemesterFormat);
   const sampleSchedule = useAppSelector(selectSampleSchedule);
   const classCache = useAppSelector(selectClassCache);
+  const showReqs = useAppSelector(selectShowReqs);
 
   const [validationResults, setValidationResults] = useState<GroupResult | null>(null);
   const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(collegeRequirements);
@@ -42,7 +43,12 @@ const PlanPageComponent = function () {
   }, [selectedRequirements, classCache, sampleSchedule, semesterFormat, userDocument]);
 
   return (
-    <div className="grid md:grid-rows-1 min-h-screen py-8 md:grid-cols-[auto_1fr] items-stretch gap-4">
+    <div className={classNames(
+      showReqs && 'md:grid-rows-1 md:grid-cols-[auto_1fr] items-stretch gap-4',
+      'grid min-h-screen py-8',
+    )}
+    >
+      {showReqs && (
       <RequirementsSection
         {...{
           selectedRequirements,
@@ -54,6 +60,7 @@ const PlanPageComponent = function () {
           validationResults,
         }}
       />
+      )}
 
       <PlanningSection highlightedRequirement={highlightedRequirement} />
     </div>

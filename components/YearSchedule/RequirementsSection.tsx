@@ -2,7 +2,9 @@ import React, {
   useCallback, useEffect, useRef, useState,
 } from 'react';
 import { Disclosure, Listbox } from '@headlessui/react';
-import { FaChevronDown, FaEnvelope, FaTimes } from 'react-icons/fa';
+import {
+  FaAngleDoubleRight, FaChevronDown, FaEnvelope, FaTimes,
+} from 'react-icons/fa';
 import {
   arrayUnion,
   doc,
@@ -22,7 +24,9 @@ import RequirementGroupComponent from './RequirementsDisplay';
 import { allTruthy, classNames } from '../../shared/util';
 import { allRequirements } from '../../src/requirements';
 import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
-import { selectSampleSchedule, showSample, showSelected } from '../../src/features/semesterFormat';
+import {
+  selectSampleSchedule, setShowReqs, showSample, showSelected,
+} from '../../src/features/semesterFormat';
 import { createSchedule, CreateSchedulePayload, selectSchedule } from '../../src/features/schedules';
 import { selectUid } from '../../src/features/userData';
 
@@ -226,6 +230,7 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
   notification,
   setNotification,
 }) {
+  const dispatch = useAppDispatch();
   const topRef = useRef<HTMLDivElement>(null!);
   const bottomRef = useRef<HTMLDivElement>(null!);
   const [topIntersecting, setTopIntersecting] = useState(false);
@@ -259,10 +264,20 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
           as="div"
           className="relative"
         >
-          <Listbox.Button className="shadow py-2 px-3 border-2 rounded w-full text-left flex justify-between items-center font-medium">
-            {selectedReqGroup.groupId}
-            <FaChevronDown />
-          </Listbox.Button>
+          <div className="flex space-x-4 items-center">
+            <Listbox.Button className="flex justify-between items-center w-full shadow py-2 px-3 border-2 rounded text-left font-medium">
+              {selectedReqGroup.groupId}
+              <FaChevronDown />
+            </Listbox.Button>
+            <button
+              type="button"
+              className="interactive"
+              onClick={() => dispatch(setShowReqs(false))}
+              title="Hide requirements panel"
+            >
+              <FaAngleDoubleRight />
+            </button>
+          </div>
           <FadeTransition>
             <Listbox.Options className="absolute w-full bg-gray-800 rounded-b-lg overflow-hidden shadow border z-20">
               {allRequirements.map(({ groupId }) => (
@@ -279,7 +294,7 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
         </Listbox>
 
         <Disclosure>
-          <Disclosure.Button className="leading-none text-sm underline text-gray-600 pl-2 interactive">
+          <Disclosure.Button className="leading-none text-sm underline text-gray-600 py-2 interactive w-max mx-auto px-4">
             Suggest new programs and concentrations
           </Disclosure.Button>
           <FadeTransition>

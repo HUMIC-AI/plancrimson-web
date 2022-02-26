@@ -53,22 +53,29 @@ function GraduationYearDialog({ defaultYear } : { defaultYear: number }) {
   const [classYear, setYear] = useState(defaultYear);
   const uid = useAppSelector(selectUid)!;
   return (
-    <form onSubmit={(e) => {
-      e.preventDefault();
-      updateDoc(getUserRef(uid), 'classYear', classYear)
-        .then(() => setOpen(false))
-        .catch((err) => console.error(err));
-    }}
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        updateDoc(getUserRef(uid), 'classYear', classYear)
+          .then(() => setOpen(false))
+          .catch((err) => console.error(err));
+      }}
+      className="bg-white p-4"
     >
-      <h2>What year are you graduating?</h2>
-      <input
-        type="number"
-        name="graduationYear"
-        id="graduationYear"
-        value={classYear}
-        onChange={(e) => setYear(parseInt(e.currentTarget.value, 10))}
-      />
-      <input type="submit" value="Submit" />
+      <div className="max-w-xs mx-auto flex flex-col items-center space-y-4">
+        <h2 className="text-xl font-semibold">What year are you graduating?</h2>
+        <input
+          type="number"
+          name="graduationYear"
+          id="graduationYear"
+          value={classYear}
+          onChange={(e) => setYear(parseInt(e.currentTarget.value, 10))}
+          className="border-4 hover:border-black transition-colors w-32 text-center rounded-xl text-3xl p-2"
+        />
+        <button type="submit" className="interactive px-4 py-2 text-white bg-gray-900 rounded-xl">
+          Get started
+        </button>
+      </div>
     </form>
   );
 }
@@ -174,6 +181,7 @@ const MyApp = function ({ Component, pageProps }: AppProps) {
           showContents({
             title: 'Set graduation year',
             content: <GraduationYearDialog defaultYear={missing.classYear} />,
+            noExit: true,
           });
           return;
         }

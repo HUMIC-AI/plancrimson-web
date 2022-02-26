@@ -94,7 +94,7 @@ function ModalWrapper({ selected }: { selected: Schedule | null }) {
     selectedSchedule,
   }), [selectedSchedule]);
   return (
-    <SearchStateProvider>
+    <SearchStateProvider oneCol>
       <SelectedScheduleContext.Provider value={context}>
         <SearchModal />
       </SelectedScheduleContext.Provider>

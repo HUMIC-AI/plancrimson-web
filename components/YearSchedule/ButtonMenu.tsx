@@ -6,12 +6,11 @@ import {
   FaPlus,
   FaTrash,
   FaDownload,
-  FaEraser,
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
 import { Schedule, Season } from '../../shared/firestoreTypes';
 import { useAppDispatch } from '../../src/app/hooks';
-import { clearSchedule, createSchedule, deleteSchedule } from '../../src/features/schedules';
+import { createSchedule, deleteSchedule } from '../../src/features/schedules';
 import { downloadJson } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 
@@ -121,7 +120,7 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
 
   return (
     <div className="flex flex-col space-y-2 w-full">
-      <div className="self-center flex justify-center items-center flex-wrap max-w-[8rem] gap-2 mt-2 text-gray-600 text-xs">
+      <div className="self-center flex justify-center items-center flex-wrap gap-2 mt-2 text-gray-600 text-xs">
         {selectedSchedule && (
           <>
             <CustomButton
@@ -138,11 +137,11 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
               Icon={FaClone}
             />
 
-            <CustomButton
+            {/* <CustomButton
               name="Clear"
               onClick={() => dispatch(clearSchedule(selectedSchedule.id))}
               Icon={FaEraser}
-            />
+            /> */}
           </>
         )}
 

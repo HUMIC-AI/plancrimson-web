@@ -166,7 +166,7 @@ const CourseCard: React.FC<Props> = function ({
               </span>
 
               {/* the info and course selection buttons */}
-              <span className="flex items-center space-x-1 ml-2">
+              <span className="flex items-center space-x-2 ml-2">
                 {warnings && (
                 <Tooltip text={warnings} direction="bottom">
                   <FaExclamationTriangle color="yellow" className="text-xl" />

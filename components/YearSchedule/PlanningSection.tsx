@@ -3,6 +3,7 @@ import React, {
   useEffect, useMemo, useRef, useState,
 } from 'react';
 import {
+  FaAngleDoubleLeft,
   FaArrowsAltH,
   FaArrowsAltV,
   FaChevronLeft,
@@ -20,7 +21,7 @@ import {
   selectSchedule, selectSelectedSchedules, selectSchedules, clearSchedule,
 } from '../../src/features/schedules';
 import {
-  selectExpandCards, selectSampleSchedule, selectSemesterFormat, showAll, showSelected, toggleExpand,
+  selectExpandCards, selectSampleSchedule, selectSemesterFormat, selectShowReqs, setShowReqs, showAll, showSelected, toggleExpand,
 } from '../../src/features/semesterFormat';
 import { selectClassYear, selectUid } from '../../src/features/userData';
 import { downloadJson, getUserRef } from '../../src/hooks';
@@ -36,6 +37,7 @@ const HeaderSection: React.FC<{
 }> = function ({ totalCourses, resizeRef, downloadData }) {
   const dispatch = useAppDispatch();
   const selectedSchedules = useAppSelector(selectSelectedSchedules);
+  const showReqs = useAppSelector(selectShowReqs);
   const isExpanded = useAppSelector(selectExpandCards);
   const semesterFormat = useAppSelector(selectSemesterFormat);
   const sampleSchedule = useAppSelector(selectSampleSchedule);
@@ -44,6 +46,16 @@ const HeaderSection: React.FC<{
   return (
     <div className="text-white space-y-4">
       <div className="flex flex-col items-center justify-center lg:flex-row xl:justify-start gap-4">
+        {!showReqs && (
+        <button
+          title="Show requirements panel"
+          type="button"
+          onClick={() => dispatch(setShowReqs(true))}
+          className="interactive"
+        >
+          <FaAngleDoubleLeft />
+        </button>
+        )}
         <span className="whitespace-nowrap">
           Total courses:
           {' '}
