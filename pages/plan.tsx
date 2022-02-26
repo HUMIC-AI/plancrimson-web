@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout/Layout';
 import PlanningSection from '../components/YearSchedule/PlanningSection';
 import RequirementsSection from '../components/YearSchedule/RequirementsSection';

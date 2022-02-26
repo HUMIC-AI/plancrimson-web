@@ -240,6 +240,7 @@ function PlanningSection({ highlightedRequirement } : Props) {
       default:
         return [];
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classYear, sampleSchedule?.schedules, schedules, selectedSchedules, semesterFormat]);
 
   const totalCourses = useMemo(

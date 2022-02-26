@@ -100,6 +100,7 @@ const CourseCard: React.FC<Props> = function ({
       classId: getClassId(course),
       scheduleId: selectedSchedule.id,
     }]));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classCache, classYear, course, lastLoggedIn, scheduleData, selectedSchedule]);
 
   const handleDragStart: React.DragEventHandler<HTMLDivElement> = (ev) => {

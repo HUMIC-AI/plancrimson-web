@@ -97,6 +97,7 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
       console.error(err);
       alert("Couldn't duplicate your schedule. Please try again later.");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSchedule]);
 
   const handleDelete = useCallback(async () => {
@@ -115,6 +116,7 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
         'There was a problem deleting your schedule. Please try again later.',
       );
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prevScheduleId, selectedSchedule]);
 
   return (

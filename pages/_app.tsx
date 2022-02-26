@@ -149,6 +149,7 @@ const MyApp = function ({ Component, pageProps }: AppProps) {
       (err) => dispatch(signInError(err)),
     );
     return unsub;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -206,6 +207,7 @@ const MyApp = function ({ Component, pageProps }: AppProps) {
       .catch((err) => dispatch(setSnapshotError(err)));
 
     return unsub;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid]);
 
   return (
