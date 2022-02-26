@@ -152,7 +152,6 @@ const Navbar = function () {
                   <div className="flex space-x-4">
                     {paths.map((item) => (
                       // pass the query between pages to preserve the selected schedule
-                      // see src/context/selectedSchedule.tsx
                       <Link
                         key={item.name}
                         href={{

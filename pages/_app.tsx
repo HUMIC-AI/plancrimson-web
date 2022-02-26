@@ -20,6 +20,7 @@ import { overwrite } from '../src/features/schedules';
 import { ModalProvider, useModal } from '../src/features/modal';
 import { allTruthy, getDefaultSemesters, getUniqueSemesters } from '../shared/util';
 import type { Term, UserDocument } from '../shared/firestoreTypes';
+import { loadClass } from '../src/features/classCache';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -180,6 +181,10 @@ const MyApp = function ({ Component, pageProps }: AppProps) {
         }
 
         dispatch(setClassYear(data.classYear!));
+
+        Object.values(data.schedules!)
+          .forEach((schedule) => schedule.classes
+            .forEach(({ classId }) => dispatch(loadClass(classId))));
 
         dispatch(overwrite({
           schedules: data.schedules!,

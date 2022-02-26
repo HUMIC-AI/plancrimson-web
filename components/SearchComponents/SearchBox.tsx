@@ -5,17 +5,17 @@ import React, { Fragment } from 'react';
 import type { SearchBoxProvided } from 'react-instantsearch-core';
 import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
 import Attribute from './Attribute';
-import useSelectedScheduleContext from '../../src/context/selectedSchedule';
 import ScheduleSelector from '../ScheduleSelector';
-import { classNames } from '../../shared/util';
+import { classNames, sortSchedules } from '../../shared/util';
 import { ATTRIBUTE_DESCRIPTIONS, Class } from '../../shared/apiTypes';
 import Stats, { StatsComponent } from './Stats';
-import { useLgBreakpoint } from '../../src/hooks';
+import { useLgBreakpoint, useSelectedSchedule } from '../../src/hooks';
 import StateResults, { StateResultsComponent } from './StateResults';
 import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
 import { selectUid } from '../../src/features/userData';
 import { alertSignIn } from './searchUtils';
 import { selectShowAttributes, setShowAttributes } from '../../src/features/semesterFormat';
+import { selectSchedules } from '../../src/features/schedules';
 
 const AttributeMenuDropdown = function () {
   return (
@@ -62,10 +62,11 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
   isSearchStalled,
 }) {
   const dispatch = useAppDispatch();
+  const schedules = useAppSelector(selectSchedules);
   const user = useAppSelector(selectUid);
   const showAttributes = useAppSelector(selectShowAttributes);
   const isLg = useLgBreakpoint();
-  const { schedules, selectSchedule, selectedSchedule } = useSelectedScheduleContext();
+  const { selectSchedule, selectedSchedule } = useSelectedSchedule();
 
   return (
     <div className="flex flex-col space-y-1 w-full">
@@ -98,8 +99,8 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
         />
         <div className="hidden sm:block">
           <ScheduleSelector
-            schedules={schedules}
-            selectSchedule={selectSchedule}
+            schedules={sortSchedules(schedules)}
+            selectSchedule={(schedule) => selectSchedule(schedule?.id || null)}
             selectedSchedule={selectedSchedule}
             direction="left"
           />
@@ -131,7 +132,8 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
 export const SearchBoxComponent: React.FC<SearchBoxProvided> = function (
   props,
 ) {
-  const { schedules, selectSchedule, selectedSchedule } = useSelectedScheduleContext();
+  const schedules = useAppSelector(selectSchedules);
+  const { selectSchedule, selectedSchedule } = useSelectedSchedule();
 
   return (
     <div className="flex flex-col space-y-4 items-start">
@@ -141,8 +143,8 @@ export const SearchBoxComponent: React.FC<SearchBoxProvided> = function (
 
       <div className="sm:hidden relative">
         <ScheduleSelector
-          schedules={schedules}
-          selectSchedule={selectSchedule}
+          schedules={sortSchedules(schedules)}
+          selectSchedule={(schedule) => selectSchedule(schedule?.id || null)}
           selectedSchedule={selectedSchedule}
           direction="right"
         />

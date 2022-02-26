@@ -1,11 +1,12 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { Listbox } from '@headlessui/react';
+import { useRouter } from 'next/router';
 import React, { useState } from 'react';
-import { FaAngleDown, FaCheckSquare } from 'react-icons/fa';
+import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
 import { Schedule, Semester } from '../shared/firestoreTypes';
 import { classNames, compareSemesters } from '../shared/util';
 import { useAppDispatch, useAppSelector } from '../src/app/hooks';
-import { renameSchedule } from '../src/features/schedules';
+import { renameSchedule, selectSchedule } from '../src/features/schedules';
 import { selectSemesterFormat } from '../src/features/semesterFormat';
 import FadeTransition from './FadeTransition';
 
@@ -17,7 +18,6 @@ export interface ScheduleSelectorProps {
   showTerm?: boolean;
   parentWidth?: string;
   highlight?: boolean;
-  onPlanningPage?: boolean;
 }
 
 function titleContainsTerm(title: string, term: Semester) {
@@ -45,6 +45,7 @@ function ButtonTitle({
   const dispatch = useAppDispatch();
   const [value, setValue] = useState(selectedSchedule?.id || '');
   const disabled = !selectedSchedule;
+  const { season, year } = selectedSchedule!;
 
   function saveTitle(e: any) {
     e.preventDefault();
@@ -76,8 +77,15 @@ function ButtonTitle({
           onBlur={saveTitle}
           disabled={disabled}
         />
-        <button type="button" className="w-4 ml-2">
-          <FaCheckSquare />
+        <button
+          type="button"
+          className="w-4 ml-2"
+          onClick={() => dispatch(selectSchedule({
+            term: `${year}${season}`,
+            scheduleId: selectedSchedule!.id,
+          }))}
+        >
+          {highlight ? <FaCheckSquare /> : <FaSquare />}
         </button>
       </form>
 
@@ -86,9 +94,9 @@ function ButtonTitle({
         && (showTerm
           || !titleContainsTerm(selectedSchedule.id, selectedSchedule)) && (
           <span className="text-xs text-gray-400">
-            {selectedSchedule.season}
+            {season}
             {' '}
-            {selectedSchedule.year}
+            {year}
           </span>
       )}
     </span>
@@ -98,19 +106,19 @@ function ButtonTitle({
 const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
   schedules,
   selectedSchedule,
-  selectSchedule,
+  selectSchedule: select,
   direction,
   showTerm,
   parentWidth,
   highlight = false,
-  onPlanningPage = false,
 }) {
+  const { pathname } = useRouter();
   const semesterFormat = useAppSelector(selectSemesterFormat);
   const optionStyles = 'flex space-x-2 w-min max-w-full';
 
   // if we're showing all schedules, don't render a dropdown menu
   // instead just have the title be clickable to select
-  if (onPlanningPage && semesterFormat === 'all') {
+  if (pathname === '/plan' && semesterFormat === 'all') {
     return (
       <ButtonTitle
         parentWidth={`${parentWidth} + 2rem`}
@@ -125,7 +133,7 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
     <div className="flex flex-col items-center">
       <Listbox
         value={selectedSchedule}
-        onChange={selectSchedule}
+        onChange={select}
         as="div"
         className="relative inline-block"
       >

@@ -3,7 +3,6 @@ import React from 'react'; // useEffect, useRef, useState,
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
-import useSelectedScheduleContext from '../../src/context/selectedSchedule';
 import { classNames, getClassId } from '../../shared/util';
 import CourseCard from '../Course/CourseCard';
 import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
@@ -12,6 +11,7 @@ import { useModal } from '../../src/features/modal';
 import sampleCourses from './sampleCourses.json';
 import { alertSignIn } from './searchUtils';
 import { DAY_SHORT } from '../../shared/firestoreTypes';
+import { useSelectedSchedule } from '../../src/hooks';
 
 type ButtonProps = {
   onClick: () => void;
@@ -70,9 +70,7 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
   inSearch = true,
 }) {
   const { showCourse } = useModal();
-  const { selectedSchedule } = useSelectedScheduleContext();
-
-  // const [numCols, setNumCols] = useState(getNumCols(144));
+  const { selectedSchedule } = useSelectedSchedule();
 
   return (
     <div className="space-y-6 flex flex-col items-center">

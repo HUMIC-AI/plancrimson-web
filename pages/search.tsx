@@ -6,7 +6,6 @@ import { FaAngleDoubleLeft } from 'react-icons/fa';
 import { adjustAttr, getMeiliApiKey, getMeiliHost } from '../shared/util';
 import MEILI_ATTRIBUTES from '../shared/meiliAttributes.json';
 import { useLgBreakpoint } from '../src/hooks';
-import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
 
 // components
 import Layout from '../components/Layout/Layout';
@@ -84,14 +83,12 @@ const SearchPage = function () {
             </div>
 
             <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
-              <SelectedScheduleProvider>
-                {user ? <SearchBox /> : <SearchBoxDemo />}
-                <div className="grid grid-cols-[auto_1fr] gap-4">
-                  {user ? <SortBy /> : <SortByDemo />}
-                  {user ? <CurrentRefinements /> : <CurrentRefinementsDemo />}
-                </div>
-                {user ? <Hits /> : <HitsDemo />}
-              </SelectedScheduleProvider>
+              {user ? <SearchBox /> : <SearchBoxDemo />}
+              <div className="grid grid-cols-[auto_1fr] gap-4">
+                {user ? <SortBy /> : <SortByDemo />}
+                {user ? <CurrentRefinements /> : <CurrentRefinementsDemo />}
+              </div>
+              {user ? <Hits /> : <HitsDemo />}
             </div>
           </div>
         </InstantSearch>
