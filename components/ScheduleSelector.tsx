@@ -42,14 +42,15 @@ function ButtonTitle({
   highlight: boolean;
   selectedSchedule: Schedule | null;
 }) {
-  const [value, setValue] = useState(selectedSchedule?.id || '');
   const dispatch = useAppDispatch();
+  const [value, setValue] = useState(selectedSchedule?.id || '');
+  const disabled = !selectedSchedule;
+
   function saveTitle(e: any) {
     e.preventDefault();
     if (!selectedSchedule?.id || value === selectedSchedule.id) return;
     dispatch(renameSchedule({ oldId: selectedSchedule.id, newId: value }));
   }
-  const disabled = !selectedSchedule;
 
   return (
     <span className="flex flex-col items-center space-y-1">

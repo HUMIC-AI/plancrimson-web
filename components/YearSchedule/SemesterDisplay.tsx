@@ -274,7 +274,7 @@ function SemesterComponent({
               <>
                 <Link href={{ pathname: '/search', query: { selected: selectedSchedule?.id } }}>
                   {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                  <a className="flex items-center justify-center rounded-xl bg-blue-300 hover:opacity-50 transition-opacity py-2">
+                  <a className="flex items-center justify-center rounded-xl bg-blue-300 interactive py-2">
                     <FaPlus />
                   </a>
                 </Link>

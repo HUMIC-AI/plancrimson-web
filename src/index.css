@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .interactive {
+    @apply hover:opacity-50 transition-opacity;
+  }
+}

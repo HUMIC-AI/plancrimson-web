@@ -26,7 +26,7 @@ export const SelectedScheduleProvider: React.FC = function ({ children }) {
       selectSchedule: (schedule) => schedule && replace({ pathname, query: { selected: schedule.id } }),
       schedules: sortSchedules(schedules),
     }),
-    [selected, schedules, pathname, replace],
+    [selected, schedules, pathname],
   );
 
   return (

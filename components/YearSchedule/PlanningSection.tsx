@@ -76,7 +76,7 @@ const HeaderSection: React.FC<{
                   dispatch(showAll());
                 }
               }}
-              className="py-1 px-2 bg-gray-600 hover:opacity-50 transition-opacity rounded"
+              className="py-1 px-2 bg-gray-600 interactive rounded"
             >
               {semesterFormat === 'all'
                 ? 'Showing all schedules'
@@ -85,7 +85,7 @@ const HeaderSection: React.FC<{
           )}
           <button
             type="button"
-            className="hover:opacity-50 transition-opacity underline"
+            className="interactive underline"
             onClick={() => downloadJson(
               semesterFormat === 'sample'
                 ? `Sample ${sampleSchedule?.id} - Plan Crimson`
@@ -99,7 +99,7 @@ const HeaderSection: React.FC<{
           {semesterFormat !== 'sample' && (
             <button
               type="button"
-              className="hover:opacity-50 transition-opacity underline"
+              className="interactive underline"
               onClick={() => {
                 // eslint-disable-next-line no-restricted-globals
                 const yn = confirm(
@@ -336,7 +336,7 @@ const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
                       if (!userUid) return;
                       updateDoc(getUserRef(userUid), `schedules.${id}.hidden`, false);
                     }}
-                    className="hover:opacity-50 transition-opacity"
+                    className="interactive"
                   >
                     {id}
                   </button>

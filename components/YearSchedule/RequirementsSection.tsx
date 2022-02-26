@@ -162,7 +162,7 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
         type="button"
         className={classNames(
           isSelected && 'font-bold',
-          'text-left hover:opacity-50 transition-opacity',
+          'text-left interactive',
         )}
         onClick={() => {
           if (isSelected) {
@@ -201,7 +201,7 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
             alert('An unexpected error occurred when cloning the sample schedule. Please try again later.');
           }
         }}
-        className="font-medium hover:opacity-50 transition-opacity"
+        className="font-medium interactive"
       >
         Clone
       </button>
@@ -209,7 +209,7 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
         href={schedule.source}
         target="_blank"
         rel="noopener noreferrer"
-        className="font-medium hover:opacity-50 transition-opacity"
+        className="font-medium interactive"
       >
         Source
       </a>
@@ -269,7 +269,7 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
                 <Listbox.Option
                   key={groupId}
                   value={groupId}
-                  className="odd:bg-gray-300 even:bg-white hover:opacity-50 transition-opacity py-2 px-4 cursor-pointer"
+                  className="odd:bg-gray-300 even:bg-white interactive py-2 px-4 cursor-pointer"
                 >
                   {groupId}
                 </Listbox.Option>
@@ -279,7 +279,7 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
         </Listbox>
 
         <Disclosure>
-          <Disclosure.Button className="leading-none text-sm underline text-gray-600 pl-2 hover:opacity-50 transition-opacity">
+          <Disclosure.Button className="leading-none text-sm underline text-gray-600 pl-2 interactive">
             Suggest new programs and concentrations
           </Disclosure.Button>
           <FadeTransition>
@@ -291,7 +291,7 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
 
         {selectedReqGroup.sampleSchedules && (
           <Disclosure>
-            <Disclosure.Button className="leading-none text-sm underline text-gray-600 pl-2 hover:opacity-50 transition-opacity">
+            <Disclosure.Button className="leading-none text-sm underline text-gray-600 pl-2 interactive">
               Sample schedules
             </Disclosure.Button>
             <FadeTransition>
@@ -338,7 +338,7 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
             <button
               type="button"
               onClick={() => setNotification(false)}
-              className="absolute top-2 right-2 not-italic text-xl hover:opacity-50 transition-opacity"
+              className="absolute top-2 right-2 not-italic text-xl interactive"
             >
               <FaTimes />
             </button>

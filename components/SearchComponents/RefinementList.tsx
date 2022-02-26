@@ -2,8 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import type { RefinementListProvided } from 'react-instantsearch-core';
 import { connectRefinementList } from 'react-instantsearch-dom';
 import { termNumberToSeason, classNames } from '../../shared/util';
-import { useAppSelector } from '../../src/app/hooks';
-import { selectExpandCards } from '../../src/features/semesterFormat';
+import { alertSignIn } from './searchUtils';
 
 type Props = Pick<RefinementListProvided, 'items' | 'refine'>;
 
@@ -76,7 +75,6 @@ export const RefinementListComponent = React.memo(
  */
 const InnerWrapper: React.FC<Props> = function ({ items, refine }) {
   const [allItems, setAllItems] = useState<typeof items>([]);
-  const isExpanded = useAppSelector(selectExpandCards);
 
   useEffect(() => {
     // items only contains a list of the refined items
@@ -100,11 +98,33 @@ const InnerWrapper: React.FC<Props> = function ({ items, refine }) {
     });
   }, [items]);
 
-  if (isExpanded) {
-    return <RefinementListComponent items={allItems} refine={refine} />;
-  }
-
-  return null;
+  return <RefinementListComponent items={allItems} refine={refine} />;
 };
+
+export function RefinementListDemo() {
+  return (
+    <RefinementListComponent
+      items={[
+        {
+          count: 42,
+          isRefined: true,
+          label: 'Example',
+          objectID: '',
+          value: ['Example'],
+          _highlightResult: {},
+        },
+        {
+          count: 69,
+          isRefined: false,
+          label: 'Sign in to get started',
+          objectID: '',
+          value: [],
+          _highlightResult: {},
+        },
+      ]}
+      refine={alertSignIn}
+    />
+  );
+}
 
 export default connectRefinementList(InnerWrapper);

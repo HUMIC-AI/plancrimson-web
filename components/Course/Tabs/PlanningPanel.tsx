@@ -128,7 +128,7 @@ const PlanningPanel: React.FC<{ course: ExtendedClass }> = function ({
           {' '}
           <Link href="/schedule">
             {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-            <a className="font-bold hover:opacity-50 transition-opacity">
+            <a className="font-bold interactive">
               creating a schedule
             </a>
           </Link>

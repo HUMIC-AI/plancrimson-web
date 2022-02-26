@@ -4,35 +4,12 @@ import { FaChevronDown } from 'react-icons/fa';
 import { classNames, compareItems, compareWeekdays } from '../../shared/util';
 import { useAppSelector } from '../../src/app/hooks';
 import { selectUid } from '../../src/features/userData';
-import RefinementList, { RefinementListComponent } from './RefinementList';
+import RefinementList, { RefinementListDemo } from './RefinementList';
 
-const alertSignIn = () => alert('Sign in to search for courses!');
-
-const DemoElement = (
-  <RefinementListComponent
-    items={[
-      {
-        count: 42,
-        isRefined: true,
-        label: 'Example',
-        objectID: '',
-        value: ['Example'],
-        _highlightResult: {},
-      },
-      {
-        count: 69,
-        isRefined: false,
-        label: 'Sign in to get started',
-        objectID: '',
-        value: [],
-        _highlightResult: {},
-      },
-    ]}
-    refine={alertSignIn}
-  />
-);
-
-type AttributeProps = { attribute: string; label: string };
+interface AttributeProps {
+  attribute: string;
+  label: string
+}
 
 const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = function ({ open, attribute, label }) {
   const user = useAppSelector(selectUid);
@@ -77,7 +54,7 @@ const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = functio
               )}
             />
           ) : (
-            DemoElement
+            <RefinementListDemo />
           )}
         </div>
       </Disclosure.Panel>

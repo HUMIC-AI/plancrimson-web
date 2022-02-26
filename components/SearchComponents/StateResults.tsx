@@ -25,7 +25,7 @@ Pick<StateResultsProvided, 'searchState'>
       <button
         type="button"
         onClick={handleClick}
-        className="underline hover:opacity-50 transition-opacity"
+        className="underline interactive"
       >
         Copy search
       </button>

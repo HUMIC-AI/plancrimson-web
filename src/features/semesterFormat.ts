@@ -1,5 +1,5 @@
 /* eslint-disable no-param-reassign */
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { SampleSchedule } from '../requirements/util';
 import type { RootState } from '../app/store';
 
@@ -7,12 +7,14 @@ interface SemesterFormat {
   format: 'all' | 'selected' | 'sample' | null;
   sampleSchedule: SampleSchedule | null;
   expandCards: boolean;
+  showAttributes: boolean;
 }
 
 const initialState: SemesterFormat = {
   format: 'all',
   sampleSchedule: null,
   expandCards: false,
+  showAttributes: true,
 };
 
 export const semesterFormatSlice = createSlice({
@@ -33,11 +35,14 @@ export const semesterFormatSlice = createSlice({
     toggleExpand: (state) => {
       state.expandCards = !state.expandCards;
     },
+    setShowAttributes: (state, action: PayloadAction<boolean>) => {
+      state.showAttributes = action.payload;
+    },
   },
 });
 
 export const {
-  showAll, showSelected, showSample, toggleExpand,
+  showAll, showSelected, showSample, toggleExpand, setShowAttributes,
 } = semesterFormatSlice.actions;
 
 // ========================= SELECTORS =========================
@@ -45,3 +50,4 @@ export const {
 export const selectSemesterFormat = (state: RootState) => state.semesterFormat.format;
 export const selectSampleSchedule = (state: RootState) => state.semesterFormat.sampleSchedule;
 export const selectExpandCards = (state: RootState) => state.semesterFormat.expandCards;
+export const selectShowAttributes = (state: RootState) => state.semesterFormat.showAttributes;

@@ -233,6 +233,7 @@ export function checkViable(
 
   if (
     cls.SUBJECT === 'FRSEMR'
+    && data.classYear
     && getSchoolYear(querySemester, data.classYear) > 1
   ) {
     return {

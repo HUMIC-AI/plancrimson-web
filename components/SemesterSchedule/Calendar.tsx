@@ -127,7 +127,7 @@ function MissingClass({ cls }: { cls: ExtendedClass }) {
             </div>
             <button
               type="submit"
-              className="mt-4 bg-gray-300 hover:opacity-50 transition-opacity px-4 py-2 rounded-md shadow-md"
+              className="mt-4 bg-gray-300 interactive px-4 py-2 rounded-md shadow-md"
             >
               Save
             </button>
@@ -235,7 +235,7 @@ const Calendar: React.FC<CalendarProps> = function ({ classes }) {
         <button
           type="button"
           onClick={handleExport}
-          className="bg-gray-300 hover:opacity-50 transition-opacity py-2 px-4 rounded-md"
+          className="bg-gray-300 interactive py-2 px-4 rounded-md"
         >
           Export to ICS
         </button>

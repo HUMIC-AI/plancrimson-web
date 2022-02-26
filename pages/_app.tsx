@@ -1,5 +1,5 @@
 import '../src/wdyr';
-import 'tailwindcss/tailwind.css';
+import '../src/index.css';
 import type { AppProps } from 'next/app';
 import { getApps, initializeApp } from 'firebase/app';
 import {

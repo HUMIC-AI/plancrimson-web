@@ -17,7 +17,7 @@ const Tabs: React.FC<{ course: ExtendedClass }> = function ({ course }) {
               className={({ selected }) => classNames(
                 selected
                   ? 'bg-blue-500 text-white'
-                  : 'bg-white text-gray-800 hover:opacity-50 transition-opacity',
+                  : 'bg-white text-gray-800 interactive',
                 'flex-1 text-sm py-2 px-4 rounded-t-xl font-medium whitespace-nowrap',
               )}
             >

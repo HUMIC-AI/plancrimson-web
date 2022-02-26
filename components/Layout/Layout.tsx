@@ -50,7 +50,7 @@ function Footer() {
               query,
             }}
           >
-            <a className="font-bold hover:opacity-50 transition-opacity">
+            <a className="font-bold interactive">
               Attributions
             </a>
           </Link>
@@ -76,7 +76,7 @@ function Footer() {
               query,
             }}
           >
-            <a className="font-bold hover:opacity-50 transition-opacity">
+            <a className="font-bold interactive">
               Privacy
             </a>
           </Link>
