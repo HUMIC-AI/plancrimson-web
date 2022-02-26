@@ -215,6 +215,7 @@ const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
           })) || []
         );
       case 'selected':
+        if (!classYear) return [];
         return getUniqueSemesters(
           classYear,
           Object.values(schedules),

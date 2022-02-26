@@ -82,7 +82,7 @@ function ButtonTitle({
           className="w-4 ml-2"
           onClick={() => dispatch(selectSchedule({
             term: `${year}${season}`,
-            scheduleId: selectedSchedule!.id,
+            scheduleId: selectedSchedule?.id || null,
           }))}
         >
           {highlight ? <FaCheckSquare /> : <FaSquare />}

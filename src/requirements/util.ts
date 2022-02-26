@@ -33,7 +33,7 @@ export type Requirement<Accumulator = number> = {
     prev: Accumulator,
     cls: Class,
     schedule: Schedule,
-    userData: UserDocument
+    userData: UserDocument<string>
   ) => Accumulator | null;
 };
 

@@ -39,7 +39,7 @@ function validateSchedule<Accumulator>(
   initialValue: Accumulator,
   req: Requirement<Accumulator>,
   schedule: Schedule,
-  userData: UserDocument,
+  userData: UserDocument<string>,
   classCache: Readonly<ClassCache>,
 ) {
   const allClasses: ExtendedClass[] = allTruthy(
@@ -58,7 +58,7 @@ function validateSchedule<Accumulator>(
 function validateReq(
   req: Requirement,
   schedules: Schedule[],
-  userData: UserDocument,
+  userData: UserDocument<string>,
   classCache: Readonly<ClassCache>,
 ): ReqResult {
   if (typeof req.validate === 'undefined') {
@@ -92,7 +92,7 @@ function validateReq(
 function validateSchedules(
   group: RequirementGroup,
   schedules: Schedule[],
-  userData: UserDocument,
+  userData: UserDocument<string>,
   classCache: Readonly<ClassCache>,
 ): GroupResult {
   const childResults: ChildResults = {};
