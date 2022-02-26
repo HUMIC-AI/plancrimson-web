@@ -1,13 +1,12 @@
 import { Dialog } from '@headlessui/react';
-import { useState } from 'react';
 import { DownloadPlan, SEASON_ORDER } from '../shared/firestoreTypes';
 import { allTruthy } from '../shared/util';
-import useUserData from '../src/context/userData';
-import CustomDialog from './CustomDialog';
+import { useAppDispatch } from '../src/app/hooks';
+import { useModal } from '../src/features/modal';
+import { createSchedule } from '../src/features/schedules';
 
-export default function UploadPlan() {
-  const [showDialog, setShowDialog] = useState(false);
-  const { createSchedule } = useUserData();
+function UploadForm() {
+  const dispatch = useAppDispatch();
 
   const handleUpload: React.FormEventHandler<HTMLFormElement> = async (ev) => {
     ev.preventDefault();
@@ -32,18 +31,18 @@ export default function UploadPlan() {
           ) {
             throw new Error(`${schedule.id} invalid or missing fields`);
           }
-          return createSchedule({
+          return dispatch(createSchedule({
             season: schedule.season,
             year: schedule.year,
             classes: schedule.classes,
             id: `${schedule.id}`,
             force: true,
-          }).catch((err) => {
+          })).catch((err) => {
             throw new Error(`${schedule.id} threw error ${err.message}`);
           });
         }),
       );
-      setShowDialog(false);
+
       const rejected = allTruthy(
         results.map((result) => (result.status === 'rejected' ? result.reason.message : null)),
       );
@@ -55,41 +54,42 @@ export default function UploadPlan() {
   };
 
   return (
-    <div>
+    <form
+      className="bg-white p-6 flex flex-col items-start space-y-4"
+      onSubmit={handleUpload}
+    >
+      <Dialog.Description>Upload a plan</Dialog.Description>
+      <input
+        type="file"
+        name="plan"
+        id="planFile"
+        accept="application/json"
+        className="mt-4"
+        required
+      />
       <button
-        type="button"
-        onClick={() => setShowDialog(!showDialog)}
-        className="hover:opacity-50 transition-opacity underline"
+        type="submit"
+        className="bg-gray-400 py-2 px-4 rounded-md interactive"
       >
-        Upload plan
+        Submit
       </button>
+    </form>
+  );
+}
 
-      <CustomDialog
-        open={showDialog}
-        closeModal={() => setShowDialog(false)}
-        title="Upload plan"
-      >
-        <form
-          className="bg-white p-6 flex flex-col items-start space-y-4"
-          onSubmit={handleUpload}
-        >
-          <Dialog.Description>Upload a plan</Dialog.Description>
-          <input
-            type="file"
-            name="plan"
-            id="planFile"
-            accept="application/json"
-            className="mt-4"
-            required
-          />
-          <button
-            type="submit"
-            className="bg-gray-400 py-2 px-4 rounded-md hover:opacity-50 transition-opacity"
-          >
-            Submit
-          </button>
-        </form>
-      </CustomDialog>
-    </div>
+export default function UploadPlan() {
+  const { showContents } = useModal();
+
+  return (
+    <button
+      type="button"
+      onClick={() => showContents({
+        content: <UploadForm />,
+        title: 'Upload plan',
+      })}
+      className="underline interactive"
+    >
+      Upload plan
+    </button>
   );
 }

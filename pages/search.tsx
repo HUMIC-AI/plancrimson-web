@@ -1,74 +1,29 @@
 import React, { useEffect } from 'react';
-import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
 import { Configure, InstantSearch } from 'react-instantsearch-dom';
 import qs from 'qs';
-import { adjustAttr, getMeiliApiKey, getMeiliHost } from '../shared/util';
-import MEILI_ATTRIBUTES from '../shared/meiliAttributes.json';
-import { useLgBreakpoint } from '../src/hooks';
-import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
-import useUser, { alertSignIn } from '../src/context/user';
-import sampleCourses from '../components/SearchComponents/sampleCourses.json';
+import { meiliSearchClient } from '../src/hooks';
 
 // components
 import Layout from '../components/Layout/Layout';
-import Attribute from '../components/SearchComponents/Attribute';
 import SearchBox, {
-  SearchBoxComponent,
+  SearchBoxDemo,
 } from '../components/SearchComponents/SearchBox';
-import Hits, { HitsComponent } from '../components/SearchComponents/Hits';
+import Hits, { HitsDemo } from '../components/SearchComponents/Hits';
 import CurrentRefinements, {
-  CurrentRefinementsComponent,
+  CurrentRefinementsDemo,
 } from '../components/SearchComponents/CurrentRefinements';
-import SortBy, { SortByComponent } from '../components/SearchComponents/SortBy';
+import SortBy, { SortByDemo } from '../components/SearchComponents/SortBy';
 import useSearchState from '../src/context/searchState';
-import { DAY_SHORT } from '../shared/firestoreTypes';
-
-const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey());
-
-const SORT_INDEXES = [
-  { label: 'Relevant', value: 'courses' },
-  {
-    label: 'Catalog number',
-    value: 'courses:CATALOG_NBR:asc',
-  },
-  {
-    label: 'Popularity',
-    value: 'courses:meanClassSize:desc',
-  },
-  {
-    label: 'Light Workload',
-    value: 'courses:meanClassSize:asc',
-  },
-  {
-    label: 'Highly Recommended',
-    value: 'courses:meanRecommendation:desc',
-  },
-  {
-    label: 'Highly Rated',
-    value: 'courses:meanRating:desc',
-  },
-];
-
-const AttributeMenu = function () {
-  const isLg = useLgBreakpoint();
-
-  return (
-    <div className="flex-shrink-0 self-start w-64 p-2 hidden lg:flex flex-col space-y-2 from-gray-800 to-blue-900 bg-gradient-to-br rounded-md">
-      {isLg
-        && MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
-          <Attribute attribute={attr} key={attr} label={adjustAttr(attr)} />
-        ))}
-      <span className="text-white text-xs p-1">
-        If filters are not showing up, clear your search and try again.
-      </span>
-    </div>
-  );
-};
+import { useAppSelector } from '../src/app/hooks';
+import { selectUid } from '../src/features/userData';
+import { selectShowAttributes } from '../src/features/semesterFormat';
+import AttributeMenu from '../components/SearchComponents/AttributeMenu';
 
 // we show a demo if the user is not logged in,
 // but do not allow them to send requests to the database
 const SearchPage = function () {
-  const { user } = useUser();
+  const user = useAppSelector(selectUid);
+  const showAttributes = useAppSelector(selectShowAttributes);
   const { searchState, setSearchState } = useSearchState();
 
   useEffect(() => {
@@ -91,63 +46,17 @@ const SearchPage = function () {
         >
           {user && <Configure hitsPerPage={12} />}
           <div className="flex space-x-4">
-            <AttributeMenu />
+            <div className={showAttributes ? '' : 'hidden'}>
+              <AttributeMenu />
+            </div>
 
             <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
-              <SelectedScheduleProvider>
-                {user ? (
-                  <SearchBox />
-                ) : (
-                  <SearchBoxComponent
-                    isSearchStalled={false}
-                    refine={alertSignIn}
-                    currentRefinement="Search now"
-                  />
-                )}
-                <div className="grid grid-cols-[auto_1fr] gap-4">
-                  {user ? (
-                    <SortBy defaultRefinement="courses" items={SORT_INDEXES} />
-                  ) : (
-                    <SortByComponent
-                      items={SORT_INDEXES.map((val, i) => ({
-                        ...val,
-                        isRefined: i === 0,
-                      }))}
-                      refine={alertSignIn}
-                    />
-                  )}
-                  {user ? (
-                    <CurrentRefinements />
-                  ) : (
-                    <CurrentRefinementsComponent
-                      items={[]}
-                      refine={alertSignIn}
-                    />
-                  )}
-                </div>
-                {user ? (
-                  <Hits />
-                ) : (
-                  <HitsComponent
-                    hits={sampleCourses
-                    // oh, the things i do for typescript
-                      .map((course) => ({
-                        ...course,
-                        ...Object.assign(
-                          {},
-                          ...DAY_SHORT.map((attr) => ({
-                            [attr]: course[attr] as 'Y' | 'N',
-                          })),
-                        ),
-                      }))}
-                    hasMore
-                    hasPrevious={false}
-                    refineNext={alertSignIn}
-                    refinePrevious={alertSignIn}
-                    inSearch={false}
-                  />
-                )}
-              </SelectedScheduleProvider>
+              {user ? <SearchBox /> : <SearchBoxDemo />}
+              <div className="grid grid-cols-[auto_1fr] gap-4">
+                {user ? <SortBy /> : <SortByDemo />}
+                {user ? <CurrentRefinements /> : <CurrentRefinementsDemo />}
+              </div>
+              {user ? <Hits /> : <HitsDemo />}
             </div>
           </div>
         </InstantSearch>

@@ -9,6 +9,7 @@ import {
   compareItems,
   compareWeekdays,
 } from '../../shared/util';
+import { alertSignIn } from './searchUtils';
 
 type Props = Pick<CurrentRefinementsProvided, 'items' | 'refine'>;
 
@@ -72,5 +73,14 @@ export const CurrentRefinementsComponent: React.FC<Props> = function ({
     </>
   );
 };
+
+export function CurrentRefinementsDemo() {
+  return (
+    <CurrentRefinementsComponent
+      items={[]}
+      refine={alertSignIn}
+    />
+  );
+}
 
 export default connectCurrentRefinements(CurrentRefinementsComponent);

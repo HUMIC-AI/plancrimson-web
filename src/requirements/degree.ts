@@ -70,9 +70,10 @@ const halfway: Requirement = {
     'Forty-eight of the required 84 letter-graded credits should be completed by the end of sophomore year.',
   sourcePage: 9,
   validate: (count) => count >= 48,
-  reducer: (prev, cls, schedule, userData) => {
+  reducer: (prev, cls, schedule, { classYear }) => {
+    if (!classYear) return null;
     // courses that are taken by the end of sophomore year
-    const schoolYear = getSchoolYear(schedule, userData.classYear);
+    const schoolYear = getSchoolYear(schedule, classYear);
     if (schoolYear <= 2) return prev + getNumCredits(cls);
     return null;
   },
@@ -85,8 +86,9 @@ const firstYear: Requirement = {
     'First-year students who wish to complete fewer than 16 credits per term must obtain the approval of their Resident Dean.',
   sourcePage: 9,
   validate: (count) => count >= 16,
-  reducer: (prev, cls, schedule, userData) => {
-    if (getSchoolYear(schedule, userData.classYear) === 1) return prev + getNumCredits(cls);
+  reducer: (prev, cls, schedule, { classYear }) => {
+    if (!classYear) return null;
+    if (getSchoolYear(schedule, classYear) === 1) return prev + getNumCredits(cls);
     return null;
   },
 };
@@ -97,9 +99,10 @@ const letterMinimum: Requirement = {
     'Ordinarily, no first-year student or sophomore may take fewer than three letter-graded courses (4 credits per course) in any term. First-year students who wish to complete fewer than 16 credits per term must obtain the approval of their Resident Dean.',
   sourcePage: 9,
   validate: (count) => count >= 3,
-  reducer: (prev, cls, schedule, userData) => {
+  reducer: (prev, cls, schedule, { classYear }) => {
+    if (!classYear) return null;
     if (
-      getSchoolYear(schedule, userData.classYear) <= 2
+      getSchoolYear(schedule, classYear) <= 2
       && cls.IS_SCL_DESCR100_HU_SCL_GRADE_BASIS === 'FAS Letter Graded'
     ) return prev + 1;
     return null;

@@ -27,12 +27,7 @@
     "func-names": "off",
     "max-len": "off",
     "no-alert": "off",
-    "no-console": [
-      "error",
-      {
-        "allow": ["error"]
-      }
-    ],
+    "no-console": "off",
     "no-nested-ternary": "off",
     "no-restricted-syntax": "off",
     "react/jsx-props-no-spreading": "off",

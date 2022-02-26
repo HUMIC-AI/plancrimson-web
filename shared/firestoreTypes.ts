@@ -68,17 +68,27 @@ export interface CustomTimeRecord {
   endDate: string; // yyyy-mm-dd
 }
 
-// firestore user schema
-export interface UserData {
-  classYear: number;
-  lastLoggedIn: Date;
-  schedules: {
-    [scheduleId: string]: Schedule;
-  };
+export type UserDocument<DateType> = UserData<DateType> & ScheduleData;
+
+export interface UserData<DateType> {
+  classYear: number | null;
+  lastLoggedIn: DateType | null;
+}
+
+export interface Schedules {
+  [scheduleId: string]: Schedule;
+}
+
+export interface ScheduleData {
+  schedules: Schedules;
+
   selectedSchedules: {
-    [term: Term]: string | null;
+    [semester: Term]: string | null;
   };
-  customTimes: Record<ClassId, CustomTimeRecord>;
+
+  customTimes: {
+    [classId: string]: CustomTimeRecord;
+  };
 
   // for each requirement,
   // if waivedRequirements[requirement.id].waived is set to true,
@@ -88,9 +98,9 @@ export interface UserData {
   waivedRequirements: {
     [requirementId: string]: {
       waived: boolean;
-      classes: ClassId[];
+      classes: string[];
     };
-  }
+  };
 }
 
 export interface Schedule {

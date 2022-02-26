@@ -15,37 +15,44 @@ import {
   classNames,
   checkViable,
 } from '../../../shared/util';
-import useClassCache from '../../../src/context/classCache';
-import useUserData from '../../../src/context/userData';
+import { useAppDispatch, useAppSelector } from '../../../src/app/hooks';
+import { selectClassCache } from '../../../src/features/classCache';
+import {
+  addCourse, removeCourses, selectScheduleData, selectSchedules,
+} from '../../../src/features/schedules';
+import { selectClassYear, selectLastLoggedIn } from '../../../src/features/userData';
 import Tooltip from '../../Tooltip';
 
 const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass }> = function ({ schedule, course }) {
-  const { data, addCourses, removeCourses } = useUserData();
-  const cacheRequests = useMemo(() => Object.values(data.schedules), [data.schedules]);
-  const classCache = useClassCache(cacheRequests);
+  const dispatch = useAppDispatch();
+  const scheduleData = useAppSelector(selectScheduleData);
+  const classCache = useAppSelector(selectClassCache);
+  const classYear = useAppSelector(selectClassYear);
+  const lastLoggedIn = useAppSelector(selectLastLoggedIn);
+
   const enabled = !!schedule.classes.find(
     ({ classId }) => classId === getClassId(course),
   );
   const viabilityStatus = useMemo(() => {
     const semester = { year: schedule.year, season: schedule.season };
-    return checkViable(course, semester, data, classCache);
-  }, [schedule, course, data, classCache]);
+    return checkViable(course, semester, { ...scheduleData, classYear, lastLoggedIn }, classCache);
+  }, [schedule.year, schedule.season, course, scheduleData, classYear, lastLoggedIn, classCache]);
 
   const handleSwitch = (checked: boolean) => {
     if (checked) {
       if (viabilityStatus.viability === 'No') {
         alert('This course is not being offered in this semester!');
       } else {
-        addCourses({
+        dispatch(addCourse([{
           classId: getClassId(course),
           scheduleId: schedule.id,
-        });
+        }]));
       }
     } else {
-      removeCourses({
+      dispatch(removeCourses([{
         classId: getClassId(course),
         scheduleId: schedule.id,
-      });
+      }]));
     }
   };
 
@@ -102,13 +109,12 @@ const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass }> = fun
 const PlanningPanel: React.FC<{ course: ExtendedClass }> = function ({
   course,
 }) {
-  const { data: userData } = useUserData();
-
+  const schedules = useAppSelector(selectSchedules);
   return (
     <Tab.Panel>
-      {Object.keys(userData.schedules).length > 0 ? (
+      {Object.keys(schedules).length > 0 ? (
         <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
-          {sortSchedules(userData.schedules).map((schedule) => (
+          {sortSchedules(schedules).map((schedule) => (
             <ScheduleRow
               key={schedule.id}
               course={course}
@@ -122,7 +128,7 @@ const PlanningPanel: React.FC<{ course: ExtendedClass }> = function ({
           {' '}
           <Link href="/schedule">
             {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-            <a className="font-bold hover:opacity-50 transition-opacity">
+            <a className="font-bold interactive">
               creating a schedule
             </a>
           </Link>

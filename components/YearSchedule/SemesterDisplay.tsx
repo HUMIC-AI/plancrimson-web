@@ -1,8 +1,9 @@
 import React, {
   useCallback, useMemo, useRef, useState,
 } from 'react';
-import { FaCheck, FaMinus } from 'react-icons/fa';
+import { FaCheck, FaMinus, FaPlus } from 'react-icons/fa';
 import { updateDoc } from 'firebase/firestore';
+import { Configure, InstantSearch } from 'react-instantsearch-dom';
 import {
   allTruthy,
   checkViable,
@@ -10,18 +11,28 @@ import {
   findConflicts,
   getSchedulesBySemester,
 } from '../../shared/util';
-import useUserData from '../../src/context/userData';
-import { Season, Viability } from '../../shared/firestoreTypes';
-import { getUserRef, useCourseDialog } from '../../src/hooks';
+import { Schedule, Season, Viability } from '../../shared/firestoreTypes';
+import { getUserRef, meiliSearchClient } from '../../src/hooks';
 import ScheduleSelector from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
-import CourseDialog from '../Course/CourseDialog';
-import useClassCache, { ClassCache } from '../../src/context/classCache';
 import FadeTransition from '../FadeTransition';
 import { Requirement } from '../../src/requirements/util';
 import ButtonMenu from './ButtonMenu';
-import useShowAllSchedules from '../../src/context/showAllSchedules';
-import useUser from '../../src/context/user';
+import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
+import { selectSampleSchedule, selectSemesterFormat } from '../../src/features/semesterFormat';
+import {
+  addCourse, removeCourses, renameSchedule, selectScheduleData,
+} from '../../src/features/schedules';
+import { selectClassCache } from '../../src/features/classCache';
+import { selectClassYear, selectLastLoggedIn, selectUid } from '../../src/features/userData';
+import { useModal } from '../../src/features/modal';
+import useSearchState, { SearchStateProvider } from '../../src/context/searchState';
+import CurrentRefinements, { CurrentRefinementsDemo } from '../SearchComponents/CurrentRefinements';
+import Hits, { HitsDemo } from '../SearchComponents/Hits';
+import SearchBox, { SearchBoxDemo } from '../SearchComponents/SearchBox';
+import SortBy, { SortByDemo } from '../SearchComponents/SortBy';
+import { SelectedScheduleContext } from '../../src/context/selectedSchedule';
+// import AttributeMenu from '../SearchComponents/AttributeMenu';
 
 type Props = {
   selectedScheduleId: string | null;
@@ -45,6 +56,52 @@ const VIABILITY_COLORS: Record<Viability, string> = {
   No: 'bg-red-300',
 };
 
+function SearchModal() {
+  const user = useAppSelector(selectUid);
+  const { searchState, setSearchState } = useSearchState();
+
+  return (
+    <InstantSearch
+      indexName="courses"
+      searchClient={meiliSearchClient}
+      searchState={searchState}
+      onSearchStateChange={(newState) => {
+        setSearchState({ ...searchState, ...newState });
+      }}
+      stalledSearchDelay={500}
+    >
+      {user && <Configure hitsPerPage={12} />}
+      <div className="flex space-x-4">
+        {/* <AttributeMenu /> */}
+        <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
+          {user ? <SearchBox /> : <SearchBoxDemo />}
+          <div className="grid grid-cols-[auto_1fr] gap-4">
+            {user ? <SortBy /> : <SortByDemo />}
+            {user ? <CurrentRefinements /> : <CurrentRefinementsDemo />}
+          </div>
+          {user ? <Hits /> : <HitsDemo />}
+        </div>
+      </div>
+    </InstantSearch>
+  );
+}
+
+function ModalWrapper({ selected }: { selected: Schedule | null }) {
+  const [selectedSchedule, setSelected] = useState(selected);
+
+  const context = useMemo(() => ({
+    selectSchedule: setSelected,
+    selectedSchedule,
+  }), [selectedSchedule]);
+  return (
+    <SearchStateProvider>
+      <SelectedScheduleContext.Provider value={context}>
+        <SearchModal />
+      </SelectedScheduleContext.Provider>
+    </SearchStateProvider>
+  );
+}
+
 function SemesterComponent({
   year,
   season,
@@ -56,14 +113,15 @@ function SemesterComponent({
   colWidth,
   highlight,
 }: Props) {
-  const { user } = useUser();
-  const {
-    data, addCourses, removeCourses, renameSchedule,
-  } = useUserData();
-  const {
-    closeModal, handleExpand, isOpen, openedCourse,
-  } = useCourseDialog();
-  const { showAllSchedules, sampleSchedule } = useShowAllSchedules();
+  const dispatch = useAppDispatch();
+  const uid = useAppSelector(selectUid);
+  const classYear = useAppSelector(selectClassYear);
+  const lastLoggedIn = useAppSelector(selectLastLoggedIn);
+  const semesterFormat = useAppSelector(selectSemesterFormat);
+  const scheduleData = useAppSelector(selectScheduleData);
+  const classCache = useAppSelector(selectClassCache);
+  const sampleSchedule = useAppSelector(selectSampleSchedule);
+  const { showCourse, showContents } = useModal();
 
   const editRef = useRef<HTMLInputElement>(null!);
 
@@ -72,17 +130,12 @@ function SemesterComponent({
   const [editing, setEditing] = useState(false);
   const [scheduleTitle, setScheduleTitle] = useState<string>();
 
-  const schedules = getSchedulesBySemester(data, year, season);
-  const selectedSchedule = showAllSchedules === 'sample'
-    ? sampleSchedule?.schedules.find(
-      (schedule) => schedule.id === selectedScheduleId,
-    )!
+  const schedulesBySemester = getSchedulesBySemester(scheduleData.schedules, year, season);
+  const selectedSchedule = semesterFormat === 'sample'
+    ? sampleSchedule?.schedules.find((schedule) => schedule.id === selectedScheduleId)!
     : selectedScheduleId
-      ? data.schedules[selectedScheduleId]
+      ? scheduleData.schedules[selectedScheduleId]
       : null;
-
-  const scheduleIds = useMemo(() => allTruthy([selectedSchedule]), [selectedSchedule]);
-  const classCache: Readonly<ClassCache> = useClassCache(scheduleIds);
 
   const conflicts = selectedSchedule
     ? findConflicts(allTruthy(selectedSchedule.classes.map(({ classId }) => classCache[classId])))
@@ -98,17 +151,17 @@ function SemesterComponent({
           year: selectedSchedule.year,
           season: selectedSchedule.season,
         },
-        data,
+        { ...scheduleData, classYear, lastLoggedIn },
         classCache,
       )
       : null),
-    [classCache, data, draggedClass, selectedSchedule],
+    [classCache, classYear, draggedClass, lastLoggedIn, scheduleData, selectedSchedule],
   );
 
   function handleMinimize() {
-    if (!user || !selectedSchedule) return;
+    if (!uid || !selectedSchedule) return;
     const { id, hidden } = selectedSchedule;
-    updateDoc(getUserRef(user.uid), `schedules.${id}.hidden`, !hidden)
+    updateDoc(getUserRef(uid), `schedules.${id}.hidden`, !hidden)
       .catch((err) => {
         console.error(err);
         alert('An unexpected error occurred. Please try again.');
@@ -128,22 +181,15 @@ function SemesterComponent({
             || confirm(`${viableDrop.reason} Continue anyways?`);
           if (doAdd) {
             const { classId, originScheduleId } = dragStatus.data;
-            addCourses({ classId, scheduleId: selectedScheduleId });
-            removeCourses({ classId, scheduleId: originScheduleId });
+            dispatch(addCourse([{ classId, scheduleId: selectedScheduleId }]));
+            dispatch(removeCourses([{ classId, scheduleId: originScheduleId }]));
           }
         }
       }
 
       setDragStatus({ dragging: false });
     },
-    [
-      addCourses,
-      dragStatus,
-      removeCourses,
-      selectedScheduleId,
-      setDragStatus,
-      viableDrop,
-    ],
+    [dragStatus, selectedScheduleId, viableDrop],
   );
 
   if (selectedSchedule?.hidden) return null;
@@ -176,7 +222,7 @@ function SemesterComponent({
         {/* First component of display: header */}
         <div className="flex flex-col items-stretch space-y-2 p-4 border-black border-b-2">
           {/* only show */}
-          {showAllSchedules !== 'all' && (
+          {semesterFormat !== 'all' && (
             <h1 className="text-lg text-center min-w-max font-semibold">
               {season}
               {' '}
@@ -199,12 +245,14 @@ function SemesterComponent({
                   return alert('no schedule selected to rename');
                 }
                 if (!scheduleTitle) return alert('invalid title given');
-                renameSchedule(selectedScheduleId, scheduleTitle)
-                  .then((schedule) => {
-                    selectSchedule(schedule.id);
-                    setEditing(false);
-                  })
-                  .catch((err) => alert(`Oops, couldn't rename your schedule: ${err.message}`));
+                const { payload } = await dispatch(renameSchedule({ oldId: selectedScheduleId, newId: scheduleTitle }));
+                if ('errors' in payload) {
+                  console.error(new Error(payload.errors.join(', ')));
+                  alert('Oops, couldn\'t rename your schedule. Please try again later.');
+                } else {
+                  selectSchedule(payload.newId);
+                  setEditing(false);
+                }
               }}
             >
               <input
@@ -227,33 +275,32 @@ function SemesterComponent({
             </form>
           </FadeTransition>
 
-          {showAllSchedules !== 'sample' && showSelector && (
+          {semesterFormat !== 'sample' && showSelector && (
             <ScheduleSelector
-              schedules={schedules}
+              schedules={schedulesBySemester}
               selectedSchedule={selectedSchedule}
               selectSchedule={(schedule) => schedule && selectSchedule(schedule.id)}
               direction="center"
               parentWidth={`${colWidth}px`}
-              showTerm={showAllSchedules === 'all'}
+              showTerm={semesterFormat === 'all'}
               highlight={
                 typeof highlight !== 'undefined'
                 && highlight === selectedSchedule?.id
               }
-              onPlanningPage
+              showDropdown={semesterFormat !== 'all'}
             />
           )}
 
-          {showAllSchedules !== 'sample' && (
+          {semesterFormat !== 'sample' && (
             <ButtonMenu
-              editing={editing}
-              prevScheduleId={schedules[0]?.id === selectedSchedule?.id ? null : (schedules[0]?.id || null)}
-              season={season}
-              year={year}
-              selectSchedule={selectSchedule}
-              selectedSchedule={selectedSchedule}
-              setEditing={setEditing}
-              focusInput={() => editRef.current.focus()}
-              setScheduleTitle={setScheduleTitle}
+              prevScheduleId={schedulesBySemester[0]?.id === selectedSchedule?.id ? null : (schedulesBySemester[0]?.id || null)}
+              {...{
+                season,
+                year,
+                selectedSchedule,
+                selectSchedule,
+                setScheduleTitle,
+              }}
             />
           )}
         </div>
@@ -274,39 +321,51 @@ function SemesterComponent({
         <div className="flex-1 p-4 md:overflow-auto h-max">
           <div className="flex flex-col items-stretch min-h-[12rem] space-y-4">
             {selectedSchedule
-              && selectedSchedule.classes.map(({ classId: id }) => (id && classCache[id] ? (
-                <CourseCard
-                  key={id}
-                  course={classCache[id]}
-                  handleExpand={handleExpand}
-                  highlight={
+              && (
+              <>
+                {/* add course button */}
+                <button
+                  type="button"
+                  className="flex items-center justify-center rounded-xl bg-blue-300 interactive py-2"
+                  onClick={() => showContents({
+                    title: 'Add a course',
+                    content: <ModalWrapper selected={selectedSchedule} />,
+                  })}
+                >
+                  <FaPlus />
+                </button>
+                {/* <Link href={{ pathname: '/search', query: { selected: selectedSchedule?.id } }}> */}
+                {/* </Link> */}
+
+                {selectedSchedule.classes.map(({ classId: id }) => (id && classCache[id] ? (
+                  <CourseCard
+                    key={id}
+                    course={classCache[id]}
+                    handleExpand={() => showCourse(classCache[id])}
+                    highlight={
                       highlightedRequirement
                       && highlightedRequirement.reducer(
                         highlightedRequirement.initialValue || 0,
                         classCache[id],
                         selectedSchedule!,
-                        data,
+                        { ...scheduleData, classYear, lastLoggedIn },
                       ) !== null
                     }
-                  selectedSchedule={selectedSchedule}
-                  setDragStatus={
-                      showAllSchedules === 'sample' ? undefined : setDragStatus
+                    selectedSchedule={selectedSchedule}
+                    setDragStatus={
+                      semesterFormat === 'sample' ? undefined : setDragStatus
                     }
-                  inSearchContext={false}
-                  warnings={(conflicts?.[id]?.length || 0) > 0 ? `This class conflicts with: ${conflicts![id].map((i) => classCache[i].SUBJECT + classCache[i].CATALOG_NBR).join(', ')}` : undefined}
-                />
-              ) : (
-                <div key={id}>Loading course data...</div>
-              )))}
+                    inSearchContext={false}
+                    warnings={(conflicts?.[id]?.length || 0) > 0 ? `This class conflicts with: ${conflicts![id].map((i) => classCache[i].SUBJECT + classCache[i].CATALOG_NBR).join(', ')}` : undefined}
+                  />
+                ) : (
+                  <div key={id}>Loading course data...</div>
+                )))}
+              </>
+              )}
           </div>
         </div>
       </div>
-
-      <CourseDialog
-        isOpen={isOpen}
-        closeModal={closeModal}
-        course={openedCourse}
-      />
     </div>
   );
 }

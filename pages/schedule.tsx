@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 // components
 import Layout from '../components/Layout/Layout';
@@ -9,18 +9,19 @@ import UploadPlan from '../components/UploadPlan';
 import ButtonMenu from '../components/YearSchedule/ButtonMenu';
 import { Season, SEASON_ORDER } from '../shared/firestoreTypes';
 import { allTruthy, classNames, sortSchedules } from '../shared/util';
-import useClassCache from '../src/context/classCache';
-import useUserData from '../src/context/userData';
+import { useAppDispatch, useAppSelector } from '../src/app/hooks';
+import { selectClassCache } from '../src/features/classCache';
+import { createSchedule, selectSchedules } from '../src/features/schedules';
 
 export default function SchedulePage() {
-  const { data, createSchedule } = useUserData();
+  const dispatch = useAppDispatch();
+  const schedules = useAppSelector(selectSchedules);
   const { query } = useRouter();
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(
     typeof query.selected === 'string' ? query.selected : null,
   );
 
-  const cacheRequests = useMemo(() => Object.values(data.schedules), [data.schedules]);
-  const classCache = useClassCache(cacheRequests);
+  const classCache = useAppSelector(selectClassCache);
 
   const newSemester: React.FormEventHandler<HTMLFormElement> = async (ev) => {
     ev.preventDefault();
@@ -30,13 +31,18 @@ export default function SchedulePage() {
       if (typeof season !== 'string' || !(season in SEASON_ORDER)) {
         throw new Error('Invalid season');
       }
-      const schedule = await createSchedule({
+
+      const schedule = await dispatch(createSchedule({
         id: fields.get('semesterId') as string,
         year: parseInt(fields.get('year') as string, 10),
         season: season as Season,
+        classes: [],
         force: true,
-      });
-      setSelectedScheduleId(schedule.id);
+      }));
+
+      if (!('errors' in schedule.payload)) {
+        setSelectedScheduleId(schedule.payload.id);
+      }
     } catch (err) {
       alert(
         "Couldn't create a schedule! Make sure you provided valid values and try again.",
@@ -45,12 +51,12 @@ export default function SchedulePage() {
     }
   };
 
-  const selectedSchedule = (selectedScheduleId && data.schedules[selectedScheduleId]) || null;
-  const schedules = sortSchedules(data.schedules);
-  const selectedIndex = schedules.findIndex(
+  const selectedSchedule = (selectedScheduleId && schedules[selectedScheduleId]) || null;
+  const sortedSchedules = sortSchedules(schedules);
+  const selectedIndex = sortedSchedules.findIndex(
     (schedule) => schedule.id === selectedScheduleId,
   );
-  const prevScheduleId = selectedIndex > 0 ? schedules[selectedIndex - 1].id : null;
+  const prevScheduleId = selectedIndex > 0 ? sortedSchedules[selectedIndex - 1].id : null;
 
   return (
     <Layout>
@@ -58,10 +64,11 @@ export default function SchedulePage() {
         <div className="flex flex-col sm:flex-row sm:space-x-4 items-center justify-center">
           <div className="text-center space-y-2 mb-4 sm:mb-0">
             <ScheduleSelector
-              schedules={schedules}
+              schedules={sortedSchedules}
               selectSchedule={(schedule) => setSelectedScheduleId(schedule ? schedule.id : null)}
               selectedSchedule={selectedSchedule}
               direction="center"
+              showDropdown
             />
             <UploadPlan />
           </div>

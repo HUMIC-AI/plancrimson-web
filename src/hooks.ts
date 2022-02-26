@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { getFirestore, DocumentReference, doc } from 'firebase/firestore';
-import { ExtendedClass } from '../shared/apiTypes';
-import { UserData } from '../shared/firestoreTypes';
+import {
+  getFirestore, DocumentReference, doc, Timestamp,
+} from 'firebase/firestore';
+import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
+import type { UserDocument } from '../shared/firestoreTypes';
+import { getMeiliHost, getMeiliApiKey } from '../shared/util';
 
 const LG_BREAKPOINT = 1024;
 
 export function getUserRef(uid: string) {
-  return doc(getFirestore(), 'users', uid) as DocumentReference<UserData>;
+  return doc(getFirestore(), 'users', uid) as DocumentReference<Partial<UserDocument<Timestamp>>>;
 }
 
 export function downloadJson(filename: string, data: object | string, extension = 'json') {
@@ -20,25 +23,6 @@ export function downloadJson(filename: string, data: object | string, extension 
   document.body.appendChild(a);
   a.click();
   a.remove();
-}
-
-export function useCourseDialog() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [openedCourse, openCourse] = useState<ExtendedClass | null>(null);
-
-  const handleExpand = (course: ExtendedClass) => {
-    openCourse(course);
-    setIsOpen(true);
-  };
-
-  const closeModal = () => setIsOpen(false);
-
-  return {
-    isOpen,
-    openedCourse,
-    handleExpand,
-    closeModal,
-  };
 }
 
 export function useLgBreakpoint() {
@@ -61,3 +45,5 @@ export function useLgBreakpoint() {
 
   return isPast;
 }
+
+export const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey());

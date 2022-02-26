@@ -12,7 +12,7 @@ const ExternalLink: React.FC<Props> = function ({ href, children }) {
       href={href}
       target={isMail ? undefined : '_blank'}
       rel={isMail ? undefined : 'noreferrer'}
-      className="font-bold hover:opacity-50 transition-opacity"
+      className="font-bold interactive"
       onClick={(ev) => ev.stopPropagation()}
     >
       {children}

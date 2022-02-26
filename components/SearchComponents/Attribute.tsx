@@ -1,47 +1,23 @@
 import { Disclosure } from '@headlessui/react';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { classNames, compareItems, compareWeekdays } from '../../shared/util';
-import { CardStyleContext } from '../../src/context/cardStyle';
-import useUser, { alertSignIn } from '../../src/context/user';
-import RefinementList, { RefinementListComponent } from './RefinementList';
+import { useAppSelector } from '../../src/app/hooks';
+import { selectUid } from '../../src/features/userData';
+import RefinementList, { RefinementListDemo } from './RefinementList';
 
-const DemoElement = (
-  <RefinementListComponent
-    items={[
-      {
-        count: 42,
-        isRefined: true,
-        label: 'Example',
-        objectID: '',
-        value: ['Example'],
-        _highlightResult: {},
-      },
-      {
-        count: 69,
-        isRefined: false,
-        label: 'Sign in to get started',
-        objectID: '',
-        value: [],
-        _highlightResult: {},
-      },
-    ]}
-    refine={alertSignIn}
-  />
-);
-
-type AttributeProps = { attribute: string; label: string };
+interface AttributeProps {
+  attribute: string;
+  label: string
+}
 
 const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = function ({ open, attribute, label }) {
+  const user = useAppSelector(selectUid);
+
   const [operator, setOperator] = useState<'and' | 'or'>('or');
-  const context = useMemo(
-    () => ({ isExpanded: open, expand: () => null }),
-    [open],
-  );
-  const { user } = useUser();
 
   return (
-    <CardStyleContext.Provider value={context}>
+    <>
       <Disclosure.Button
         className={classNames(
           'bg-white flex justify-between items-center w-full py-2 px-3',
@@ -78,11 +54,11 @@ const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = functio
               )}
             />
           ) : (
-            DemoElement
+            <RefinementListDemo />
           )}
         </div>
       </Disclosure.Panel>
-    </CardStyleContext.Provider>
+    </>
   );
 };
 

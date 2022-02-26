@@ -15,28 +15,31 @@ import {
   compareSemesters,
   getUniqueSemesters,
 } from '../../shared/util';
-import useCardStyle from '../../src/context/cardStyle';
-import useShowAllSchedules from '../../src/context/showAllSchedules';
-import useUser from '../../src/context/user';
-import useUserData, { clearSchedule } from '../../src/context/userData';
+import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
+import {
+  selectSchedule, selectSelectedSchedules, selectSchedules, clearSchedule,
+} from '../../src/features/schedules';
+import {
+  selectExpandCards, selectSampleSchedule, selectSemesterFormat, showAll, showSelected, toggleExpand,
+} from '../../src/features/semesterFormat';
+import { selectClassYear, selectUid } from '../../src/features/userData';
 import { downloadJson, getUserRef } from '../../src/hooks';
-import { Requirement } from '../../src/requirements/util';
-import { DragStatus } from '../Course/CourseCard';
+import type { Requirement } from '../../src/requirements/util';
+import type { DragStatus } from '../Course/CourseCard';
 import UploadPlan from '../UploadPlan';
 import SemesterComponent from './SemesterDisplay';
-
-type Props = {
-  highlightedRequirement: Requirement | undefined;
-};
 
 const HeaderSection: React.FC<{
   totalCourses: number;
   resizeRef: React.MutableRefObject<HTMLDivElement>;
   downloadData: any;
 }> = function ({ totalCourses, resizeRef, downloadData }) {
-  const { isExpanded, expand } = useCardStyle();
-  const { showAllSchedules, setShowAllSchedules, sampleSchedule } = useShowAllSchedules();
-  const { data, removeCourses } = useUserData();
+  const dispatch = useAppDispatch();
+  const selectedSchedules = useAppSelector(selectSelectedSchedules);
+  const isExpanded = useAppSelector(selectExpandCards);
+  const semesterFormat = useAppSelector(selectSemesterFormat);
+  const sampleSchedule = useAppSelector(selectSampleSchedule);
+  const schedules = useAppSelector(selectSchedules);
 
   return (
     <div className="text-white space-y-4">
@@ -51,7 +54,7 @@ const HeaderSection: React.FC<{
         <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
           <button
             type="button"
-            onClick={() => expand(!isExpanded)}
+            onClick={() => dispatch(toggleExpand())}
             className={classNames(
               isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
               'rounded-full hover:opacity-50 p-1 border',
@@ -59,24 +62,28 @@ const HeaderSection: React.FC<{
           >
             <FaArrowsAltV />
           </button>
-          {showAllSchedules !== 'sample' && (
+          {semesterFormat !== 'sample' && (
             <button
               type="button"
-              onClick={() => setShowAllSchedules(
-                showAllSchedules === 'all' ? 'selected' : 'all',
-              )}
-              className="py-1 px-2 bg-gray-600 hover:opacity-50 transition-opacity rounded"
+              onClick={() => {
+                if (semesterFormat === 'all') {
+                  dispatch(showSelected());
+                } else {
+                  dispatch(showAll());
+                }
+              }}
+              className="py-1 px-2 bg-gray-600 interactive rounded"
             >
-              {showAllSchedules === 'all'
+              {semesterFormat === 'all'
                 ? 'Showing all schedules'
                 : 'Showing only selected schedules'}
             </button>
           )}
           <button
             type="button"
-            className="hover:opacity-50 transition-opacity underline"
+            className="interactive underline"
             onClick={() => downloadJson(
-              showAllSchedules === 'sample'
+              semesterFormat === 'sample'
                 ? `Sample ${sampleSchedule?.id} - Plan Crimson`
                 : 'Selected schedules - Plan Crimson',
               downloadData,
@@ -85,10 +92,10 @@ const HeaderSection: React.FC<{
             Download all
           </button>
           <UploadPlan />
-          {showAllSchedules !== 'sample' && (
+          {semesterFormat !== 'sample' && (
             <button
               type="button"
-              className="hover:opacity-50 transition-opacity underline"
+              className="interactive underline"
               onClick={() => {
                 // eslint-disable-next-line no-restricted-globals
                 const yn = confirm(
@@ -96,8 +103,8 @@ const HeaderSection: React.FC<{
                 );
                 if (yn) {
                   allTruthy(
-                    Object.values(data.selectedSchedules).map((id) => (id ? data.schedules[id] : null)),
-                  ).forEach((schedule) => clearSchedule(removeCourses, schedule));
+                    Object.values(selectedSchedules).map((id) => (id ? schedules[id] : null)),
+                  ).forEach((schedule) => dispatch(clearSchedule(schedule.id)));
                 }
               }}
             >
@@ -127,10 +134,23 @@ interface SemesterDisplayInfo {
   highlight?: string;
 }
 
-const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
-  const { user } = useUser();
-  const { data, selectSchedule } = useUserData();
-  const { showAllSchedules, sampleSchedule } = useShowAllSchedules();
+type Props = {
+  highlightedRequirement: Requirement | undefined;
+};
+
+function PlanningSection({ highlightedRequirement } : Props) {
+  const dispatch = useAppDispatch();
+  const {
+    userUid, classYear, semesterFormat, sampleSchedule, schedules, selectedSchedules,
+  } = useAppSelector((state) => ({
+    userUid: selectUid(state),
+    classYear: selectClassYear(state),
+    semesterFormat: selectSemesterFormat(state),
+    sampleSchedule: selectSampleSchedule(state),
+    schedules: selectSchedules(state),
+    selectedSchedules: selectSelectedSchedules(state),
+  }));
+
   const [dragStatus, setDragStatus] = useState<DragStatus>({
     dragging: false,
   });
@@ -176,76 +196,73 @@ const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
     };
   }, []);
 
+  const selectNewSchedule = (year: number, season: Season, scheduleId: string | null) => dispatch(selectSchedule({
+    term: `${year}${season}`,
+    scheduleId,
+  }));
+
   const allSemesters: SemesterDisplayInfo[] = useMemo(() => {
-    switch (showAllSchedules) {
+    switch (semesterFormat) {
       case 'sample':
         return (
           sampleSchedule?.schedules.map(({ year, season, id }) => ({
             year,
             season,
-            selectSchedule: (newId) => selectSchedule(year, season, newId),
+            selectSchedule: (newId) => selectNewSchedule(year, season, newId),
             key: id,
             selectedScheduleId: id,
             highlight: false,
           })) || []
         );
       case 'selected':
+        if (!classYear) return [];
         return getUniqueSemesters(
-          data.classYear,
-          Object.values(data.schedules),
+          classYear,
+          Object.values(schedules),
         ).map(({ year, season }) => ({
           year,
           season,
-          selectedScheduleId:
-            data.selectedSchedules[`${year}${season}`] || null,
+          selectedScheduleId: selectedSchedules[`${year}${season}`] || null,
           key: year + season,
-          selectSchedule: (id) => selectSchedule(year, season, id),
+          selectSchedule: (id) => selectNewSchedule(year, season, id),
         }));
       case 'all':
-        return Object.values(data.schedules)
+        return Object.values(schedules)
           .sort(compareSemesters)
           .map(({ year, season, id }) => ({
             year,
             season,
             selectedScheduleId: id,
             key: id,
-            selectSchedule: (newId) => selectSchedule(year, season, newId),
-            highlight: data.selectedSchedules[`${year}${season}`] || undefined,
+            selectSchedule: (newId) => selectNewSchedule(year, season, newId),
+            highlight: selectedSchedules[`${year}${season}`] || undefined,
           }));
       default:
         return [];
     }
-  }, [
-    data.classYear,
-    data.schedules,
-    data.selectedSchedules,
-    sampleSchedule?.schedules,
-    selectSchedule,
-    showAllSchedules,
-  ]);
+  }, [classYear, sampleSchedule?.schedules, schedules, selectedSchedules, semesterFormat]);
 
   const totalCourses = useMemo(
-    () => Object.values(data.selectedSchedules).reduce(
+    () => Object.values(selectedSchedules).reduce(
       (acc, scheduleId) => acc
-          + ((scheduleId && data.schedules[scheduleId]?.classes.length) || 0),
+          + ((scheduleId && schedules[scheduleId]?.classes.length) || 0),
       0,
     ),
-    [data.schedules, data.selectedSchedules],
+    [schedules, selectedSchedules],
   );
 
   const downloadData: DownloadPlan = {
-    id:
-      showAllSchedules === 'sample'
-        ? sampleSchedule!.id
-        : Math.random().toString(16).slice(2, 18),
+    id: semesterFormat === 'sample'
+      ? sampleSchedule!.id
+      : Math.random().toString(16).slice(2, 18),
     schedules: allTruthy(
-      allSemesters.map(({ selectedScheduleId }) => (selectedScheduleId ? data.schedules[selectedScheduleId] : null)),
+      allSemesters.map(({ selectedScheduleId }) => (selectedScheduleId ? schedules[selectedScheduleId] : null)),
     ),
   };
 
   const hiddenSchedules = allTruthy(allSemesters.map(({ selectedScheduleId }) => {
     if (!selectedScheduleId) return null;
-    const schedule = data.schedules[selectedScheduleId];
+    const schedule = schedules[selectedScheduleId];
     if (!schedule?.hidden) return null;
     return schedule.id;
   }));
@@ -317,10 +334,10 @@ const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
                   <button
                     type="button"
                     onClick={() => {
-                      if (!user) return;
-                      updateDoc(getUserRef(user.uid), `schedules.${id}.hidden`, false);
+                      if (!userUid) return;
+                      updateDoc(getUserRef(userUid), `schedules.${id}.hidden`, false);
                     }}
-                    className="hover:opacity-50 transition-opacity"
+                    className="interactive"
                   >
                     {id}
                   </button>
@@ -332,7 +349,7 @@ const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
       </div>
     </div>
   );
-};
+}
 
 // PlanningSection.whyDidYouRender = true;
 

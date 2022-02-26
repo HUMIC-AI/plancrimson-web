@@ -1,11 +1,8 @@
 import Link from 'next/link';
 import React, { useCallback } from 'react';
 import {
-  FaSearch,
   FaCalendarWeek,
   FaClone,
-  FaTimes,
-  FaPencilAlt,
   FaPlus,
   FaTrash,
   FaDownload,
@@ -13,29 +10,18 @@ import {
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
 import { Schedule, Season } from '../../shared/firestoreTypes';
-import useUserData, { clearSchedule } from '../../src/context/userData';
+import { useAppDispatch } from '../../src/app/hooks';
+import { clearSchedule, createSchedule, deleteSchedule } from '../../src/features/schedules';
 import { downloadJson } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 
-interface BaseButtonMenuProps {
+interface ButtonMenuProps {
   selectedSchedule: Schedule | null;
   selectSchedule: React.Dispatch<string | null>;
   year: number;
   season: Season;
   prevScheduleId: string | null;
 }
-
-interface EditingProps {
-  selectedSchedule: Schedule | null;
-  editing: boolean;
-  setEditing: React.Dispatch<boolean>;
-  setScheduleTitle: React.Dispatch<string>;
-  focusInput: () => void;
-}
-
-type ButtonMenuProps =
-  | BaseButtonMenuProps
-  | (BaseButtonMenuProps & EditingProps);
 
 const buttonStyles = 'inline-block p-1 rounded bg-black bg-opacity-0 hover:text-black hover:bg-opacity-50 transition-colors';
 
@@ -87,55 +73,31 @@ function CustomButton({ name, Icon, ...rest }: ButtonProps | LinkProps) {
   );
 }
 
-function EditingButton({
-  editing,
-  setEditing,
-  setScheduleTitle,
-  focusInput,
-  selectedSchedule,
-}: EditingProps) {
-  const handleEditing = async () => {
-    if (!selectedSchedule) return;
-    if (editing) setEditing(false);
-    else {
-      setScheduleTitle(selectedSchedule.id);
-      setEditing(true);
-      process.nextTick(focusInput);
-    }
-  };
-
-  return (
-    <CustomButton
-      name={editing ? 'Cancel editing' : 'Edit name'}
-      onClick={handleEditing}
-      Icon={editing ? FaTimes : FaPencilAlt}
-    />
-  );
-}
-
 const ButtonMenu: React.FC<ButtonMenuProps> = function ({
   selectedSchedule,
   selectSchedule,
   year,
   season,
   prevScheduleId,
-  ...rest
 }) {
-  const { createSchedule, deleteSchedule, removeCourses } = useUserData();
+  const dispatch = useAppDispatch();
 
   const handleDuplicate = useCallback(async () => {
     if (!selectedSchedule) return;
     try {
-      const schedule = await createSchedule({
+      const schedule = await dispatch(createSchedule({
         ...selectedSchedule,
         force: true,
-      });
-      selectSchedule(schedule.id);
+      }));
+      if ('errors' in schedule.payload) {
+        throw new Error(schedule.payload.errors.join(', '));
+      }
+      selectSchedule(schedule.payload.id);
     } catch (err) {
       console.error(err);
       alert("Couldn't duplicate your schedule. Please try again later.");
     }
-  }, [createSchedule, selectSchedule, selectedSchedule]);
+  }, [selectedSchedule]);
 
   const handleDelete = useCallback(async () => {
     if (!selectedSchedule) return;
@@ -145,7 +107,7 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
     );
     if (!confirmDelete) return;
     try {
-      await deleteSchedule(selectedSchedule.id);
+      await dispatch(deleteSchedule(selectedSchedule.id));
       selectSchedule(prevScheduleId);
     } catch (err) {
       console.error(err);
@@ -153,21 +115,13 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
         'There was a problem deleting your schedule. Please try again later.',
       );
     }
-  }, [deleteSchedule, prevScheduleId, selectSchedule, selectedSchedule]);
+  }, [prevScheduleId, selectedSchedule]);
 
   return (
     <div className="flex flex-col space-y-2 w-full">
       <div className="self-center flex justify-center items-center flex-wrap max-w-[8rem] gap-2 mt-2 text-gray-600 text-xs">
         {selectedSchedule && (
           <>
-            <CustomButton
-              name="Add courses"
-              isLink
-              scheduleId={selectedSchedule.id}
-              pathname="/search"
-              Icon={FaSearch}
-            />
-
             <CustomButton
               name="Calendar view"
               isLink
@@ -182,13 +136,9 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
               Icon={FaClone}
             />
 
-            {'editing' in rest && (
-              <EditingButton selectedSchedule={selectedSchedule} {...rest} />
-            )}
-
             <CustomButton
               name="Clear"
-              onClick={() => clearSchedule(removeCourses, selectedSchedule)}
+              onClick={() => dispatch(clearSchedule(selectedSchedule.id))}
               Icon={FaEraser}
             />
           </>
@@ -196,18 +146,22 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
 
         <CustomButton
           name="New schedule"
-          onClick={() => {
-            createSchedule({
+          onClick={async () => {
+            const schedule = await dispatch(createSchedule({
               id: `${season} ${year}`,
               year,
               season,
+              classes: [],
               force: true,
-            })
-              .then((schedule) => selectSchedule(schedule.id))
-              .catch((err) => {
-                console.error(err);
-                alert("Couldn't create a new schedule!");
-              });
+            }));
+            try {
+              if ('errors' in schedule.payload) {
+                throw new Error(schedule.payload.errors.join(', '));
+              }
+            } catch (err) {
+              console.error(err);
+              alert("Couldn't create a new schedule! Please try again later.");
+            }
           }}
           Icon={FaPlus}
         />

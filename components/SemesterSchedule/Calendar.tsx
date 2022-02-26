@@ -6,7 +6,6 @@ import { createEvents, DateArray, EventAttributes } from 'ics';
 import { ExtendedClass } from '../../shared/apiTypes';
 import { DAYS_OF_WEEK, DAY_SHORT } from '../../shared/firestoreTypes';
 import { getClassId } from '../../shared/util';
-import useUserData from '../../src/context/userData';
 import {
   strToDec,
   decToStr,
@@ -14,6 +13,8 @@ import {
   doesRRuleHaveDay,
 } from './calendarUtil';
 import { downloadJson } from '../../src/hooks';
+import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
+import { customTime, selectCustomTime, selectCustomTimes } from '../../src/features/schedules';
 
 const dayStartTime = 8; // time to start the calendar at
 const dayEndTime = 20;
@@ -35,9 +36,10 @@ type CalendarProps = {
 };
 
 function MissingClass({ cls }: { cls: ExtendedClass }) {
-  const { setCustomTime, data: userData } = useUserData();
+  const dispatch = useAppDispatch();
   const classId = getClassId(cls);
-  const customTime = userData.customTimes[classId];
+  const classTime = useAppSelector((state) => selectCustomTime(state, classId));
+
   const { register, handleSubmit } = useForm();
 
   const onSubmit = (data: FieldValues) => {
@@ -46,14 +48,14 @@ function MissingClass({ cls }: { cls: ExtendedClass }) {
     if ([start, end].some(Number.isNaN) || start >= end) {
       alert('Invalid time. Please try again.');
     } else {
-      setCustomTime(
+      dispatch(customTime({
         classId,
-        DAYS_OF_WEEK.filter((day) => data[day]),
+        pattern: DAYS_OF_WEEK.filter((day) => data[day]),
         start,
         end,
-        data.startDate,
-        data.endDate,
-      );
+        startDate: data.startDate,
+        endDate: data.endDate,
+      }));
     }
   };
 
@@ -77,7 +79,7 @@ function MissingClass({ cls }: { cls: ExtendedClass }) {
                       type="checkbox"
                       id={classId + day}
                       className="py-1 px-2 ml-2"
-                      defaultChecked={customTime?.pattern.includes(day)}
+                      defaultChecked={classTime?.pattern.includes(day)}
                       {...register(day)}
                     />
                   </Fragment>
@@ -90,7 +92,7 @@ function MissingClass({ cls }: { cls: ExtendedClass }) {
                 <input
                   type="time"
                   {...register('startTime')}
-                  defaultValue={customTime && decToStr(customTime.start)}
+                  defaultValue={classTime && decToStr(classTime.start)}
                 />
 
                 <label htmlFor="endTime" className="mr-2 text-right">
@@ -99,7 +101,7 @@ function MissingClass({ cls }: { cls: ExtendedClass }) {
                 <input
                   type="time"
                   {...register('endTime')}
-                  defaultValue={customTime && decToStr(customTime.end)}
+                  defaultValue={classTime && decToStr(classTime.end)}
                 />
 
                 <label htmlFor="startDate" className="mr-2 text-right">
@@ -109,7 +111,7 @@ function MissingClass({ cls }: { cls: ExtendedClass }) {
                   type="date"
                   {...register('startDate')}
                   id="startDate"
-                  defaultValue={customTime?.startDate}
+                  defaultValue={classTime?.startDate}
                 />
 
                 <label htmlFor="endDate" className="mr-2 text-right">
@@ -119,13 +121,13 @@ function MissingClass({ cls }: { cls: ExtendedClass }) {
                   type="date"
                   {...register('endDate')}
                   id="endDate"
-                  defaultValue={customTime?.endDate}
+                  defaultValue={classTime?.endDate}
                 />
               </div>
             </div>
             <button
               type="submit"
-              className="mt-4 bg-gray-300 hover:opacity-50 transition-opacity px-4 py-2 rounded-md shadow-md"
+              className="mt-4 bg-gray-300 interactive px-4 py-2 rounded-md"
             >
               Save
             </button>
@@ -189,9 +191,7 @@ function DayComponent({ events }: { events: EventAttributes[] }) {
 }
 
 const Calendar: React.FC<CalendarProps> = function ({ classes }) {
-  const {
-    data: { customTimes },
-  } = useUserData();
+  const customTimes = useAppSelector(selectCustomTimes);
 
   function extendCustomTime(cls: ExtendedClass): ExtendedClass {
     const classId = getClassId(cls);
@@ -235,7 +235,7 @@ const Calendar: React.FC<CalendarProps> = function ({ classes }) {
         <button
           type="button"
           onClick={handleExport}
-          className="bg-gray-300 hover:opacity-50 transition-opacity py-2 px-4 rounded-md"
+          className="bg-gray-300 interactive py-2 px-4 rounded-md"
         >
           Export to ICS
         </button>

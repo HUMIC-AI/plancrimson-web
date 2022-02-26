@@ -1,21 +1,23 @@
 import { useRouter } from 'next/router';
-import React, { createContext, useContext, useMemo } from 'react';
-import { ScheduleSelectorProps } from '../../components/ScheduleSelector';
-import { sortSchedules } from '../../shared/util';
-import useUserData from './userData';
+import React, {
+  createContext, Dispatch, PropsWithChildren, useContext, useMemo,
+} from 'react';
+import { Schedule } from '../../shared/firestoreTypes';
+import { useAppSelector } from '../app/hooks';
+import { selectSchedules } from '../features/schedules';
 
-type SelectedScheduleContextType = Omit<ScheduleSelectorProps, 'direction'>;
+interface SelectedScheduleContextType {
+  selectedSchedule: Schedule | null;
+  selectSchedule: Dispatch<Schedule | null>;
+}
 
 export const SelectedScheduleContext = createContext<SelectedScheduleContextType>({
-  schedules: [],
   selectSchedule: () => null,
   selectedSchedule: null,
 });
 
-export const SelectedScheduleProvider: React.FC = function ({ children }) {
-  const {
-    data: { schedules },
-  } = useUserData();
+export function SelectedScheduleProvider({ children }: PropsWithChildren<{}>) {
+  const schedules = useAppSelector(selectSchedules);
   const { query, pathname, replace } = useRouter();
   const { selected } = query;
 
@@ -24,10 +26,15 @@ export const SelectedScheduleProvider: React.FC = function ({ children }) {
       selectedSchedule:
         (typeof selected === 'string' && schedules[selected]) || null,
       // see https://nextjs.org/docs/api-reference/next/link#with-url-object
-      selectSchedule: (schedule) => schedule && replace({ pathname, query: { selected: schedule.id } }),
-      schedules: sortSchedules(schedules),
+      selectSchedule(schedule) {
+        if (schedule) {
+          replace({ pathname, query: { selected: schedule.id } });
+        } else {
+          replace(pathname);
+        }
+      },
     }),
-    [selected, schedules, pathname, replace],
+    [selected, schedules, pathname],
   );
 
   return (
@@ -35,7 +42,7 @@ export const SelectedScheduleProvider: React.FC = function ({ children }) {
       {children}
     </SelectedScheduleContext.Provider>
   );
-};
+}
 
 const useSelectedScheduleContext = () => useContext(SelectedScheduleContext);
 

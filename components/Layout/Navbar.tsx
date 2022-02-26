@@ -14,7 +14,8 @@ import {
   FaTimes, FaBars, FaCalendarCheck, FaUser,
 } from 'react-icons/fa';
 import { classNames } from '../../shared/util';
-import useUser from '../../src/context/user';
+import { useAppSelector } from '../../src/app/hooks';
+import { selectPhotoUrl } from '../../src/features/userData';
 
 const paths = [
   {
@@ -37,7 +38,7 @@ const paths = [
 
 // Profile dropdown
 const UserMenu = function () {
-  const { user } = useUser();
+  const photoUrl = useAppSelector(selectPhotoUrl);
 
   return (
     <Menu as="div" className="ml-3 relative z-50">
@@ -47,10 +48,10 @@ const UserMenu = function () {
           className="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
         >
           <span className="sr-only">Open user menu</span>
-          {user?.photoURL ? (
+          {photoUrl ? (
             <Image
               className="h-8 w-8 rounded-full"
-              src={user.photoURL}
+              src={photoUrl}
               width={32}
               height={32}
               alt=""
@@ -78,13 +79,13 @@ const UserMenu = function () {
             {({ active }) => (
               <button
                 type="button"
-                name={user ? 'Sign out' : 'Sign in'}
+                name={photoUrl ? 'Sign out' : 'Sign in'}
                 className={classNames(
                   active ? 'bg-white' : '',
                   'block w-full px-4 py-2 text-sm text-left text-gray-800',
                 )}
                 onClick={async () => {
-                  if (user) {
+                  if (photoUrl) {
                     await signOut(getAuth());
                   } else {
                     // we don't need any additional scopes
@@ -101,7 +102,7 @@ const UserMenu = function () {
                   }
                 }}
               >
-                {user ? 'Sign out' : 'Sign in'}
+                {photoUrl ? 'Sign out' : 'Sign in'}
               </button>
             )}
           </Menu.Item>
@@ -151,7 +152,6 @@ const Navbar = function () {
                   <div className="flex space-x-4">
                     {paths.map((item) => (
                       // pass the query between pages to preserve the selected schedule
-                      // see src/context/selectedSchedule.tsx
                       <Link
                         key={item.name}
                         href={{

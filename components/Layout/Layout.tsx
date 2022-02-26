@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import React from 'react';
 import { classNames, unsplashParams } from '../../shared/util';
 import ExternalLink from '../ExternalLink';
+import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
 
 type LayoutProps = {
@@ -49,7 +50,7 @@ function Footer() {
               query,
             }}
           >
-            <a className="font-bold hover:opacity-50 transition-opacity">
+            <a className="font-bold interactive">
               Attributions
             </a>
           </Link>
@@ -75,7 +76,7 @@ function Footer() {
               query,
             }}
           >
-            <a className="font-bold hover:opacity-50 transition-opacity">
+            <a className="font-bold interactive">
               Privacy
             </a>
           </Link>
@@ -111,6 +112,8 @@ const Layout: React.FC<LayoutProps> = function ({
       </main>
 
       <Footer />
+
+      <CustomModal />
     </div>
   );
 };

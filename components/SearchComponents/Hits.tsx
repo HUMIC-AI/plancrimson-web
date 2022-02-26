@@ -1,43 +1,31 @@
 import { connectInfiniteHits } from 'react-instantsearch-dom';
 import React from 'react'; // useEffect, useRef, useState,
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
-import { FaArrowsAltV, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
-import useSelectedScheduleContext from '../../src/context/selectedSchedule';
 import { classNames, getClassId } from '../../shared/util';
 import CourseCard from '../Course/CourseCard';
-import CourseDialog from '../Course/CourseDialog';
-import { useCourseDialog } from '../../src/hooks';
-import useCardStyle from '../../src/context/cardStyle';
+import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
+import { selectExpandCards, toggleExpand } from '../../src/features/semesterFormat';
+import { useModal } from '../../src/features/modal';
+import sampleCourses from './sampleCourses.json';
+import { alertSignIn } from './searchUtils';
+import { DAY_SHORT } from '../../shared/firestoreTypes';
+import useSelectedScheduleContext from '../../src/context/selectedSchedule';
 
 type ButtonProps = {
   onClick: () => void;
   enabled: boolean;
   direction: 'up' | 'down';
-  // setNumCols: React.Dispatch<React.SetStateAction<number>>;
 };
-
-// function getNumCols(buttonWidth: number) {
-//   return (Math.floor((192 - buttonWidth) / 20) + 1);
-// }
 
 const CustomButton: React.FC<ButtonProps> = function ({
   onClick,
   enabled,
   direction,
-  // setNumCols,
 }) {
-  const { isExpanded, expand } = useCardStyle();
-
-  // const ref = useRef<HTMLButtonElement>(null!);
-  // useEffect(() => {
-  //   const observer = new ResizeObserver(([{ borderBoxSize: [{ inlineSize }] }]) => {
-  //     const newNumCols = getNumCols(inlineSize);
-  //     setNumCols(newNumCols);
-  //   });
-  //   observer.observe(ref.current);
-  //   return () => observer.disconnect();
-  // }, [setNumCols]);
+  const dispatch = useAppDispatch();
+  const isExpanded = useAppSelector(selectExpandCards);
 
   return (
     <div className="relative">
@@ -45,13 +33,11 @@ const CustomButton: React.FC<ButtonProps> = function ({
         type="button"
         onClick={onClick}
         disabled={!enabled}
-        // ref={ref}
         className={classNames(
           enabled
             ? 'bg-gray-800 hover:opacity-50'
             : 'bg-gray-300 cursor-not-allowed',
-          'p-2 shadow w-48 min-w-[84px] max-w-full sm:max-w-[192px] rounded text-white transition-opacity',
-          // 'resize-x overflow-auto',
+          'p-2 shadow w-24 sm:w-48 rounded text-white transition-opacity',
           'flex justify-center',
         )}
       >
@@ -60,13 +46,14 @@ const CustomButton: React.FC<ButtonProps> = function ({
       </button>
       <button
         type="button"
-        onClick={() => expand(!isExpanded)}
+        onClick={() => dispatch(toggleExpand())}
         className={classNames(
-          isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
-          'rounded-full hover:opacity-50 p-1 absolute inset-y-0 left-full ml-4 border',
+          'bg-gray-800 text-white',
+          'rounded-full interactive py-1 px-3 absolute inset-y-0 left-full ml-4',
+          'flex items-center',
         )}
       >
-        <FaArrowsAltV />
+        {isExpanded ? 'Collapse' : 'Expand'}
       </button>
     </div>
   );
@@ -82,12 +69,8 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
   refineNext,
   inSearch = true,
 }) {
+  const { showCourse } = useModal();
   const { selectedSchedule } = useSelectedScheduleContext();
-  const {
-    isOpen, openedCourse, closeModal, handleExpand,
-  } = useCourseDialog();
-
-  // const [numCols, setNumCols] = useState(getNumCols(144));
 
   return (
     <div className="space-y-6 flex flex-col items-center">
@@ -109,15 +92,10 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
               key={getClassId(hit)}
               course={hit}
               selectedSchedule={selectedSchedule}
-              handleExpand={handleExpand}
+              handleExpand={() => showCourse(hit)}
               inSearchContext={inSearch}
             />
           ))}
-          <CourseDialog
-            isOpen={isOpen}
-            course={openedCourse}
-            closeModal={closeModal}
-          />
         </div>
       )}
 
@@ -130,5 +108,28 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
     </div>
   );
 };
+
+export function HitsDemo() {
+  return (
+    <HitsComponent
+      hits={sampleCourses
+      // oh, the things i do for typescript
+        .map((course) => ({
+          ...course,
+          ...Object.assign(
+            {},
+            ...DAY_SHORT.map((attr) => ({
+              [attr]: course[attr] as 'Y' | 'N',
+            })),
+          ),
+        }))}
+      hasMore
+      hasPrevious={false}
+      refineNext={alertSignIn}
+      refinePrevious={alertSignIn}
+      inSearch={false}
+    />
+  );
+}
 
 export default connectInfiniteHits(HitsComponent);
