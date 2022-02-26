@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { Listbox } from '@headlessui/react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
 import { Schedule, Semester } from '../shared/firestoreTypes';
 import { classNames, compareSemesters } from '../shared/util';
@@ -43,6 +43,7 @@ function ButtonTitle({
 }) {
   const dispatch = useAppDispatch();
   const [value, setValue] = useState(selectedSchedule.id);
+  useEffect(() => setValue(selectedSchedule.id), [selectedSchedule.id]);
 
   function saveTitle(e: any) {
     e.preventDefault();
@@ -59,7 +60,7 @@ function ButtonTitle({
           type="text"
           className={classNames(
             'text-sm md:text-base font-medium overflow-auto rounded-md hover:shadow text-center w-full',
-            'border-gray-400 hover:border-black transition-colors duration-300 border-b-4 cursor-text',
+            'border-gray-400 hover:border-black transition-colors duration-300 border border-b-4 cursor-text',
             highlight && 'bg-gray-800 text-white px-1',
           )}
           value={value}
@@ -135,9 +136,7 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
                   highlight={highlight}
                   showDropdown
                 />
-                <Listbox.Button
-                  name="Select schedule"
-                >
+                <Listbox.Button name="Select schedule">
                   <FaAngleDown
                     className={classNames(
                       open && 'transform rotate-180 transition-transform',

@@ -2,10 +2,8 @@ import { useEffect, useState } from 'react';
 import {
   getFirestore, DocumentReference, doc, Timestamp,
 } from 'firebase/firestore';
-import { useRouter } from 'next/router';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
 import type { UserDocument } from '../shared/firestoreTypes';
-import { useAppSelector } from './app/hooks';
 import { getMeiliHost, getMeiliApiKey } from '../shared/util';
 
 const LG_BREAKPOINT = 1024;
@@ -46,21 +44,6 @@ export function useLgBreakpoint() {
   }, []);
 
   return isPast;
-}
-
-export function useSelectedSchedule() {
-  const schedules = useAppSelector((state) => state.schedules.schedules);
-  const { query: { selected }, pathname, replace } = useRouter();
-
-  return {
-    selectedSchedule: (typeof selected === 'string' && schedules[selected]) || null,
-    selectSchedule: (scheduleId: string | null) => {
-      if (scheduleId) {
-        // see https://nextjs.org/docs/api-reference/next/link#with-url-object
-        replace({ pathname, query: { selected: scheduleId } });
-      }
-    },
-  };
 }
 
 export const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey());

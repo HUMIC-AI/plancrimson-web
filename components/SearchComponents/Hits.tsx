@@ -11,7 +11,7 @@ import { useModal } from '../../src/features/modal';
 import sampleCourses from './sampleCourses.json';
 import { alertSignIn } from './searchUtils';
 import { DAY_SHORT } from '../../shared/firestoreTypes';
-import { useSelectedSchedule } from '../../src/hooks';
+import useSelectedScheduleContext from '../../src/context/selectedSchedule';
 
 type ButtonProps = {
   onClick: () => void;
@@ -70,7 +70,7 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
   inSearch = true,
 }) {
   const { showCourse } = useModal();
-  const { selectedSchedule } = useSelectedSchedule();
+  const { selectedSchedule } = useSelectedScheduleContext();
 
   return (
     <div className="space-y-6 flex flex-col items-center">

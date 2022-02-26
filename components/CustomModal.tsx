@@ -6,8 +6,6 @@ import { useModal } from '../src/features/modal';
 export default function CustomModal() {
   const { open, setOpen, data } = useModal();
 
-  console.log({ open });
-
   return (
     <Transition appear show={open} as={Fragment}>
       <Dialog

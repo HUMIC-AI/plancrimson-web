@@ -9,13 +9,14 @@ import ScheduleSelector from '../ScheduleSelector';
 import { classNames, sortSchedules } from '../../shared/util';
 import { ATTRIBUTE_DESCRIPTIONS, Class } from '../../shared/apiTypes';
 import Stats, { StatsComponent } from './Stats';
-import { useLgBreakpoint, useSelectedSchedule } from '../../src/hooks';
 import StateResults, { StateResultsComponent } from './StateResults';
 import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
 import { selectUid } from '../../src/features/userData';
 import { alertSignIn } from './searchUtils';
 import { selectShowAttributes, setShowAttributes } from '../../src/features/semesterFormat';
 import { selectSchedules } from '../../src/features/schedules';
+import useSelectedScheduleContext from '../../src/context/selectedSchedule';
+import { useLgBreakpoint } from '../../src/hooks';
 
 const AttributeMenuDropdown = function () {
   return (
@@ -66,7 +67,7 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
   const user = useAppSelector(selectUid);
   const showAttributes = useAppSelector(selectShowAttributes);
   const isLg = useLgBreakpoint();
-  const { selectSchedule, selectedSchedule } = useSelectedSchedule();
+  const { selectSchedule, selectedSchedule } = useSelectedScheduleContext();
 
   return (
     <div className="flex flex-col space-y-1 w-full">
@@ -100,7 +101,7 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
         <div className="hidden sm:block">
           <ScheduleSelector
             schedules={sortSchedules(schedules)}
-            selectSchedule={(schedule) => selectSchedule(schedule?.id || null)}
+            selectSchedule={selectSchedule}
             selectedSchedule={selectedSchedule}
             direction="left"
             showDropdown
@@ -134,7 +135,7 @@ export const SearchBoxComponent: React.FC<SearchBoxProvided> = function (
   props,
 ) {
   const schedules = useAppSelector(selectSchedules);
-  const { selectSchedule, selectedSchedule } = useSelectedSchedule();
+  const { selectSchedule, selectedSchedule } = useSelectedScheduleContext();
 
   return (
     <div className="flex flex-col space-y-4 items-start">
@@ -145,7 +146,7 @@ export const SearchBoxComponent: React.FC<SearchBoxProvided> = function (
       <div className="sm:hidden relative">
         <ScheduleSelector
           schedules={sortSchedules(schedules)}
-          selectSchedule={(schedule) => selectSchedule(schedule?.id || null)}
+          selectSchedule={selectSchedule}
           selectedSchedule={selectedSchedule}
           direction="right"
           showDropdown

@@ -56,7 +56,7 @@ export default function SchedulePage() {
   const selectedIndex = sortedSchedules.findIndex(
     (schedule) => schedule.id === selectedScheduleId,
   );
-  const prevScheduleId = selectedIndex > 0 ? schedules[selectedIndex - 1].id : null;
+  const prevScheduleId = selectedIndex > 0 ? sortedSchedules[selectedIndex - 1].id : null;
 
   return (
     <Layout>

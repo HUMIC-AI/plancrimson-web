@@ -183,7 +183,7 @@ const CourseCard: React.FC<Props> = function ({
 
                 {selectedSchedule
                   && semesterFormat !== 'sample'
-                  && (selectedSchedule.classes.find(
+                  && (scheduleData.schedules[selectedSchedule.id].classes.find(
                     (cls) => cls.classId === getClassId(course),
                   ) ? (
                     <button

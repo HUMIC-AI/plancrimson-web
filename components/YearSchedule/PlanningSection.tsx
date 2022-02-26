@@ -24,14 +24,10 @@ import {
 } from '../../src/features/semesterFormat';
 import { selectClassYear, selectUid } from '../../src/features/userData';
 import { downloadJson, getUserRef } from '../../src/hooks';
-import { Requirement } from '../../src/requirements/util';
-import { DragStatus } from '../Course/CourseCard';
+import type { Requirement } from '../../src/requirements/util';
+import type { DragStatus } from '../Course/CourseCard';
 import UploadPlan from '../UploadPlan';
 import SemesterComponent from './SemesterDisplay';
-
-type Props = {
-  highlightedRequirement: Requirement | undefined;
-};
 
 const HeaderSection: React.FC<{
   totalCourses: number;
@@ -138,7 +134,11 @@ interface SemesterDisplayInfo {
   highlight?: string;
 }
 
-const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
+type Props = {
+  highlightedRequirement: Requirement | undefined;
+};
+
+function PlanningSection({ highlightedRequirement } : Props) {
   const dispatch = useAppDispatch();
   const {
     userUid, classYear, semesterFormat, sampleSchedule, schedules, selectedSchedules,
@@ -349,7 +349,7 @@ const PlanningSection: React.FC<Props> = function ({ highlightedRequirement }) {
       </div>
     </div>
   );
-};
+}
 
 // PlanningSection.whyDidYouRender = true;
 

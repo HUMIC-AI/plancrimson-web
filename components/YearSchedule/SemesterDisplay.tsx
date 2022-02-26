@@ -11,7 +11,7 @@ import {
   findConflicts,
   getSchedulesBySemester,
 } from '../../shared/util';
-import { Season, Viability } from '../../shared/firestoreTypes';
+import { Schedule, Season, Viability } from '../../shared/firestoreTypes';
 import { getUserRef, meiliSearchClient } from '../../src/hooks';
 import ScheduleSelector from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
@@ -31,6 +31,7 @@ import CurrentRefinements, { CurrentRefinementsDemo } from '../SearchComponents/
 import Hits, { HitsDemo } from '../SearchComponents/Hits';
 import SearchBox, { SearchBoxDemo } from '../SearchComponents/SearchBox';
 import SortBy, { SortByDemo } from '../SearchComponents/SortBy';
+import { SelectedScheduleContext } from '../../src/context/selectedSchedule';
 // import AttributeMenu from '../SearchComponents/AttributeMenu';
 
 type Props = {
@@ -58,6 +59,7 @@ const VIABILITY_COLORS: Record<Viability, string> = {
 function SearchModal() {
   const user = useAppSelector(selectUid);
   const { searchState, setSearchState } = useSearchState();
+
   return (
     <InstantSearch
       indexName="courses"
@@ -81,6 +83,22 @@ function SearchModal() {
         </div>
       </div>
     </InstantSearch>
+  );
+}
+
+function ModalWrapper({ selected }: { selected: Schedule | null }) {
+  const [selectedSchedule, setSelected] = useState(selected);
+
+  const context = useMemo(() => ({
+    selectSchedule: setSelected,
+    selectedSchedule,
+  }), [selectedSchedule]);
+  return (
+    <SearchStateProvider>
+      <SelectedScheduleContext.Provider value={context}>
+        <SearchModal />
+      </SelectedScheduleContext.Provider>
+    </SearchStateProvider>
   );
 }
 
@@ -114,9 +132,7 @@ function SemesterComponent({
 
   const schedulesBySemester = getSchedulesBySemester(scheduleData.schedules, year, season);
   const selectedSchedule = semesterFormat === 'sample'
-    ? sampleSchedule?.schedules.find(
-      (schedule) => schedule.id === selectedScheduleId,
-    )!
+    ? sampleSchedule?.schedules.find((schedule) => schedule.id === selectedScheduleId)!
     : selectedScheduleId
       ? scheduleData.schedules[selectedScheduleId]
       : null;
@@ -313,7 +329,7 @@ function SemesterComponent({
                   className="flex items-center justify-center rounded-xl bg-blue-300 interactive py-2"
                   onClick={() => showContents({
                     title: 'Add a course',
-                    content: <SearchStateProvider><SearchModal /></SearchStateProvider>,
+                    content: <ModalWrapper selected={selectedSchedule} />,
                   })}
                 >
                   <FaPlus />

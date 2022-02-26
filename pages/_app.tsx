@@ -21,6 +21,7 @@ import { ModalProvider, useModal } from '../src/features/modal';
 import { allTruthy, getDefaultSemesters, getUniqueSemesters } from '../shared/util';
 import type { Term, UserDocument } from '../shared/firestoreTypes';
 import { loadClass } from '../src/features/classCache';
+import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -168,7 +169,7 @@ const MyApp = function ({ Component, pageProps }: AppProps) {
 
         // need class year before other missing fields
         if (missing.classYear) {
-          console.log('missing class year');
+          console.warn('missing class year');
           showContents({
             title: 'Set graduation year',
             content: <GraduationYearDialog defaultYear={missing.classYear} />,
@@ -201,7 +202,7 @@ const MyApp = function ({ Component, pageProps }: AppProps) {
 
     // trigger initial write
     setDoc(ref, { lastLoggedIn: serverTimestamp() }, { merge: true })
-      .then(() => console.log('updated last login time'))
+      .then(() => console.info('updated last login time'))
       .catch((err) => dispatch(setSnapshotError(err)));
 
     return unsub;
@@ -209,7 +210,9 @@ const MyApp = function ({ Component, pageProps }: AppProps) {
 
   return (
     <SearchStateProvider>
-      <Component {...pageProps} />
+      <SelectedScheduleProvider>
+        <Component {...pageProps} />
+      </SelectedScheduleProvider>
     </SearchStateProvider>
   );
 };
