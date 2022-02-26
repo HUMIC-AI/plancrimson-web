@@ -97,19 +97,22 @@ function getMissingFields({
   // select the first schedule
   const existingSchedules = Object.values(schedules || missingFields.schedules!);
   if (!selectedSchedules) {
-    missingFields.selectedSchedules = Object.fromEntries(getUniqueSemesters(classYear, existingSchedules).map(({ year, season }) => {
+    missingFields.selectedSchedules = Object.fromEntries(allTruthy(getUniqueSemesters(classYear, existingSchedules).map(({ year, season }) => {
       const term: Term = `${year}${season}`;
-      return [term, existingSchedules.find(
+      const existing = existingSchedules.find(
         ({ year: y, season: s }) => year === y && season === s,
-      )!.id];
-    }));
+      );
+      if (!existing) return null;
+      return [term, existing.id];
+    })));
   } else {
     const missingSelectedSchedules = allTruthy(getUniqueSemesters(classYear, existingSchedules).map(({ year, season }) => {
       const term: Term = `${year}${season}`;
-      if (selectedSchedules[term]) return null;
-      return [term, existingSchedules.find(
+      const existing = existingSchedules.find(
         ({ year: y, season: s }) => year === y && season === s,
-      )!.id];
+      );
+      if (selectedSchedules[term] || !existing) return null;
+      return [term, existing.id];
     }));
     if (missingSelectedSchedules.length > 0) {
       missingFields.selectedSchedules = Object.assign(selectedSchedules, Object.fromEntries(missingSelectedSchedules));

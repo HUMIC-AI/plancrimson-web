@@ -208,6 +208,9 @@ export const renameSchedule = createActionCreator<RenameSchedulePayload>(
     if (newId in state.schedules) {
       errors.push('id taken');
     }
+    if (newId.length === 0 || /\./.test(newId)) {
+      errors.push('invalid id');
+    }
     return errors;
   },
   rename,

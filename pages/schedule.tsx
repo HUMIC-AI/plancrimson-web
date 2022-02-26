@@ -68,6 +68,7 @@ export default function SchedulePage() {
               selectSchedule={(schedule) => setSelectedScheduleId(schedule ? schedule.id : null)}
               selectedSchedule={selectedSchedule}
               direction="center"
+              showDropdown
             />
             <UploadPlan />
           </div>

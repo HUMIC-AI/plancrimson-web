@@ -3,7 +3,7 @@ import React, {
 } from 'react';
 import { FaCheck, FaMinus, FaPlus } from 'react-icons/fa';
 import { updateDoc } from 'firebase/firestore';
-import Link from 'next/link';
+import { Configure, InstantSearch } from 'react-instantsearch-dom';
 import {
   allTruthy,
   checkViable,
@@ -12,7 +12,7 @@ import {
   getSchedulesBySemester,
 } from '../../shared/util';
 import { Season, Viability } from '../../shared/firestoreTypes';
-import { getUserRef } from '../../src/hooks';
+import { getUserRef, meiliSearchClient } from '../../src/hooks';
 import ScheduleSelector from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
 import FadeTransition from '../FadeTransition';
@@ -26,6 +26,12 @@ import {
 import { selectClassCache } from '../../src/features/classCache';
 import { selectClassYear, selectLastLoggedIn, selectUid } from '../../src/features/userData';
 import { useModal } from '../../src/features/modal';
+import useSearchState, { SearchStateProvider } from '../../src/context/searchState';
+import CurrentRefinements, { CurrentRefinementsDemo } from '../SearchComponents/CurrentRefinements';
+import Hits, { HitsDemo } from '../SearchComponents/Hits';
+import SearchBox, { SearchBoxDemo } from '../SearchComponents/SearchBox';
+import SortBy, { SortByDemo } from '../SearchComponents/SortBy';
+// import AttributeMenu from '../SearchComponents/AttributeMenu';
 
 type Props = {
   selectedScheduleId: string | null;
@@ -49,6 +55,35 @@ const VIABILITY_COLORS: Record<Viability, string> = {
   No: 'bg-red-300',
 };
 
+function SearchModal() {
+  const user = useAppSelector(selectUid);
+  const { searchState, setSearchState } = useSearchState();
+  return (
+    <InstantSearch
+      indexName="courses"
+      searchClient={meiliSearchClient}
+      searchState={searchState}
+      onSearchStateChange={(newState) => {
+        setSearchState({ ...searchState, ...newState });
+      }}
+      stalledSearchDelay={500}
+    >
+      {user && <Configure hitsPerPage={12} />}
+      <div className="flex space-x-4">
+        {/* <AttributeMenu /> */}
+        <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
+          {user ? <SearchBox /> : <SearchBoxDemo />}
+          <div className="grid grid-cols-[auto_1fr] gap-4">
+            {user ? <SortBy /> : <SortByDemo />}
+            {user ? <CurrentRefinements /> : <CurrentRefinementsDemo />}
+          </div>
+          {user ? <Hits /> : <HitsDemo />}
+        </div>
+      </div>
+    </InstantSearch>
+  );
+}
+
 function SemesterComponent({
   year,
   season,
@@ -68,7 +103,7 @@ function SemesterComponent({
   const scheduleData = useAppSelector(selectScheduleData);
   const classCache = useAppSelector(selectClassCache);
   const sampleSchedule = useAppSelector(selectSampleSchedule);
-  const { showCourse } = useModal();
+  const { showCourse, showContents } = useModal();
 
   const editRef = useRef<HTMLInputElement>(null!);
 
@@ -236,6 +271,7 @@ function SemesterComponent({
                 typeof highlight !== 'undefined'
                 && highlight === selectedSchedule?.id
               }
+              showDropdown={semesterFormat !== 'all'}
             />
           )}
 
@@ -268,16 +304,22 @@ function SemesterComponent({
         {/* Second component: actual classes */}
         <div className="flex-1 p-4 md:overflow-auto h-max">
           <div className="flex flex-col items-stretch min-h-[12rem] space-y-4">
-
             {selectedSchedule
               && (
               <>
-                <Link href={{ pathname: '/search', query: { selected: selectedSchedule?.id } }}>
-                  {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                  <a className="flex items-center justify-center rounded-xl bg-blue-300 interactive py-2">
-                    <FaPlus />
-                  </a>
-                </Link>
+                {/* add course button */}
+                <button
+                  type="button"
+                  className="flex items-center justify-center rounded-xl bg-blue-300 interactive py-2"
+                  onClick={() => showContents({
+                    title: 'Add a course',
+                    content: <SearchStateProvider><SearchModal /></SearchStateProvider>,
+                  })}
+                >
+                  <FaPlus />
+                </button>
+                {/* <Link href={{ pathname: '/search', query: { selected: selectedSchedule?.id } }}> */}
+                {/* </Link> */}
 
                 {selectedSchedule.classes.map(({ classId: id }) => (id && classCache[id] ? (
                   <CourseCard

@@ -4,6 +4,6 @@
 
 @layer components {
   .interactive {
-    @apply hover:opacity-50 transition-opacity;
+    @apply hover:opacity-50 transition-opacity shadow;
   }
 }

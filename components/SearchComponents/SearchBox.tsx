@@ -103,6 +103,7 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
             selectSchedule={(schedule) => selectSchedule(schedule?.id || null)}
             selectedSchedule={selectedSchedule}
             direction="left"
+            showDropdown
           />
         </div>
         {!isLg && <AttributeMenuDropdown />}
@@ -147,6 +148,7 @@ export const SearchBoxComponent: React.FC<SearchBoxProvided> = function (
           selectSchedule={(schedule) => selectSchedule(schedule?.id || null)}
           selectedSchedule={selectedSchedule}
           direction="right"
+          showDropdown
         />
       </div>
     </div>
