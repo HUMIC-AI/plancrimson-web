@@ -81,17 +81,15 @@ export default function UploadPlan() {
   const { showContents } = useModal();
 
   return (
-    <div>
-      <button
-        type="button"
-        onClick={() => showContents({
-          content: <UploadForm />,
-          title: 'Upload plan',
-        })}
-        className="hover:opacity-50 transition-opacity underline"
-      >
-        Upload plan
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={() => showContents({
+        content: <UploadForm />,
+        title: 'Upload plan',
+      })}
+      className="hover:opacity-50 transition-opacity underline"
+    >
+      Upload plan
+    </button>
   );
 }

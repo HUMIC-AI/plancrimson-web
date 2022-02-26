@@ -71,6 +71,11 @@ export function ModalProvider({ children }: PropsWithChildren<{}>) {
   const [open, setOpen] = useState<boolean>(false);
   const [data, setContents] = useState<CustomDialogProps | null>(null);
 
+  const showContents: ModalContextType['showContents'] = (c) => {
+    setContents(c);
+    setOpen(true);
+  };
+
   const showCourse = (course: ExtendedClass) => {
     const semester = course ? getSemester(course) : null;
     const title = course
@@ -95,14 +100,9 @@ export function ModalProvider({ children }: PropsWithChildren<{}>) {
       </>
     );
     const content = course && <Tabs course={course} />;
-    setContents({
+    showContents({
       title, headerContent, content,
     });
-  };
-
-  const showContents: ModalContextType['showContents'] = (c) => {
-    setContents(c);
-    setOpen(true);
   };
 
   const context = useMemo(() => ({
@@ -116,71 +116,8 @@ export function ModalProvider({ children }: PropsWithChildren<{}>) {
   return (
     <ModalContext.Provider value={context}>
       {children}
-
-      <Transition appear show={open} as={Fragment}>
-        <Dialog
-          as="div"
-          className="fixed inset-0 z-40 overflow-y-auto"
-          onClose={() => setOpen(false)}
-        >
-          <div className="min-h-screen px-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <Dialog.Overlay className="fixed inset-0 bg-white bg-opacity-50" />
-            </Transition.Child>
-
-            {/* This element is to trick the browser into centering the modal contents. */}
-            <span
-              className="inline-block h-screen align-middle"
-              aria-hidden="true"
-            >
-              &#8203;
-            </span>
-
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <div className="inline-block w-full max-w-lg my-8 overflow-hidden text-left align-middle transition-all transform bg-gray-800 shadow-xl rounded-2xl">
-                <div className="p-6 text-white border-none">
-                  <Dialog.Title as="h3" className="text-xl font-semibold">
-                    {data?.title}
-                  </Dialog.Title>
-
-                  {data?.headerContent}
-                </div>
-
-                {data?.content}
-
-                <button
-                  type="button"
-                  name="Close dialog"
-                  onClick={() => setOpen(false)}
-                  className="absolute top-5 right-5 text-gray-800 rounded-full p-2 bg-white hover:opacity-50 transition-opacity"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-            </Transition.Child>
-          </div>
-        </Dialog>
-      </Transition>
     </ModalContext.Provider>
   );
 }
-
-export default ModalContext;
 
 export const useModal = () => useContext(ModalContext);

@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import React from 'react';
 import { classNames, unsplashParams } from '../../shared/util';
 import ExternalLink from '../ExternalLink';
+import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
 
 type LayoutProps = {
@@ -111,6 +112,8 @@ const Layout: React.FC<LayoutProps> = function ({
       </main>
 
       <Footer />
+
+      <CustomModal />
     </div>
   );
 };
