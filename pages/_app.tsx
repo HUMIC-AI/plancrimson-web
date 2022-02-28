@@ -93,8 +93,9 @@ function getMissingFields({
   const missingFields: Partial<UserDocument<Timestamp>> = {};
 
   if (!schedules) {
+    // create a schedule for each semester
     missingFields.schedules = Object.fromEntries(getDefaultSemesters(classYear).map(({ year, season }) => {
-      const id = `${season} ${year}`;
+      const id = `My ${season} ${year}`;
       return [id, {
         year, season, id, classes: [],
       }];

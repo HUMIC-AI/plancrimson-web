@@ -23,8 +23,8 @@ const paths = [
     name: 'Search',
   },
   {
-    href: '/plan',
-    name: 'Plan',
+    href: '/',
+    name: 'My Courses',
   },
   {
     href: '/schedule',
@@ -39,6 +39,24 @@ const paths = [
 // Profile dropdown
 const UserMenu = function () {
   const photoUrl = useAppSelector(selectPhotoUrl);
+
+  async function signInOut() {
+    if (photoUrl) {
+      await signOut(getAuth());
+    } else {
+      // we don't need any additional scopes
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        hd: 'college.harvard.edu',
+      });
+      try {
+        await signInWithPopup(getAuth(), provider);
+      } catch (err) {
+        console.error(err);
+        alert('Failed to sign in. Please try again later.');
+      }
+    }
+  }
 
   return (
     <Menu as="div" className="ml-3 relative z-50">
@@ -84,23 +102,7 @@ const UserMenu = function () {
                   active ? 'bg-white' : '',
                   'block w-full px-4 py-2 text-sm text-left text-gray-800',
                 )}
-                onClick={async () => {
-                  if (photoUrl) {
-                    await signOut(getAuth());
-                  } else {
-                    // we don't need any additional scopes
-                    const provider = new GoogleAuthProvider();
-                    provider.setCustomParameters({
-                      hd: 'college.harvard.edu',
-                    });
-                    try {
-                      await signInWithPopup(getAuth(), provider);
-                    } catch (err) {
-                      console.error(err);
-                      alert('Failed to sign in. Please try again later.');
-                    }
-                  }
-                }}
+                onClick={signInOut}
               >
                 {photoUrl ? 'Sign out' : 'Sign in'}
               </button>
@@ -138,7 +140,7 @@ const Navbar = function () {
 
               <div className="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex-shrink-0 flex items-center text-white">
-                  <Link href="/">
+                  <Link href="/home">
                     <a>
                       <FaCalendarCheck className="block lg:hidden h-8 w-auto" />
                       <div className="hidden lg:flex items-center gap-4">

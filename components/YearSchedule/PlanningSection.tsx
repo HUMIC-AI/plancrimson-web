@@ -8,6 +8,7 @@ import {
   FaArrowsAltV,
   FaChevronLeft,
   FaChevronRight,
+  FaPlus,
 } from 'react-icons/fa';
 import { DownloadPlan, Season } from '../../shared/firestoreTypes';
 import {
@@ -15,10 +16,11 @@ import {
   classNames,
   compareSemesters,
   getUniqueSemesters,
+  sortSchedules,
 } from '../../shared/util';
 import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
 import {
-  selectSchedule, selectSelectedSchedules, selectSchedules, clearSchedule,
+  selectSchedule, selectSelectedSchedules, selectSchedules, clearSchedule, createSchedule,
 } from '../../src/features/schedules';
 import {
   selectExpandCards, selectSampleSchedule, selectSemesterFormat, selectShowReqs, setShowReqs, showAll, showSelected, toggleExpand,
@@ -280,6 +282,22 @@ function PlanningSection({ highlightedRequirement } : Props) {
     return schedule.id;
   }));
 
+  function addPrevSemester() {
+    const earliest = sortSchedules(schedules)[0];
+    const [season, year] = earliest.season === 'Spring'
+      ? ['Fall' as Season, earliest.year - 1]
+      : ['Spring' as Season, earliest.year];
+    dispatch(createSchedule({
+      id: `My ${season} ${year}`,
+      season,
+      year,
+      classes: [],
+    })).catch((err) => {
+      alert('An unexpected error occurred! Please try again later.');
+      console.error(err);
+    });
+  }
+
   return (
     <div className="relative bg-gray-800 md:p-4 md:rounded-lg md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full md:h-full">
       <div className="flex flex-col space-y-4 md:h-full">
@@ -297,6 +315,17 @@ function PlanningSection({ highlightedRequirement } : Props) {
             ref={semestersContainerRef}
           >
             <div ref={leftScrollRef} />
+            {semesterFormat === 'selected' && (
+            <button
+              type="button"
+              className="bg-blue-300 interactive h-full px-4"
+              onClick={addPrevSemester}
+              name="Add previous semester"
+              title="Add previous semester"
+            >
+              <FaPlus />
+            </button>
+            )}
             {allSemesters.map((props) => (
               <SemesterComponent
                 {...{
@@ -348,7 +377,10 @@ function PlanningSection({ highlightedRequirement } : Props) {
                     type="button"
                     onClick={() => {
                       if (!userUid) return;
-                      updateDoc(getUserRef(userUid), `schedules.${id}.hidden`, false);
+                      updateDoc(getUserRef(userUid), `schedules.${id}.hidden`, false).catch((err) => {
+                        alert('An unexpected error occurred! Please try again later.');
+                        console.error(err);
+                      });
                     }}
                     className="interactive"
                   >

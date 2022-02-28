@@ -1,59 +1,76 @@
-import Image from 'next/image';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout/Layout';
-import demoImg from '../public/demo.png';
-import searchImg from '../public/search.png';
-import evaluationImg from '../public/evaluation.png';
+import PlanningSection from '../components/YearSchedule/PlanningSection';
+import RequirementsSection from '../components/YearSchedule/RequirementsSection';
+import { allTruthy, classNames } from '../shared/util';
+import { useAppSelector } from '../src/app/hooks';
+import { selectClassCache } from '../src/features/classCache';
+import { selectSampleSchedule, selectSemesterFormat, selectShowReqs } from '../src/features/semesterFormat';
+import { selectUserDocument } from '../src/features/userData';
+import validateSchedules from '../src/requirements';
+import collegeRequirements from '../src/requirements/college';
+import {
+  GroupResult,
+  Requirement,
+  RequirementGroup,
+} from '../src/requirements/util';
 
-export default function LandingPage() {
+const PlanPageComponent = function () {
+  const userDocument = useAppSelector(selectUserDocument);
+  const semesterFormat = useAppSelector(selectSemesterFormat);
+  const sampleSchedule = useAppSelector(selectSampleSchedule);
+  const classCache = useAppSelector(selectClassCache);
+  const showReqs = useAppSelector(selectShowReqs);
+
+  const [validationResults, setValidationResults] = useState<GroupResult | null>(null);
+  const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(collegeRequirements);
+  const [highlightedRequirement, setHighlightedRequirement] = useState<Requirement>();
+  const [notification, setNotification] = useState(true);
+
+  useEffect(() => {
+    const showSchedules = semesterFormat === 'sample'
+      ? sampleSchedule!.schedules
+      : allTruthy(
+        Object.values(userDocument.selectedSchedules).map((id) => (id ? userDocument.schedules[id] : null)),
+      );
+    const results = validateSchedules(
+      selectedRequirements,
+      showSchedules,
+      userDocument,
+      classCache,
+    );
+    setValidationResults(results);
+  }, [selectedRequirements, classCache, sampleSchedule, semesterFormat, userDocument]);
+
   return (
-    <Layout size="w-full from-gray-800 to-blue-900 bg-gradient-to-br text-white flex flex-col items-center px-8 sm:px-24 py-24">
-      {/* <div className="absolute inset-0 bg-blue-900">Hi</div> */}
-      <h1 className="text-5xl sm:text-6xl uppercase tracking-wider font-black text-center">Plan Crimson</h1>
-      <p className="italic text-xl text-center mt-8">Make the most of your Harvard education</p>
-      <Link href="/search">
-        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-        <a className="inline-block text-center mt-8 py-4 px-8 font-bold bg-white text-blue-900 text-2xl rounded-md hover:opacity-50 transition-all shadow-md hover:shadow-xl">
-          Get started now
-        </a>
-      </Link>
+    <div className={classNames(
+      showReqs && 'md:grid-rows-1 md:grid-cols-[auto_1fr] items-stretch gap-4',
+      'grid min-h-screen py-8',
+    )}
+    >
+      {showReqs && (
+      <RequirementsSection
+        {...{
+          selectedRequirements,
+          setSelectedRequirements,
+          highlightRequirement: setHighlightedRequirement,
+          highlightedRequirement,
+          notification,
+          setNotification,
+          validationResults,
+        }}
+      />
+      )}
 
-      <div className="flex flex-col sm:flex-row items-center sm:space-x-12 mt-24 text-center sm:text-right">
-        <div className="max-w-sm">
-          <h2 className="text-4xl font-bold">Search and sort courses by the metrics you care about</h2>
-          <p className="text-xl mt-8">Sort by popularity, workload, recommendations, and more, all from up-to-date data</p>
-        </div>
-        <div className="max-w-4xl mt-8 mx-4 sm:mt-0">
-          <Image src={searchImg} alt="courses and requirements" className="rounded-xl" />
-        </div>
-      </div>
+      <PlanningSection highlightedRequirement={highlightedRequirement} />
+    </div>
+  );
+};
 
-      <div className="flex flex-col sm:flex-row items-center sm:space-x-12 mt-24 text-center sm:text-right">
-        <div className="max-w-sm">
-          <h2 className="text-4xl font-bold">View evaluations from all past years in one place</h2>
-          <p className="text-xl mt-8">No more back-and-forth between my.harvard, Q Reports, and Course Evaluations — see what past students have to say</p>
-        </div>
-        <div className="max-w-xl mt-8 mx-4 sm:mt-0">
-          <Image src={evaluationImg} alt="courses and requirements" className="rounded-[2rem]" />
-        </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row items-center sm:space-x-12 mt-24 text-center sm:text-right">
-        <div className="max-w-sm">
-          <h2 className="text-4xl font-bold">Verify your program requirements</h2>
-          <p className="text-xl mt-8">Easily view information from the Student Handbook, with more programs and concentrations coming soon</p>
-        </div>
-        <div className="max-w-4xl mt-8 mx-4 sm:mt-0">
-          <Image src={demoImg} alt="courses and requirements" className="rounded-xl" />
-        </div>
-      </div>
-
-      <Link href="/search">
-        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-        <a className="inline-block mt-24 py-4 px-8 font-bold bg-white text-blue-900 text-2xl rounded-md hover:opacity-50 transition-all shadow-md hover:shadow-xl">
-          Get started now
-        </a>
-      </Link>
+export default function PlanPage() {
+  return (
+    <Layout size="w-full md:px-8" title="Plan">
+      <PlanPageComponent />
     </Layout>
   );
 }

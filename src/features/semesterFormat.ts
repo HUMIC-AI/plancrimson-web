@@ -12,7 +12,7 @@ interface SemesterFormat {
 }
 
 const initialState: SemesterFormat = {
-  format: 'all',
+  format: 'selected',
   sampleSchedule: null,
   expandCards: false,
   showAttributes: true,
