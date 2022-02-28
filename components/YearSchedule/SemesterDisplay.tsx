@@ -27,10 +27,8 @@ import { selectClassCache } from '../../src/features/classCache';
 import { selectClassYear, selectLastLoggedIn, selectUid } from '../../src/features/userData';
 import { useModal } from '../../src/features/modal';
 import useSearchState, { SearchStateProvider } from '../../src/context/searchState';
-import CurrentRefinements, { CurrentRefinementsDemo } from '../SearchComponents/CurrentRefinements';
 import Hits, { HitsDemo } from '../SearchComponents/Hits';
 import SearchBox, { SearchBoxDemo } from '../SearchComponents/SearchBox';
-import SortBy, { SortByDemo } from '../SearchComponents/SortBy';
 import { SelectedScheduleContext } from '../../src/context/selectedSchedule';
 // import AttributeMenu from '../SearchComponents/AttributeMenu';
 
@@ -70,15 +68,11 @@ function SearchModal() {
       }}
       stalledSearchDelay={500}
     >
-      {user && <Configure hitsPerPage={12} />}
+      {user && <Configure hitsPerPage={4} />}
       <div className="flex space-x-4">
         {/* <AttributeMenu /> */}
         <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
           {user ? <SearchBox /> : <SearchBoxDemo />}
-          <div className="grid grid-cols-[auto_1fr] gap-4">
-            {user ? <SortBy /> : <SortByDemo />}
-            {user ? <CurrentRefinements /> : <CurrentRefinementsDemo />}
-          </div>
           {user ? <Hits /> : <HitsDemo />}
         </div>
       </div>
