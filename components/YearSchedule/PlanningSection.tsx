@@ -315,10 +315,12 @@ function PlanningSection({ highlightedRequirement } : Props) {
             ref={semestersContainerRef}
           >
             <div ref={leftScrollRef} />
-            {semesterFormat === 'selected' && (
+
+            {/* add previous semester button */}
+            {semesterFormat === 'selected' && classYear && (
             <button
               type="button"
-              className="bg-blue-300 interactive h-full px-4"
+              className="bg-blue-300 interactive h-full px-4 flex-grow-0"
               onClick={addPrevSemester}
               name="Add previous semester"
               title="Add previous semester"
@@ -326,6 +328,7 @@ function PlanningSection({ highlightedRequirement } : Props) {
               <FaPlus />
             </button>
             )}
+
             {allSemesters.map((props) => (
               <SemesterComponent
                 {...{
@@ -337,6 +340,7 @@ function PlanningSection({ highlightedRequirement } : Props) {
                 }}
               />
             ))}
+
             <div ref={rightScrollRef} />
           </div>
 

@@ -70,10 +70,7 @@ export default function SchedulePage() {
               direction="center"
               showDropdown
             />
-            <UploadPlan />
-          </div>
-
-          {selectedSchedule && (
+            {selectedSchedule && (
             <div>
               <ButtonMenu
                 year={selectedSchedule.year}
@@ -83,7 +80,9 @@ export default function SchedulePage() {
                 prevScheduleId={prevScheduleId}
               />
             </div>
-          )}
+            )}
+            <UploadPlan />
+          </div>
 
           <form
             onSubmit={newSemester}
