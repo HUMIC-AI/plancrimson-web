@@ -16,6 +16,7 @@ import { selectClassCache } from '../../src/features/classCache';
 import { addCourse, removeCourses, selectScheduleData } from '../../src/features/schedules';
 import { selectExpandCards, selectSemesterFormat } from '../../src/features/semesterFormat';
 import { selectClassYear, selectLastLoggedIn } from '../../src/features/userData';
+import { handleError } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 import {
   ClassTime,
@@ -108,7 +109,7 @@ const CourseCard: React.FC<Props> = function ({
     ev.dataTransfer.dropEffect = 'move';
     // eslint-disable-next-line no-alert
     if (!selectedSchedule?.id) {
-      alert('Oops! An unexpected error occurred.');
+      handleError(new Error('Selected schedule has no ID'));
     } else {
       setDragStatus!({
         dragging: true,

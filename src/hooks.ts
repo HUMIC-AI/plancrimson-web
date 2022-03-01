@@ -3,6 +3,7 @@ import {
   getFirestore, DocumentReference, doc, Timestamp,
 } from 'firebase/firestore';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
+import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import type { UserDocument } from '../shared/firestoreTypes';
 import { getMeiliHost, getMeiliApiKey } from '../shared/util';
 
@@ -47,3 +48,17 @@ export function useLgBreakpoint() {
 }
 
 export const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey());
+
+export async function signInUser() {
+  // we don't need any additional scopes
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({
+    hd: 'college.harvard.edu',
+  });
+  await signInWithPopup(getAuth(), provider);
+}
+
+export function handleError(err: unknown) {
+  alert('An unexpected error occurred! Please try again later.');
+  console.error(err);
+}

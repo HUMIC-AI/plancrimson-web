@@ -1,10 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-param-reassign */
 import {
-  createContext, Dispatch, Fragment, PropsWithChildren, ReactNode, SetStateAction, useCallback, useContext, useMemo, useState,
+  createContext, Dispatch, PropsWithChildren, ReactNode, SetStateAction, useContext, useMemo, useState,
 } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { FaTimes } from 'react-icons/fa';
 import qs from 'qs';
 import type { ExtendedClass } from '../../shared/apiTypes';
 import { getSemester } from '../../shared/util';
@@ -17,10 +14,6 @@ interface CustomDialogProps {
   content: ReactNode;
   noExit?: boolean;
 }
-
-/**
- * Based on https://headlessui.dev/react/dialog
- */
 
 interface ModalContextType {
   open: boolean;
@@ -77,7 +70,7 @@ export function ModalProvider({ children }: PropsWithChildren<{}>) {
     setOpen(true);
   };
 
-  const showCourse = (course: ExtendedClass) => {
+  function showCourse(course: ExtendedClass) {
     const semester = course ? getSemester(course) : null;
     const title = course
       ? course.SUBJECT + course.CATALOG_NBR
@@ -104,7 +97,7 @@ export function ModalProvider({ children }: PropsWithChildren<{}>) {
     showContents({
       title, headerContent, content,
     });
-  };
+  }
 
   const context = useMemo(() => ({
     open,

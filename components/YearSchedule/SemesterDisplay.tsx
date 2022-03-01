@@ -12,7 +12,7 @@ import {
   getSchedulesBySemester,
 } from '../../shared/util';
 import { Schedule, Season, Viability } from '../../shared/firestoreTypes';
-import { getUserRef, meiliSearchClient } from '../../src/hooks';
+import { getUserRef, handleError, meiliSearchClient } from '../../src/hooks';
 import ScheduleSelector from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
 import FadeTransition from '../FadeTransition';
@@ -156,10 +156,7 @@ function SemesterComponent({
     if (!uid || !selectedSchedule) return;
     const { id, hidden } = selectedSchedule;
     updateDoc(getUserRef(uid), `schedules.${id}.hidden`, !hidden)
-      .catch((err) => {
-        console.error(err);
-        alert('An unexpected error occurred. Please try again.');
-      });
+      .catch(handleError);
   }
 
   const handleDrop: React.DragEventHandler<HTMLDivElement> = useCallback(

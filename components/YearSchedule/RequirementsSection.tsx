@@ -29,6 +29,7 @@ import {
 } from '../../src/features/semesterFormat';
 import { createSchedule, CreateSchedulePayload, selectSchedule } from '../../src/features/schedules';
 import { selectUid } from '../../src/features/userData';
+import { handleError } from '../../src/hooks';
 
 interface RequirementsSectionProps {
   selectedRequirements: RequirementGroup;
@@ -201,8 +202,7 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
             });
             alert('Cloned successfully!');
           } catch (err) {
-            console.error(err);
-            alert('An unexpected error occurred when cloning the sample schedule. Please try again later.');
+            handleError(err);
           }
         }}
         className="font-medium interactive"

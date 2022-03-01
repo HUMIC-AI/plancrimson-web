@@ -3,8 +3,6 @@ import { Disclosure, Menu, Transition } from '@headlessui/react';
 import {
   signOut,
   getAuth,
-  signInWithPopup,
-  GoogleAuthProvider,
 } from 'firebase/auth';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -16,6 +14,7 @@ import {
 import { classNames } from '../../shared/util';
 import { useAppSelector } from '../../src/app/hooks';
 import { selectPhotoUrl } from '../../src/features/userData';
+import { handleError, signInUser } from '../../src/hooks';
 
 const paths = [
   {
@@ -39,24 +38,6 @@ const paths = [
 // Profile dropdown
 const UserMenu = function () {
   const photoUrl = useAppSelector(selectPhotoUrl);
-
-  async function signInOut() {
-    if (photoUrl) {
-      await signOut(getAuth());
-    } else {
-      // we don't need any additional scopes
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({
-        hd: 'college.harvard.edu',
-      });
-      try {
-        await signInWithPopup(getAuth(), provider);
-      } catch (err) {
-        console.error(err);
-        alert('Failed to sign in. Please try again later.');
-      }
-    }
-  }
 
   return (
     <Menu as="div" className="ml-3 relative z-50">
@@ -102,7 +83,17 @@ const UserMenu = function () {
                   active ? 'bg-white' : '',
                   'block w-full px-4 py-2 text-sm text-left text-gray-800',
                 )}
-                onClick={signInOut}
+                onClick={async () => {
+                  try {
+                    if (photoUrl) {
+                      await signOut(getAuth());
+                    } else {
+                      await signInUser();
+                    }
+                  } catch (err) {
+                    handleError(err);
+                  }
+                }}
               >
                 {photoUrl ? 'Sign out' : 'Sign in'}
               </button>

@@ -3,6 +3,9 @@ import { Fragment } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { useModal } from '../src/features/modal';
 
+/**
+ * Based on https://headlessui.dev/react/dialog
+ */
 export default function CustomModal() {
   const { open, setOpen, data } = useModal();
 

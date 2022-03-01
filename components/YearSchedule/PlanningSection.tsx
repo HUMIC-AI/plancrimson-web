@@ -26,7 +26,9 @@ import {
   selectExpandCards, selectSampleSchedule, selectSemesterFormat, selectShowReqs, setShowReqs, showAll, showSelected, toggleExpand,
 } from '../../src/features/semesterFormat';
 import { selectClassYear, selectUid } from '../../src/features/userData';
-import { downloadJson, getUserRef } from '../../src/hooks';
+import {
+  downloadJson, getUserRef, handleError, signInUser,
+} from '../../src/hooks';
 import type { Requirement } from '../../src/requirements/util';
 import type { DragStatus } from '../Course/CourseCard';
 import UploadPlan from '../UploadPlan';
@@ -292,11 +294,10 @@ function PlanningSection({ highlightedRequirement } : Props) {
       season,
       year,
       classes: [],
-    })).catch((err) => {
-      alert('An unexpected error occurred! Please try again later.');
-      console.error(err);
-    });
+    })).catch(handleError);
   }
+
+  console.log({ userUid });
 
   return (
     <div className="relative bg-gray-800 md:p-4 md:rounded-lg md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full md:h-full">
@@ -307,6 +308,7 @@ function PlanningSection({ highlightedRequirement } : Props) {
           downloadData={downloadData}
         />
 
+        {/* begin semesters display */}
         <div className="relative overflow-x-auto flex-1">
           {/* on small screens, this extends as far as necessary */}
           {/* on medium screens and larger, put this into its own box */}
@@ -316,30 +318,44 @@ function PlanningSection({ highlightedRequirement } : Props) {
           >
             <div ref={leftScrollRef} />
 
-            {/* add previous semester button */}
-            {semesterFormat === 'selected' && classYear && (
-            <button
-              type="button"
-              className="bg-blue-300 interactive h-full px-4 flex-grow-0"
-              onClick={addPrevSemester}
-              name="Add previous semester"
-              title="Add previous semester"
-            >
-              <FaPlus />
-            </button>
-            )}
+            {userUid ? (
+              <>
+                {/* add previous semester button */}
+                {semesterFormat === 'selected' && classYear && (
+                  <button
+                    type="button"
+                    className="bg-blue-300 interactive h-full px-4 flex-grow-0"
+                    onClick={addPrevSemester}
+                    name="Add previous semester"
+                    title="Add previous semester"
+                  >
+                    <FaPlus />
+                  </button>
+                )}
 
-            {allSemesters.map((props) => (
-              <SemesterComponent
-                {...{
-                  ...props,
-                  colWidth,
-                  dragStatus,
-                  setDragStatus,
-                  highlightedRequirement,
-                }}
-              />
-            ))}
+                {allSemesters.map((props) => (
+                  <SemesterComponent
+                    {...{
+                      ...props,
+                      colWidth,
+                      dragStatus,
+                      setDragStatus,
+                      highlightedRequirement,
+                    }}
+                  />
+                ))}
+              </>
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <button
+                  type="button"
+                  className="text-white font-black text-6xl interactive"
+                  onClick={() => signInUser().catch(handleError)}
+                >
+                  Sign in to get started!
+                </button>
+              </div>
+            )}
 
             <div ref={rightScrollRef} />
           </div>
@@ -347,24 +363,24 @@ function PlanningSection({ highlightedRequirement } : Props) {
           {dragStatus.dragging && (
             <>
               {leftIntersecting || (
-                <div
-                  className="absolute inset-y-0 left-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
-                  onDragOver={() => {
-                    semestersContainerRef.current.scrollBy(-2, 0);
-                  }}
-                >
-                  <FaChevronLeft />
-                </div>
+              <div
+                className="absolute inset-y-0 left-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
+                onDragOver={() => {
+                  semestersContainerRef.current.scrollBy(-2, 0);
+                }}
+              >
+                <FaChevronLeft />
+              </div>
               )}
               {rightIntersecting || (
-                <div
-                  className="absolute inset-y-0 right-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
-                  onDragOver={() => {
-                    semestersContainerRef.current.scrollBy(2, 0);
-                  }}
-                >
-                  <FaChevronRight />
-                </div>
+              <div
+                className="absolute inset-y-0 right-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
+                onDragOver={() => {
+                  semestersContainerRef.current.scrollBy(2, 0);
+                }}
+              >
+                <FaChevronRight />
+              </div>
               )}
             </>
           )}
@@ -381,10 +397,7 @@ function PlanningSection({ highlightedRequirement } : Props) {
                     type="button"
                     onClick={() => {
                       if (!userUid) return;
-                      updateDoc(getUserRef(userUid), `schedules.${id}.hidden`, false).catch((err) => {
-                        alert('An unexpected error occurred! Please try again later.');
-                        console.error(err);
-                      });
+                      updateDoc(getUserRef(userUid), `schedules.${id}.hidden`, false).catch(handleError);
                     }}
                     className="interactive"
                   >
