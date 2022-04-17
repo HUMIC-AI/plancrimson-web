@@ -2,11 +2,13 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { PropsWithChildren } from 'react';
 import { classNames, unsplashParams } from '../../shared/util';
 import ExternalLink from '../ExternalLink';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
+import { useAppSelector } from '../../src/app/hooks';
+import { selectSnapshotError } from '../../src/features/userData';
 
 type LayoutProps = {
   title?: string;
@@ -86,12 +88,13 @@ function Footer() {
   );
 }
 
-const Layout: React.FC<LayoutProps> = function ({
+export default function Layout({
   children,
   title,
   size = 'container sm:p-8',
-}) {
+}: PropsWithChildren<LayoutProps>) {
   const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
+  const errors = useAppSelector(selectSnapshotError);
   return (
     <div className="flex flex-col min-h-screen overflow-auto">
       <Head>
@@ -107,6 +110,8 @@ const Layout: React.FC<LayoutProps> = function ({
 
       <Navbar />
 
+      {errors && <pre>{JSON.stringify(errors)}</pre>}
+
       <main className={classNames('mx-auto flex-1', size)}>
         {children}
       </main>
@@ -116,6 +121,4 @@ const Layout: React.FC<LayoutProps> = function ({
       <CustomModal />
     </div>
   );
-};
-
-export default Layout;
+}

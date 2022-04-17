@@ -47,3 +47,19 @@ Below is a walkthrough of the project and some notable files.
 The search UI is built with [Instant MeiliSearch](https://github.com/meilisearch/instant-meilisearch) and the [InstantSearch API from Algolia](https://www.algolia.com/doc/api-reference/widgets/react/). The [MeiliSearch React GitHub repository](https://github.com/meilisearch/meilisearch-react/) describes how these technologies work together.
 
 - `SearchComponents/` contains a number of widgets built using the
+
+## User logic
+
+On the `Find Classmates` page, users can find other users and view their basic description and any schedules they have made public.
+
+User A can send a friend request to User B.
+
+If B accepts the request, then A and B are now friends. This means their schedules are automatically visible to each other.
+
+A user can make some of their schedules public. This means that anyone can see those schedules regardless of whether or not they are friends.
+
+## Tutorial
+
+A schedule is made of semesters. A user can edit each semester they are enrolled in.
+
+You can add the same semester to multiple schedules.

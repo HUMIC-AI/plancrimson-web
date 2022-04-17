@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { classNames, compareItems, compareWeekdays } from '../../shared/util';
 import { useAppSelector } from '../../src/app/hooks';
-import { selectUid } from '../../src/features/userData';
+import { selectUserUid } from '../../src/features/userData';
 import RefinementList, { RefinementListDemo } from './RefinementList';
 
 interface AttributeProps {
@@ -12,7 +12,7 @@ interface AttributeProps {
 }
 
 const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = function ({ open, attribute, label }) {
-  const user = useAppSelector(selectUid);
+  const user = useAppSelector(selectUserUid);
 
   const [operator, setOperator] = useState<'and' | 'or'>('or');
 

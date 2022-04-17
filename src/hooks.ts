@@ -1,16 +1,24 @@
 import { useEffect, useState } from 'react';
 import {
-  getFirestore, DocumentReference, doc, Timestamp,
+  getFirestore, DocumentReference, doc, Timestamp, collection, CollectionReference,
 } from 'firebase/firestore';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import type { UserDocument } from '../shared/firestoreTypes';
+import type { Schedule, UserDocument } from '../shared/firestoreTypes';
 import { getMeiliHost, getMeiliApiKey } from '../shared/util';
 
 const LG_BREAKPOINT = 1024;
 
 export function getUserRef(uid: string) {
   return doc(getFirestore(), 'users', uid) as DocumentReference<Partial<UserDocument<Timestamp>>>;
+}
+
+export function getScheduleRef(scheduleUid: string) {
+  return doc(getFirestore(), 'schedules', scheduleUid) as DocumentReference<Schedule>;
+}
+
+export function getSchedulesRef() {
+  return collection(getFirestore(), 'schedules') as CollectionReference<Schedule>;
 }
 
 export function downloadJson(filename: string, data: object | string, extension = 'json') {

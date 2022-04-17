@@ -2,27 +2,35 @@
 import {
   ActionCreatorWithPayload, createSlice, PayloadAction, ThunkAction,
 } from '@reduxjs/toolkit';
-import { updateDoc } from 'firebase/firestore';
 import {
-  CustomTimeRecord, Schedule, ScheduleData, SEASON_ORDER, Term,
+  onSnapshot, query, QueryConstraint, setDoc, updateDoc,
+} from 'firebase/firestore';
+import { useEffect } from 'react';
+import {
+  CustomTimeRecord, Schedule, ScheduleMetadata, ScheduleMap, SEASON_ORDER, Term,
 } from '../../shared/firestoreTypes';
 import { allTruthy, ErrorData } from '../../shared/util';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
 import type { RootState } from '../app/store';
-import { getUserRef } from '../hooks';
-import { selectUid } from './userData';
+import { getScheduleRef, getSchedulesRef, getUserRef } from '../hooks';
+import * as ClassCache from './classCache';
+import { selectUserUid, setSnapshotError } from './userData';
 
-type ScheduleState = ScheduleData & {
+type SchedulesState = ScheduleMetadata & {
+  schedules: ScheduleMap,
   errors: ErrorData[];
 };
 
-const initialState: ScheduleState = {
+const initialState: SchedulesState = {
   schedules: {},
   selectedSchedules: {},
   customTimes: {},
   waivedRequirements: {},
   errors: [],
+  hidden: [],
 };
 
+// Payloads for the various actions
 type RemoveClassesPayload = Array<{
   classId: string;
   scheduleId?: string;
@@ -41,18 +49,29 @@ type SelectSchedulePayload = {
   scheduleId: string | null;
 };
 
-type Validator<Payload> = (state: Readonly<ScheduleState>, payload: Payload) => string[];
-
 export const schedulesSlice = createSlice({
   name: 'schedules',
   initialState,
   reducers: {
-    overwrite(state, action: PayloadAction<ScheduleData>) {
+    /**
+     * Overwrite the existing schedule metadata.
+     * @param action The new state to overwrite with, typically from Firestore.
+     */
+    overwriteScheduleMetadata(state, action: PayloadAction<ScheduleMetadata>) {
       Object.assign(state, action.payload);
     },
+
+    overwriteSchedules(state, action: PayloadAction<ScheduleMap>) {
+      Object.assign(state.schedules, action.payload);
+    },
+
+    /**
+     * Create a new schedule locally.
+     * Automatically increments the id to avoid collisions.
+     */
     create(state, action: PayloadAction<CreateSchedulePayload>) {
       const {
-        id, year, season, classes = [], force = false,
+        uid, id, force = false, ...data
       } = action.payload;
       let newScheduleId = id;
       if (force) {
@@ -62,13 +81,18 @@ export const schedulesSlice = createSlice({
           i += 1;
         }
       }
-      state.schedules[newScheduleId] = {
+      state.schedules[uid] = {
+        uid,
         id: newScheduleId,
-        season,
-        year,
-        classes,
+        ...data,
       };
     },
+
+    /**
+     * Remove a schedule locally.
+     * @param action The class to remove and the schedule to remove it from.
+     * (If omitted, will remove from all schedules.)
+     */
     remove(state, action: PayloadAction<RemoveClassesPayload>) {
       action.payload.forEach(({ classId, scheduleId: fromScheduleId }) => {
         if (fromScheduleId) {
@@ -89,29 +113,57 @@ export const schedulesSlice = createSlice({
         }
       });
     },
+
+    /**
+     * Deletes a schedule.
+     * @param action The id of the schedule to delete.
+     */
     deleteSchedule(state, action: PayloadAction<string>) {
       delete state.schedules[action.payload];
     },
+
+    /**
+     * Rename a schedule.
+     * @param action The old and new schedule titles.
+     */
     rename(state, action: PayloadAction<RenameSchedulePayload>) {
       const { oldId, newId } = action.payload;
-      const {
-        season, year, classes, hidden,
-      } = state.schedules[oldId];
+      const { classes, id, ...data } = state.schedules[oldId];
       state.schedules[newId] = {
-        season, year, classes: [...classes], id: newId,
+        classes: [...classes], id: newId, ...data,
       };
-      if (typeof hidden !== 'undefined') state.schedules[newId].hidden = hidden;
-      Object.entries(state.selectedSchedules).forEach(([term, id]) => {
-        const t: Term = `${year}${season}`;
-        if (term === t && id === oldId) {
+      Object.entries(state.selectedSchedules).forEach(([term, scheduleId]) => {
+        const t: Term = `${data.year}${data.season}`;
+        if (term === t && scheduleId === oldId) {
           state.selectedSchedules[t] = newId;
         }
       });
       delete state.schedules[oldId];
     },
+
+    /**
+     * Toggles whether or not a given schedule is hidden.
+     * @param action The uid of the schedule to toggle.
+     */
+    toggleHidden(state, action: PayloadAction<string>) {
+      const index = state.hidden.indexOf(action.payload);
+      if (index === -1) state.hidden.push(action.payload);
+      else state.hidden.splice(index, 1);
+    },
+
+    /**
+     * Add an error to the state.
+     * @param action The error to add
+     */
     error(state, action: PayloadAction<ErrorData>) {
       state.errors.push(action.payload);
     },
+
+    /**
+     * Adds a course to a schedule.
+     * @param action A list of tuples,
+     * each containing the class uid and the uid of the schedule to add it to.
+     */
     addCourse(state, action: PayloadAction<AddCoursePayload>) {
       action.payload.forEach(({ classId, scheduleId }) => {
         const { classes } = state.schedules[scheduleId];
@@ -120,13 +172,28 @@ export const schedulesSlice = createSlice({
         }
       });
     },
+
+    /**
+     * Remove all classes from a schedule.
+     * @param action the uid of the schedule to clear.
+     */
     clearSchedule(state, action: PayloadAction<string>) {
-      state.schedules[action.payload].classes = [];
+      state.schedules[action.payload].classes.length = 0;
     },
+
+    /**
+     * Lets a user input a custom time for a given class.
+     * @param action See {@link CustomTimePayload}
+     */
     customTime(state, action: PayloadAction<CustomTimePayload>) {
       const { classId, ...timeData } = action.payload;
       state.customTimes[classId] = timeData;
     },
+
+    /**
+     * A user selects a given schedule for a given term.
+     * @param action The term and the schedule to select for that term.
+     */
     selectSchedule(state, action: PayloadAction<SelectSchedulePayload>) {
       const { term, scheduleId } = action.payload;
       state.selectedSchedules[term] = scheduleId;
@@ -139,38 +206,66 @@ export const schedulesSlice = createSlice({
 export const selectScheduleData = (state: RootState) => state.schedules;
 export const selectSchedules = (state: RootState) => state.schedules.schedules;
 export const selectSelectedSchedules = (state: RootState) => state.schedules.selectedSchedules;
+export const selectHiddenSchedules = (state: RootState) => state.schedules.hidden;
 export const selectCustomTimes = (state: RootState) => state.schedules.customTimes;
 export const selectCustomTime = (state: RootState, classId: string) => state.schedules.customTimes[classId];
 
 // ========================= ACTION CREATORS =========================
 
 const {
-  create, remove, rename, deleteSchedule: delSchedule, error,
+  overwriteSchedules, create, remove, rename, deleteSchedule: delSchedule, error,
 } = schedulesSlice.actions;
 
-export const { overwrite, customTime, clearSchedule } = schedulesSlice.actions;
+export const { overwriteScheduleMetadata, customTime, clearSchedule } = schedulesSlice.actions;
 
-const syncSchedules = (uid: string, { schedules: { errors, ...data } }: RootState) => updateDoc(
-  getUserRef(uid),
-  // @ts-ignore
-  data,
-);
+/**
+ * Uploads the entire local state to Firestore.
+ * @param uid user uid
+ * @param schedules the entire state. We exclude `errors` and `schedules` to return only the metadata.
+ */
+const syncSchedules = (uid: string, { schedules, errors, ...metadata }: SchedulesState) => Promise.all([
+  updateDoc(
+    getUserRef(uid),
+    // @ts-ignore
+    metadata,
+  ),
+  Promise.all(Object.entries(schedules).map(
+    ([scheduleUid, schedule]) => {
+      console.log(scheduleUid, schedule);
+      return setDoc(getScheduleRef(scheduleUid), schedule, { merge: true });
+    },
+  )),
+]);
 
+type Validator<Payload> = (state: Readonly<SchedulesState>, payload: Payload) => string[];
 type Dispatcher<Payload> = (payload: Payload & { sender?: string }) => ThunkAction<Promise<PayloadAction<Payload | ErrorData>>, RootState, undefined, PayloadAction<Payload | ErrorData>>;
 
-const createActionCreator = <Payload>(validatePayload: Validator<Payload>, createAction: ActionCreatorWithPayload<Payload>): Dispatcher<Payload> => (payload) => async (dispatch, getState) => {
-  const errors = validatePayload(getState().schedules, payload);
-  if (errors.length) {
-    return dispatch(error({
-      sender: payload.sender,
-      errors,
-    }));
-  }
-  const result = dispatch(createAction(payload));
-  const uid = selectUid(getState());
-  if (uid) await syncSchedules(uid, getState());
-  return result;
-};
+/**
+ * Wraps an action creator with some error handling and remote sync.
+ * @param validatePayload takes in the current state and the payload and returns a list of errors.
+ * @param createAction Takes the payload and creates an action
+ * (typically one of the methods from schedulesSlice.actions).
+ * @returns A wrapped action creator that will dispatch errors if any are encountered,
+ * otherwise dispatches the change and updates the remote state to match the local.
+ */
+function createActionCreator<Payload>(
+  validatePayload: Validator<Payload>,
+  createAction: ActionCreatorWithPayload<Payload>,
+): Dispatcher<Payload> {
+  return (payload) => async (dispatch, getState) => {
+    const errors = validatePayload(getState().schedules, payload);
+    if (errors.length) {
+      return dispatch(error({
+        sender: payload.sender,
+        errors,
+      }));
+    }
+    const result = dispatch(createAction(payload));
+    const uid = selectUserUid(getState());
+    if (uid) await syncSchedules(uid, getState().schedules);
+    return result;
+  };
+}
 
 export const createSchedule = createActionCreator<CreateSchedulePayload>(
   (state, {
@@ -192,6 +287,11 @@ export const createSchedule = createActionCreator<CreateSchedulePayload>(
     return errors;
   },
   create,
+);
+
+export const toggleHidden = createActionCreator<string>(
+  () => [],
+  schedulesSlice.actions.toggleHidden,
 );
 
 export const removeCourses = createActionCreator<RemoveClassesPayload>(
@@ -235,3 +335,31 @@ export const selectSchedule = createActionCreator<SelectSchedulePayload>(
   (state, { scheduleId }) => (scheduleId && !state.schedules[scheduleId] ? ['schedule not found'] : []),
   schedulesSlice.actions.selectSchedule,
 );
+
+/**
+ * Queries the `schedules` collection according to a set of constraints and saves
+ * them to the Redux state.
+ * @param constraints the set of Firestore constraints to query with.
+ */
+export function useSchedules(...constraints: QueryConstraint[]) {
+  const dispatch = useAppDispatch();
+
+  // listen for this user's schedules, load all of them into the class cache
+  useEffect(() => {
+    if (constraints.length === 0) {
+      return;
+    }
+    const q = query(getSchedulesRef(), ...constraints);
+    const unsubSchedules = onSnapshot(q, (snap) => {
+      // load all of the classes into the class cache
+      snap.docs.forEach((schedule) => {
+        schedule.data().classes.forEach(({ classId }) => dispatch(ClassCache.loadClass(classId)));
+      });
+      const scheduleEntries = snap.docs.map((doc) => doc.data()).map((schedule) => [schedule.uid, schedule]);
+      console.log(scheduleEntries);
+      dispatch(overwriteSchedules(Object.fromEntries(scheduleEntries)));
+    }, (err) => dispatch(setSnapshotError(err)));
+    // eslint-disable-next-line consistent-return
+    return unsubSchedules;
+  }, constraints);
+}

@@ -15,14 +15,14 @@ import CurrentRefinements, {
 import SortBy, { SortByDemo } from '../components/SearchComponents/SortBy';
 import useSearchState from '../src/context/searchState';
 import { useAppSelector } from '../src/app/hooks';
-import { selectUid } from '../src/features/userData';
+import { selectUserUid } from '../src/features/userData';
 import { selectShowAttributes } from '../src/features/semesterFormat';
 import AttributeMenu from '../components/SearchComponents/AttributeMenu';
 
 // we show a demo if the user is not logged in,
 // but do not allow them to send requests to the database
 const SearchPage = function () {
-  const user = useAppSelector(selectUid);
+  const user = useAppSelector(selectUserUid);
   const showAttributes = useAppSelector(selectShowAttributes);
   const { searchState, setSearchState } = useSearchState();
 

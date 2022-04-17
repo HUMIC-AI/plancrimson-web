@@ -1,3 +1,7 @@
+/**
+ * API types for reverse engineering my.harvard and the Q Guide.
+ */
+
 import { DayOfWeek, Season } from './firestoreTypes';
 
 export type SearchParams = Partial<{

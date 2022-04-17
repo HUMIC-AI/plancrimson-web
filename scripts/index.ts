@@ -6,6 +6,7 @@ import fetchCsTags from './fetchCsTags';
 import fetchEvaluations from './fetchEvaluations';
 import fetchOldEvaluations from './fetchOldEvaluations';
 import fetchSyllabi from './fetchSyllabi';
+import fetchStatistics from './statistics';
 import uploadData from './uploadData';
 import uploadEvaluations from './uploadEvaluations';
 
@@ -47,6 +48,8 @@ const commands = [
     },
   },
   fetchCsTags,
+  newLabel('Statistics'),
+  fetchStatistics,
 ];
 
 async function main() {

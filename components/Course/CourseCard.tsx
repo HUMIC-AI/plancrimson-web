@@ -13,9 +13,11 @@ import {
 } from '../../shared/util';
 import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
 import { selectClassCache } from '../../src/features/classCache';
-import { addCourse, removeCourses, selectScheduleData } from '../../src/features/schedules';
+import {
+  addCourse, removeCourses, selectScheduleData, selectSchedules,
+} from '../../src/features/schedules';
 import { selectExpandCards, selectSemesterFormat } from '../../src/features/semesterFormat';
-import { selectClassYear, selectLastLoggedIn } from '../../src/features/userData';
+import { selectClassYear, selectLastLoggedIn, selectUserDocument } from '../../src/features/userData';
 import { handleError } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 import {
@@ -51,7 +53,10 @@ export type DragStatus =
     };
   };
 
-const CourseCard: React.FC<Props> = function ({
+/**
+ * Renders a given course on the planning page or in the search page.
+ */
+export default function CourseCard({
   course,
   selectedSchedule,
   handleExpand,
@@ -59,13 +64,14 @@ const CourseCard: React.FC<Props> = function ({
   setDragStatus,
   inSearchContext = true,
   warnings,
-}) {
+}: Props) {
   const dispatch = useAppDispatch();
+  const user = useAppSelector(selectUserDocument);
   const classCache = useAppSelector(selectClassCache);
   const isExpanded = useAppSelector(selectExpandCards);
-  const scheduleData = useAppSelector(selectScheduleData);
   const classYear = useAppSelector(selectClassYear);
   const lastLoggedIn = useAppSelector(selectLastLoggedIn);
+  const schedules = useAppSelector(selectSchedules);
   const semesterFormat = useAppSelector(selectSemesterFormat);
 
   const draggable = typeof setDragStatus !== 'undefined';
@@ -79,13 +85,16 @@ const CourseCard: React.FC<Props> = function ({
 
   const buttonStyles = 'bg-white text-blue-900 bg-opacity-60 hover:bg-opacity-90 transition-colors rounded-full p-1';
 
+  // adds a class to the selected schedule.
+  // linked to plus button in top right corner.
   const addClass = useCallback(() => {
     if (!selectedSchedule) return;
     const { year, season } = selectedSchedule;
     const viability = checkViable(
       course,
       { year, season },
-      { ...scheduleData, classYear, lastLoggedIn },
+      user,
+      schedules,
       classCache,
     );
     if (viability.viability === 'No') {
@@ -102,7 +111,7 @@ const CourseCard: React.FC<Props> = function ({
       scheduleId: selectedSchedule.id,
     }]));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classCache, classYear, course, lastLoggedIn, scheduleData, selectedSchedule]);
+  }, [classCache, classYear, course, lastLoggedIn, selectedSchedule]);
 
   const handleDragStart: React.DragEventHandler<HTMLDivElement> = (ev) => {
     // eslint-disable-next-line no-param-reassign
@@ -185,7 +194,7 @@ const CourseCard: React.FC<Props> = function ({
 
                 {selectedSchedule
                   && semesterFormat !== 'sample'
-                  && (scheduleData.schedules[selectedSchedule.id].classes.find(
+                  && (schedules[selectedSchedule.id].classes.find(
                     (cls) => cls.classId === getClassId(course),
                   ) ? (
                     <button
@@ -252,6 +261,4 @@ const CourseCard: React.FC<Props> = function ({
       </div>
     </div>
   );
-};
-
-export default CourseCard;
+}

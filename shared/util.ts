@@ -14,8 +14,9 @@ import {
   DayOfWeek,
   DAYS_OF_WEEK,
   Viability,
-  Schedules,
+  ScheduleMap,
   UserDocument,
+  ScheduleMetadata,
 } from './firestoreTypes';
 import seasPlan from './seasPlan.json';
 import { getSchoolYear } from '../src/requirements/util';
@@ -62,8 +63,9 @@ export function classNames(...classes: (string | boolean)[]) {
     );
 }
 
+// Returns all the truthy items in a list.
 export function allTruthy<T>(list: T[]) {
-  return list.filter(Boolean).map((val) => val!);
+  return list.filter(Boolean) as NonNullable<T>[];
 }
 
 export function getClassId(course: Class): ClassId {
@@ -126,12 +128,12 @@ export function getUniqueSemesters(classYear: number, semesters: Semester[]) {
   return defaultSemesters.sort(compareSemesters);
 }
 
-export function sortSchedules(schedules: Schedules) {
+export function sortSchedules(schedules: ScheduleMap) {
   return Object.values(schedules).sort(compareSemesters);
 }
 
 export function getSchedulesBySemester(
-  schedules: Schedules,
+  schedules: ScheduleMap,
   targetYear: number,
   targetSeason: Season,
 ) {
@@ -154,6 +156,10 @@ function mapSome(val: string | string[], fn: (arg: string) => boolean) {
   return typeof val === 'string' ? fn(val) : val.some(fn);
 }
 
+/**
+ * Check if two classes conflict, i.e. cannot be taken at the same time.
+ * @returns true if the two classes overlap
+ */
 function doesConflict(class1: Class, class2: Class) {
   return DAYS_OF_WEEK.some((day) => {
     if (
@@ -172,6 +178,11 @@ function doesConflict(class1: Class, class2: Class) {
   });
 }
 
+/**
+ * Check for time conflicts between classes in a list.
+ * @param classes the list of classes to search for conflicts between.
+ * @returns A map from class uids to the list of uids that the class conflicts with.
+ */
 export function findConflicts(classes: Class[]): Record<ClassId, ClassId[]> {
   const conflicts: Record<ClassId, ClassId[]> = {};
   classes.forEach((cls) => {
@@ -192,23 +203,33 @@ export function findConflicts(classes: Class[]): Record<ClassId, ClassId[]> {
 }
 
 export interface ErrorData {
-  sender?: string;
-  errors: string[];
+  sender?: string; // the id of the object raising this error
+  errors: string[]; // the errors returned
 }
 
-export function checkViable(
+/**
+ * Check if it is viable for a given user to take a given class during a given semester.
+ * @param cls The class to be added.
+ * @param schedule the schedule to add it to.
+ * @param classYear the user's graduation year
+ * @param schedules A map of the user's schedules.
+ * @param classCache A map from class uids to objects.
+ * @returns a tuple containing the viability and the reason.
+ */
+export function checkViable({
+  cls, schedule, classYear, classCache,
+}: {
   cls: Class,
-  querySemester: Semester,
-  data: UserDocument<string>,
+  schedule: Schedule,
+  classYear: number,
   classCache: ClassCache,
-): ViabilityResponse {
+}): ViabilityResponse {
   const { year, season } = getSemester(cls);
 
-  const selectedSchedule = data.selectedSchedules[`${querySemester.year}${querySemester.season}`];
-  if (selectedSchedule && data.schedules[selectedSchedule]) {
+  if (schedule) {
     const conflicts = findConflicts(allTruthy([
       cls,
-      ...data.schedules[selectedSchedule].classes.map(
+      ...schedule.classes.map(
         ({ classId }) => classCache[classId],
       ),
     ]));
@@ -224,17 +245,17 @@ export function checkViable(
     }
   }
 
-  if (year === querySemester.year && season === querySemester.season) {
+  if (year === schedule.year && season === schedule.season) {
     return {
       viability: 'Yes',
-      reason: `This course is offered in ${querySemester.season} ${querySemester.year} in my.harvard.`,
+      reason: `This course is offered in ${schedule.season} ${schedule.year} in my.harvard.`,
     };
   }
 
   if (
     cls.SUBJECT === 'FRSEMR'
-    && data.classYear
-    && getSchoolYear(querySemester, data.classYear) > 1
+    && classYear
+    && getSchoolYear({ year: schedule.year, season: schedule.season }, classYear) > 1
   ) {
     return {
       viability: 'No',
@@ -257,44 +278,44 @@ export function checkViable(
   if (foundInSeasPlan) {
     const matchesSemester = foundInSeasPlan.semesters.find(
       (plannedSemester) => (plannedSemester.term === 'Spring'
-          && querySemester.season === 'Spring'
-          && plannedSemester.academicYear + 1 === querySemester.year)
+          && schedule.season === 'Spring'
+          && plannedSemester.academicYear + 1 === schedule.year)
         || (plannedSemester.term === 'Fall'
-          && querySemester.season === 'Fall'
-          && plannedSemester.academicYear === querySemester.year),
+          && schedule.season === 'Fall'
+          && plannedSemester.academicYear === schedule.year),
     );
 
     if (matchesSemester?.offeredStatus === 'No') {
       return {
         viability: 'No',
-        reason: `This course will not be offered in ${querySemester.season} ${querySemester.year} according to the SEAS Four Year Plan.`,
+        reason: `This course will not be offered in ${schedule.season} ${schedule.year} according to the SEAS Four Year Plan.`,
       };
     }
 
     if (matchesSemester?.offeredStatus === 'Yes') {
       return {
         viability: 'Yes',
-        reason: `This course will be offered in ${querySemester.season} ${querySemester.year} according to the SEAS Four Year Plan.`,
+        reason: `This course will be offered in ${schedule.season} ${schedule.year} according to the SEAS Four Year Plan.`,
         instructors: matchesSemester.instructors,
       };
     }
 
     return {
       viability: 'Unlikely',
-      reason: `${querySemester.season} ${querySemester.year} is not listed in this course's offerings in the SEAS Four Year Plan.`,
+      reason: `${schedule.season} ${schedule.year} is not listed in this course's offerings in the SEAS Four Year Plan.`,
     };
   }
 
-  if (season === querySemester.season) {
+  if (season === schedule.season) {
     return {
       viability: 'Likely',
-      reason: `This course is usually offered in the ${querySemester.season.toLowerCase()}.`,
+      reason: `This course is usually offered in the ${schedule.season.toLowerCase()}.`,
     };
   }
 
   return {
     viability: 'Unlikely',
-    reason: `This course is not usually offered in the ${querySemester.season.toLowerCase()}.`,
+    reason: `This course is not usually offered in the ${schedule.season.toLowerCase()}.`,
   };
 }
 

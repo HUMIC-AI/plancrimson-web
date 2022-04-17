@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 // components
 import Layout from '../components/Layout/Layout';
@@ -12,9 +13,11 @@ import { allTruthy, classNames, sortSchedules } from '../shared/util';
 import { useAppDispatch, useAppSelector } from '../src/app/hooks';
 import { selectClassCache } from '../src/features/classCache';
 import { createSchedule, selectSchedules } from '../src/features/schedules';
+import { selectUserUid } from '../src/features/userData';
 
 export default function SchedulePage() {
   const dispatch = useAppDispatch();
+  const userUid = useAppSelector(selectUserUid);
   const schedules = useAppSelector(selectSchedules);
   const { query } = useRouter();
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(
@@ -31,8 +34,14 @@ export default function SchedulePage() {
       if (typeof season !== 'string' || !(season in SEASON_ORDER)) {
         throw new Error('Invalid season');
       }
+      if (!userUid) {
+        throw new Error('User not logged in');
+      }
 
       const schedule = await dispatch(createSchedule({
+        uid: uuidv4(),
+        ownerUid: userUid,
+        public: false,
         id: fields.get('semesterId') as string,
         year: parseInt(fields.get('year') as string, 10),
         season: season as Season,

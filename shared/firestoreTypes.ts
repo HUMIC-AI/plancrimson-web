@@ -68,20 +68,21 @@ export interface CustomTimeRecord {
   endDate: string; // yyyy-mm-dd
 }
 
-export type UserDocument<DateType> = UserData<DateType> & ScheduleData;
+/**
+ * The schema of the actual Firestore user document.
+ * Contains user metadata and their schedule metadata.
+ * Actual schedules are stored in the schedules Firestore collection.
+ */
+export type UserDocument<DateType> = UserMetadata<DateType> & ScheduleMetadata;
 
-export interface UserData<DateType> {
+export interface UserMetadata<DateType> {
   classYear: number | null;
+  friends: string[]; // list of uids
   lastLoggedIn: DateType | null;
 }
 
-export interface Schedules {
-  [scheduleId: string]: Schedule;
-}
-
-export interface ScheduleData {
-  schedules: Schedules;
-
+// Contains a user's selected schedules, custom class times, and waived reqs.
+export interface ScheduleMetadata {
   selectedSchedules: {
     [semester: Term]: string | null;
   };
@@ -101,13 +102,30 @@ export interface ScheduleData {
       classes: string[];
     };
   };
+
+  hidden: string[]; // hidden schedules
 }
 
-export interface Schedule {
+export interface DownloadPlan {
   id: string;
+  schedules: Schedule[];
+}
+
+// maps from ids to schedules
+export interface ScheduleMap {
+  [scheduleId: string]: Schedule;
+}
+
+/**
+ * The Firestore schema for the schedules collection.
+ */
+export interface Schedule {
+  uid: string; // global unique id
+  id: string; // better understood as "title"
+  ownerUid: string; // uid of the user that created this schedule
+  public: boolean;
   year: number;
   season: Season;
-  hidden?: boolean;
   classes: UserClassData[];
 }
 
@@ -115,9 +133,4 @@ export interface Schedule {
 export interface UserClassData {
   classId: string;
   grade?: Grade;
-}
-
-export interface DownloadPlan {
-  id: string;
-  schedules: Schedule[];
 }

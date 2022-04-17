@@ -11,7 +11,7 @@ import { ATTRIBUTE_DESCRIPTIONS, Class } from '../../shared/apiTypes';
 import Stats, { StatsComponent } from './Stats';
 import StateResults, { StateResultsComponent } from './StateResults';
 import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
-import { selectUid } from '../../src/features/userData';
+import { selectUserUid } from '../../src/features/userData';
 import { alertSignIn } from './searchUtils';
 import { selectShowAttributes, setShowAttributes } from '../../src/features/semesterFormat';
 import { selectSchedules } from '../../src/features/schedules';
@@ -64,7 +64,7 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
 }) {
   const dispatch = useAppDispatch();
   const schedules = useAppSelector(selectSchedules);
-  const user = useAppSelector(selectUid);
+  const user = useAppSelector(selectUserUid);
   const showAttributes = useAppSelector(selectShowAttributes);
   const isLg = useLgBreakpoint();
   const { selectSchedule, selectedSchedule } = useSelectedScheduleContext();

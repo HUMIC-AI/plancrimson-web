@@ -1,30 +1,36 @@
 /* eslint-disable no-param-reassign */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { FirestoreError } from 'firebase/firestore';
-import type { UserDocument, UserData } from '../../shared/firestoreTypes';
+import type { UserDocument, UserMetadata } from '../../shared/firestoreTypes';
 import type { RootState } from '../app/store';
 
-type UserDataState = UserData<string> & {
+// authentication info, not from Firestore
+interface UserInfo {
+  uid: string;
+  photoUrl: string | null;
+  email: string;
+}
+
+type UserDataState = UserMetadata<string> & {
   userInfo: UserInfo | null;
   signInError: Error | null;
   snapshotError: FirestoreError | null;
 };
 
-type UserInfo = {
-  uid: string;
-  photoUrl: string | null;
-  email: string;
-};
-
 const initialState: UserDataState = {
-  userInfo: null,
+  // from UserData
   classYear: null,
+  friends: [],
   lastLoggedIn: null,
+  // additional fields
+  userInfo: null,
   signInError: null,
   snapshotError: null,
 };
 
-// eslint-disable-next-line import/prefer-default-export
+/**
+ * Handles the user authentication state and base user metadata.
+ */
 export const userDataSlice = createSlice({
   name: 'userData',
   initialState,
@@ -34,10 +40,13 @@ export const userDataSlice = createSlice({
         state.userInfo = action.payload;
       }
     },
+    signOut(state) {
+      state.userInfo = null;
+    },
     setLastSignIn(state, action: PayloadAction<string | null>) {
       state.lastLoggedIn = action.payload;
     },
-    signInError(state, action: PayloadAction<Error>) {
+    setSignInError(state, action: PayloadAction<Error>) {
       state.signInError = action.payload;
     },
     setClassYear(state, action: PayloadAction<number>) {
@@ -50,20 +59,22 @@ export const userDataSlice = createSlice({
 });
 
 export const {
-  signIn, setLastSignIn, signInError, setClassYear, setSnapshotError,
+  signIn, signOut, setLastSignIn, setSignInError, setClassYear, setSnapshotError,
 } = userDataSlice.actions;
 
 // ========================= SELECTORS =========================
 
 export const selectPhotoUrl = (state: RootState) => state.user.userInfo?.photoUrl || null;
-export const selectUid = (state: RootState) => state.user.userInfo?.uid || null;
+export const selectUserUid = (state: RootState) => state.user.userInfo?.uid || null;
 export const selectClassYear = (state: RootState) => state.user.classYear;
 export const selectLastLoggedIn = (state: RootState) => state.user.lastLoggedIn;
+export const selectSnapshotError = (state: RootState) => state.user.snapshotError;
 export const selectUserDocument = (state: RootState): UserDocument<string> => ({
   classYear: state.user.classYear,
   lastLoggedIn: state.user.lastLoggedIn,
+  friends: state.user.friends,
   customTimes: state.schedules.customTimes,
-  schedules: state.schedules.schedules,
   selectedSchedules: state.schedules.selectedSchedules,
   waivedRequirements: state.schedules.waivedRequirements,
+  hidden: state.schedules.hidden,
 });

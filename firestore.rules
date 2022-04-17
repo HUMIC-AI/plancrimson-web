@@ -1,16 +1,37 @@
 rules_version = '2'
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+    function loggedInStudent() {
+      return request.auth != null; // && request.auth.token.email.matches("@[^@]+harvard.edu$");
     }
 
-    match /evaluations/{uid} {
+    match /alerts/{uid} {
       allow read: if request.auth != null;
     }
 
+    match /users/{uid} {
+      allow read, write: if loggedInStudent() && request.auth.uid == uid;
+    }
+
+    match /schedules/{uid} {
+      // allow logged in user to see a schedule
+      // if it's public or if they're friends of the schedule's creator
+      allow read: if loggedInStudent() && (
+        (resource.data.public == true)
+        || (request.auth.uid == resource.data.ownerUid)
+        || ('ownerUid' in resource.data && request.auth.uid in get(/databases/$(database)/documents/users/$(resource.data.ownerUid)).data.friends)
+      );
+      // only allow logged in user to modify their own schedule
+      allow create: if loggedInStudent() && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if loggedInStudent() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /evaluations/{uid} {
+      allow read: if loggedInStudent();
+    }
+
     match /suggestions/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if loggedInStudent() && request.auth.uid == uid;
     }
   }
 }

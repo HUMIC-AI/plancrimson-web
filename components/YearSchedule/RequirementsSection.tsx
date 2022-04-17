@@ -28,7 +28,7 @@ import {
   selectSampleSchedule, setShowReqs, showSample, showSelected,
 } from '../../src/features/semesterFormat';
 import { createSchedule, CreateSchedulePayload, selectSchedule } from '../../src/features/schedules';
-import { selectUid } from '../../src/features/userData';
+import { selectUserUid } from '../../src/features/userData';
 import { handleError } from '../../src/hooks';
 
 interface RequirementsSectionProps {
@@ -46,7 +46,7 @@ interface RequirementsSectionProps {
 function SuggestionForm() {
   const { uid, email } = useAppSelector((state) => ({
     email: state.user.userInfo?.email || null,
-    uid: selectUid(state),
+    uid: selectUserUid(state),
   }));
 
   const timeoutRef = useRef<number>();

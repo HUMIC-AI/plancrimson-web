@@ -42,13 +42,13 @@ function ButtonTitle({
   showDropdown: boolean;
 }) {
   const dispatch = useAppDispatch();
-  const [value, setValue] = useState(selectedSchedule.id);
-  useEffect(() => setValue(selectedSchedule.id), [selectedSchedule.id]);
+  const [value, setValue] = useState(selectedSchedule.uid);
+  useEffect(() => setValue(selectedSchedule.uid), [selectedSchedule.uid]);
 
   function saveTitle(e: any) {
     e.preventDefault();
-    if (!selectedSchedule.id || value === selectedSchedule.id) return;
-    dispatch(renameSchedule({ oldId: selectedSchedule.id, newId: value }));
+    if (!selectedSchedule.uid || value === selectedSchedule.uid) return;
+    dispatch(renameSchedule({ oldId: selectedSchedule.uid, newId: value }));
   }
 
   const doShowTerm = showTerm !== false && (showTerm || !titleContainsTerm(selectedSchedule.id, selectedSchedule));
@@ -92,7 +92,7 @@ function ButtonTitle({
   );
 }
 
-const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
+function ScheduleSelector({
   schedules,
   selectedSchedule,
   selectSchedule: select,
@@ -101,7 +101,7 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
   parentWidth,
   showDropdown,
   highlight = false,
-}) {
+}: ScheduleSelectorProps) {
   const optionStyles = 'flex space-x-2 w-min max-w-full';
 
   // if we're showing all schedules, don't render a dropdown menu
@@ -172,7 +172,7 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
               {schedules.length > 0 ? (
                 schedules.sort(compareSemesters).map((schedule) => (
                   <Listbox.Option
-                    key={schedule.id}
+                    key={schedule.uid}
                     value={schedule}
                     className="odd:bg-gray-200 even:bg-white cursor-default py-1.5 px-3"
                   >
@@ -202,6 +202,6 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
       )}
     </Listbox>
   );
-};
+}
 
 export default ScheduleSelector;

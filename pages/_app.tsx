@@ -3,7 +3,7 @@ import '../src/index.css';
 import type { AppProps } from 'next/app';
 import { getApps, initializeApp } from 'firebase/app';
 import {
-  connectFirestoreEmulator, getFirestore, onSnapshot, serverTimestamp, setDoc, Timestamp, updateDoc,
+  connectFirestoreEmulator, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc,
 } from 'firebase/firestore';
 // import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { Provider } from 'react-redux';
@@ -13,14 +13,9 @@ import { SearchStateProvider } from '../src/context/searchState';
 import store from '../src/app/store';
 import { getUserRef } from '../src/hooks';
 import { useAppDispatch, useAppSelector } from '../src/app/hooks';
-import {
-  selectUid, setClassYear, setLastSignIn, setSnapshotError, signIn, signInError,
-} from '../src/features/userData';
-import { overwrite } from '../src/features/schedules';
+import * as UserData from '../src/features/userData';
+import * as Schedules from '../src/features/schedules';
 import { ModalProvider, useModal } from '../src/features/modal';
-import { allTruthy, getDefaultSemesters, getUniqueSemesters } from '../shared/util';
-import type { Term, UserDocument } from '../shared/firestoreTypes';
-import { loadClass } from '../src/features/classCache';
 import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
 
 // Your web app's Firebase configuration
@@ -48,10 +43,13 @@ if (getApps().length === 0) {
   }
 }
 
+/**
+ * Ask the user for their graduation year.
+ */
 function GraduationYearDialog({ defaultYear } : { defaultYear: number }) {
   const { setOpen } = useModal();
   const [classYear, setYear] = useState(defaultYear);
-  const uid = useAppSelector(selectUid)!;
+  const uid = useAppSelector(UserData.selectUserUid)!;
   return (
     <form
       onSubmit={(e) => {
@@ -80,81 +78,22 @@ function GraduationYearDialog({ defaultYear } : { defaultYear: number }) {
   );
 }
 
-function getMissingFields({
-  classYear, schedules, customTimes, selectedSchedules, waivedRequirements,
-}: Partial<UserDocument<Timestamp>>) {
-  // need the class year to do anything else
-  if (!classYear) {
-    const now = new Date();
-    const defaultYear = now.getFullYear() + (now.getMonth() > 5 ? 4 : 3);
-    return { classYear: defaultYear };
-  }
-
-  const missingFields: Partial<UserDocument<Timestamp>> = {};
-
-  if (!schedules) {
-    // create a schedule for each semester
-    missingFields.schedules = Object.fromEntries(getDefaultSemesters(classYear).map(({ year, season }) => {
-      const id = `My ${season} ${year}`;
-      return [id, {
-        year, season, id, classes: [],
-      }];
-    }));
-  }
-
-  // for each term that does not currently have a selected schedule,
-  // select the first schedule
-  const existingSchedules = Object.values(schedules || missingFields.schedules!);
-  if (!selectedSchedules) {
-    missingFields.selectedSchedules = Object.fromEntries(allTruthy(getUniqueSemesters(classYear, existingSchedules).map(({ year, season }) => {
-      const term: Term = `${year}${season}`;
-      const existing = existingSchedules.find(
-        ({ year: y, season: s }) => year === y && season === s,
-      );
-      if (!existing) return null;
-      return [term, existing.id];
-    })));
-  } else {
-    const missingSelectedSchedules = allTruthy(getUniqueSemesters(classYear, existingSchedules).map(({ year, season }) => {
-      const term: Term = `${year}${season}`;
-      const existing = existingSchedules.find(
-        ({ year: y, season: s }) => year === y && season === s,
-      );
-      if (selectedSchedules[term] || !existing) return null;
-      return [term, existing.id];
-    }));
-    if (missingSelectedSchedules.length > 0) {
-      missingFields.selectedSchedules = Object.assign(selectedSchedules, Object.fromEntries(missingSelectedSchedules));
-    }
-  }
-
-  if (!customTimes) {
-    missingFields.customTimes = {};
-  }
-
-  if (!waivedRequirements) {
-    missingFields.waivedRequirements = {};
-  }
-
-  return missingFields;
-}
-
-const MyApp = function ({ Component, pageProps }: AppProps) {
+function MyApp({ Component, pageProps }: AppProps) {
   const auth = getAuth();
   const dispatch = useAppDispatch();
-  const uid = useAppSelector(selectUid);
+  const uid = useAppSelector(UserData.selectUserUid);
   const { showContents } = useModal();
 
-  // load user
+  // When the user logs in/out, dispatch to redux
   useEffect(() => {
     const unsub = onAuthStateChanged(
       auth,
-      (u) => dispatch(signIn(u ? {
+      (u) => dispatch(UserData.signIn(u ? {
         uid: u.uid,
         email: u.email!,
         photoUrl: u.photoURL,
       } : null)),
-      (err) => dispatch(signInError(err)),
+      (err) => dispatch(UserData.setSignInError(err)),
     );
     return unsub;
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -163,57 +102,47 @@ const MyApp = function ({ Component, pageProps }: AppProps) {
   useEffect(() => {
     if (!uid) return () => {};
 
-    const ref = getUserRef(uid);
+    const userRef = getUserRef(uid);
     const unsub = onSnapshot(
-      ref,
-      (snap) => {
-        if (!snap.exists() || snap.metadata.fromCache) return;
+      userRef,
+      (userSnap) => {
+        // only refresh on new data from Firestore
+        if (!userSnap.exists() || userSnap.metadata.fromCache) return;
 
-        const { lastLoggedIn, ...data } = snap.data();
+        const { lastLoggedIn, ...data } = userSnap.data();
 
-        // know this will always exist
-        dispatch(setLastSignIn(lastLoggedIn ? lastLoggedIn.toDate().toISOString() : null));
-
-        const missing = getMissingFields(data);
+        // update last sign in, know this will always exist
+        dispatch(UserData.setLastSignIn(lastLoggedIn ? lastLoggedIn.toDate().toISOString() : null));
 
         // need class year before other missing fields
-        if (missing.classYear) {
+        if (!data.classYear) {
           console.warn('missing class year');
+          const now = new Date();
           showContents({
             title: 'Set graduation year',
-            content: <GraduationYearDialog defaultYear={missing.classYear} />,
+            content: <GraduationYearDialog defaultYear={now.getFullYear() + (now.getMonth() > 5 ? 4 : 3)} />,
             noExit: true,
           });
           return;
         }
 
-        // otherwise, handle other missing fields
-        if (Object.keys(missing).length > 0) {
-          setDoc(ref, missing, { merge: true })
-            .catch((err) => console.error(err));
-          return;
-        }
+        dispatch(UserData.setClassYear(data.classYear!));
 
-        dispatch(setClassYear(data.classYear!));
-
-        Object.values(data.schedules!)
-          .forEach((schedule) => schedule.classes
-            .forEach(({ classId }) => dispatch(loadClass(classId))));
-
-        dispatch(overwrite({
-          schedules: data.schedules!,
-          customTimes: data.customTimes!,
-          selectedSchedules: data.selectedSchedules!,
-          waivedRequirements: data.waivedRequirements!,
+        // overwrite metadata
+        dispatch(Schedules.overwriteScheduleMetadata({
+          customTimes: data.customTimes || {},
+          selectedSchedules: data.selectedSchedules || {},
+          waivedRequirements: data.waivedRequirements || {},
+          hidden: data.hidden || [],
         }));
       },
-      (err) => dispatch(setSnapshotError(err)),
+      (err) => dispatch(UserData.setSnapshotError(err)),
     );
 
     // trigger initial write
-    setDoc(ref, { lastLoggedIn: serverTimestamp() }, { merge: true })
+    setDoc(userRef, { lastLoggedIn: serverTimestamp() }, { merge: true })
       .then(() => console.info('updated last login time'))
-      .catch((err) => dispatch(setSnapshotError(err)));
+      .catch((err) => dispatch(UserData.setSnapshotError(err)));
 
     return unsub;
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -226,7 +155,7 @@ const MyApp = function ({ Component, pageProps }: AppProps) {
       </SelectedScheduleProvider>
     </SearchStateProvider>
   );
-};
+}
 
 function Wrapper(props: AppProps) {
   return (

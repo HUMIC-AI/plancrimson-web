@@ -5,6 +5,7 @@ import { useModal } from '../src/features/modal';
 
 /**
  * Based on https://headlessui.dev/react/dialog
+ * Only one instance exists in the root Layout component.
  */
 export default function CustomModal() {
   const { open, setOpen, data } = useModal();

@@ -12,8 +12,8 @@ import {
   FaTimes, FaBars, FaCalendarCheck, FaUser,
 } from 'react-icons/fa';
 import { classNames } from '../../shared/util';
-import { useAppSelector } from '../../src/app/hooks';
-import { selectPhotoUrl } from '../../src/features/userData';
+import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
+import { selectPhotoUrl, selectUserUid, signOut as signOutUser } from '../../src/features/userData';
 import { handleError, signInUser } from '../../src/hooks';
 
 const paths = [
@@ -37,7 +37,9 @@ const paths = [
 
 // Profile dropdown
 const UserMenu = function () {
+  const uid = useAppSelector(selectUserUid);
   const photoUrl = useAppSelector(selectPhotoUrl);
+  const dispatch = useAppDispatch();
 
   return (
     <Menu as="div" className="ml-3 relative z-50">
@@ -78,15 +80,16 @@ const UserMenu = function () {
             {({ active }) => (
               <button
                 type="button"
-                name={photoUrl ? 'Sign out' : 'Sign in'}
+                name={uid ? 'Sign out' : 'Sign in'}
                 className={classNames(
                   active ? 'bg-white' : '',
                   'block w-full px-4 py-2 text-sm text-left text-gray-800',
                 )}
                 onClick={async () => {
                   try {
-                    if (photoUrl) {
+                    if (uid) {
                       await signOut(getAuth());
+                      dispatch(signOutUser());
                     } else {
                       await signInUser();
                     }
@@ -95,7 +98,7 @@ const UserMenu = function () {
                   }
                 }}
               >
-                {photoUrl ? 'Sign out' : 'Sign in'}
+                {uid ? 'Sign out' : 'Sign in'}
               </button>
             )}
           </Menu.Item>

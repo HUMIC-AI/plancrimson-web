@@ -8,9 +8,11 @@ import {
   FaDownload,
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
+import { v4 as uuidv4 } from 'uuid';
 import { Schedule, Season } from '../../shared/firestoreTypes';
-import { useAppDispatch } from '../../src/app/hooks';
+import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
 import { createSchedule, deleteSchedule } from '../../src/features/schedules';
+import { selectUserUid } from '../../src/features/userData';
 import { downloadJson } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 
@@ -72,14 +74,15 @@ function CustomButton({ name, Icon, ...rest }: ButtonProps | LinkProps) {
   );
 }
 
-const ButtonMenu: React.FC<ButtonMenuProps> = function ({
+function ButtonMenu({
   selectedSchedule,
   selectSchedule,
   year,
   season,
   prevScheduleId,
-}) {
+}: ButtonMenuProps) {
   const dispatch = useAppDispatch();
+  const userUid = useAppSelector(selectUserUid);
 
   const handleDuplicate = useCallback(async () => {
     if (!selectedSchedule) return;
@@ -148,11 +151,18 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
         <CustomButton
           name="New schedule"
           onClick={async () => {
+            if (!userUid) {
+              alert('You must be logged in!');
+              return;
+            }
             const schedule = await dispatch(createSchedule({
+              uid: uuidv4(),
               id: `${season} ${year}`,
               year,
               season,
               classes: [],
+              ownerUid: userUid,
+              public: false,
               force: true,
             }));
             try {
@@ -183,6 +193,6 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
       </div>
     </div>
   );
-};
+}
 
 export default ButtonMenu;

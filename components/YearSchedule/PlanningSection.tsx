@@ -10,6 +10,7 @@ import {
   FaChevronRight,
   FaPlus,
 } from 'react-icons/fa';
+import { v4 as uuidv4 } from 'uuid';
 import { DownloadPlan, Season } from '../../shared/firestoreTypes';
 import {
   allTruthy,
@@ -19,13 +20,11 @@ import {
   sortSchedules,
 } from '../../shared/util';
 import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
-import {
-  selectSchedule, selectSelectedSchedules, selectSchedules, clearSchedule, createSchedule,
-} from '../../src/features/schedules';
+import * as Schedules from '../../src/features/schedules';
 import {
   selectExpandCards, selectSampleSchedule, selectSemesterFormat, selectShowReqs, setShowReqs, showAll, showSelected, toggleExpand,
 } from '../../src/features/semesterFormat';
-import { selectClassYear, selectUid } from '../../src/features/userData';
+import { selectClassYear, selectUserUid } from '../../src/features/userData';
 import {
   downloadJson, getUserRef, handleError, signInUser,
 } from '../../src/hooks';
@@ -40,12 +39,12 @@ const HeaderSection: React.FC<{
   downloadData: any;
 }> = function ({ totalCourses, resizeRef, downloadData }) {
   const dispatch = useAppDispatch();
-  const selectedSchedules = useAppSelector(selectSelectedSchedules);
+  const selectedSchedules = useAppSelector(Schedules.selectSelectedSchedules);
   const showReqs = useAppSelector(selectShowReqs);
   const isExpanded = useAppSelector(selectExpandCards);
   const semesterFormat = useAppSelector(selectSemesterFormat);
   const sampleSchedule = useAppSelector(selectSampleSchedule);
-  const schedules = useAppSelector(selectSchedules);
+  const userSchedules = useAppSelector(Schedules.selectSchedules);
 
   return (
     <div className="text-white space-y-4">
@@ -119,8 +118,8 @@ const HeaderSection: React.FC<{
                 );
                 if (yn) {
                   allTruthy(
-                    Object.values(selectedSchedules).map((id) => (id ? schedules[id] : null)),
-                  ).forEach((schedule) => dispatch(clearSchedule(schedule.id)));
+                    Object.values(selectedSchedules).map((id) => (id ? userSchedules[id] : null)),
+                  ).forEach((schedule) => dispatch(Schedules.clearSchedule(schedule.id)));
                 }
               }}
             >
@@ -157,14 +156,15 @@ type Props = {
 function PlanningSection({ highlightedRequirement } : Props) {
   const dispatch = useAppDispatch();
   const {
-    userUid, classYear, semesterFormat, sampleSchedule, schedules, selectedSchedules,
+    userUid, classYear, semesterFormat, sampleSchedule, schedules: userSchedules, selectedSchedules, hidden,
   } = useAppSelector((state) => ({
-    userUid: selectUid(state),
+    userUid: selectUserUid(state),
     classYear: selectClassYear(state),
     semesterFormat: selectSemesterFormat(state),
     sampleSchedule: selectSampleSchedule(state),
-    schedules: selectSchedules(state),
-    selectedSchedules: selectSelectedSchedules(state),
+    schedules: Schedules.selectSchedules(state),
+    selectedSchedules: Schedules.selectSelectedSchedules(state),
+    hidden: Schedules.selectHiddenSchedules(state),
   }));
 
   const [dragStatus, setDragStatus] = useState<DragStatus>({
@@ -212,7 +212,7 @@ function PlanningSection({ highlightedRequirement } : Props) {
     };
   }, []);
 
-  const selectNewSchedule = (year: number, season: Season, scheduleId: string | null) => dispatch(selectSchedule({
+  const selectNewSchedule = (year: number, season: Season, scheduleId: string | null) => dispatch(Schedules.selectSchedule({
     term: `${year}${season}`,
     scheduleId,
   }));
@@ -234,7 +234,7 @@ function PlanningSection({ highlightedRequirement } : Props) {
         if (!classYear) return [];
         return getUniqueSemesters(
           classYear,
-          Object.values(schedules),
+          Object.values(userSchedules),
         ).map(({ year, season }) => ({
           year,
           season,
@@ -243,7 +243,7 @@ function PlanningSection({ highlightedRequirement } : Props) {
           selectSchedule: (id) => selectNewSchedule(year, season, id),
         }));
       case 'all':
-        return Object.values(schedules)
+        return Object.values(userSchedules)
           .sort(compareSemesters)
           .map(({ year, season, id }) => ({
             year,
@@ -257,15 +257,15 @@ function PlanningSection({ highlightedRequirement } : Props) {
         return [];
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classYear, sampleSchedule?.schedules, schedules, selectedSchedules, semesterFormat]);
+  }, [classYear, sampleSchedule?.schedules, userSchedules, selectedSchedules, semesterFormat]);
 
   const totalCourses = useMemo(
     () => Object.values(selectedSchedules).reduce(
       (acc, scheduleId) => acc
-          + ((scheduleId && schedules[scheduleId]?.classes.length) || 0),
+          + ((scheduleId && userSchedules[scheduleId]?.classes.length) || 0),
       0,
     ),
-    [schedules, selectedSchedules],
+    [userSchedules, selectedSchedules],
   );
 
   const downloadData: DownloadPlan = {
@@ -273,31 +273,33 @@ function PlanningSection({ highlightedRequirement } : Props) {
       ? sampleSchedule!.id
       : Math.random().toString(16).slice(2, 18),
     schedules: allTruthy(
-      allSemesters.map(({ selectedScheduleId }) => (selectedScheduleId ? schedules[selectedScheduleId] : null)),
+      allSemesters.map(({ selectedScheduleId }) => (selectedScheduleId ? userSchedules[selectedScheduleId] : null)),
     ),
   };
 
   const hiddenSchedules = allTruthy(allSemesters.map(({ selectedScheduleId }) => {
     if (!selectedScheduleId) return null;
-    const schedule = schedules[selectedScheduleId];
-    if (!schedule?.hidden) return null;
+    const schedule = userSchedules[selectedScheduleId];
+    if (!hidden.includes(schedule.uid)) return null;
     return schedule.id;
   }));
 
   function addPrevSemester() {
-    const earliest = sortSchedules(schedules)[0];
+    if (!userUid) return;
+    const earliest = sortSchedules(userSchedules)[0];
     const [season, year] = earliest.season === 'Spring'
       ? ['Fall' as Season, earliest.year - 1]
       : ['Spring' as Season, earliest.year];
-    dispatch(createSchedule({
+    dispatch(Schedules.createSchedule({
+      uid: uuidv4(),
       id: `My ${season} ${year}`,
       season,
       year,
       classes: [],
+      ownerUid: userUid,
+      public: false,
     })).catch(handleError);
   }
-
-  console.log({ userUid });
 
   return (
     <div className="relative bg-gray-800 md:p-4 md:rounded-lg md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full md:h-full">
