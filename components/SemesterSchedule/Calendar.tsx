@@ -38,7 +38,7 @@ type CalendarProps = {
 function MissingClass({ cls }: { cls: ExtendedClass }) {
   const dispatch = useAppDispatch();
   const classId = getClassId(cls);
-  const classTime = useAppSelector((state) => selectCustomTime(state, classId));
+  const classTime = useAppSelector(selectCustomTime(classId));
 
   const { register, handleSubmit } = useForm();
 

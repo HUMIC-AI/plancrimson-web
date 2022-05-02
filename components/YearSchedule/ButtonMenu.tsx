@@ -11,18 +11,10 @@ import type { IconType } from 'react-icons/lib';
 import { v4 as uuidv4 } from 'uuid';
 import { Schedule, Season } from '../../shared/firestoreTypes';
 import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
-import { createSchedule, deleteSchedule } from '../../src/features/schedules';
+import { chooseSchedule, createSchedule, deleteSchedule } from '../../src/features/schedules';
 import { selectUserUid } from '../../src/features/userData';
 import { downloadJson } from '../../src/hooks';
 import Tooltip from '../Tooltip';
-
-interface ButtonMenuProps {
-  selectedSchedule: Schedule | null;
-  selectSchedule: React.Dispatch<string | null>;
-  year: number;
-  season: Season;
-  prevScheduleId: string | null;
-}
 
 const buttonStyles = 'inline-block p-1 rounded bg-black bg-opacity-0 hover:text-black hover:bg-opacity-50 transition-colors';
 
@@ -74,6 +66,14 @@ function CustomButton({ name, Icon, ...rest }: ButtonProps | LinkProps) {
   );
 }
 
+interface ButtonMenuProps {
+  selectedSchedule: Schedule | null;
+  selectSchedule: React.Dispatch<string | null>;
+  year: number;
+  season: Season;
+  prevScheduleId: string | null;
+}
+
 function ButtonMenu({
   selectedSchedule,
   selectSchedule,
@@ -106,11 +106,11 @@ function ButtonMenu({
     if (!selectedSchedule) return;
     // eslint-disable-next-line no-restricted-globals
     const confirmDelete = confirm(
-      `Are you sure you want to delete your schedule ${selectedSchedule.id}?`,
+      `Are you sure you want to delete your schedule ${selectedSchedule.title}?`,
     );
     if (!confirmDelete) return;
     try {
-      await dispatch(deleteSchedule(selectedSchedule.id));
+      await dispatch(deleteSchedule(selectedSchedule.title));
       selectSchedule(prevScheduleId);
     } catch (err) {
       console.error(err);
@@ -129,7 +129,7 @@ function ButtonMenu({
             <CustomButton
               name="Calendar view"
               isLink
-              scheduleId={selectedSchedule.id}
+              scheduleId={selectedSchedule.title}
               Icon={FaCalendarWeek}
               pathname="/schedule"
             />
@@ -156,8 +156,8 @@ function ButtonMenu({
               return;
             }
             const schedule = await dispatch(createSchedule({
-              uid: uuidv4(),
-              id: `${season} ${year}`,
+              id: uuidv4(),
+              title: `${season} ${year}`,
               year,
               season,
               classes: [],
@@ -169,6 +169,10 @@ function ButtonMenu({
               if ('errors' in schedule.payload) {
                 throw new Error(schedule.payload.errors.join(', '));
               }
+              await dispatch(chooseSchedule({
+                term: `${schedule.payload.year}${schedule.payload.season}`,
+                scheduleId: schedule.payload.id,
+              }));
             } catch (err) {
               console.error(err);
               alert("Couldn't create a new schedule! Please try again later.");
@@ -183,7 +187,7 @@ function ButtonMenu({
             <CustomButton
               name="Download schedule"
               onClick={() => downloadJson(
-                `${selectedSchedule.id} (Plan Crimson)`,
+                `${selectedSchedule.title} (Plan Crimson)`,
                 { schedules: [selectedSchedule] },
               )}
               Icon={FaDownload}

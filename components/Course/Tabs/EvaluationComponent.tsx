@@ -8,21 +8,21 @@ import FadeTransition from '../../FadeTransition';
 import Tooltip from '../../Tooltip';
 import Percentages from './Percentages';
 
-const Section: React.FC<{ title: string }> = function ({ title, children }) {
+function Section({ title, children }: React.PropsWithChildren<{ title: string }>) {
   return (
     <div className="space-y-2">
       <h4 className="text-md font-bold">{title}</h4>
       {children}
     </div>
   );
-};
+}
 
 type GridProps = {
   title: string;
   data: EvaluationStatistics | null;
 };
 
-const GridHeading: React.FC<GridProps> = function ({ title, data }) {
+function GridHeading({ title, data } : GridProps) {
   if (!data) return null;
 
   return (
@@ -42,6 +42,11 @@ const GridHeading: React.FC<GridProps> = function ({ title, data }) {
       <Percentages categories={data.votes || null} />
     </>
   );
+}
+
+type OverallEvaluationProps = DisclosureComponentProps & {
+  visibleStats: EvaluationStatistics;
+  components: Record<string, EvaluationStatistics | null>;
 };
 
 type DisclosureComponentProps = {
@@ -49,16 +54,11 @@ type DisclosureComponentProps = {
   visibleStats?: EvaluationStatistics;
 };
 
-type OverallEvaluationProps = DisclosureComponentProps & {
-  visibleStats: EvaluationStatistics;
-  components: Record<string, EvaluationStatistics | null>;
-};
-
-const DisclosureComponent: React.FC<DisclosureComponentProps> = function ({
+function DisclosureComponent({
   heading,
   visibleStats,
   children,
-}) {
+}: React.PropsWithChildren<DisclosureComponentProps>) {
   return (
     <Disclosure as="div" className="border-gray-600 border-2 rounded-lg">
       {({ open }) => (
@@ -100,7 +100,7 @@ const DisclosureComponent: React.FC<DisclosureComponentProps> = function ({
       )}
     </Disclosure>
   );
-};
+}
 
 const OverallEvaluation: React.FC<OverallEvaluationProps> = function ({
   components,
@@ -152,7 +152,7 @@ const InstructorFeedback: React.FC<{ evaluation: Evaluation }> = function ({
   );
 };
 
-const EvaluationComponent: React.FC<{ report: Evaluation | Evaluation[] }> = function ({ report }) {
+export default function EvaluationComponent({ report }: { report: Evaluation | Evaluation[] }) {
   const multipleInstructors = Array.isArray(report);
   const courseEvaluation = multipleInstructors ? report[0] : report;
   const hoursData = courseEvaluation[
@@ -301,6 +301,4 @@ const EvaluationComponent: React.FC<{ report: Evaluation | Evaluation[] }> = fun
       )}
     </Disclosure>
   );
-};
-
-export default EvaluationComponent;
+}

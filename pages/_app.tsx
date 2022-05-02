@@ -133,7 +133,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           customTimes: data.customTimes || {},
           selectedSchedules: data.selectedSchedules || {},
           waivedRequirements: data.waivedRequirements || {},
-          hidden: data.hidden || [],
+          hiddenScheduleIds: data.hiddenScheduleIds || [],
         }));
       },
       (err) => dispatch(UserData.setSnapshotError(err)),

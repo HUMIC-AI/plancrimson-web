@@ -6,6 +6,9 @@ import { useLgBreakpoint } from '../../src/hooks';
 import Attribute from './Attribute';
 import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
 
+/**
+ * Renders the list of attributes to filter classes by.
+ */
 export default function AttributeMenu() {
   const dispatch = useAppDispatch();
   const isLg = useLgBreakpoint();

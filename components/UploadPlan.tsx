@@ -24,21 +24,15 @@ function UploadForm() {
       const results = await Promise.allSettled(
         schedules.map(async (schedule) => {
           if (
-            typeof schedule.id !== 'string'
+            typeof schedule.title !== 'string'
             || !Array.isArray(schedule.classes)
             || typeof schedule.year !== 'number'
             || !(schedule.season in SEASON_ORDER)
           ) {
-            throw new Error(`${schedule.id} invalid or missing fields`);
+            throw new Error(`${schedule.title} invalid or missing fields`);
           }
-          return dispatch(createSchedule({
-            season: schedule.season,
-            year: schedule.year,
-            classes: schedule.classes,
-            id: `${schedule.id}`,
-            force: true,
-          })).catch((err) => {
-            throw new Error(`${schedule.id} threw error ${err.message}`);
+          return dispatch(createSchedule(schedule)).catch((err) => {
+            throw new Error(`${schedule.title} threw error ${err.message}`);
           });
         }),
       );

@@ -76,5 +76,5 @@ export const selectUserDocument = (state: RootState): UserDocument<string> => ({
   customTimes: state.schedules.customTimes,
   selectedSchedules: state.schedules.selectedSchedules,
   waivedRequirements: state.schedules.waivedRequirements,
-  hidden: state.schedules.hidden,
+  hiddenScheduleIds: state.schedules.hiddenScheduleIds,
 });

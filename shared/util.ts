@@ -110,8 +110,8 @@ export function getDefaultSemesters(classYear: number) {
 
 /**
  * @param classYear the user's graduation year
- * @param semesters the list of the user's semesters
- * @returns a set of the user's semesters
+ * @param semesters the list of additional semesters to add
+ * @returns a set of semesters
  */
 export function getUniqueSemesters(classYear: number, semesters: Semester[]) {
   const defaultSemesters = getDefaultSemesters(classYear);
@@ -134,11 +134,10 @@ export function sortSchedules(schedules: ScheduleMap) {
 
 export function getSchedulesBySemester(
   schedules: ScheduleMap,
-  targetYear: number,
-  targetSeason: Season,
+  semester: Semester,
 ) {
   return sortSchedules(schedules).filter(
-    ({ year, season }) => year === targetYear && season === targetSeason,
+    ({ year, season }) => year === semester.year && season === semester.season,
   );
 }
 
@@ -212,7 +211,6 @@ export interface ErrorData {
  * @param cls The class to be added.
  * @param schedule the schedule to add it to.
  * @param classYear the user's graduation year
- * @param schedules A map of the user's schedules.
  * @param classCache A map from class uids to objects.
  * @returns a tuple containing the viability and the reason.
  */
@@ -329,6 +327,11 @@ export function adjustAttr(attr: string) {
   return ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr;
 }
 
+/**
+ * Fetches from Firestore all the evaluations for a given course.
+ * @param courseName The name of the course to get evaluations for.
+ * @returns The evaluations for a given course.
+ */
 export async function getEvaluations(courseName: string) {
   const evaluations = await getDocs(
     query(

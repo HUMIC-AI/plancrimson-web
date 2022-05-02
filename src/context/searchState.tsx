@@ -9,6 +9,9 @@ interface SearchStateContextType {
   oneCol: boolean;
 }
 
+/**
+ * Used in deeply nested Instantsearch components
+ */
 const SearchStateContext = createContext<SearchStateContextType>({
   searchState: null,
   setSearchState: throwMissingContext,

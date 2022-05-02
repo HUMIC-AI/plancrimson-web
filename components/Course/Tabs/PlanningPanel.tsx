@@ -18,29 +18,35 @@ import {
 import { useAppDispatch, useAppSelector } from '../../../src/app/hooks';
 import { selectClassCache } from '../../../src/features/classCache';
 import {
-  addCourse, removeCourses, selectScheduleData, selectSchedules,
+  addCourse, removeCourses, selectSchedules,
 } from '../../../src/features/schedules';
-import { selectClassYear, selectLastLoggedIn } from '../../../src/features/userData';
+import { selectClassYear } from '../../../src/features/userData';
 import Tooltip from '../../Tooltip';
 
-const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass }> = function ({ schedule, course }) {
+/**
+ * For a given user schedule, shows the schedule title, semester,
+ * and a switch to add this course to that schedule
+ * @param schedule The schedule
+ * @param course The course currently open in a modal
+ */
+function ScheduleRow({ schedule, course }: { schedule: Schedule; course: ExtendedClass }) {
   const dispatch = useAppDispatch();
-  const scheduleData = useAppSelector(selectScheduleData);
   const classCache = useAppSelector(selectClassCache);
   const classYear = useAppSelector(selectClassYear);
-  const lastLoggedIn = useAppSelector(selectLastLoggedIn);
 
   const enabled = !!schedule.classes.find(
     ({ classId }) => classId === getClassId(course),
   );
-  const viabilityStatus = useMemo(() => {
-    const semester = { year: schedule.year, season: schedule.season };
-    return checkViable(course, semester, { ...scheduleData, classYear, lastLoggedIn }, classCache);
-  }, [schedule.year, schedule.season, course, scheduleData, classYear, lastLoggedIn, classCache]);
 
-  const handleSwitch = (checked: boolean) => {
+  const viabilityStatus = useMemo(() => (classYear ? checkViable({
+    cls: course, schedule, classYear, classCache,
+  }) : null), [course, schedule, classYear, classCache]);
+
+  if (viabilityStatus === null) return null;
+
+  function handleSwitch(checked: boolean) {
     if (checked) {
-      if (viabilityStatus.viability === 'No') {
+      if (viabilityStatus !== null && viabilityStatus.viability === 'No') {
         alert('This course is not being offered in this semester!');
       } else {
         dispatch(addCourse([{
@@ -54,10 +60,10 @@ const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass }> = fun
         scheduleId: schedule.id,
       }]));
     }
-  };
+  }
 
   return (
-    <Fragment key={schedule.id}>
+    <>
       <span className="font-semibold max-w-[12rem] sm:max-w-[24rem] overflow-hidden text-ellipsis">
         {schedule.id}
       </span>
@@ -66,6 +72,7 @@ const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass }> = fun
         {/* Code from https://headlessui.dev/react/switch */}
         <Switch
           checked={enabled}
+          // eslint-disable-next-line react/jsx-no-bind
           onChange={handleSwitch}
           className={classNames(
             enabled ? 'bg-teal-600' : 'bg-teal-900',
@@ -102,13 +109,15 @@ const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass }> = fun
           </Tooltip>
         </div>
       </div>
-    </Fragment>
+    </>
   );
-};
+}
 
-const PlanningPanel: React.FC<{ course: ExtendedClass }> = function ({
-  course,
-}) {
+/**
+ * The planning panel in the course modal. Returns a Tab.Panel.
+ * @param course The course that's currently displayed in the modal
+ */
+export default function PlanningPanel({ course }: { course: ExtendedClass }) {
   const schedules = useAppSelector(selectSchedules);
   return (
     <Tab.Panel>
@@ -116,7 +125,7 @@ const PlanningPanel: React.FC<{ course: ExtendedClass }> = function ({
         <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
           {sortSchedules(schedules).map((schedule) => (
             <ScheduleRow
-              key={schedule.id}
+              key={schedule.title}
               course={course}
               schedule={schedule}
             />
@@ -137,6 +146,4 @@ const PlanningPanel: React.FC<{ course: ExtendedClass }> = function ({
       )}
     </Tab.Panel>
   );
-};
-
-export default PlanningPanel;
+}

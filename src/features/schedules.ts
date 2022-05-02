@@ -10,7 +10,7 @@ import {
   CustomTimeRecord, Schedule, ScheduleMetadata, ScheduleMap, SEASON_ORDER, Term,
 } from '../../shared/firestoreTypes';
 import { allTruthy, ErrorData } from '../../shared/util';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { useAppDispatch } from '../app/hooks';
 import type { RootState } from '../app/store';
 import { getScheduleRef, getSchedulesRef, getUserRef } from '../hooks';
 import * as ClassCache from './classCache';
@@ -27,7 +27,7 @@ const initialState: SchedulesState = {
   customTimes: {},
   waivedRequirements: {},
   errors: [],
-  hidden: [],
+  hiddenScheduleIds: [],
 };
 
 // Payloads for the various actions
@@ -38,7 +38,7 @@ type RemoveClassesPayload = Array<{
 export type CreateSchedulePayload = Schedule & {
   force?: boolean;
 };
-type RenameSchedulePayload = { oldId: string, newId: string };
+type RenameSchedulePayload = { scheduleId: string, newTitle: string };
 type DeleteSchedulePayload = string;
 type AddCoursePayload = { classId: string; scheduleId: string }[];
 type CustomTimePayload = CustomTimeRecord & {
@@ -61,31 +61,20 @@ export const schedulesSlice = createSlice({
       Object.assign(state, action.payload);
     },
 
+    /**
+     * Overwrites all schedules in the state.
+     * @param action A mapping from ids to schedules
+     */
     overwriteSchedules(state, action: PayloadAction<ScheduleMap>) {
       Object.assign(state.schedules, action.payload);
     },
 
     /**
      * Create a new schedule locally.
-     * Automatically increments the id to avoid collisions.
      */
     create(state, action: PayloadAction<CreateSchedulePayload>) {
-      const {
-        uid, id, force = false, ...data
-      } = action.payload;
-      let newScheduleId = id;
-      if (force) {
-        let i = 1;
-        while (newScheduleId in state.schedules) {
-          newScheduleId = `${id} (${i})`;
-          i += 1;
-        }
-      }
-      state.schedules[uid] = {
-        uid,
-        id: newScheduleId,
-        ...data,
-      };
+      const { id, ...data } = action.payload;
+      state.schedules[id] = { id, ...data };
     },
 
     /**
@@ -124,21 +113,11 @@ export const schedulesSlice = createSlice({
 
     /**
      * Rename a schedule.
-     * @param action The old and new schedule titles.
+     * @param action The ID of the schedule to rename and the new title.
      */
     rename(state, action: PayloadAction<RenameSchedulePayload>) {
-      const { oldId, newId } = action.payload;
-      const { classes, id, ...data } = state.schedules[oldId];
-      state.schedules[newId] = {
-        classes: [...classes], id: newId, ...data,
-      };
-      Object.entries(state.selectedSchedules).forEach(([term, scheduleId]) => {
-        const t: Term = `${data.year}${data.season}`;
-        if (term === t && scheduleId === oldId) {
-          state.selectedSchedules[t] = newId;
-        }
-      });
-      delete state.schedules[oldId];
+      const { scheduleId, newTitle } = action.payload;
+      state.schedules[scheduleId].title = newTitle;
     },
 
     /**
@@ -146,9 +125,9 @@ export const schedulesSlice = createSlice({
      * @param action The uid of the schedule to toggle.
      */
     toggleHidden(state, action: PayloadAction<string>) {
-      const index = state.hidden.indexOf(action.payload);
-      if (index === -1) state.hidden.push(action.payload);
-      else state.hidden.splice(index, 1);
+      const index = state.hiddenScheduleIds.indexOf(action.payload);
+      if (index === -1) state.hiddenScheduleIds.push(action.payload);
+      else state.hiddenScheduleIds.splice(index, 1);
     },
 
     /**
@@ -195,8 +174,8 @@ export const schedulesSlice = createSlice({
      * @param action The term and the schedule to select for that term.
      */
     selectSchedule(state, action: PayloadAction<SelectSchedulePayload>) {
-      const { term, scheduleId } = action.payload;
-      state.selectedSchedules[term] = scheduleId;
+      const { term, scheduleId: scheduleUid } = action.payload;
+      state.selectedSchedules[term] = scheduleUid;
     },
   },
 });
@@ -205,10 +184,14 @@ export const schedulesSlice = createSlice({
 
 export const selectScheduleData = (state: RootState) => state.schedules;
 export const selectSchedules = (state: RootState) => state.schedules.schedules;
+export const selectSchedule = (scheduleId: string | null) => function (state: RootState) {
+  // eslint-disable-next-line react/destructuring-assignment
+  return scheduleId === null ? null : state.schedules.schedules[scheduleId];
+};
 export const selectSelectedSchedules = (state: RootState) => state.schedules.selectedSchedules;
-export const selectHiddenSchedules = (state: RootState) => state.schedules.hidden;
+export const selectHiddenScheduleIds = (state: RootState) => state.schedules.hiddenScheduleIds;
 export const selectCustomTimes = (state: RootState) => state.schedules.customTimes;
-export const selectCustomTime = (state: RootState, classId: string) => state.schedules.customTimes[classId];
+export const selectCustomTime = (classId: string) => (state: RootState) => state.schedules.customTimes[classId];
 
 // ========================= ACTION CREATORS =========================
 
@@ -269,7 +252,7 @@ function createActionCreator<Payload>(
 
 export const createSchedule = createActionCreator<CreateSchedulePayload>(
   (state, {
-    id, year, season, classes = [], force = false,
+    title: id, year, season, classes = [], force = false,
   }) => {
     const errors: string[] = [];
     if (id in state.schedules && !force) {
@@ -300,18 +283,11 @@ export const removeCourses = createActionCreator<RemoveClassesPayload>(
 );
 
 export const renameSchedule = createActionCreator<RenameSchedulePayload>(
-  (state, { oldId, newId }) => {
-    const errors: string[] = [];
-    if (!(oldId in state.schedules)) {
-      errors.push('schedule not found');
+  (state, { scheduleId }) => {
+    if (!(scheduleId in state.schedules)) {
+      return ['schedule not found'];
     }
-    if (newId in state.schedules) {
-      errors.push('id taken');
-    }
-    if (newId.length === 0 || /\./.test(newId)) {
-      errors.push('invalid id');
-    }
-    return errors;
+    return [];
   },
   rename,
 );
@@ -331,8 +307,8 @@ export const addCourse = createActionCreator<AddCoursePayload>(
   schedulesSlice.actions.addCourse,
 );
 
-export const selectSchedule = createActionCreator<SelectSchedulePayload>(
-  (state, { scheduleId }) => (scheduleId && !state.schedules[scheduleId] ? ['schedule not found'] : []),
+export const chooseSchedule = createActionCreator<SelectSchedulePayload>(
+  (state, { scheduleId: scheduleUid }) => (scheduleUid && !state.schedules[scheduleUid] ? ['schedule not found'] : []),
   schedulesSlice.actions.selectSchedule,
 );
 
@@ -355,11 +331,14 @@ export function useSchedules(...constraints: QueryConstraint[]) {
       snap.docs.forEach((schedule) => {
         schedule.data().classes.forEach(({ classId }) => dispatch(ClassCache.loadClass(classId)));
       });
-      const scheduleEntries = snap.docs.map((doc) => doc.data()).map((schedule) => [schedule.uid, schedule]);
-      console.log(scheduleEntries);
+      const scheduleEntries = snap.docs.map((doc) => {
+        const { id, ...data } = doc.data();
+        return [id, { id, ...data }];
+      });
       dispatch(overwriteSchedules(Object.fromEntries(scheduleEntries)));
     }, (err) => dispatch(setSnapshotError(err)));
     // eslint-disable-next-line consistent-return
     return unsubSchedules;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, constraints);
 }

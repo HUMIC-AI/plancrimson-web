@@ -6,12 +6,15 @@ import { Schedule } from '../../shared/firestoreTypes';
 import { useAppSelector } from '../app/hooks';
 import { selectSchedules } from '../features/schedules';
 
-interface SelectedScheduleContextType {
+interface ChosenScheduleContextType {
   selectedSchedule: Schedule | null;
   selectSchedule: Dispatch<Schedule | null>;
 }
 
-export const SelectedScheduleContext = createContext<SelectedScheduleContextType>({
+/**
+ * Passes down a global chosen schedule for use with deeply nested Instantsearch components.
+ */
+export const ChosenScheduleContext = createContext<ChosenScheduleContextType>({
   selectSchedule: () => null,
   selectedSchedule: null,
 });
@@ -21,7 +24,7 @@ export function SelectedScheduleProvider({ children }: PropsWithChildren<{}>) {
   const { query, pathname, replace } = useRouter();
   const { selected } = query;
 
-  const context = useMemo<SelectedScheduleContextType>(
+  const context = useMemo<ChosenScheduleContextType>(
     () => ({
       selectedSchedule:
         (typeof selected === 'string' && schedules[selected]) || null,
@@ -34,16 +37,16 @@ export function SelectedScheduleProvider({ children }: PropsWithChildren<{}>) {
         }
       },
     }),
-    [selected, schedules, pathname],
+    [selected, schedules, replace, pathname],
   );
 
   return (
-    <SelectedScheduleContext.Provider value={context}>
+    <ChosenScheduleContext.Provider value={context}>
       {children}
-    </SelectedScheduleContext.Provider>
+    </ChosenScheduleContext.Provider>
   );
 }
 
-const useSelectedScheduleContext = () => useContext(SelectedScheduleContext);
+const useChosenScheduleContext = () => useContext(ChosenScheduleContext);
 
-export default useSelectedScheduleContext;
+export default useChosenScheduleContext;

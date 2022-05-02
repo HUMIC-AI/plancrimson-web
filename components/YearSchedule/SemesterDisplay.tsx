@@ -7,12 +7,15 @@ import {
   allTruthy,
   checkViable,
   classNames,
+  compareSemesters,
   findConflicts,
   getSchedulesBySemester,
 } from '../../shared/util';
-import { Schedule, Season, Viability } from '../../shared/firestoreTypes';
+import {
+  Schedule, Semester, Viability,
+} from '../../shared/firestoreTypes';
 import { meiliSearchClient } from '../../src/hooks';
-import ScheduleSelector from '../ScheduleSelector';
+import ScheduleChooser from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
 import FadeTransition from '../FadeTransition';
 import { Requirement } from '../../src/requirements/util';
@@ -26,23 +29,7 @@ import { useModal } from '../../src/features/modal';
 import useSearchState, { SearchStateProvider } from '../../src/context/searchState';
 import Hits, { HitsDemo } from '../SearchComponents/Hits';
 import SearchBox, { SearchBoxDemo } from '../SearchComponents/SearchBox';
-import { SelectedScheduleContext } from '../../src/context/selectedSchedule';
-// import AttributeMenu from '../SearchComponents/AttributeMenu';
-
-type Props = {
-  selectedScheduleId: string | null;
-  selectSchedule: React.Dispatch<string | null>;
-
-  year: number;
-  season: Season;
-
-  highlightedRequirement: Requirement | undefined;
-  highlight?: string;
-  dragStatus: DragStatus;
-  setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>;
-
-  colWidth: number;
-};
+import { ChosenScheduleContext } from '../../src/context/selectedSchedule';
 
 const VIABILITY_COLORS: Record<Viability, string> = {
   Yes: 'bg-green-200',
@@ -86,24 +73,46 @@ function ModalWrapper({ selected }: { selected: Schedule | null }) {
   }), [selectedSchedule]);
   return (
     <SearchStateProvider oneCol>
-      <SelectedScheduleContext.Provider value={context}>
+      <ChosenScheduleContext.Provider value={context}>
         <SearchModal />
-      </SelectedScheduleContext.Provider>
+      </ChosenScheduleContext.Provider>
     </SearchStateProvider>
   );
 }
 
+export interface SemesterDisplayProps {
+  semester: Semester;
+  chosenScheduleId: string | null;
+  highlight?: string;
+}
+
+interface SemesterComponentProps extends SemesterDisplayProps {
+  highlightedRequirement: Requirement | undefined;
+  handleChooseSchedule: React.Dispatch<string | null>;
+  dragStatus: DragStatus;
+  setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>;
+  colWidth: number;
+}
+
+/**
+ * A column in the {@link PlanningSection} that represents a semester.
+ * Renders a schedule chooser and the classes in the chosen schedule.
+ * @param semester the semester to render
+ * @param chosenScheduleId the ID of the currently selected schedule
+ * @param chooseSchedule the callback for when a schedule is chosen
+ * @param highlightedRequirement highlight any courses that satisfy this requirement
+ * @param highlight highlight this semester
+ */
 export default function SemesterComponent({
-  year,
-  season,
-  selectedScheduleId,
-  selectSchedule,
+  semester,
+  chosenScheduleId,
+  handleChooseSchedule,
   highlightedRequirement,
   dragStatus,
   setDragStatus,
   colWidth,
   highlight,
-}: Props) {
+}: SemesterComponentProps) {
   const dispatch = useAppDispatch();
   const userDocument = useAppSelector(selectUserDocument);
   const semesterFormat = useAppSelector(selectSemesterFormat);
@@ -120,12 +129,14 @@ export default function SemesterComponent({
   const [scheduleTitle, setScheduleTitle] = useState<string>();
 
   // the schedules for this semester to show
-  const currentSchedules = getSchedulesBySemester(schedules, year, season);
-  const selectedSchedule = semesterFormat === 'sample'
-    ? sampleSchedule?.schedules.find((schedule) => schedule.id === selectedScheduleId)!
-    : selectedScheduleId
-      ? schedules[selectedScheduleId]
-      : null;
+  const currentSchedules = getSchedulesBySemester(schedules, semester);
+  const selectedSchedule = (() => {
+    if (semesterFormat === 'sample') {
+      return sampleSchedule?.schedules.find((schedule) => schedule.id === chosenScheduleId)!;
+    }
+    if (chosenScheduleId) return schedules[chosenScheduleId];
+    return null;
+  })();
 
   const conflicts = selectedSchedule
     ? findConflicts(allTruthy(selectedSchedule.classes.map(({ classId }) => classCache[classId])))
@@ -147,23 +158,23 @@ export default function SemesterComponent({
 
   function handleMinimize() {
     if (!selectedSchedule) return;
-    dispatch(Schedules.toggleHidden(selectedSchedule.uid));
+    dispatch(Schedules.toggleHidden(selectedSchedule.id));
   }
 
   const handleDrop: React.DragEventHandler<HTMLDivElement> = useCallback(
     (ev) => {
       ev.preventDefault();
 
-      if (dragStatus.dragging && selectedScheduleId && viableDrop) {
+      if (dragStatus.dragging && chosenScheduleId && viableDrop) {
         if (viableDrop.viability === 'No') {
           alert(viableDrop.reason);
-        } else if (selectedScheduleId !== dragStatus.data.originScheduleId) {
+        } else if (chosenScheduleId !== dragStatus.data.originScheduleId) {
           const doAdd = viableDrop.viability !== 'Unlikely'
             // eslint-disable-next-line no-restricted-globals
             || confirm(`${viableDrop.reason} Continue anyways?`);
           if (doAdd) {
             const { classId, originScheduleId } = dragStatus.data;
-            dispatch(Schedules.addCourse([{ classId, scheduleId: selectedScheduleId }]));
+            dispatch(Schedules.addCourse([{ classId, scheduleId: chosenScheduleId }]));
             dispatch(Schedules.removeCourses([{ classId, scheduleId: originScheduleId }]));
           }
         }
@@ -172,15 +183,34 @@ export default function SemesterComponent({
       setDragStatus({ dragging: false });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [dragStatus, selectedScheduleId, viableDrop],
+    [dragStatus, chosenScheduleId, viableDrop],
   );
+
+  // eslint-disable-next-line consistent-return
+  const handleRenameSchedule: React.FormEventHandler<HTMLFormElement> = async (ev) => {
+    ev.preventDefault();
+    if (!chosenScheduleId) {
+      return alert('no schedule selected to rename');
+    }
+    if (!scheduleTitle) return alert('invalid title given');
+    const { payload } = await dispatch(Schedules.renameSchedule({ scheduleId: chosenScheduleId, newTitle: scheduleTitle }));
+    if ('errors' in payload) {
+      console.error(new Error(payload.errors.join(', ')));
+      alert('Oops, couldn\'t rename your schedule. Please try again later.');
+    } else {
+      handleChooseSchedule(payload.newTitle);
+      setEditing(false);
+    }
+  };
+
+  const prevScheduleId = currentSchedules[0]?.title === selectedSchedule?.id ? null : (currentSchedules[0]?.title || null);
 
   return (
     <div
       className={classNames(
         'relative md:h-full overflow-hidden transition-colors duration-300',
         dragStatus.dragging
-          ? dragStatus.data.originScheduleId === selectedScheduleId
+          ? dragStatus.data.originScheduleId === chosenScheduleId
             || !viableDrop
             ? 'bg-gray-300 cursor-not-allowed'
             : VIABILITY_COLORS[viableDrop?.viability]
@@ -205,9 +235,9 @@ export default function SemesterComponent({
           {/* only show */}
           {semesterFormat !== 'all' && (
             <h1 className="text-lg text-center min-w-max font-semibold">
-              {season}
+              {semester.season}
               {' '}
-              {year}
+              {semester.year}
             </h1>
           )}
 
@@ -219,22 +249,7 @@ export default function SemesterComponent({
           >
             <form
               className="relative"
-              // eslint-disable-next-line consistent-return
-              onSubmit={async (ev) => {
-                ev.preventDefault();
-                if (!selectedScheduleId) {
-                  return alert('no schedule selected to rename');
-                }
-                if (!scheduleTitle) return alert('invalid title given');
-                const { payload } = await dispatch(Schedules.renameSchedule({ oldId: selectedScheduleId, newId: scheduleTitle }));
-                if ('errors' in payload) {
-                  console.error(new Error(payload.errors.join(', ')));
-                  alert('Oops, couldn\'t rename your schedule. Please try again later.');
-                } else {
-                  selectSchedule(payload.newId);
-                  setEditing(false);
-                }
-              }}
+              onSubmit={handleRenameSchedule}
             >
               <input
                 type="text"
@@ -257,13 +272,13 @@ export default function SemesterComponent({
           </FadeTransition>
 
           {semesterFormat !== 'sample' && showSelector && (
-            <ScheduleSelector
-              schedules={currentSchedules}
-              selectedSchedule={selectedSchedule}
-              selectSchedule={(schedule) => schedule && selectSchedule(schedule.id)}
+            <ScheduleChooser
+              scheduleIds={currentSchedules.sort(compareSemesters).map((s) => s.id)}
+              chosenScheduleId={selectedSchedule?.id || null}
+              handleChooseSchedule={(scheduleId) => handleChooseSchedule(scheduleId)}
               direction="center"
               parentWidth={`${colWidth}px`}
-              showTerm={semesterFormat === 'all'}
+              showTerm={semesterFormat === 'all' ? 'on' : 'auto'}
               highlight={
                 typeof highlight !== 'undefined'
                 && highlight === selectedSchedule?.id
@@ -274,12 +289,12 @@ export default function SemesterComponent({
 
           {semesterFormat !== 'sample' && (
             <ButtonMenu
-              prevScheduleId={currentSchedules[0]?.id === selectedSchedule?.id ? null : (currentSchedules[0]?.id || null)}
+              prevScheduleId={prevScheduleId}
               {...{
-                season,
-                year,
+                season: semester.season,
+                year: semester.year,
                 selectedSchedule,
-                selectSchedule,
+                selectSchedule: handleChooseSchedule,
                 setScheduleTitle,
               }}
             />
@@ -332,7 +347,7 @@ export default function SemesterComponent({
                         userDocument,
                       ) !== null
                     }
-                    selectedSchedule={selectedSchedule}
+                    chosenScheduleId={selectedSchedule.id}
                     setDragStatus={
                       semesterFormat === 'sample' ? undefined : setDragStatus
                     }

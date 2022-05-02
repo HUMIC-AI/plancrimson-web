@@ -11,20 +11,20 @@ import { useModal } from '../../src/features/modal';
 import sampleCourses from './sampleCourses.json';
 import { alertSignIn } from './searchUtils';
 import { DAY_SHORT } from '../../shared/firestoreTypes';
-import useSelectedScheduleContext from '../../src/context/selectedSchedule';
+import useChosenScheduleContext from '../../src/context/selectedSchedule';
 import useSearchState from '../../src/context/searchState';
 
-type ButtonProps = {
+interface ButtonProps {
   onClick: () => void;
   enabled: boolean;
   direction: 'up' | 'down';
-};
+}
 
-const CustomButton: React.FC<ButtonProps> = function ({
+function CustomButton({
   onClick,
   enabled,
   direction,
-}) {
+}: ButtonProps) {
   const dispatch = useAppDispatch();
   const isExpanded = useAppSelector(selectExpandCards);
 
@@ -58,7 +58,7 @@ const CustomButton: React.FC<ButtonProps> = function ({
       </button>
     </div>
   );
-};
+}
 
 export const HitsComponent: React.FC<
 InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
@@ -72,7 +72,7 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
 }) {
   const { showCourse } = useModal();
   const { oneCol } = useSearchState();
-  const { selectedSchedule } = useSelectedScheduleContext();
+  const { selectedSchedule } = useChosenScheduleContext();
 
   return (
     <div className="space-y-6 flex flex-col items-center">
@@ -93,7 +93,7 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
             <CourseCard
               key={getClassId(hit)}
               course={hit}
-              selectedSchedule={selectedSchedule}
+              chosenScheduleId={selectedSchedule?.id || null}
               handleExpand={() => showCourse(hit)}
               inSearchContext={inSearch}
             />

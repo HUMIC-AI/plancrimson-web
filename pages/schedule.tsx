@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 // components
 import Layout from '../components/Layout/Layout';
-import ScheduleSelector from '../components/ScheduleSelector';
+import ScheduleChooser from '../components/ScheduleSelector';
 import Calendar from '../components/SemesterSchedule/Calendar';
 import UploadPlan from '../components/UploadPlan';
 import ButtonMenu from '../components/YearSchedule/ButtonMenu';
@@ -39,10 +39,10 @@ export default function SchedulePage() {
       }
 
       const schedule = await dispatch(createSchedule({
-        uid: uuidv4(),
+        id: uuidv4(),
         ownerUid: userUid,
         public: false,
-        id: fields.get('semesterId') as string,
+        title: fields.get('semesterId') as string,
         year: parseInt(fields.get('year') as string, 10),
         season: season as Season,
         classes: [],
@@ -63,19 +63,19 @@ export default function SchedulePage() {
   const selectedSchedule = (selectedScheduleId && schedules[selectedScheduleId]) || null;
   const sortedSchedules = sortSchedules(schedules);
   const selectedIndex = sortedSchedules.findIndex(
-    (schedule) => schedule.id === selectedScheduleId,
+    (schedule) => schedule.title === selectedScheduleId,
   );
-  const prevScheduleId = selectedIndex > 0 ? sortedSchedules[selectedIndex - 1].id : null;
+  const prevScheduleId = selectedIndex > 0 ? sortedSchedules[selectedIndex - 1].title : null;
 
   return (
     <Layout>
       <div className="space-y-4 py-8">
         <div className="flex flex-col sm:flex-row sm:space-x-4 items-center justify-center">
           <div className="text-center space-y-2 mb-4 sm:mb-0">
-            <ScheduleSelector
-              schedules={sortedSchedules}
-              selectSchedule={(schedule) => setSelectedScheduleId(schedule ? schedule.id : null)}
-              selectedSchedule={selectedSchedule}
+            <ScheduleChooser
+              scheduleIds={sortedSchedules}
+              handleChooseSchedule={(schedule) => setSelectedScheduleId(schedule ? schedule.id : null)}
+              chosenScheduleId={selectedSchedule}
               direction="center"
               showDropdown
             />

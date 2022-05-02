@@ -36,7 +36,7 @@ const paths = [
 ];
 
 // Profile dropdown
-const UserMenu = function () {
+function UserMenu() {
   const uid = useAppSelector(selectUserUid);
   const photoUrl = useAppSelector(selectPhotoUrl);
   const dispatch = useAppDispatch();
@@ -106,9 +106,9 @@ const UserMenu = function () {
       </Transition>
     </Menu>
   );
-};
+}
 
-const Navbar = function () {
+export default function Navbar() {
   const { pathname, query } = useRouter();
 
   return (
@@ -209,6 +209,4 @@ const Navbar = function () {
       )}
     </Disclosure>
   );
-};
-
-export default Navbar;
+}

@@ -23,6 +23,10 @@ import {
 import departments from '../../../src/departments.json';
 import Tooltip from '../../Tooltip';
 
+/**
+ * The "More Info" panel in a course modal.
+ * @param course The course that's being displayed in the modal
+ */
 const InfoPanel: React.FC<{ course: ExtendedClass }> = function ({ course }) {
   return (
     <Tab.Panel>

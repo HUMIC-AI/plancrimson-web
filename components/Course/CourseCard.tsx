@@ -1,10 +1,9 @@
 import Image from 'next/image';
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   FaInfo, FaTimes, FaPlus, FaExclamationTriangle,
 } from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
-import { Schedule } from '../../shared/firestoreTypes';
 import {
   getClassId,
   classNames,
@@ -14,10 +13,10 @@ import {
 import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
 import { selectClassCache } from '../../src/features/classCache';
 import {
-  addCourse, removeCourses, selectScheduleData, selectSchedules,
+  addCourse, removeCourses, selectSchedule,
 } from '../../src/features/schedules';
 import { selectExpandCards, selectSemesterFormat } from '../../src/features/semesterFormat';
-import { selectClassYear, selectLastLoggedIn, selectUserDocument } from '../../src/features/userData';
+import { selectClassYear } from '../../src/features/userData';
 import { handleError } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 import {
@@ -29,15 +28,7 @@ import {
 } from './CourseComponents';
 import departmentImages from './departmentImages.json';
 
-type Props = {
-  course: ExtendedClass;
-  selectedSchedule: Schedule | null;
-  handleExpand: (course: ExtendedClass) => void;
-  highlight?: boolean;
-  inSearchContext?: boolean;
-  setDragStatus?: React.Dispatch<React.SetStateAction<DragStatus>>;
-  warnings?: string;
-};
+const buttonStyles = 'bg-white text-blue-900 bg-opacity-60 hover:bg-opacity-90 transition-colors rounded-full p-1';
 
 type Department = keyof typeof departmentImages;
 
@@ -53,50 +44,23 @@ export type DragStatus =
     };
   };
 
-/**
- * Renders a given course on the planning page or in the search page.
- */
-export default function CourseCard({
-  course,
-  selectedSchedule,
-  handleExpand,
-  highlight,
-  setDragStatus,
-  inSearchContext = true,
-  warnings,
-}: Props) {
+function ToggleButton({ chosenScheduleId, course } : { chosenScheduleId: string; course: ExtendedClass; }) {
   const dispatch = useAppDispatch();
-  const user = useAppSelector(selectUserDocument);
-  const classCache = useAppSelector(selectClassCache);
-  const isExpanded = useAppSelector(selectExpandCards);
-  const classYear = useAppSelector(selectClassYear);
-  const lastLoggedIn = useAppSelector(selectLastLoggedIn);
-  const schedules = useAppSelector(selectSchedules);
+  const chosenSchedule = useAppSelector(selectSchedule(chosenScheduleId));
   const semesterFormat = useAppSelector(selectSemesterFormat);
-
-  const draggable = typeof setDragStatus !== 'undefined';
-  const [semester, department] = useMemo(
-    () => [
-      getSemester(course),
-      course.IS_SCL_DESCR_IS_SCL_DESCRD as Department,
-    ],
-    [course],
-  );
-
-  const buttonStyles = 'bg-white text-blue-900 bg-opacity-60 hover:bg-opacity-90 transition-colors rounded-full p-1';
+  const classYear = useAppSelector(selectClassYear);
+  const classCache = useAppSelector(selectClassCache);
 
   // adds a class to the selected schedule.
   // linked to plus button in top right corner.
-  const addClass = useCallback(() => {
-    if (!selectedSchedule) return;
-    const { year, season } = selectedSchedule;
-    const viability = checkViable(
-      course,
-      { year, season },
-      user,
-      schedules,
+  function addClass() {
+    if (!chosenSchedule || !classYear) return;
+    const viability = checkViable({
+      cls: course,
+      schedule: chosenSchedule,
       classCache,
-    );
+      classYear,
+    });
     if (viability.viability === 'No') {
       alert(viability.reason);
       return;
@@ -108,23 +72,95 @@ export default function CourseCard({
     }
     dispatch(addCourse([{
       classId: getClassId(course),
-      scheduleId: selectedSchedule.id,
+      scheduleId: chosenSchedule.id,
     }]));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classCache, classYear, course, lastLoggedIn, selectedSchedule]);
+  }
+
+  if (!chosenSchedule) return null;
+
+  const inSchedule = chosenSchedule?.classes.find(({ classId }) => course.id === classId);
+
+  if (semesterFormat === 'sample' || !inSchedule) {
+    return (
+      <button
+        type="button"
+        name="Add class to schedule"
+        onClick={addClass}
+        className={buttonStyles}
+      >
+        <FaPlus />
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      name="Remove class from schedule"
+      onClick={() => dispatch(removeCourses([{
+        classId: getClassId(course),
+        scheduleId: chosenSchedule.title,
+      }]))}
+      className={buttonStyles}
+    >
+      <FaTimes />
+    </button>
+  );
+}
+
+// see below
+type CourseCardProps = {
+  course: ExtendedClass;
+  chosenScheduleId: string | null;
+  handleExpand: (course: ExtendedClass) => void;
+  highlight?: boolean;
+  inSearchContext?: boolean;
+  setDragStatus?: React.Dispatch<React.SetStateAction<DragStatus>>;
+  warnings?: string;
+};
+
+/**
+ * Renders a given small expandable course card on the planning page or in the search page.
+ * @param course the course to summarize in this card
+ * @param chosenScheduleId the current chosen schedule. Used for various button interactions.
+ * @param handleExpand the callback to expand the card
+ * @param highlight whether to highlight this class. default false
+ * @param setDragStatus a callback when this card starts to be dragged
+ * @param warnings an optional list of warnings, eg time collisions with other classes
+ */
+export default function CourseCard({
+  course,
+  chosenScheduleId,
+  handleExpand,
+  highlight = false,
+  setDragStatus,
+  inSearchContext = true,
+  warnings,
+}: CourseCardProps) {
+  const isExpanded = useAppSelector(selectExpandCards);
+  const chosenSchedule = useAppSelector(selectSchedule(chosenScheduleId));
+
+  const draggable = typeof setDragStatus !== 'undefined';
+  const [semester, department] = useMemo(
+    () => [
+      getSemester(course),
+      course.IS_SCL_DESCR_IS_SCL_DESCRD as Department,
+    ],
+    [course],
+  );
 
   const handleDragStart: React.DragEventHandler<HTMLDivElement> = (ev) => {
     // eslint-disable-next-line no-param-reassign
     ev.dataTransfer.dropEffect = 'move';
     // eslint-disable-next-line no-alert
-    if (!selectedSchedule?.id) {
+    if (!chosenSchedule?.title) {
       handleError(new Error('Selected schedule has no ID'));
     } else {
       setDragStatus!({
         dragging: true,
         data: {
           classId: getClassId(course),
-          originScheduleId: selectedSchedule.id,
+          originScheduleId: chosenSchedule.id,
         },
       });
     }
@@ -192,32 +228,7 @@ export default function CourseCard({
                   <FaInfo />
                 </button>
 
-                {selectedSchedule
-                  && semesterFormat !== 'sample'
-                  && (schedules[selectedSchedule.id].classes.find(
-                    (cls) => cls.classId === getClassId(course),
-                  ) ? (
-                    <button
-                      type="button"
-                      name="Remove class from schedule"
-                      onClick={() => dispatch(removeCourses([{
-                        classId: getClassId(course),
-                        scheduleId: selectedSchedule.id,
-                      }]))}
-                      className={buttonStyles}
-                    >
-                      <FaTimes />
-                    </button>
-                    ) : (
-                      <button
-                        type="button"
-                        name="Add class to schedule"
-                        onClick={addClass}
-                        className={buttonStyles}
-                      >
-                        <FaPlus />
-                      </button>
-                    ))}
+                <ToggleButton chosenScheduleId={chosenScheduleId!} course={course} />
               </span>
             </p>
             <h3 className={classNames(isExpanded || 'text-sm')}>

@@ -27,7 +27,7 @@ import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
 import {
   selectSampleSchedule, setShowReqs, showSample, showSelected,
 } from '../../src/features/semesterFormat';
-import { createSchedule, CreateSchedulePayload, selectSchedule } from '../../src/features/schedules';
+import { createSchedule, CreateSchedulePayload, chooseSchedule } from '../../src/features/schedules';
 import { selectUserUid } from '../../src/features/userData';
 import { handleError } from '../../src/hooks';
 
@@ -184,7 +184,7 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
         onClick={async () => {
           const schedules = await Promise.all(schedule.schedules.map((s) => dispatch(createSchedule({
             ...s,
-            id: `${s.id} (${schedule.id})`,
+            title: `${s.title} (${schedule.id})`,
             force: true,
           }))));
           try {
@@ -194,8 +194,8 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
             }
             dispatch(showSelected());
             schedules.forEach((s) => {
-              const { year, season, id } = s.payload as CreateSchedulePayload;
-              dispatch(selectSchedule({
+              const { year, season, title: id } = s.payload as CreateSchedulePayload;
+              dispatch(chooseSchedule({
                 term: `${year}${season}`,
                 scheduleId: id,
               }));

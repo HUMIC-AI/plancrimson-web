@@ -1,4 +1,3 @@
-import { updateDoc } from 'firebase/firestore';
 import React, {
   useEffect, useMemo, useRef, useState,
 } from 'react';
@@ -26,18 +25,20 @@ import {
 } from '../../src/features/semesterFormat';
 import { selectClassYear, selectUserUid } from '../../src/features/userData';
 import {
-  downloadJson, getUserRef, handleError, signInUser,
+  downloadJson, handleError, signInUser,
 } from '../../src/hooks';
 import type { Requirement } from '../../src/requirements/util';
 import type { DragStatus } from '../Course/CourseCard';
 import UploadPlan from '../UploadPlan';
-import SemesterComponent from './SemesterDisplay';
+import SemesterComponent, { SemesterDisplayProps } from './SemesterDisplay';
 
-const HeaderSection: React.FC<{
+interface HeaderSectionProps {
   totalCourses: number;
   resizeRef: React.MutableRefObject<HTMLDivElement>;
   downloadData: any;
-}> = function ({ totalCourses, resizeRef, downloadData }) {
+}
+
+function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionProps) {
   const dispatch = useAppDispatch();
   const selectedSchedules = useAppSelector(Schedules.selectSelectedSchedules);
   const showReqs = useAppSelector(selectShowReqs);
@@ -138,33 +139,57 @@ const HeaderSection: React.FC<{
       </div>
     </div>
   );
-};
-
-interface SemesterDisplayInfo {
-  year: number;
-  season: Season;
-  selectedScheduleId: string | null;
-  key: string;
-  selectSchedule: React.Dispatch<string | null>;
-  highlight?: string;
 }
 
-type Props = {
-  highlightedRequirement: Requirement | undefined;
-};
-
-function PlanningSection({ highlightedRequirement } : Props) {
+function HiddenSchedules({ allSemesters } : { allSemesters: SemesterDisplayProps[] }) {
   const dispatch = useAppDispatch();
+  const userUid = useAppSelector(selectUserUid);
+  const hiddenScheduleIds = useAppSelector(Schedules.selectHiddenScheduleIds);
+  const hiddenSchedules = allSemesters.filter(
+    ({ chosenScheduleId }) => chosenScheduleId && hiddenScheduleIds.includes(chosenScheduleId),
+  );
+
+  function handleShowSchedule(scheduleId: string) {
+    if (!userUid) return;
+    dispatch(Schedules.toggleHidden(scheduleId));
+  }
+
+  if (hiddenSchedules.length === 0) return null;
+
+  return (
+    <div className="flex text-white items-center">
+      <h3>Hidden schedules:</h3>
+      <ul className="flex items-center">
+        {hiddenSchedules.map((data) => (
+          <li key={data.chosenScheduleId! + data.semester.year + data.semester.season} className="ml-2">
+            <button
+              type="button"
+              onClick={() => handleShowSchedule(data.chosenScheduleId!)}
+              className="interactive"
+            >
+              {data.chosenScheduleId}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** *
+ * Renders all of a user's semesters.
+ */
+export default function PlanningSection({ highlightedRequirement } : { highlightedRequirement?: Requirement; }) {
+  const dispatch = useAppDispatch();
+  const userUid = useAppSelector(selectUserUid);
   const {
-    userUid, classYear, semesterFormat, sampleSchedule, schedules: userSchedules, selectedSchedules, hidden,
+    classYear, semesterFormat, sampleSchedule, schedules: userSchedules, selectedSchedules,
   } = useAppSelector((state) => ({
-    userUid: selectUserUid(state),
     classYear: selectClassYear(state),
     semesterFormat: selectSemesterFormat(state),
     sampleSchedule: selectSampleSchedule(state),
     schedules: Schedules.selectSchedules(state),
     selectedSchedules: Schedules.selectSelectedSchedules(state),
-    hidden: Schedules.selectHiddenSchedules(state),
   }));
 
   const [dragStatus, setDragStatus] = useState<DragStatus>({
@@ -212,22 +237,19 @@ function PlanningSection({ highlightedRequirement } : Props) {
     };
   }, []);
 
-  const selectNewSchedule = (year: number, season: Season, scheduleId: string | null) => dispatch(Schedules.selectSchedule({
+  const chooseSchedule = (year: number, season: Season, scheduleId: string | null) => dispatch(Schedules.chooseSchedule({
     term: `${year}${season}`,
     scheduleId,
   }));
 
-  const allSemesters: SemesterDisplayInfo[] = useMemo(() => {
+  // the set of columns in our table, each representing a semester
+  const allSemesters: SemesterDisplayProps[] = useMemo(() => {
     switch (semesterFormat) {
       case 'sample':
         return (
           sampleSchedule?.schedules.map(({ year, season, id }) => ({
-            year,
-            season,
-            selectSchedule: (newId) => selectNewSchedule(year, season, newId),
-            key: id,
-            selectedScheduleId: id,
-            highlight: false,
+            semester: { year, season },
+            chosenScheduleId: id,
           })) || []
         );
       case 'selected':
@@ -236,21 +258,15 @@ function PlanningSection({ highlightedRequirement } : Props) {
           classYear,
           Object.values(userSchedules),
         ).map(({ year, season }) => ({
-          year,
-          season,
-          selectedScheduleId: selectedSchedules[`${year}${season}`] || null,
-          key: year + season,
-          selectSchedule: (id) => selectNewSchedule(year, season, id),
+          semester: { year, season },
+          chosenScheduleId: selectedSchedules[`${year}${season}`] || null,
         }));
       case 'all':
         return Object.values(userSchedules)
           .sort(compareSemesters)
           .map(({ year, season, id }) => ({
-            year,
-            season,
-            selectedScheduleId: id,
-            key: id,
-            selectSchedule: (newId) => selectNewSchedule(year, season, newId),
+            semester: { year, season },
+            chosenScheduleId: id,
             highlight: selectedSchedules[`${year}${season}`] || undefined,
           }));
       default:
@@ -273,17 +289,11 @@ function PlanningSection({ highlightedRequirement } : Props) {
       ? sampleSchedule!.id
       : Math.random().toString(16).slice(2, 18),
     schedules: allTruthy(
-      allSemesters.map(({ selectedScheduleId }) => (selectedScheduleId ? userSchedules[selectedScheduleId] : null)),
+      allSemesters.map(({ chosenScheduleId }) => (chosenScheduleId ? userSchedules[chosenScheduleId] : null)),
     ),
   };
 
-  const hiddenSchedules = allTruthy(allSemesters.map(({ selectedScheduleId }) => {
-    if (!selectedScheduleId) return null;
-    const schedule = userSchedules[selectedScheduleId];
-    if (!hidden.includes(schedule.uid)) return null;
-    return schedule.id;
-  }));
-
+  // add a schedule whose semester is before the current earliest semester
   function addPrevSemester() {
     if (!userUid) return;
     const earliest = sortSchedules(userSchedules)[0];
@@ -291,8 +301,8 @@ function PlanningSection({ highlightedRequirement } : Props) {
       ? ['Fall' as Season, earliest.year - 1]
       : ['Spring' as Season, earliest.year];
     dispatch(Schedules.createSchedule({
-      uid: uuidv4(),
-      id: `My ${season} ${year}`,
+      id: uuidv4(),
+      title: `My ${season} ${year}`,
       season,
       year,
       classes: [],
@@ -335,14 +345,17 @@ function PlanningSection({ highlightedRequirement } : Props) {
                   </button>
                 )}
 
-                {allSemesters.map((props) => (
+                {allSemesters.map((semester) => (
                   <SemesterComponent
                     {...{
-                      ...props,
+                      ...semester,
                       colWidth,
                       dragStatus,
                       setDragStatus,
                       highlightedRequirement,
+                      handleChooseSchedule(id) {
+                        chooseSchedule(semester.semester.year, semester.semester.season, id);
+                      },
                     }}
                   />
                 ))}
@@ -389,32 +402,8 @@ function PlanningSection({ highlightedRequirement } : Props) {
         </div>
         {/* end semesters display */}
 
-        {hiddenSchedules.length > 0 && (
-          <div className="flex text-white items-center">
-            <h3>Hidden schedules:</h3>
-            <ul className="flex items-center">
-              {hiddenSchedules.map((id) => (
-                <li key={id} className="ml-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!userUid) return;
-                      updateDoc(getUserRef(userUid), `schedules.${id}.hidden`, false).catch(handleError);
-                    }}
-                    className="interactive"
-                  >
-                    {id}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <HiddenSchedules allSemesters={allSemesters} />
       </div>
     </div>
   );
 }
-
-// PlanningSection.whyDidYouRender = true;
-
-export default PlanningSection;

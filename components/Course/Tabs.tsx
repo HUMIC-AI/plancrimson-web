@@ -6,7 +6,11 @@ import EvaluationsPanel from './Tabs/EvaluationsPanel';
 import InfoPanel from './Tabs/InfoPanel';
 import PlanningPanel from './Tabs/PlanningPanel';
 
-const Tabs: React.FC<{ course: ExtendedClass }> = function ({ course }) {
+/**
+ * The tabs for the opened course modal.
+ * @param course the active course in the modal
+ */
+export default function Tabs({ course }: { course: ExtendedClass }) {
   return (
     <Tab.Group defaultIndex={0}>
       <Tab.List className="bg-gray-800 flex overflow-auto">
@@ -38,6 +42,4 @@ const Tabs: React.FC<{ course: ExtendedClass }> = function ({ course }) {
       </Tab.Panels>
     </Tab.Group>
   );
-};
-
-export default Tabs;
+}

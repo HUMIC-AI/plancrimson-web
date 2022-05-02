@@ -62,7 +62,12 @@ const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = functio
   );
 };
 
-const Attribute: React.FC<AttributeProps> = function ({ attribute, label }) {
+/**
+ * Renders an expandable menu to filter a given attribute
+ * @param attribute the Meilisearch attribute to filter by
+ * @param label the text to show
+ */
+export default function Attribute({ attribute, label }: AttributeProps) {
   return (
     <Disclosure as="div">
       {({ open }) => (
@@ -70,6 +75,4 @@ const Attribute: React.FC<AttributeProps> = function ({ attribute, label }) {
       )}
     </Disclosure>
   );
-};
-
-export default Attribute;
+}

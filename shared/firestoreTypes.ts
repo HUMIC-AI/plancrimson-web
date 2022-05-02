@@ -35,9 +35,9 @@ export const SEASON_ORDER = {
   Fall: 3,
 } as const;
 
-export type Semester = { year: number; season: Season };
-
 export type Season = keyof typeof SEASON_ORDER;
+
+export type Semester = { year: number; season: Season };
 
 export type Term = `${number}${Season}`;
 
@@ -103,7 +103,7 @@ export interface ScheduleMetadata {
     };
   };
 
-  hidden: string[]; // hidden schedules
+  hiddenScheduleIds: string[]; // hidden schedules
 }
 
 export interface DownloadPlan {
@@ -120,8 +120,8 @@ export interface ScheduleMap {
  * The Firestore schema for the schedules collection.
  */
 export interface Schedule {
-  uid: string; // global unique id
-  id: string; // better understood as "title"
+  id: string; // global unique id
+  title: string;
   ownerUid: string; // uid of the user that created this schedule
   public: boolean;
   year: number;
