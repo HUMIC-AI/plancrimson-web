@@ -1,4 +1,4 @@
-import '../src/wdyr';
+// import '../src/wdyr';
 import '../src/index.css';
 import type { AppProps } from 'next/app';
 import { getApps, initializeApp } from 'firebase/app';

@@ -24,6 +24,41 @@ import { selectClassYear } from '../../../src/features/userData';
 import Tooltip from '../../Tooltip';
 
 /**
+ * The planning panel in the course modal. Returns a Tab.Panel.
+ * @param course The course that's currently displayed in the modal
+ */
+export default function PlanningPanel({ course }: { course: ExtendedClass }) {
+  const schedules = useAppSelector(selectSchedules);
+  return (
+    <Tab.Panel>
+      {Object.keys(schedules).length > 0 ? (
+        <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
+          {sortSchedules(schedules).map((schedule) => (
+            <ScheduleRow
+              key={schedule.title}
+              course={course}
+              schedule={schedule}
+            />
+          ))}
+        </div>
+      ) : (
+        <p>
+          Get started by
+          {' '}
+          <Link href="/schedule">
+            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+            <a className="font-bold interactive">
+              creating a schedule
+            </a>
+          </Link>
+          !
+        </p>
+      )}
+    </Tab.Panel>
+  );
+}
+
+/**
  * For a given user schedule, shows the schedule title, semester,
  * and a switch to add this course to that schedule
  * @param schedule The schedule
@@ -65,7 +100,7 @@ function ScheduleRow({ schedule, course }: { schedule: Schedule; course: Extende
   return (
     <>
       <span className="font-semibold max-w-[12rem] sm:max-w-[24rem] overflow-hidden text-ellipsis">
-        {schedule.id}
+        {schedule.title}
       </span>
       <span className="text-gray-600">{`${schedule.season} ${schedule.year}`}</span>
       <div className="flex flex-row-reverse relative">
@@ -110,40 +145,5 @@ function ScheduleRow({ schedule, course }: { schedule: Schedule; course: Extende
         </div>
       </div>
     </>
-  );
-}
-
-/**
- * The planning panel in the course modal. Returns a Tab.Panel.
- * @param course The course that's currently displayed in the modal
- */
-export default function PlanningPanel({ course }: { course: ExtendedClass }) {
-  const schedules = useAppSelector(selectSchedules);
-  return (
-    <Tab.Panel>
-      {Object.keys(schedules).length > 0 ? (
-        <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
-          {sortSchedules(schedules).map((schedule) => (
-            <ScheduleRow
-              key={schedule.title}
-              course={course}
-              schedule={schedule}
-            />
-          ))}
-        </div>
-      ) : (
-        <p>
-          Get started by
-          {' '}
-          <Link href="/schedule">
-            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-            <a className="font-bold interactive">
-              creating a schedule
-            </a>
-          </Link>
-          !
-        </p>
-      )}
-    </Tab.Panel>
   );
 }

@@ -131,6 +131,14 @@ export const schedulesSlice = createSlice({
     },
 
     /**
+     * Toggles a given schedule's publicity
+     * @param action the id of the schedule to toggle
+     */
+    togglePublic(state, action: PayloadAction<string>) {
+      state.schedules[action.payload].public = !state.schedules[action.payload].public;
+    },
+
+    /**
      * Add an error to the state.
      * @param action The error to add
      */
@@ -290,6 +298,11 @@ export const renameSchedule = createActionCreator<RenameSchedulePayload>(
     return [];
   },
   rename,
+);
+
+export const togglePublic = createActionCreator<string>(
+  (state, id) => (id in state.schedules ? [] : ['schedule not found']),
+  schedulesSlice.actions.togglePublic,
 );
 
 export const deleteSchedule = createActionCreator<DeleteSchedulePayload>(

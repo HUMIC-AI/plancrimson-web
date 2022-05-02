@@ -30,6 +30,10 @@ import Tooltip from '../../Tooltip';
 const InfoPanel: React.FC<{ course: ExtendedClass }> = function ({ course }) {
   return (
     <Tab.Panel>
+      <p className="max-w-lg mb-4">
+        {course.textDescription || 'No description'}
+      </p>
+
       {/* Class information */}
       <div className="grid grid-cols-[auto_1fr] items-center gap-y-2 gap-x-4">
         <Instructors course={course} />

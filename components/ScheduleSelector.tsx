@@ -225,7 +225,7 @@ function ScheduleChooser({
               }}
             >
               {scheduleIds.length > 0 ? (
-                scheduleIds.map((scheduleId) => <ChooserOption scheduleId={scheduleId} />)
+                scheduleIds.map((scheduleId) => <ChooserOption key={scheduleId} scheduleId={scheduleId} />)
               ) : (
                 <Listbox.Option
                   value={null}

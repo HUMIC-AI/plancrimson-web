@@ -8,9 +8,9 @@ const totalCredits: Requirement = {
     'All candidates for the A.B. or the S.B. degree must pass 128 credits (the equivalent of 32 4-credit courses).',
   sourcePage: 9,
   validate: (count) => count >= 128,
-  reducer: (prev, cls, schedule, userData) => {
+  reducer: (prev, cls, schedule) => {
     // TODO handle advanced standing, etc
-    const takenClass = userData.schedules[schedule.title].classes.find(
+    const takenClass = schedule.classes.find(
       (classTaken) => classTaken.classId === getClassId(cls),
     );
     if (

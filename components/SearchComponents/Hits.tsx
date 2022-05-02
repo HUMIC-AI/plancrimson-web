@@ -72,7 +72,7 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
 }) {
   const { showCourse } = useModal();
   const { oneCol } = useSearchState();
-  const { selectedSchedule } = useChosenScheduleContext();
+  const { chosenScheduleId } = useChosenScheduleContext();
 
   return (
     <div className="space-y-6 flex flex-col items-center">
@@ -93,7 +93,7 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
             <CourseCard
               key={getClassId(hit)}
               course={hit}
-              chosenScheduleId={selectedSchedule?.id || null}
+              chosenScheduleId={chosenScheduleId}
               handleExpand={() => showCourse(hit)}
               inSearchContext={inSearch}
             />

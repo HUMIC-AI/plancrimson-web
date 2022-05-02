@@ -1,7 +1,6 @@
 import axios, { AxiosRequestHeaders } from 'axios';
 import { existsSync, readFileSync } from 'fs';
 import inquirer from 'inquirer';
-import path from 'path';
 import { ExtendedClass } from '../shared/apiTypes';
 
 const defaultMeiliUrl = 'http://127.0.0.1:7700';
@@ -33,8 +32,8 @@ async function uploadData(data: ExtendedClass[]) {
     },
   ]);
 
-  axios({
-    url: path.join(meiliUrl, 'indexes/courses/documents'),
+  await axios({
+    url: `${meiliUrl}/indexes/courses/documents`,
     headers: getHeaders(meiliUrl),
     data,
   });
@@ -53,6 +52,12 @@ export default {
     if (!existsSync(filepath)) {
       throw new Error('file does not exist');
     }
-    await uploadData(JSON.parse(readFileSync(filepath).toString('utf8')));
+    const allCourses: ExtendedClass[] = JSON.parse(readFileSync(filepath).toString('utf8'));
+    for (let i = 0; i < allCourses.length; i += 500) {
+      // eslint-disable-next-line no-await-in-loop
+      await uploadData(allCourses.slice(i, i + 500));
+    }
   },
 };
+
+// data/courses/courses-2022-02-01

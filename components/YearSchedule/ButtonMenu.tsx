@@ -6,12 +6,16 @@ import {
   FaPlus,
   FaTrash,
   FaDownload,
+  FaLink,
+  FaUnlink,
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
 import { v4 as uuidv4 } from 'uuid';
-import { Schedule, Season } from '../../shared/firestoreTypes';
+import { Season } from '../../shared/firestoreTypes';
 import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
-import { chooseSchedule, createSchedule, deleteSchedule } from '../../src/features/schedules';
+import {
+  chooseSchedule, createSchedule, deleteSchedule, selectSchedule, togglePublic,
+} from '../../src/features/schedules';
 import { selectUserUid } from '../../src/features/userData';
 import { downloadJson } from '../../src/hooks';
 import Tooltip from '../Tooltip';
@@ -67,51 +71,52 @@ function CustomButton({ name, Icon, ...rest }: ButtonProps | LinkProps) {
 }
 
 interface ButtonMenuProps {
-  selectedSchedule: Schedule | null;
-  selectSchedule: React.Dispatch<string | null>;
+  chosenScheduleId: string | null;
+  handleChooseSchedule: React.Dispatch<string | null>;
   year: number;
   season: Season;
   prevScheduleId: string | null;
 }
 
 function ButtonMenu({
-  selectedSchedule,
-  selectSchedule,
+  chosenScheduleId,
+  handleChooseSchedule,
   year,
   season,
   prevScheduleId,
 }: ButtonMenuProps) {
   const dispatch = useAppDispatch();
   const userUid = useAppSelector(selectUserUid);
+  const chosenSchedule = useAppSelector(selectSchedule(chosenScheduleId));
 
   const handleDuplicate = useCallback(async () => {
-    if (!selectedSchedule) return;
+    if (!chosenSchedule) return;
     try {
       const schedule = await dispatch(createSchedule({
-        ...selectedSchedule,
+        ...chosenSchedule,
         force: true,
       }));
       if ('errors' in schedule.payload) {
         throw new Error(schedule.payload.errors.join(', '));
       }
-      selectSchedule(schedule.payload.id);
+      handleChooseSchedule(schedule.payload.id);
     } catch (err) {
       console.error(err);
       alert("Couldn't duplicate your schedule. Please try again later.");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSchedule]);
+  }, [chosenSchedule]);
 
   const handleDelete = useCallback(async () => {
-    if (!selectedSchedule) return;
+    if (!chosenSchedule) return;
     // eslint-disable-next-line no-restricted-globals
     const confirmDelete = confirm(
-      `Are you sure you want to delete your schedule ${selectedSchedule.title}?`,
+      `Are you sure you want to delete your schedule ${chosenSchedule.title}?`,
     );
     if (!confirmDelete) return;
     try {
-      await dispatch(deleteSchedule(selectedSchedule.title));
-      selectSchedule(prevScheduleId);
+      await dispatch(deleteSchedule(chosenSchedule.title));
+      handleChooseSchedule(prevScheduleId);
     } catch (err) {
       console.error(err);
       alert(
@@ -119,17 +124,17 @@ function ButtonMenu({
       );
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prevScheduleId, selectedSchedule]);
+  }, [prevScheduleId, chosenSchedule]);
 
   return (
     <div className="flex flex-col space-y-2 w-full">
       <div className="self-center flex justify-center items-center flex-wrap gap-2 mt-2 text-gray-600 text-xs">
-        {selectedSchedule && (
+        {chosenSchedule && (
           <>
             <CustomButton
               name="Calendar view"
               isLink
-              scheduleId={selectedSchedule.title}
+              scheduleId={chosenSchedule.title}
               Icon={FaCalendarWeek}
               pathname="/schedule"
             />
@@ -181,16 +186,21 @@ function ButtonMenu({
           Icon={FaPlus}
         />
 
-        {selectedSchedule && (
+        {chosenSchedule && (
           <>
             <CustomButton name="Delete" onClick={handleDelete} Icon={FaTrash} />
             <CustomButton
               name="Download schedule"
               onClick={() => downloadJson(
-                `${selectedSchedule.title} (Plan Crimson)`,
-                { schedules: [selectedSchedule] },
+                `${chosenSchedule.title} (Plan Crimson)`,
+                { schedules: [chosenSchedule] },
               )}
               Icon={FaDownload}
+            />
+            <CustomButton
+              name={chosenSchedule.public ? 'Make private' : 'Make public'}
+              onClick={() => dispatch(togglePublic(chosenSchedule.id))}
+              Icon={chosenSchedule.public ? FaUnlink : FaLink}
             />
           </>
         )}

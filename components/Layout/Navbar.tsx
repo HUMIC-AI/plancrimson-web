@@ -22,6 +22,10 @@ const paths = [
     name: 'Search',
   },
   {
+    href: '/connect',
+    name: 'Connect',
+  },
+  {
     href: '/',
     name: 'My Courses',
   },

@@ -67,7 +67,7 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
   const user = useAppSelector(selectUserUid);
   const showAttributes = useAppSelector(selectShowAttributes);
   const isLg = useLgBreakpoint();
-  const { selectSchedule, selectedSchedule } = useChosenScheduleContext();
+  const { chooseSchedule, chosenScheduleId } = useChosenScheduleContext();
 
   return (
     <div className="flex flex-col space-y-1 w-full">
@@ -100,9 +100,9 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
         />
         <div className="hidden sm:block">
           <ScheduleChooser
-            scheduleIds={sortSchedules(schedules)}
-            handleChooseSchedule={selectSchedule}
-            chosenScheduleId={selectedSchedule}
+            scheduleIds={sortSchedules(schedules).map((schedule) => schedule.id)}
+            handleChooseSchedule={chooseSchedule}
+            chosenScheduleId={chosenScheduleId}
             direction="left"
             showDropdown
           />
@@ -135,7 +135,7 @@ export const SearchBoxComponent: React.FC<SearchBoxProvided> = function (
   props,
 ) {
   const schedules = useAppSelector(selectSchedules);
-  const { selectSchedule, selectedSchedule } = useChosenScheduleContext();
+  const { chooseSchedule: selectSchedule, chosenScheduleId: selectedSchedule } = useChosenScheduleContext();
 
   return (
     <div className="flex flex-col space-y-4 items-start">
@@ -145,7 +145,7 @@ export const SearchBoxComponent: React.FC<SearchBoxProvided> = function (
 
       <div className="sm:hidden relative">
         <ScheduleChooser
-          scheduleIds={sortSchedules(schedules)}
+          scheduleIds={sortSchedules(schedules).map((schedule) => schedule.id)}
           handleChooseSchedule={selectSchedule}
           chosenScheduleId={selectedSchedule}
           direction="right"
