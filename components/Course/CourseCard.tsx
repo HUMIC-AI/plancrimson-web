@@ -10,14 +10,13 @@ import {
   getSemester,
   checkViable,
 } from '../../shared/util';
-import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
 import { selectClassCache } from '../../src/features/classCache';
 import {
   addCourse, removeCourses, selectSchedule,
 } from '../../src/features/schedules';
 import { selectExpandCards, selectSemesterFormat } from '../../src/features/semesterFormat';
 import { selectClassYear } from '../../src/features/userData';
-import { handleError } from '../../src/hooks';
+import { handleError, useAppDispatch, useAppSelector } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 import {
   ClassTime,

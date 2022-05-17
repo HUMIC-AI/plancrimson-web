@@ -12,8 +12,7 @@ import {
   getEvents,
   doesRRuleHaveDay,
 } from './calendarUtil';
-import { downloadJson } from '../../src/hooks';
-import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
+import { downloadJson, useAppDispatch, useAppSelector } from '../../src/hooks';
 import { customTime, selectCustomTime, selectCustomTimes } from '../../src/features/schedules';
 
 const dayStartTime = 8; // time to start the calendar at

@@ -15,8 +15,6 @@ import {
   DAYS_OF_WEEK,
   Viability,
   ScheduleMap,
-  UserDocument,
-  ScheduleMetadata,
 } from './firestoreTypes';
 import seasPlan from './seasPlan.json';
 import { getSchoolYear } from '../src/requirements/util';
@@ -80,6 +78,7 @@ export function getNumCredits(course: Class) {
   return parseInt(course.HU_UNITS_MIN, 10);
 }
 
+// compare semesters a and b chronologically, breaking ties with id.
 export function compareSemesters(a: Semester, b: Semester) {
   if (a.year !== b.year) return a.year - b.year;
   const seasonDiff = SEASON_ORDER[a.season] - SEASON_ORDER[b.season];
@@ -111,7 +110,8 @@ export function getDefaultSemesters(classYear: number) {
 /**
  * @param classYear the user's graduation year
  * @param semesters the list of additional semesters to add
- * @returns a set of semesters
+ * @returns the union of the default semesters for the given class year
+ * and the given semesters, sorted in chronological order
  */
 export function getUniqueSemesters(classYear: number, semesters: Semester[]) {
   const defaultSemesters = getDefaultSemesters(classYear);

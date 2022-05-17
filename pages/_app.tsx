@@ -8,11 +8,10 @@ import {
 // import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { Provider } from 'react-redux';
 import { useEffect, useState } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { connectAuthEmulator, getAuth, onAuthStateChanged } from 'firebase/auth';
 import { SearchStateProvider } from '../src/context/searchState';
-import store from '../src/app/store';
-import { getUserRef } from '../src/hooks';
-import { useAppDispatch, useAppSelector } from '../src/app/hooks';
+import store from '../src/store';
+import { getUserRef, useAppDispatch, useAppSelector } from '../src/hooks';
 import * as UserData from '../src/features/userData';
 import * as Schedules from '../src/features/schedules';
 import { ModalProvider, useModal } from '../src/features/modal';
@@ -22,7 +21,7 @@ import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: 'AIzaSyAtHudtGRcdGwEuXPnfb8Q4JjcUOYVVcEg',
-  authDomain: 'harvard-concentration-planner.firebaseapp.com',
+  authDomain: 'plancrimson.com',
   projectId: 'harvard-concentration-planner',
   storageBucket: 'harvard-concentration-planner.appspot.com',
   messagingSenderId: '770496895607',
@@ -30,15 +29,16 @@ const firebaseConfig = {
   measurementId: 'G-F4RKHQJFH3',
 };
 
+// first initialize app
 if (getApps().length === 0) {
   initializeApp(firebaseConfig);
 
   // connect to emulators in development mode
   // check /firebase.json for port numbers
   if (process.env.NODE_ENV === 'development') {
-    // const auth = getAuth();
-    // connectAuthEmulator(auth, 'http://127.0.0.1:9099');
+    const auth = getAuth();
     const db = getFirestore();
+    connectAuthEmulator(auth, 'http://127.0.0.1:9099');
     connectFirestoreEmulator(db, '127.0.0.1', 8080);
   }
 }
@@ -136,13 +136,13 @@ function MyApp({ Component, pageProps }: AppProps) {
           hiddenScheduleIds: data.hiddenScheduleIds || [],
         }));
       },
-      (err) => dispatch(UserData.setSnapshotError(err)),
+      (err) => dispatch(UserData.setSnapshotError({ error: err })),
     );
 
     // trigger initial write
     setDoc(userRef, { lastLoggedIn: serverTimestamp() }, { merge: true })
       .then(() => console.info('updated last login time'))
-      .catch((err) => dispatch(UserData.setSnapshotError(err)));
+      .catch((err) => dispatch(UserData.setSnapshotError({ error: err })));
 
     return unsub;
   // eslint-disable-next-line react-hooks/exhaustive-deps

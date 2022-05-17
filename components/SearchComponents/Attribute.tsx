@@ -2,8 +2,8 @@ import { Disclosure } from '@headlessui/react';
 import React, { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { classNames, compareItems, compareWeekdays } from '../../shared/util';
-import { useAppSelector } from '../../src/app/hooks';
 import { selectUserUid } from '../../src/features/userData';
+import { useAppSelector } from '../../src/hooks';
 import RefinementList, { RefinementListDemo } from './RefinementList';
 
 interface AttributeProps {

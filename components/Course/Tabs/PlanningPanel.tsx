@@ -15,12 +15,12 @@ import {
   classNames,
   checkViable,
 } from '../../../shared/util';
-import { useAppDispatch, useAppSelector } from '../../../src/app/hooks';
 import { selectClassCache } from '../../../src/features/classCache';
 import {
   addCourse, removeCourses, selectSchedules,
 } from '../../../src/features/schedules';
 import { selectClassYear } from '../../../src/features/userData';
+import { useAppSelector, useAppDispatch } from '../../../src/hooks';
 import Tooltip from '../../Tooltip';
 
 /**

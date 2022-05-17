@@ -4,10 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
 import { Semester } from '../shared/firestoreTypes';
 import { classNames } from '../shared/util';
-import { useAppDispatch, useAppSelector } from '../src/app/hooks';
 import {
   renameSchedule, chooseSchedule, selectSchedule,
 } from '../src/features/schedules';
+import { useAppDispatch, useAppSelector } from '../src/hooks';
 import FadeTransition from './FadeTransition';
 
 function titleContainsTerm(title: string, term: Semester) {

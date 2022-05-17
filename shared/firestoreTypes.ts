@@ -119,13 +119,11 @@ export interface ScheduleMap {
 /**
  * The Firestore schema for the schedules collection.
  */
-export interface Schedule {
+export interface Schedule extends Semester {
   id: string; // global unique id
   title: string;
   ownerUid: string; // uid of the user that created this schedule
   public: boolean;
-  year: number;
-  season: Season;
   classes: UserClassData[];
 }
 

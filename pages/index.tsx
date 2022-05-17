@@ -4,11 +4,11 @@ import Layout from '../components/Layout/Layout';
 import PlanningSection from '../components/YearSchedule/PlanningSection';
 import RequirementsSection from '../components/YearSchedule/RequirementsSection';
 import { allTruthy, classNames } from '../shared/util';
-import { useAppSelector } from '../src/app/hooks';
 import { selectClassCache } from '../src/features/classCache';
-import { selectSchedules, useSchedules } from '../src/features/schedules';
+import { selectSchedules } from '../src/features/schedules';
 import { selectSampleSchedule, selectSemesterFormat, selectShowReqs } from '../src/features/semesterFormat';
 import { selectUserUid, selectUserDocument } from '../src/features/userData';
+import { useAppSelector } from '../src/hooks';
 import validateSchedules from '../src/requirements';
 import collegeRequirements from '../src/requirements/college';
 import {
@@ -26,8 +26,7 @@ export default function PlanPageComponent() {
   const showReqs = useAppSelector(selectShowReqs);
 
   // we load all user schedules
-  const q = useMemo(() => where('ownerUid', '==', userUid), [userUid]);
-  useSchedules(q);
+  const q = useMemo(() => [where('ownerUid', '==', userUid)], [userUid]);
   const schedules = useAppSelector(selectSchedules);
 
   const [validationResults, setValidationResults] = useState<GroupResult | null>(null);
@@ -51,7 +50,7 @@ export default function PlanPageComponent() {
   }, [selectedRequirements, classCache, sampleSchedule, semesterFormat, userDocument]);
 
   return (
-    <Layout size="w-full md:px-8" title="Plan">
+    <Layout size="w-full md:px-8" title="Plan" queryConstraints={q}>
       <div className={classNames(
         showReqs && 'md:grid-rows-1 md:grid-cols-[auto_1fr] items-stretch gap-4',
         'grid min-h-screen py-8',

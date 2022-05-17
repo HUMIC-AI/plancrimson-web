@@ -12,9 +12,12 @@ import {
   FaTimes, FaBars, FaCalendarCheck, FaUser,
 } from 'react-icons/fa';
 import { classNames } from '../../shared/util';
-import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
-import { selectPhotoUrl, selectUserUid, signOut as signOutUser } from '../../src/features/userData';
-import { handleError, signInUser } from '../../src/hooks';
+import {
+  selectEmail, selectPhotoUrl, selectUserUid, signOut as signOutUser,
+} from '../../src/features/userData';
+import {
+  handleError, signInUser, useAppDispatch, useAppSelector,
+} from '../../src/hooks';
 
 const paths = [
   {
@@ -41,13 +44,20 @@ const paths = [
 
 // Profile dropdown
 function UserMenu() {
+  const dispatch = useAppDispatch();
   const uid = useAppSelector(selectUserUid);
   const photoUrl = useAppSelector(selectPhotoUrl);
-  const dispatch = useAppDispatch();
+  const email = useAppSelector(selectEmail);
+
+  const buttonStyles = (active: boolean) => classNames(
+    active ? 'bg-white' : '',
+    'block w-full px-4 py-2 text-sm text-left text-gray-800',
+  );
 
   return (
     <Menu as="div" className="ml-3 relative z-50">
-      <div>
+      <div className="flex items-center space-x-4">
+        <span className="text-white text-sm">{email}</span>
         <Menu.Button
           name="Open user menu"
           className="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
@@ -85,10 +95,7 @@ function UserMenu() {
               <button
                 type="button"
                 name={uid ? 'Sign out' : 'Sign in'}
-                className={classNames(
-                  active ? 'bg-white' : '',
-                  'block w-full px-4 py-2 text-sm text-left text-gray-800',
-                )}
+                className={buttonStyles(active)}
                 onClick={async () => {
                   try {
                     if (uid) {
@@ -106,6 +113,19 @@ function UserMenu() {
               </button>
             )}
           </Menu.Item>
+          {uid && (
+          <Menu.Item>
+            {({ active }) => (
+              <button
+                type="button"
+                onClick={() => prompt('UID', uid)}
+                className={buttonStyles(active)}
+              >
+                Copy UID
+              </button>
+            )}
+          </Menu.Item>
+          )}
         </Menu.Items>
       </Transition>
     </Menu>

@@ -12,12 +12,11 @@ import {
 import type { IconType } from 'react-icons/lib';
 import { v4 as uuidv4 } from 'uuid';
 import { Season } from '../../shared/firestoreTypes';
-import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
 import {
   chooseSchedule, createSchedule, deleteSchedule, selectSchedule, togglePublic,
 } from '../../src/features/schedules';
 import { selectUserUid } from '../../src/features/userData';
-import { downloadJson } from '../../src/hooks';
+import { downloadJson, useAppDispatch, useAppSelector } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 
 const buttonStyles = 'inline-block p-1 rounded bg-black bg-opacity-0 hover:text-black hover:bg-opacity-50 transition-colors';

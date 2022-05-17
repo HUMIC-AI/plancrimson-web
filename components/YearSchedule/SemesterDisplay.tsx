@@ -12,13 +12,12 @@ import {
   getSchedulesBySemester,
 } from '../../shared/util';
 import { Semester, Viability } from '../../shared/firestoreTypes';
-import { meiliSearchClient } from '../../src/hooks';
+import { meiliSearchClient, useAppDispatch, useAppSelector } from '../../src/hooks';
 import ScheduleChooser from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
 import FadeTransition from '../FadeTransition';
 import { Requirement } from '../../src/requirements/util';
 import ButtonMenu from './ButtonMenu';
-import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
 import { selectSampleSchedule, selectSemesterFormat } from '../../src/features/semesterFormat';
 import * as Schedules from '../../src/features/schedules';
 import { selectClassCache } from '../../src/features/classCache';

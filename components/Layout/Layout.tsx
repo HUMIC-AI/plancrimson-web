@@ -2,18 +2,22 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { PropsWithChildren } from 'react';
+import React, { PropsWithChildren, useEffect } from 'react';
+import * as firestore from 'firebase/firestore';
 import { classNames, unsplashParams } from '../../shared/util';
 import ExternalLink from '../ExternalLink';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
-import { useAppSelector } from '../../src/app/hooks';
-import { selectSnapshotError } from '../../src/features/userData';
+import { selectSnapshotError, setSnapshotError } from '../../src/features/userData';
+import { getSchedulesRef, useAppDispatch, useAppSelector } from '../../src/hooks';
+import { overwriteSchedules } from '../../src/features/schedules';
+import { loadClasses } from '../../src/features/classCache';
 
-type LayoutProps = {
+interface LayoutProps {
   title?: string;
   size?: string;
-};
+  queryConstraints?: firestore.QueryConstraint[]
+}
 
 const description = 'Wait no longer to plan out your concentration. For Harvard College students. Q Reports, Course Evaluations, my.harvard, and more, all in one place.';
 
@@ -92,9 +96,30 @@ export default function Layout({
   children,
   title,
   size = 'container sm:p-8',
+  queryConstraints = [],
 }: PropsWithChildren<LayoutProps>) {
-  const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
+  const dispatch = useAppDispatch();
   const errors = useAppSelector(selectSnapshotError);
+  const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
+
+  // listen for the requested schedules, load all of their classes into the class cache
+  useEffect(() => {
+    if (queryConstraints.length === 0) {
+      return;
+    }
+    const q = firestore.query(getSchedulesRef(), ...queryConstraints);
+    const unsubSchedules = firestore.onSnapshot(q, (snap) => {
+      // load all of the classes into the class cache
+      const scheduleEntries = snap.docs.map((doc) => doc.data());
+      const classIds = scheduleEntries.flatMap((schedule) => schedule.classes.map(({ classId }) => classId));
+      dispatch(loadClasses(classIds));
+      dispatch(overwriteSchedules(scheduleEntries));
+    }, (err) => dispatch(setSnapshotError({ error: err })));
+    // eslint-disable-next-line consistent-return
+    return unsubSchedules;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryConstraints]);
+
   return (
     <div className="flex flex-col min-h-screen overflow-auto">
       <Head>

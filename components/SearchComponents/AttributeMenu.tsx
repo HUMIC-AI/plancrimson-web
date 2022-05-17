@@ -1,8 +1,7 @@
 import { FaAngleDoubleLeft } from 'react-icons/fa';
 import { adjustAttr } from '../../shared/util';
-import { useAppDispatch } from '../../src/app/hooks';
 import { setShowAttributes } from '../../src/features/semesterFormat';
-import { useLgBreakpoint } from '../../src/hooks';
+import { useAppDispatch, useLgBreakpoint } from '../../src/hooks';
 import Attribute from './Attribute';
 import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
 

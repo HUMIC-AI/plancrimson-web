@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { SampleSchedule } from '../requirements/util';
-import type { RootState } from '../app/store';
+import type { RootState } from '../store';
 
 interface SemesterFormat {
   format: 'all' | 'selected' | 'sample' | null;

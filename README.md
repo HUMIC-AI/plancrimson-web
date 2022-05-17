@@ -26,6 +26,10 @@ The way it was reverse engineered:
 - this calls IS.S2.SES.Search(el, searchObj (which is undefined), IS.SCL)
 - which is a really big function defined in `https://portal.my.harvard.edu/cs/hrvihprd/cache_85811/IS_S2_SES_BASE_JS_MIN_10.js`, but using IS.SCL gets the values for IS.SCL.Config.AdvancedFields
 
+## Tech stack
+
+See the [About](pages/about.tsx) page.
+
 ## Code overview
 
 Below is a brief overview of the codebase. Check it out if you're interested in contributing or learning more about these technologies!

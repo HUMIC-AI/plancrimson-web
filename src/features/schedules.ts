@@ -2,19 +2,14 @@
 import {
   ActionCreatorWithPayload, createSlice, PayloadAction, ThunkAction,
 } from '@reduxjs/toolkit';
-import {
-  onSnapshot, query, QueryConstraint, setDoc, updateDoc,
-} from 'firebase/firestore';
-import { useEffect } from 'react';
+import { setDoc, updateDoc } from 'firebase/firestore';
 import {
   CustomTimeRecord, Schedule, ScheduleMetadata, ScheduleMap, SEASON_ORDER, Term,
 } from '../../shared/firestoreTypes';
 import { allTruthy, ErrorData } from '../../shared/util';
-import { useAppDispatch } from '../app/hooks';
-import type { RootState } from '../app/store';
-import { getScheduleRef, getSchedulesRef, getUserRef } from '../hooks';
-import * as ClassCache from './classCache';
-import { selectUserUid, setSnapshotError } from './userData';
+import type { RootState } from '../store';
+import { getScheduleRef, getUserRef } from '../hooks';
+import { selectUserUid } from './userData';
 
 type SchedulesState = ScheduleMetadata & {
   schedules: ScheduleMap,
@@ -65,8 +60,11 @@ export const schedulesSlice = createSlice({
      * Overwrites all schedules in the state.
      * @param action A mapping from ids to schedules
      */
-    overwriteSchedules(state, action: PayloadAction<ScheduleMap>) {
-      Object.assign(state.schedules, action.payload);
+    overwriteSchedules(state, action: PayloadAction<Schedule[]>) {
+      state.schedules = {};
+      action.payload.forEach((schedule) => {
+        state.schedules[schedule.id] = schedule;
+      });
     },
 
     /**
@@ -204,10 +202,12 @@ export const selectCustomTime = (classId: string) => (state: RootState) => state
 // ========================= ACTION CREATORS =========================
 
 const {
-  overwriteSchedules, create, remove, rename, deleteSchedule: delSchedule, error,
+  create, remove, rename, deleteSchedule: delSchedule, error,
 } = schedulesSlice.actions;
 
-export const { overwriteScheduleMetadata, customTime, clearSchedule } = schedulesSlice.actions;
+export const {
+  overwriteSchedules, overwriteScheduleMetadata, customTime, clearSchedule,
+} = schedulesSlice.actions;
 
 /**
  * Uploads the entire local state to Firestore.
@@ -324,34 +324,3 @@ export const chooseSchedule = createActionCreator<SelectSchedulePayload>(
   (state, { scheduleId: scheduleUid }) => (scheduleUid && !state.schedules[scheduleUid] ? ['schedule not found'] : []),
   schedulesSlice.actions.selectSchedule,
 );
-
-/**
- * Queries the `schedules` collection according to a set of constraints and saves
- * them to the Redux state.
- * @param constraints the set of Firestore constraints to query with.
- */
-export function useSchedules(...constraints: QueryConstraint[]) {
-  const dispatch = useAppDispatch();
-
-  // listen for this user's schedules, load all of them into the class cache
-  useEffect(() => {
-    if (constraints.length === 0) {
-      return;
-    }
-    const q = query(getSchedulesRef(), ...constraints);
-    const unsubSchedules = onSnapshot(q, (snap) => {
-      // load all of the classes into the class cache
-      snap.docs.forEach((schedule) => {
-        schedule.data().classes.forEach(({ classId }) => dispatch(ClassCache.loadClass(classId)));
-      });
-      const scheduleEntries = snap.docs.map((doc) => {
-        const { id, ...data } = doc.data();
-        return [id, { id, ...data }];
-      });
-      dispatch(overwriteSchedules(Object.fromEntries(scheduleEntries)));
-    }, (err) => dispatch(setSnapshotError(err)));
-    // eslint-disable-next-line consistent-return
-    return unsubSchedules;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, constraints);
-}

@@ -18,14 +18,13 @@ import {
   getUniqueSemesters,
   sortSchedules,
 } from '../../shared/util';
-import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
 import * as Schedules from '../../src/features/schedules';
 import {
   selectExpandCards, selectSampleSchedule, selectSemesterFormat, selectShowReqs, setShowReqs, showAll, showSelected, toggleExpand,
 } from '../../src/features/semesterFormat';
 import { selectClassYear, selectUserUid } from '../../src/features/userData';
 import {
-  downloadJson, handleError, signInUser,
+  downloadJson, handleError, signInUser, useAppDispatch, useAppSelector,
 } from '../../src/hooks';
 import type { Requirement } from '../../src/requirements/util';
 import type { DragStatus } from '../Course/CourseCard';
@@ -243,21 +242,22 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
   }));
 
   // the set of columns in our table, each representing a semester
-  const allSemesters: SemesterDisplayProps[] = useMemo(() => {
+  const columns: SemesterDisplayProps[] = useMemo(() => {
     switch (semesterFormat) {
       case 'sample':
-        return (
-          sampleSchedule?.schedules.map(({ year, season, id }) => ({
-            semester: { year, season },
-            chosenScheduleId: id,
-          })) || []
-        );
+        if (!sampleSchedule) return [];
+        return sampleSchedule.schedules.map(({ year, season, id }) => ({
+          semester: { year, season },
+          chosenScheduleId: id,
+          key: id,
+        }));
       case 'selected':
         if (!classYear) return [];
         return getUniqueSemesters(
           classYear,
           Object.values(userSchedules),
         ).map(({ year, season }) => ({
+          key: `${year}${season}`,
           semester: { year, season },
           chosenScheduleId: selectedSchedules[`${year}${season}`] || null,
         }));
@@ -265,6 +265,7 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
         return Object.values(userSchedules)
           .sort(compareSemesters)
           .map(({ year, season, id }) => ({
+            key: id,
             semester: { year, season },
             chosenScheduleId: id,
             highlight: selectedSchedules[`${year}${season}`] || undefined,
@@ -289,7 +290,7 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
       ? sampleSchedule!.id
       : Math.random().toString(16).slice(2, 18),
     schedules: allTruthy(
-      allSemesters.map(({ chosenScheduleId }) => (chosenScheduleId ? userSchedules[chosenScheduleId] : null)),
+      columns.map(({ chosenScheduleId }) => (chosenScheduleId ? userSchedules[chosenScheduleId] : null)),
     ),
   };
 
@@ -328,8 +329,10 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
             className="md:absolute md:inset-0 grid grid-flow-col rounded-t-lg md:rounded-b-lg overflow-auto"
             ref={semestersContainerRef}
           >
+            {/* when dragging a card, drag over this area to scroll left */}
             <div ref={leftScrollRef} />
 
+            {/* If the user is signed in, show the semesters. Otherwise show "Sign in to get started" */}
             {userUid ? (
               <>
                 {/* add previous semester button */}
@@ -345,16 +348,16 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
                   </button>
                 )}
 
-                {allSemesters.map((semester) => (
+                {columns.map((column) => (
                   <SemesterComponent
                     {...{
-                      ...semester,
+                      ...column,
                       colWidth,
                       dragStatus,
                       setDragStatus,
                       highlightedRequirement,
                       handleChooseSchedule(id) {
-                        chooseSchedule(semester.semester.year, semester.semester.season, id);
+                        chooseSchedule(column.semester.year, column.semester.season, id);
                       },
                     }}
                   />
@@ -372,6 +375,7 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
               </div>
             )}
 
+            {/* when dragging, drag over this area to scroll right */}
             <div ref={rightScrollRef} />
           </div>
 
@@ -402,7 +406,7 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
         </div>
         {/* end semesters display */}
 
-        <HiddenSchedules allSemesters={allSemesters} />
+        <HiddenSchedules allSemesters={columns} />
       </div>
     </div>
   );

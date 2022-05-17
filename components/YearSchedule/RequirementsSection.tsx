@@ -23,13 +23,12 @@ import FadeTransition from '../FadeTransition';
 import RequirementGroupComponent from './RequirementsDisplay';
 import { allTruthy, classNames } from '../../shared/util';
 import { allRequirements } from '../../src/requirements';
-import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
 import {
   selectSampleSchedule, setShowReqs, showSample, showSelected,
 } from '../../src/features/semesterFormat';
 import { createSchedule, CreateSchedulePayload, chooseSchedule } from '../../src/features/schedules';
 import { selectUserUid } from '../../src/features/userData';
-import { handleError } from '../../src/hooks';
+import { handleError, useAppDispatch, useAppSelector } from '../../src/hooks';
 
 interface RequirementsSectionProps {
   selectedRequirements: RequirementGroup;

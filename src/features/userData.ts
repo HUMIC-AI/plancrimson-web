@@ -2,7 +2,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { FirestoreError } from 'firebase/firestore';
 import type { UserDocument, UserMetadata } from '../../shared/firestoreTypes';
-import type { RootState } from '../app/store';
+import type { RootState } from '../store';
 
 // authentication info, not from Firestore
 interface UserInfo {
@@ -52,8 +52,8 @@ export const userDataSlice = createSlice({
     setClassYear(state, action: PayloadAction<number>) {
       state.classYear = action.payload;
     },
-    setSnapshotError(state, action: PayloadAction<FirestoreError>) {
-      state.snapshotError = action.payload;
+    setSnapshotError(state, action: PayloadAction<{ error: FirestoreError }>) {
+      state.snapshotError = action.payload.error;
     },
   },
 });
@@ -66,6 +66,7 @@ export const {
 
 export const selectPhotoUrl = (state: RootState) => state.user.userInfo?.photoUrl || null;
 export const selectUserUid = (state: RootState) => state.user.userInfo?.uid || null;
+export const selectEmail = (state: RootState) => state.user.userInfo?.email || null;
 export const selectClassYear = (state: RootState) => state.user.classYear;
 export const selectLastLoggedIn = (state: RootState) => state.user.lastLoggedIn;
 export const selectSnapshotError = (state: RootState) => state.user.snapshotError;

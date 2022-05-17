@@ -5,7 +5,6 @@ import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
 import { classNames, getClassId } from '../../shared/util';
 import CourseCard from '../Course/CourseCard';
-import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
 import { selectExpandCards, toggleExpand } from '../../src/features/semesterFormat';
 import { useModal } from '../../src/features/modal';
 import sampleCourses from './sampleCourses.json';
@@ -13,6 +12,7 @@ import { alertSignIn } from './searchUtils';
 import { DAY_SHORT } from '../../shared/firestoreTypes';
 import useChosenScheduleContext from '../../src/context/selectedSchedule';
 import useSearchState from '../../src/context/searchState';
+import { useAppDispatch, useAppSelector } from '../../src/hooks';
 
 interface ButtonProps {
   onClick: () => void;

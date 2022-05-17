@@ -1,14 +1,15 @@
 /* eslint-disable no-param-reassign */
 import {
-  createSlice, PayloadAction, ThunkAction,
+  createSlice, PayloadAction,
 } from '@reduxjs/toolkit';
 import MeiliSearch from 'meilisearch';
 import { ExtendedClass } from '../../shared/apiTypes';
 import {
+  allTruthy,
   getMeiliApiKey,
   getMeiliHost,
 } from '../../shared/util';
-import type { RootState } from '../app/store';
+import type { AppDispatch, RootState } from '../store';
 
 export interface ClassCache {
   [classId: string]: ExtendedClass;
@@ -33,9 +34,10 @@ export const classCacheSlice = createSlice({
   name: 'classCache',
   initialState,
   reducers: {
-    loadClass(state, action: PayloadAction<ExtendedClass>) {
-      const classData = action.payload;
-      state.cache[classData.id] = classData;
+    loadClasses(state, action: PayloadAction<ExtendedClass[]>) {
+      action.payload.forEach((classData) => {
+        state.cache[classData.id] = { ...classData };
+      });
     },
   },
 });
@@ -44,12 +46,16 @@ export const classCacheSlice = createSlice({
 
 export const selectClassCache = (state: RootState) => state.classCache.cache;
 
-export const loadClass = (classId: string): ThunkAction<Promise<PayloadAction<ExtendedClass>>, RootState, undefined, PayloadAction<ExtendedClass>> => async (dispatch, getState) => {
+// loads all classes that aren't already in the cache
+export const loadClasses = (classIds: string[]) => async (dispatch: AppDispatch, getState: () => RootState) => {
   const state = getState();
   const cache = selectClassCache(state);
-  if (classId in cache) {
-    return classCacheSlice.actions.loadClass(cache[classId]);
-  }
-  const data = await index.getDocument(classId);
-  return dispatch(classCacheSlice.actions.loadClass(data));
+  const classes = await Promise.all(classIds.map((classId) => {
+    if (classId in cache) {
+      return Promise.resolve(null);
+    }
+    return index.getDocument(classId);
+  }));
+  const fetchedClasses = allTruthy(classes);
+  return dispatch(classCacheSlice.actions.loadClasses(fetchedClasses));
 };

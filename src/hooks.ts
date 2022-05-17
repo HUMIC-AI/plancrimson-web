@@ -3,9 +3,13 @@ import {
   getFirestore, DocumentReference, doc, Timestamp, collection, CollectionReference,
 } from 'firebase/firestore';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import {
+  getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup,
+} from 'firebase/auth';
+import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import type { Schedule, UserDocument } from '../shared/firestoreTypes';
 import { getMeiliHost, getMeiliApiKey } from '../shared/util';
+import type { AppDispatch, RootState } from './store';
 
 const LG_BREAKPOINT = 1024;
 
@@ -58,15 +62,27 @@ export function useLgBreakpoint() {
 export const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey());
 
 export async function signInUser() {
+  const auth = getAuth();
+  if (process.env.NODE_ENV === 'development') {
+    const email = prompt('Enter email:');
+    if (!email) return;
+    const sub = Buffer.from(email).toString('base64');
+    await signInWithCredential(auth, GoogleAuthProvider.credential(JSON.stringify({ sub, email })));
+    return;
+  }
+
   // we don't need any additional scopes
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({
     hd: 'college.harvard.edu',
   });
-  await signInWithPopup(getAuth(), provider);
+  await signInWithPopup(auth, provider);
 }
 
 export function handleError(err: unknown) {
   alert('An unexpected error occurred! Please try again later.');
   console.error(err);
 }
+
+export function useAppDispatch() { return useDispatch<AppDispatch>(); }
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

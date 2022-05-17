@@ -1,9 +1,9 @@
 import { Dialog } from '@headlessui/react';
 import { DownloadPlan, SEASON_ORDER } from '../shared/firestoreTypes';
 import { allTruthy } from '../shared/util';
-import { useAppDispatch } from '../src/app/hooks';
 import { useModal } from '../src/features/modal';
 import { createSchedule } from '../src/features/schedules';
+import { useAppDispatch } from '../src/hooks';
 
 function UploadForm() {
   const dispatch = useAppDispatch();

@@ -4,10 +4,10 @@ import Calendar from '../components/SemesterSchedule/Calendar';
 import UploadPlan from '../components/UploadPlan';
 import ButtonMenu from '../components/YearSchedule/ButtonMenu';
 import { allTruthy, sortSchedules } from '../shared/util';
-import { useAppSelector } from '../src/app/hooks';
 import { selectClassCache } from '../src/features/classCache';
 import { selectSchedules } from '../src/features/schedules';
 import useChosenScheduleContext from '../src/context/selectedSchedule';
+import { useAppSelector } from '../src/hooks';
 
 export default function SchedulePage() {
   const schedules = useAppSelector(selectSchedules);
