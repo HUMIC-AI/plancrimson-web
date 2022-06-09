@@ -1,8 +1,18 @@
 rules_version = '2'
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isWhitelisted() {
+      let metadata = get(/databases/$(database)/documents/metadata/metadata);
+      return metadata != null && request.auth.token.email in metadata.data.whitelist;
+    }
+
     function loggedInStudent() {
-      return request.auth != null; // && request.auth.token.email.matches("@[^@]+harvard.edu$");
+      // anything that ends in @harvard.edu or .harvard.edu or is whitelisted
+      return request.auth != null && (request.auth.token.email.matches(".+[@.]harvard[.]edu$") || isWhitelisted());
+    }
+
+    function friendRequestPath(from, to) {
+      return /databases/$(database)/documents/allFriends/$(from)/friends/$(to);
     }
 
     match /alerts/{uid} {
@@ -13,15 +23,42 @@ service cloud.firestore {
       allow read, write: if loggedInStudent() && request.auth.uid == uid;
     }
 
-    match /schedules/{uid} {
+    // this path exists to support collection group queries
+    match /{fullPath=**}/friends/{friendRequest} {
+      allow read, delete: if loggedInStudent() && (resource == null || resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+    }
+
+    // this document represents a friend request from {from} to {to}
+    match /allFriends/{from}/friends/{to} {
+      // only receiver can update (accept request)
+      allow update: if loggedInStudent() && request.auth.uid == to;
+
+      // only sender can create requests, and there can't be an existing doc
+      // the created doc must have the correct from and to fields
+      allow create: if loggedInStudent()
+        && from == request.auth.uid
+        && !exists(friendRequestPath(to, from))
+        && request.resource.data.from == from
+        && request.resource.data.to == to;
+    }
+
+    match /schedules/{scheduleUid} {
+      // returns true iff we're friends with the owner of the schedule we're asking for
+      function isFriend() {
+        let ownerUid = resource.data.ownerUid;
+        let clientUid = request.auth.uid;
+        return get(friendRequestPath(ownerUid, clientUid)).data.accepted == true
+          || get(friendRequestPath(clientUid, ownerUid)).data.accepted == true;
+      }
+
       // allow logged in user to see a schedule
       // if it's public or if they're friends of the schedule's creator
       allow read: if loggedInStudent() && (
-        (resource.data.public == true)
-        || (request.auth.uid == resource.data.ownerUid)
-        || ('ownerUid' in resource.data && request.auth.uid in get(/databases/$(database)/documents/users/$(resource.data.ownerUid)).data.friends)
+        resource.data.public == true
+        || request.auth.uid == resource.data.ownerUid
+        || isFriend()
       );
-      // only allow logged in user to modify their own schedule
+      // only allow logged in user to modify their own schedules
       allow create: if loggedInStudent() && request.resource.data.ownerUid == request.auth.uid;
       allow update, delete: if loggedInStudent() && resource.data.ownerUid == request.auth.uid;
     }

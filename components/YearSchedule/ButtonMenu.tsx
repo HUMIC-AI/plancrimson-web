@@ -103,7 +103,6 @@ function ButtonMenu({
       console.error(err);
       alert("Couldn't duplicate your schedule. Please try again later.");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chosenSchedule]);
 
   const handleDelete = useCallback(async () => {
@@ -122,7 +121,6 @@ function ButtonMenu({
         'There was a problem deleting your schedule. Please try again later.',
       );
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prevScheduleId, chosenSchedule]);
 
   return (

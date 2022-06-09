@@ -20,7 +20,7 @@ import {
   ClassTime,
   Location,
 } from '../CourseComponents';
-import departments from '../../../src/departments.json';
+import departments from '../../../shared/assets/departments.json';
 import Tooltip from '../../Tooltip';
 
 /**

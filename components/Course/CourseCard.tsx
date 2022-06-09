@@ -25,7 +25,7 @@ import {
   Instructors,
   Location,
 } from './CourseComponents';
-import departmentImages from './departmentImages.json';
+import departmentImages from '../../shared/assets/departmentImages.json';
 
 const buttonStyles = 'bg-white text-blue-900 bg-opacity-60 hover:bg-opacity-90 transition-colors rounded-full p-1';
 

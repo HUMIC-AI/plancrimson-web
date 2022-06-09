@@ -18,12 +18,11 @@ type UserDataState = UserMetadata<string> & {
 };
 
 const initialState: UserDataState = {
-  // from UserData
-  classYear: null,
-  friends: [],
-  lastLoggedIn: null,
-  // additional fields
+  username: null,
+  concentrationRanking: null,
   userInfo: null,
+  classYear: null,
+  lastLoggedIn: null,
   signInError: null,
   snapshotError: null,
 };
@@ -43,14 +42,14 @@ export const userDataSlice = createSlice({
     signOut(state) {
       state.userInfo = null;
     },
+    setClassYear(state, action: PayloadAction<number>) {
+      state.classYear = action.payload;
+    },
     setLastSignIn(state, action: PayloadAction<string | null>) {
       state.lastLoggedIn = action.payload;
     },
     setSignInError(state, action: PayloadAction<Error>) {
       state.signInError = action.payload;
-    },
-    setClassYear(state, action: PayloadAction<number>) {
-      state.classYear = action.payload;
     },
     setSnapshotError(state, action: PayloadAction<{ error: FirestoreError }>) {
       state.snapshotError = action.payload.error;
@@ -67,14 +66,16 @@ export const {
 export const selectPhotoUrl = (state: RootState) => state.user.userInfo?.photoUrl || null;
 export const selectUserUid = (state: RootState) => state.user.userInfo?.uid || null;
 export const selectEmail = (state: RootState) => state.user.userInfo?.email || null;
+
 export const selectClassYear = (state: RootState) => state.user.classYear;
 export const selectLastLoggedIn = (state: RootState) => state.user.lastLoggedIn;
 export const selectSnapshotError = (state: RootState) => state.user.snapshotError;
 export const selectUserDocument = (state: RootState): UserDocument<string> => ({
+  username: state.user.username,
   classYear: state.user.classYear,
   lastLoggedIn: state.user.lastLoggedIn,
-  friends: state.user.friends,
   customTimes: state.schedules.customTimes,
+  concentrationRanking: state.user.concentrationRanking,
   selectedSchedules: state.schedules.selectedSchedules,
   waivedRequirements: state.schedules.waivedRequirements,
   hiddenScheduleIds: state.schedules.hiddenScheduleIds,

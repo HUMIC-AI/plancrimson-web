@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import {
-  getFirestore, DocumentReference, doc, Timestamp, collection, CollectionReference,
+  getFirestore, DocumentReference, doc, Timestamp, collection, CollectionReference, setDoc, collectionGroup, Query, deleteDoc,
 } from 'firebase/firestore';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
 import {
   getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup,
 } from 'firebase/auth';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import type { Schedule, UserDocument } from '../shared/firestoreTypes';
+import type { FriendRequest, Schedule, UserDocument } from '../shared/firestoreTypes';
 import { getMeiliHost, getMeiliApiKey } from '../shared/util';
 import type { AppDispatch, RootState } from './store';
 
@@ -25,6 +25,14 @@ export function getSchedulesRef() {
   return collection(getFirestore(), 'schedules') as CollectionReference<Schedule>;
 }
 
+export function getFriendsCollectionGroup() {
+  return collectionGroup(getFirestore(), 'friends') as Query<FriendRequest>;
+}
+
+export function getFriendRequestRef(from: string, to: string) {
+  return doc(getFirestore(), 'allFriends', from, 'friends', to) as DocumentReference<FriendRequest>;
+}
+
 export function downloadJson(filename: string, data: object | string, extension = 'json') {
   if (typeof window === 'undefined') return;
   const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(
@@ -36,6 +44,24 @@ export function downloadJson(filename: string, data: object | string, extension 
   document.body.appendChild(a);
   a.click();
   a.remove();
+}
+
+/**
+ * @param to the uid of the user to send a friend request to
+ */
+export function sendFriendRequest(from: string, to: string) {
+  return setDoc(getFriendRequestRef(from, to), {
+    from,
+    to,
+    accepted: false,
+  });
+}
+
+export function unfriend(from: string, to: string) {
+  return Promise.allSettled([
+    deleteDoc(getFriendRequestRef(from, to)),
+    deleteDoc(getFriendRequestRef(to, from)),
+  ]);
 }
 
 export function useLgBreakpoint() {

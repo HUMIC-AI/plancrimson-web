@@ -215,9 +215,9 @@ export const {
  * @param schedules the entire state. We exclude `errors` and `schedules` to return only the metadata.
  */
 const syncSchedules = (uid: string, { schedules, errors, ...metadata }: SchedulesState) => Promise.all([
+  // @ts-ignore
   updateDoc(
     getUserRef(uid),
-    // @ts-ignore
     metadata,
   ),
   Promise.all(Object.entries(schedules).map(

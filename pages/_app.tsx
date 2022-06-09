@@ -96,7 +96,6 @@ function MyApp({ Component, pageProps }: AppProps) {
       (err) => dispatch(UserData.setSignInError(err)),
     );
     return unsub;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -145,12 +144,12 @@ function MyApp({ Component, pageProps }: AppProps) {
       .catch((err) => dispatch(UserData.setSnapshotError({ error: err })));
 
     return unsub;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid]);
 
   return (
     <SearchStateProvider>
       <SelectedScheduleProvider>
+        {/* @ts-ignore */}
         <Component {...pageProps} />
       </SelectedScheduleProvider>
     </SearchStateProvider>

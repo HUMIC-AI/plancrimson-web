@@ -1,16 +1,15 @@
 /* eslint-disable no-await-in-loop, no-console */
 import axios from 'axios';
 import {
-  createWriteStream, existsSync, mkdirSync, writeFileSync,
+  createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync,
 } from 'fs';
-import inquirer from 'inquirer';
-import subjects from '../src/subjects.json';
+import path from 'path';
 import { getFilePath } from './util';
 
 const BASE_URL = 'https://syllabus-api.tlt.harvard.edu/search';
 const COURSE_URL = 'https://syllabus-api.tlt.harvard.edu/course';
 const DOWNLOAD_URL = 'https://syllabus-api.tlt.harvard.edu/download/';
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 50;
 
 interface InstanceResponse {
   instance_id: string;
@@ -61,18 +60,41 @@ function getAuthToken() {
   return SYLLABI_AUTH;
 }
 
-async function getSyllabusUrl(payload: FileRequestPayload) {
-  const { data } = await axios.post<{ url: string }>(DOWNLOAD_URL, payload, {
-    headers: { Authorization: getAuthToken() },
-  });
-  return data.url;
+// Fetch all courses under the college
+async function fetchAllCourses(): Promise<SearchHit[]> {
+  const courses = [];
+  let count = 0;
+  while (true) {
+    const { data } = await axios.post<SearchResponse>(BASE_URL, {
+      filters: {
+        dept_ids: [],
+        school_ids: [
+          'colgsas',
+        ],
+        when: 'anytime',
+      },
+      size: PAGE_SIZE,
+      from: count,
+      query: '*',
+    }, {
+      headers: {
+        Authorization: getAuthToken(),
+      },
+    });
+    const { hits, total } = data;
+    courses.push(...hits);
+    count += hits.length;
+    console.log(`done ${count}/${total}`);
+    if (count >= total) break;
+  }
+
+  return courses;
 }
 
+// Get extended information about the given course
 async function fetchCourseData(course: SearchHit) {
   const { data } = await axios.get<CourseResponse<FullInstance>>(COURSE_URL, {
-    params: {
-      doc_id: course.doc_id,
-    },
+    params: { doc_id: course.doc_id },
     headers: {
       Authorization: getAuthToken(),
     },
@@ -81,104 +103,53 @@ async function fetchCourseData(course: SearchHit) {
   return data;
 }
 
-export async function getCoursesBySubject(subject: string, pageIndex: number) {
-  const { data } = await axios.post<SearchResponse>(
-    BASE_URL,
-    {
-      filters: {
-        dept_ids: [],
-        school_ids: ['colgsas'],
-        when: 'anytime',
-      },
-      from: pageIndex * PAGE_SIZE,
-      size: PAGE_SIZE,
-      query: subject,
-    },
-    {
-      headers: {
-        Authorization: getAuthToken(),
-      },
-    },
-  );
-
-  return {
-    hits: data.hits.filter((course) => course.course_code.startsWith(subject)),
-    total: data.total,
-  };
+// Get extended information about all courses
+function fetchAllCourseData(courses: SearchHit[]) {
+  const promises = courses.map((hit, i) => new Promise<CourseResponse<FullInstance>>((resolve) => {
+    setTimeout(() => fetchCourseData(hit).then((course) => resolve(course)), 100 * i);
+  }));
+  return Promise.all(promises);
 }
 
-function downloadFiles(course: CourseResponse<FullInstance>, dirPath: string) {
-  if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
+async function getSyllabusUrl(payload: FileRequestPayload) {
+  const { data } = await axios.post<{ url: string }>(DOWNLOAD_URL, payload, {
+    headers: { Authorization: getAuthToken() },
+  });
+  return data.url;
+}
 
+// For the given course, for each instance of that course, download the syllabi of that instance
+function downloadFiles(course: CourseResponse<FullInstance>, dirPath: string) {
+  // get all instances with a file
   const instances = course.instances.filter((instance) => instance.s3_filekey);
 
   console.log(
     `downloading ${instances.length} files for course ${course.course_code}`,
   );
 
-  return Promise.all(
-    instances.map(async ({
-      instance_id, s3_filekey, my_h_id, term_name,
-    }, i) => {
-      await new Promise((resolve) => { setTimeout(resolve, 100 * i); });
-      const url = await getSyllabusUrl({
-        courseCode: course.course_code,
-        courseId: my_h_id,
-        s3KeyPrefix: s3_filekey!,
-        termName: term_name,
-      });
-      const response = await axios.get(url, {
-        responseType: 'stream',
-      });
-      const stream = createWriteStream(
-        `${dirPath}/${instance_id}${s3_filekey!.slice(
-          s3_filekey!.lastIndexOf('.'),
-        )}`,
-      );
-      response.data.pipe(stream);
-      await new Promise((resolve, reject) => {
-        stream.on('finish', resolve);
-        stream.on('error', reject);
-      });
-    }),
-  );
-}
+  const promises = instances.map(async ({
+    instance_id, s3_filekey, my_h_id, term_name,
+  }, i) => {
+    await new Promise((resolve) => { setTimeout(resolve, 100 * i); });
 
-async function fetchSyllabi(
-  dirPath: string,
-  startIndex: number,
-  endIndex: number | undefined,
-) {
-  getAuthToken(); // assert environment variable set
+    const url = await getSyllabusUrl({
+      courseCode: course.course_code,
+      courseId: my_h_id,
+      s3KeyPrefix: s3_filekey!,
+      termName: term_name,
+    });
 
-  for (const subject of Object.keys(subjects).sort().slice(startIndex, endIndex)) {
-    let pageIndex = 0;
-    const hits: SearchHit[] = [];
+    const response = await axios.get(url, { responseType: 'stream' });
 
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const { hits: courses, total } = await getCoursesBySubject(
-        subject,
-        pageIndex,
-      );
-      hits.push(...courses);
-      pageIndex += 1;
-      // if the next request would start past the total
-      if (pageIndex * PAGE_SIZE >= total) {
-        break;
-      }
-    }
-
-    const results = await Promise.all(hits.map(async (hit, i) => {
-      await new Promise((resolve) => { setTimeout(resolve, 100 * i); });
-      const course = await fetchCourseData(hit);
-      await downloadFiles(course, `${dirPath}/${subject}`);
-      return course;
-    }));
-
-    writeFileSync(`${dirPath}/${subject}.json`, JSON.stringify(results));
-    console.log(`done subject ${subject} with ${results.length} courses`);
-  }
+    const ext = s3_filekey!.slice(s3_filekey!.lastIndexOf('.'));
+    const stream = createWriteStream(path.join(dirPath, instance_id + ext));
+    response.data.pipe(stream);
+    await new Promise((resolve, reject) => {
+      stream.on('finish', resolve);
+      stream.on('error', reject);
+    });
+  });
+  return Promise.all(promises);
 }
 
 export default {
@@ -189,25 +160,40 @@ export default {
       'File path to save syllabi in:',
       'data/syllabi',
     );
-    const subjectAbbreviations = Object.keys(subjects).sort();
-    const { startIndex, endIndex } = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'startIndex',
-        message: 'Start with subject:',
-        choices: subjectAbbreviations,
-      },
-      {
-        type: 'list',
-        name: 'endIndex',
-        message: 'End with subject (exclusive):',
-        choices: ['None', ...subjectAbbreviations],
-      },
-    ]);
-    await fetchSyllabi(
-      baseDir,
-      subjectAbbreviations.indexOf(startIndex),
-      endIndex === 'None' ? undefined : subjectAbbreviations.indexOf(endIndex),
-    );
+
+    if (!existsSync(baseDir)) mkdirSync(baseDir, { recursive: true });
+
+    const coursesPath = path.join(baseDir, 'all-courses.json');
+    let courses: SearchHit[];
+    if (existsSync(coursesPath)) {
+      console.log('using', coursesPath);
+      const json = readFileSync(coursesPath).toString();
+      courses = JSON.parse(json);
+    } else {
+      console.log('fetching courses');
+      courses = await fetchAllCourses();
+      writeFileSync(coursesPath, JSON.stringify(courses));
+    }
+
+    const extendedPath = path.join(baseDir, 'all-courses-extended.json');
+    let extended: CourseResponse<FullInstance>[];
+    if (existsSync(extendedPath)) {
+      console.log('using', extendedPath);
+      const json = readFileSync(extendedPath).toString();
+      extended = JSON.parse(json);
+    } else {
+      console.log('loading extended course data');
+      extended = await fetchAllCourseData(courses);
+      writeFileSync(extendedPath, JSON.stringify(extended));
+    }
+
+    const syllabiDir = path.join(baseDir, 'syllabi');
+    if (!existsSync(syllabiDir)) mkdirSync(syllabiDir);
+
+    console.log('downloading syllabi');
+    const promises = extended.map(async (course) => {
+      await downloadFiles(course, syllabiDir);
+    });
+    await Promise.all(promises);
   },
 };

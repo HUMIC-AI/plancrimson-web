@@ -1,7 +1,7 @@
 import { Class } from '../../../shared/apiTypes';
 import { allTruthy } from '../../../shared/util';
 import { Requirement } from '../util';
-import TAGS from './tags.json';
+import TAGS from '../../../shared/assets/csTags.json';
 
 export function hasTag(cls: Class, tag: CSCourseTag) {
   const possibleNames = allTruthy([

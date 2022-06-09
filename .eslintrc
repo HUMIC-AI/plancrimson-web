@@ -4,8 +4,9 @@
     "es2021": true,
     "node": true
   },
+  "root": true,
   "extends": [
-    "next/core-web-vitals",
+    "plugin:@next/next/recommended",
     "plugin:react/recommended",
     "airbnb",
     "airbnb-typescript"
@@ -24,11 +25,14 @@
   },
   "plugins": ["react", "@typescript-eslint"],
   "rules": {
+    "consistent-return": "warn",
     "func-names": "off",
+    "jsx-a11y/anchor-is-valid": "off",
     "max-len": "off",
     "no-alert": "off",
     "no-console": "off",
     "no-nested-ternary": "off",
+    "no-param-reassign": "off",
     "no-restricted-syntax": "off",
     "@typescript-eslint/no-use-before-define": "off",
     "react/jsx-props-no-spreading": "off",

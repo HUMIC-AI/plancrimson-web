@@ -16,7 +16,7 @@ import { loadClasses } from '../../src/features/classCache';
 interface LayoutProps {
   title?: string;
   size?: string;
-  queryConstraints?: firestore.QueryConstraint[]
+  scheduleQueryConstraints?: firestore.QueryConstraint[]
 }
 
 const description = 'Wait no longer to plan out your concentration. For Harvard College students. Q Reports, Course Evaluations, my.harvard, and more, all in one place.';
@@ -96,7 +96,7 @@ export default function Layout({
   children,
   title,
   size = 'container sm:p-8',
-  queryConstraints = [],
+  scheduleQueryConstraints: queryConstraints = [],
 }: PropsWithChildren<LayoutProps>) {
   const dispatch = useAppDispatch();
   const errors = useAppSelector(selectSnapshotError);
@@ -117,8 +117,9 @@ export default function Layout({
     }, (err) => dispatch(setSnapshotError({ error: err })));
     // eslint-disable-next-line consistent-return
     return unsubSchedules;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryConstraints]);
+
+  if (errors) console.error(errors);
 
   return (
     <div className="flex flex-col min-h-screen overflow-auto">

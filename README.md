@@ -1,6 +1,6 @@
 # Harvard concentration planner
 
-## goals
+## Goals
 
 - allow consideration of multiple possible schedules
 - see which concentrations each course fits into
@@ -67,3 +67,13 @@ A user can make some of their schedules public. This means that anyone can see t
 A schedule is made of semesters. A user can edit each semester they are enrolled in.
 
 You can add the same semester to multiple schedules.
+
+## TODO
+
+- [ ] write tests, see [Firestore Security Rules docs](https://firebase.google.com/docs/firestore/security/test-rules-emulator)
+
+## local Meilisearch
+
+http://localhost:7700/
+
+when running Meilisearch as a Homebrew service, logs are stored under /usr/local/var/log/meilisearch.log

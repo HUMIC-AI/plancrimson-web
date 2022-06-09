@@ -16,7 +16,7 @@ import {
   Viability,
   ScheduleMap,
 } from './firestoreTypes';
-import seasPlan from './seasPlan.json';
+import seasPlan from './assets/seasPlan.json';
 import { getSchoolYear } from '../src/requirements/util';
 import { Class, ATTRIBUTE_DESCRIPTIONS, Evaluation } from './apiTypes';
 import type { ClassCache } from '../src/features/classCache';

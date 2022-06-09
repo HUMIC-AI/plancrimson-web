@@ -29,7 +29,6 @@ export default function SearchPage() {
     if (!user || typeof window === 'undefined') return;
     const stateFromQuery = qs.parse(window.location.search.slice(1));
     process.nextTick(() => setSearchState((prev: any) => ({ ...prev, ...stateFromQuery })));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   return (

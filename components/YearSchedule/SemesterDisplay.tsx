@@ -180,7 +180,6 @@ export default function SemesterComponent({
 
       setDragStatus({ dragging: false });
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [dragStatus, chosenScheduleId, viableDrop],
   );
 
