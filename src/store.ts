@@ -17,7 +17,7 @@ const store = configureStore({
     return getDefaultMiddleware({
       serializableCheck: {
         ignoredActionPaths: ['payload.error'],
-        ignoredPaths: ['user.snapshotError'],
+        ignoredPaths: ['auth.snapshotError'],
       },
     });
   },

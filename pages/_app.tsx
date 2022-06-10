@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 import { connectAuthEmulator, getAuth, onAuthStateChanged } from 'firebase/auth';
 import { SearchStateProvider } from '../src/context/searchState';
 import store from '../src/store';
-import { getUserRef, useAppDispatch, useAppSelector } from '../src/hooks';
+import { Schema, useAppDispatch, useAppSelector } from '../src/hooks';
 import { ModalProvider, useModal } from '../src/context/modal';
 import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
 import { Auth, Profile, Schedules } from '../src/features';
@@ -53,7 +53,7 @@ function GraduationYearDialog({ defaultYear } : { defaultYear: number }) {
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        updateDoc(getUserRef(uid), 'classYear', classYear)
+        updateDoc(Schema.profile(uid), 'classYear', classYear)
           .then(() => setOpen(false))
           .catch((err) => console.error(err));
       }}
@@ -98,22 +98,25 @@ function MyApp({ Component, pageProps }: AppProps) {
   }, []);
 
   useEffect(() => {
-    if (!uid) return () => {};
+    if (!uid) return;
 
-    const userRef = getUserRef(uid);
-    const unsub = onSnapshot(
-      userRef,
-      (userSnap) => {
+    const profileRef = Schema.profile(uid);
+    const unsubProfile = onSnapshot(
+      profileRef,
+      (snap) => {
         // only refresh on new data from Firestore
-        if (!userSnap.exists() || userSnap.metadata.fromCache) return;
+        if (!snap.exists() || snap.metadata.fromCache) return;
 
-        const { lastLoggedIn, ...data } = userSnap.data();
+        const {
+          lastLoggedIn, username, classYear,
+        } = snap.data();
 
         // update last sign in, know this will always exist
         dispatch(Profile.setLastSignIn(lastLoggedIn ? lastLoggedIn.toDate().toISOString() : null));
+        if (username) dispatch(Profile.setUsername(username));
 
         // need class year before other missing fields
-        if (!data.classYear) {
+        if (!classYear) {
           console.warn('missing class year');
           const now = new Date();
           showContents({
@@ -121,28 +124,34 @@ function MyApp({ Component, pageProps }: AppProps) {
             content: <GraduationYearDialog defaultYear={now.getFullYear() + (now.getMonth() > 5 ? 4 : 3)} />,
             noExit: true,
           });
-          return;
+        } else {
+          dispatch(Profile.setClassYear(classYear));
         }
-
-        dispatch(Profile.setClassYear(data.classYear!));
-
-        // overwrite metadata
-        dispatch(Schedules.overwriteScheduleMetadata({
-          customTimes: data.customTimes || {},
-          selectedSchedules: data.selectedSchedules || {},
-          waivedRequirements: data.waivedRequirements || {},
-          hiddenScheduleIds: data.hiddenScheduleIds || [],
-        }));
       },
       (err) => dispatch(Auth.setSnapshotError({ error: err })),
     );
 
+    const userDataRef = Schema.user(uid);
+    const unsubUserData = onSnapshot(userDataRef, (snap) => {
+      if (!snap.exists() || snap.metadata.fromCache) return;
+      const data = snap.data()!;
+      dispatch(Schedules.overwriteScheduleMetadata({
+        customTimes: data.customTimes || {},
+        selectedSchedules: data.selectedSchedules || {},
+        waivedRequirements: data.waivedRequirements || {},
+        hiddenScheduleIds: data.hiddenScheduleIds || [],
+      }));
+    });
+
     // trigger initial write
-    setDoc(userRef, { lastLoggedIn: serverTimestamp() }, { merge: true })
+    setDoc(profileRef, { lastLoggedIn: serverTimestamp() }, { merge: true })
       .then(() => console.info('updated last login time'))
       .catch((err) => dispatch(Auth.setSnapshotError({ error: err })));
 
-    return unsub;
+    return () => {
+      unsubProfile();
+      unsubUserData();
+    };
   }, [uid]);
 
   return (

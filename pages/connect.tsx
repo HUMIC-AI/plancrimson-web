@@ -7,14 +7,14 @@ import { useMemo } from 'react';
 import useSWR from 'swr';
 import Layout from '../components/Layout/Layout';
 import { Auth, ClassCache, Schedules } from '../src/features';
-import { getFriendsCollectionGroup, useAppSelector } from '../src/hooks';
+import { Schema, useAppSelector } from '../src/hooks';
 
 /**
  * just an async query instead of a snapshot listener
  * @returns a list of user ids that this user is friends with
  */
 async function incomingRequests(uid: string) {
-  const q = query(getFriendsCollectionGroup(), where('to', '==', uid));
+  const q = query(Schema.Collection.allFriends(), where('to', '==', uid));
   console.log(q);
   const friends = await getDocs(q);
   return friends.docs.map((doc) => doc.data());

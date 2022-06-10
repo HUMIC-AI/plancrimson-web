@@ -8,7 +8,7 @@ import { unsplashParams } from '../../shared/util';
 import ExternalLink from '../ExternalLink';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
-import { getSchedulesRef, useAppDispatch, useAppSelector } from '../../src/hooks';
+import { Schema, useAppDispatch, useAppSelector } from '../../src/hooks';
 import { Auth, ClassCache, Schedules } from '../../src/features';
 
 interface LayoutProps {
@@ -105,7 +105,7 @@ export default function Layout({
     if (queryConstraints.length === 0) {
       return;
     }
-    const q = firestore.query(getSchedulesRef(), ...queryConstraints);
+    const q = firestore.query(Schema.Collection.schedules(), ...queryConstraints);
     const unsubSchedules = firestore.onSnapshot(q, (snap) => {
       // load all of the classes into the class cache
       const scheduleEntries = snap.docs.map((doc) => doc.data());

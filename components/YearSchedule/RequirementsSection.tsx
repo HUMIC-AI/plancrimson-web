@@ -25,6 +25,7 @@ import { allTruthy, classNames } from '../../shared/util';
 import { allRequirements } from '../../src/requirements';
 import { handleError, useAppDispatch, useAppSelector } from '../../src/hooks';
 import { Auth, Planner, Schedules } from '../../src/features';
+import { Schedule } from '../../shared/firestoreTypes';
 
 interface RequirementsSectionProps {
   selectedRequirements: RequirementGroup;
@@ -158,7 +159,6 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
     const promises = schedule.schedules.map((s) => dispatch(Schedules.createSchedule({
       ...s,
       title: `${s.title} (${schedule.id})`,
-      force: true,
     })));
     const schedules = await Promise.all(promises);
 
@@ -169,7 +169,7 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
       }
       dispatch(Planner.showSelected());
       schedules.forEach((s) => {
-        const { year, season, title: id } = s.payload as Schedules.CreateSchedulePayload;
+        const { year, season, title: id } = s.payload as Schedule;
         dispatch(Schedules.chooseSchedule({
           term: `${year}${season}`,
           scheduleId: id,

@@ -19,6 +19,9 @@ export const userProfileSlice = createSlice({
   name: 'userData',
   initialState,
   reducers: {
+    setUsername(state, action: PayloadAction<string>) {
+      state.username = action.payload;
+    },
     setClassYear(state, action: PayloadAction<number>) {
       state.classYear = action.payload;
     },
@@ -28,10 +31,11 @@ export const userProfileSlice = createSlice({
   },
 });
 
-export const { setLastSignIn, setClassYear } = userProfileSlice.actions;
+export const { setUsername, setLastSignIn, setClassYear } = userProfileSlice.actions;
 
 // ========================= SELECTORS =========================
 
+export const selectUsername = (state: RootState) => state.profile.username;
 export const selectClassYear = (state: RootState) => state.profile.classYear;
 export const selectLastLoggedIn = (state: RootState) => state.profile.lastLoggedIn;
 export const selectUserProfile = (state: RootState): UserProfile<string> => ({
@@ -40,9 +44,3 @@ export const selectUserProfile = (state: RootState): UserProfile<string> => ({
   lastLoggedIn: state.profile.lastLoggedIn,
   concentrationRanking: state.profile.concentrationRanking,
 });
-
-// customTimes: state.schedules.customTimes,
-// concentrationRanking: state.user.concentrationRanking,
-// selectedSchedules: state.schedules.selectedSchedules,
-// waivedRequirements: state.schedules.waivedRequirements,
-// hiddenScheduleIds: state.schedules.hiddenScheduleIds,

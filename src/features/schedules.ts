@@ -2,13 +2,14 @@
 import {
   ActionCreatorWithPayload, createSlice, PayloadAction, ThunkAction,
 } from '@reduxjs/toolkit';
-import { setDoc, updateDoc } from 'firebase/firestore';
+import { deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
 import {
-  CustomTimeRecord, Schedule, ScheduleMap, SEASON_ORDER, Term, UserDocument,
+  CustomTimeRecord, Schedule, ScheduleMap, SEASON_ORDER, Semester, Term, UserDocument,
 } from '../../shared/firestoreTypes';
 import { allTruthy, ErrorData } from '../../shared/util';
-import type { RootState } from '../store';
-import { getScheduleRef, getUserRef } from '../hooks';
+import type { AppDispatch, RootState } from '../store';
+import { Schema } from '../hooks';
 import { selectUserUid } from './userAuth';
 
 type SchedulesState = UserDocument & {
@@ -30,9 +31,6 @@ type RemoveClassesPayload = Array<{
   classId: string;
   scheduleId?: string;
 }>;
-export type CreateSchedulePayload = Schedule & {
-  force?: boolean;
-};
 type RenameSchedulePayload = { scheduleId: string, newTitle: string };
 type DeleteSchedulePayload = string;
 type AddCoursePayload = { classId: string; scheduleId: string }[];
@@ -70,7 +68,7 @@ export const schedulesSlice = createSlice({
     /**
      * Create a new schedule locally.
      */
-    create(state, action: PayloadAction<CreateSchedulePayload>) {
+    create(state, action: PayloadAction<Schedule>) {
       const { id, ...data } = action.payload;
       state.schedules[id] = { id, ...data };
     },
@@ -216,14 +214,11 @@ export const {
  */
 const syncSchedules = (uid: string, { schedules, errors, ...metadata }: SchedulesState) => Promise.all([
   // @ts-ignore
-  updateDoc(
-    getUserRef(uid),
-    metadata,
-  ),
+  updateDoc(Schema.user(uid), metadata),
   Promise.all(Object.entries(schedules).map(
     ([scheduleUid, schedule]) => {
       console.log(scheduleUid, schedule);
-      return setDoc(getScheduleRef(scheduleUid), schedule, { merge: true });
+      return setDoc(Schema.schedule(scheduleUid), schedule, { merge: true });
     },
   )),
 ]);
@@ -258,12 +253,12 @@ function createActionCreator<Payload>(
   };
 }
 
-export const createSchedule = createActionCreator<CreateSchedulePayload>(
+export const createSchedule = createActionCreator<Schedule>(
   (state, {
-    title: id, year, season, classes = [], force = false,
+    title: id, year, season, classes = [],
   }) => {
     const errors: string[] = [];
-    if (id in state.schedules && !force) {
+    if (id in state.schedules) {
       errors.push('schedule already exists');
     }
     if (typeof year !== 'number') {
@@ -279,6 +274,16 @@ export const createSchedule = createActionCreator<CreateSchedulePayload>(
   },
   create,
 );
+
+export const createDefaultSchedule = ({ season, year }: Semester, uid: string) => createSchedule({
+  id: uuidv4(),
+  title: `My ${season} ${year}`,
+  season,
+  year,
+  classes: [],
+  ownerUid: uid,
+  public: false,
+});
 
 export const toggleHidden = createActionCreator<string>(
   () => [],
@@ -305,15 +310,10 @@ export const togglePublic = createActionCreator<string>(
   schedulesSlice.actions.togglePublic,
 );
 
-export const deleteSchedule = createActionCreator<DeleteSchedulePayload>(
-  (state, id) => {
-    if (id in state.schedules) {
-      return [];
-    }
-    return ['schedule not found'];
-  },
-  delSchedule,
-);
+export const deleteSchedule = (id: DeleteSchedulePayload) => async (dispatch: AppDispatch) => {
+  await deleteDoc(Schema.schedule(id));
+  dispatch(delSchedule(id));
+};
 
 export const addCourse = createActionCreator<AddCoursePayload>(
   (state, courses) => allTruthy(courses.map(({ scheduleId }) => (scheduleId in state.schedules ? null : `schedule ${scheduleId} not found`))),

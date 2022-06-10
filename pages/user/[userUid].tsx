@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Layout from '../../components/Layout/Layout';
 import { Auth, Schedules } from '../../src/features';
 import {
-  getFriendRequestRef, sendFriendRequest, unfriend, useAppSelector,
+  Schema, sendFriendRequest, unfriend, useAppSelector,
 } from '../../src/hooks';
 
 type FriendStatus = 'loading' | 'none' | 'friends' | 'pending';
@@ -27,7 +27,7 @@ export default function UserPage() {
 
   useEffect(() => {
     if (!uid) return;
-    const ref = getFriendRequestRef(uid, userUid);
+    const ref = Schema.friendRequest(uid, userUid);
     const unsub = onSnapshot(
       ref,
       (snap) => {

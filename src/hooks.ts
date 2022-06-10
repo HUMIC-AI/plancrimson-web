@@ -7,31 +7,36 @@ import {
   getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup,
 } from 'firebase/auth';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import type { FriendRequest, Schedule, UserDocument } from '../shared/firestoreTypes';
+import type {
+  FriendRequest, Schedule, UserDocument, UserProfile,
+} from '../shared/firestoreTypes';
 import { getMeiliHost, getMeiliApiKey } from '../shared/util';
 import type { AppDispatch, RootState } from './store';
 
 const LG_BREAKPOINT = 1024;
 
-export function getUserRef(uid: string) {
-  return doc(getFirestore(), 'users', uid) as DocumentReference<Partial<UserDocument<Timestamp>>>;
-}
-
-export function getScheduleRef(scheduleUid: string) {
-  return doc(getFirestore(), 'schedules', scheduleUid) as DocumentReference<Schedule>;
-}
-
-export function getSchedulesRef() {
-  return collection(getFirestore(), 'schedules') as CollectionReference<Schedule>;
-}
-
-export function getFriendsCollectionGroup() {
-  return collectionGroup(getFirestore(), 'friends') as Query<FriendRequest>;
-}
-
-export function getFriendRequestRef(from: string, to: string) {
-  return doc(getFirestore(), 'allFriends', from, 'friends', to) as DocumentReference<FriendRequest>;
-}
+export const Schema = {
+  profile(uid: string) {
+    return doc(getFirestore(), 'userProfiles', uid) as DocumentReference<Partial<UserProfile<Timestamp>>>;
+  },
+  user(uid: string) {
+    return doc(getFirestore(), 'users', uid) as DocumentReference<Partial<UserDocument>>;
+  },
+  schedule(scheduleUid: string) {
+    return doc(getFirestore(), 'schedules', scheduleUid) as DocumentReference<Schedule>;
+  },
+  friendRequest(from: string, to: string) {
+    return doc(getFirestore(), 'allFriends', from, 'friends', to) as DocumentReference<FriendRequest>;
+  },
+  Collection: {
+    schedules() {
+      return collection(getFirestore(), 'schedules') as CollectionReference<Schedule>;
+    },
+    allFriends() {
+      return collectionGroup(getFirestore(), 'friends') as Query<FriendRequest>;
+    },
+  },
+};
 
 export function downloadJson(filename: string, data: object | string, extension = 'json') {
   if (typeof window === 'undefined') return;
@@ -50,7 +55,7 @@ export function downloadJson(filename: string, data: object | string, extension 
  * @param to the uid of the user to send a friend request to
  */
 export function sendFriendRequest(from: string, to: string) {
-  return setDoc(getFriendRequestRef(from, to), {
+  return setDoc(Schema.friendRequest(from, to), {
     from,
     to,
     accepted: false,
@@ -59,8 +64,8 @@ export function sendFriendRequest(from: string, to: string) {
 
 export function unfriend(from: string, to: string) {
   return Promise.allSettled([
-    deleteDoc(getFriendRequestRef(from, to)),
-    deleteDoc(getFriendRequestRef(to, from)),
+    deleteDoc(Schema.friendRequest(from, to)),
+    deleteDoc(Schema.friendRequest(to, from)),
   ]);
 }
 

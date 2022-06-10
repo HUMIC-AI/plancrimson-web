@@ -10,7 +10,6 @@ import {
   FaUnlink,
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
-import { v4 as uuidv4 } from 'uuid';
 import { Season } from '../../shared/firestoreTypes';
 import { Auth, Schedules } from '../../src/features';
 import { downloadJson, useAppDispatch, useAppSelector } from '../../src/hooks';
@@ -88,10 +87,7 @@ function ButtonMenu({
   const handleDuplicate = useCallback(async () => {
     if (!chosenSchedule) return;
     try {
-      const schedule = await dispatch(Schedules.createSchedule({
-        ...chosenSchedule,
-        force: true,
-      }));
+      const schedule = await dispatch(Schedules.createSchedule({ ...chosenSchedule }));
       if ('errors' in schedule.payload) {
         throw new Error(schedule.payload.errors.join(', '));
       }
@@ -103,6 +99,7 @@ function ButtonMenu({
   }, [chosenSchedule]);
 
   const handleDelete = useCallback(async () => {
+    console.log({ chosenSchedule });
     if (!chosenSchedule) return;
     // eslint-disable-next-line no-restricted-globals
     const confirmDelete = confirm(
@@ -110,7 +107,7 @@ function ButtonMenu({
     );
     if (!confirmDelete) return;
     try {
-      await dispatch(Schedules.deleteSchedule(chosenSchedule.title));
+      await dispatch(Schedules.deleteSchedule(chosenSchedule.id));
       handleChooseSchedule(prevScheduleId);
     } catch (err) {
       console.error(err);
@@ -154,16 +151,7 @@ function ButtonMenu({
               alert('You must be logged in!');
               return;
             }
-            const schedule = await dispatch(Schedules.createSchedule({
-              id: uuidv4(),
-              title: `${season} ${year}`,
-              year,
-              season,
-              classes: [],
-              ownerUid: userUid,
-              public: false,
-              force: true,
-            }));
+            const schedule = await dispatch(Schedules.createDefaultSchedule({ season, year }, userUid));
             try {
               if ('errors' in schedule.payload) {
                 throw new Error(schedule.payload.errors.join(', '));

@@ -112,7 +112,7 @@ export function getDefaultSemesters(classYear: number) {
  * @returns the union of the default semesters for the given class year
  * and the given semesters, sorted in chronological order
  */
-export function getUniqueSemesters(classYear: number, semesters: Semester[]) {
+export function getUniqueSemesters(classYear: number, ...semesters: Semester[]) {
   const defaultSemesters = getDefaultSemesters(classYear);
   semesters.forEach(({ year, season }) => {
     // if this semester has not yet been added

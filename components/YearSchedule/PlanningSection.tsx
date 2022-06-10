@@ -9,7 +9,6 @@ import {
   FaChevronRight,
   FaPlus,
 } from 'react-icons/fa';
-import { v4 as uuidv4 } from 'uuid';
 import { DownloadPlan, Season } from '../../shared/firestoreTypes';
 import {
   allTruthy,
@@ -253,7 +252,7 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
         if (!classYear) return [];
         return getUniqueSemesters(
           classYear,
-          Object.values(userSchedules),
+          ...Object.values(userSchedules),
         ).map(({ year, season }) => ({
           key: `${year}${season}`,
           semester: { year, season },
@@ -298,15 +297,7 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
     const [season, year] = earliest.season === 'Spring'
       ? ['Fall' as Season, earliest.year - 1]
       : ['Spring' as Season, earliest.year];
-    dispatch(Schedules.createSchedule({
-      id: uuidv4(),
-      title: `My ${season} ${year}`,
-      season,
-      year,
-      classes: [],
-      ownerUid: userUid,
-      public: false,
-    })).catch(handleError);
+    dispatch(Schedules.createDefaultSchedule({ season, year }, userUid)).catch(handleError);
   }
 
   return (
