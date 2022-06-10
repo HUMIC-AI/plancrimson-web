@@ -4,9 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
 import { Semester } from '../shared/firestoreTypes';
 import { classNames } from '../shared/util';
-import {
-  renameSchedule, chooseSchedule, selectSchedule,
-} from '../src/features/schedules';
+import { Schedules } from '../src/features';
 import { useAppDispatch, useAppSelector } from '../src/hooks';
 import FadeTransition from './FadeTransition';
 
@@ -40,7 +38,7 @@ function ButtonTitle({
   showDropdown,
 }: ButtonTitleProps) {
   const dispatch = useAppDispatch();
-  const schedule = useAppSelector(selectSchedule(chosenScheduleId));
+  const schedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
   const [newTitle, setNewTitle] = useState(schedule?.title || null);
   useEffect(() => {
     setNewTitle(schedule?.title || null);
@@ -49,7 +47,7 @@ function ButtonTitle({
   function saveTitle(e: any) {
     e.preventDefault();
     if (!chosenScheduleId || !newTitle || newTitle === chosenScheduleId) return;
-    dispatch(renameSchedule({ scheduleId: chosenScheduleId, newTitle }));
+    dispatch(Schedules.renameSchedule({ scheduleId: chosenScheduleId, newTitle }));
   }
 
   if (!schedule || !newTitle) return null;
@@ -79,7 +77,7 @@ function ButtonTitle({
         <button
           type="button"
           className="w-4 ml-2"
-          onClick={() => dispatch(chooseSchedule({
+          onClick={() => dispatch(Schedules.chooseSchedule({
             term: `${schedule.year}${schedule.season}`,
             scheduleId: schedule?.title || null,
           }))}
@@ -99,7 +97,7 @@ function ButtonTitle({
 }
 
 function ChooserOption({ scheduleId }: { scheduleId: string }) {
-  const schedule = useAppSelector(selectSchedule(scheduleId));
+  const schedule = useAppSelector(Schedules.selectSchedule(scheduleId));
   if (!schedule) return null;
   return (
     <Listbox.Option

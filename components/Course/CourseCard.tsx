@@ -10,12 +10,6 @@ import {
   getSemester,
   checkViable,
 } from '../../shared/util';
-import { selectClassCache } from '../../src/features/classCache';
-import {
-  addCourse, removeCourses, selectSchedule,
-} from '../../src/features/schedules';
-import { selectExpandCards, selectSemesterFormat } from '../../src/features/semesterFormat';
-import { selectClassYear } from '../../src/features/userData';
 import { handleError, useAppDispatch, useAppSelector } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 import {
@@ -26,6 +20,9 @@ import {
   Location,
 } from './CourseComponents';
 import departmentImages from '../../shared/assets/departmentImages.json';
+import {
+  ClassCache, Planner, Profile, Schedules,
+} from '../../src/features';
 
 const buttonStyles = 'bg-white text-blue-900 bg-opacity-60 hover:bg-opacity-90 transition-colors rounded-full p-1';
 
@@ -45,10 +42,10 @@ export type DragStatus =
 
 function ToggleButton({ chosenScheduleId, course } : { chosenScheduleId: string; course: ExtendedClass; }) {
   const dispatch = useAppDispatch();
-  const chosenSchedule = useAppSelector(selectSchedule(chosenScheduleId));
-  const semesterFormat = useAppSelector(selectSemesterFormat);
-  const classYear = useAppSelector(selectClassYear);
-  const classCache = useAppSelector(selectClassCache);
+  const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
+  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
+  const classYear = useAppSelector(Profile.selectClassYear);
+  const classCache = useAppSelector(ClassCache.selectClassCache);
 
   // adds a class to the selected schedule.
   // linked to plus button in top right corner.
@@ -69,7 +66,7 @@ function ToggleButton({ chosenScheduleId, course } : { chosenScheduleId: string;
       const yn = confirm(`${viability.reason} Continue anyways?`);
       if (!yn) return;
     }
-    dispatch(addCourse([{
+    dispatch(Schedules.addCourse([{
       classId: getClassId(course),
       scheduleId: chosenSchedule.id,
     }]));
@@ -96,7 +93,7 @@ function ToggleButton({ chosenScheduleId, course } : { chosenScheduleId: string;
     <button
       type="button"
       name="Remove class from schedule"
-      onClick={() => dispatch(removeCourses([{
+      onClick={() => dispatch(Schedules.removeCourses([{
         classId: getClassId(course),
         scheduleId: chosenSchedule.title,
       }]))}
@@ -136,8 +133,8 @@ export default function CourseCard({
   inSearchContext = true,
   warnings,
 }: CourseCardProps) {
-  const isExpanded = useAppSelector(selectExpandCards);
-  const chosenSchedule = useAppSelector(selectSchedule(chosenScheduleId));
+  const isExpanded = useAppSelector(Planner.selectExpandCards);
+  const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
 
   const draggable = typeof setDragStatus !== 'undefined';
   const [semester, department] = useMemo(

@@ -4,14 +4,13 @@ import Calendar from '../components/SemesterSchedule/Calendar';
 import UploadPlan from '../components/UploadPlan';
 import ButtonMenu from '../components/YearSchedule/ButtonMenu';
 import { allTruthy, sortSchedules } from '../shared/util';
-import { selectClassCache } from '../src/features/classCache';
-import { selectSchedules } from '../src/features/schedules';
 import useChosenScheduleContext from '../src/context/selectedSchedule';
+import { Schedules, ClassCache } from '../src/features';
 import { useAppSelector } from '../src/hooks';
 
 export default function SchedulePage() {
-  const schedules = useAppSelector(selectSchedules);
-  const classCache = useAppSelector(selectClassCache);
+  const schedules = useAppSelector(Schedules.selectSchedules);
+  const classCache = useAppSelector(ClassCache.selectClassCache);
   const { chosenScheduleId, chooseSchedule } = useChosenScheduleContext();
 
   const chosenSchedule = chosenScheduleId ? schedules[chosenScheduleId] : null;

@@ -4,14 +4,14 @@ import {
 } from '@reduxjs/toolkit';
 import { setDoc, updateDoc } from 'firebase/firestore';
 import {
-  CustomTimeRecord, Schedule, ScheduleMetadata, ScheduleMap, SEASON_ORDER, Term,
+  CustomTimeRecord, Schedule, ScheduleMap, SEASON_ORDER, Term, UserDocument,
 } from '../../shared/firestoreTypes';
 import { allTruthy, ErrorData } from '../../shared/util';
 import type { RootState } from '../store';
 import { getScheduleRef, getUserRef } from '../hooks';
-import { selectUserUid } from './userData';
+import { selectUserUid } from './userAuth';
 
-type SchedulesState = ScheduleMetadata & {
+type SchedulesState = UserDocument & {
   schedules: ScheduleMap,
   errors: ErrorData[];
 };
@@ -52,7 +52,7 @@ export const schedulesSlice = createSlice({
      * Overwrite the existing schedule metadata.
      * @param action The new state to overwrite with, typically from Firestore.
      */
-    overwriteScheduleMetadata(state, action: PayloadAction<ScheduleMetadata>) {
+    overwriteScheduleMetadata(state, action: PayloadAction<UserDocument>) {
       Object.assign(state, action.payload);
     },
 

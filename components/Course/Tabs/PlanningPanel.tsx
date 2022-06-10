@@ -15,11 +15,7 @@ import {
   classNames,
   checkViable,
 } from '../../../shared/util';
-import { selectClassCache } from '../../../src/features/classCache';
-import {
-  addCourse, removeCourses, selectSchedules,
-} from '../../../src/features/schedules';
-import { selectClassYear } from '../../../src/features/userData';
+import { ClassCache, Profile, Schedules } from '../../../src/features';
 import { useAppSelector, useAppDispatch } from '../../../src/hooks';
 import Tooltip from '../../Tooltip';
 
@@ -28,7 +24,7 @@ import Tooltip from '../../Tooltip';
  * @param course The course that's currently displayed in the modal
  */
 export default function PlanningPanel({ course }: { course: ExtendedClass }) {
-  const schedules = useAppSelector(selectSchedules);
+  const schedules = useAppSelector(Schedules.selectSchedules);
   return (
     <Tab.Panel>
       {Object.keys(schedules).length > 0 ? (
@@ -66,8 +62,8 @@ export default function PlanningPanel({ course }: { course: ExtendedClass }) {
  */
 function ScheduleRow({ schedule, course }: { schedule: Schedule; course: ExtendedClass }) {
   const dispatch = useAppDispatch();
-  const classCache = useAppSelector(selectClassCache);
-  const classYear = useAppSelector(selectClassYear);
+  const classCache = useAppSelector(ClassCache.selectClassCache);
+  const classYear = useAppSelector(Profile.selectClassYear);
 
   const enabled = !!schedule.classes.find(
     ({ classId }) => classId === getClassId(course),
@@ -84,13 +80,13 @@ function ScheduleRow({ schedule, course }: { schedule: Schedule; course: Extende
       if (viabilityStatus !== null && viabilityStatus.viability === 'No') {
         alert('This course is not being offered in this semester!');
       } else {
-        dispatch(addCourse([{
+        dispatch(Schedules.addCourse([{
           classId: getClassId(course),
           scheduleId: schedule.id,
         }]));
       }
     } else {
-      dispatch(removeCourses([{
+      dispatch(Schedules.removeCourses([{
         classId: getClassId(course),
         scheduleId: schedule.id,
       }]));

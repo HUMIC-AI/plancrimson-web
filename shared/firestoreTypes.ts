@@ -26,24 +26,19 @@ export const DAYS_OF_WEEK = [
 
 export const DAY_SHORT = ['MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT'] as const;
 
-// ============================== /users ==============================
+// ============================== /userProfiles ==============================
 
-/**
- * The schema of the actual Firestore user document.
- * Contains user metadata and their schedule metadata.
- * Actual schedules are stored in the schedules Firestore collection.
- */
-export type UserDocument<DateType> = UserMetadata<DateType> & ScheduleMetadata;
-
-export interface UserMetadata<DateType> {
+export interface UserProfile<DateType> {
   username: string | null;
   classYear: number | null;
   lastLoggedIn: DateType | null;
   concentrationRanking: Concentration[] | null;
 }
 
+// ============================== /users ==============================
+
 // Contains a user's selected schedules, custom class times, and waived reqs.
-export interface ScheduleMetadata {
+export interface UserDocument {
   selectedSchedules: {
     [semester: Term]: string | null;
   };

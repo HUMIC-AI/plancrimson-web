@@ -2,13 +2,15 @@ import { configureStore } from '@reduxjs/toolkit';
 import { classCacheSlice } from './features/classCache';
 import { schedulesSlice } from './features/schedules';
 import { semesterFormatSlice } from './features/semesterFormat';
-import { userDataSlice } from './features/userData';
+import { authSlice } from './features/userAuth';
+import { userProfileSlice } from './features/profile';
 
 const store = configureStore({
   reducer: {
     semesterFormat: semesterFormatSlice.reducer,
     schedules: schedulesSlice.reducer,
-    user: userDataSlice.reducer,
+    profile: userProfileSlice.reducer,
+    auth: authSlice.reducer,
     classCache: classCacheSlice.reducer,
   },
   middleware(getDefaultMiddleware) {

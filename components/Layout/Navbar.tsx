@@ -12,9 +12,7 @@ import {
   FaTimes, FaBars, FaCalendarCheck, FaUser,
 } from 'react-icons/fa';
 import { classNames } from '../../shared/util';
-import {
-  selectEmail, selectPhotoUrl, selectUserUid, signOut as signOutUser,
-} from '../../src/features/userData';
+import { Auth } from '../../src/features';
 import {
   handleError, signInUser, useAppDispatch, useAppSelector,
 } from '../../src/hooks';
@@ -49,9 +47,9 @@ const paths = [
 // Profile dropdown
 function UserMenu() {
   const dispatch = useAppDispatch();
-  const uid = useAppSelector(selectUserUid);
-  const photoUrl = useAppSelector(selectPhotoUrl);
-  const email = useAppSelector(selectEmail);
+  const uid = useAppSelector(Auth.selectUserUid);
+  const photoUrl = useAppSelector(Auth.selectPhotoUrl);
+  const email = useAppSelector(Auth.selectEmail);
 
   const buttonStyles = (active: boolean) => classNames(
     active ? 'bg-white' : '',
@@ -104,7 +102,7 @@ function UserMenu() {
                   try {
                     if (uid) {
                       await signOut(getAuth());
-                      dispatch(signOutUser());
+                      dispatch(Auth.signOut());
                     } else {
                       await signInUser();
                     }

@@ -4,10 +4,9 @@ import Layout from '../components/Layout/Layout';
 import PlanningSection from '../components/YearSchedule/PlanningSection';
 import RequirementsSection from '../components/YearSchedule/RequirementsSection';
 import { allTruthy, classNames } from '../shared/util';
-import { selectClassCache } from '../src/features/classCache';
-import { selectSchedules } from '../src/features/schedules';
-import { selectSampleSchedule, selectSemesterFormat, selectShowReqs } from '../src/features/semesterFormat';
-import { selectUserUid, selectUserDocument } from '../src/features/userData';
+import {
+  Auth, ClassCache, Planner, Profile, Schedules,
+} from '../src/features';
 import { useAppSelector } from '../src/hooks';
 import validateSchedules from '../src/requirements';
 import collegeRequirements from '../src/requirements/college';
@@ -18,16 +17,17 @@ import {
 } from '../src/requirements/util';
 
 export default function PlanPageComponent() {
-  const userUid = useAppSelector(selectUserUid);
-  const userDocument = useAppSelector(selectUserDocument);
-  const semesterFormat = useAppSelector(selectSemesterFormat);
-  const sampleSchedule = useAppSelector(selectSampleSchedule);
-  const classCache = useAppSelector(selectClassCache);
-  const showReqs = useAppSelector(selectShowReqs);
+  const userUid = useAppSelector(Auth.selectUserUid);
+  const profile = useAppSelector(Profile.selectUserProfile);
+  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
+  const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
+  const showReqs = useAppSelector(Planner.selectShowReqs);
+  const selectedSchedules = useAppSelector(Schedules.selectSelectedSchedules);
+  const schedules = useAppSelector(Schedules.selectSchedules);
+  const classCache = useAppSelector(ClassCache.selectClassCache);
 
   // we load all user schedules
   const q = useMemo(() => [where('ownerUid', '==', userUid)], [userUid]);
-  const schedules = useAppSelector(selectSchedules);
 
   const [validationResults, setValidationResults] = useState<GroupResult | null>(null);
   const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(collegeRequirements);
@@ -38,16 +38,16 @@ export default function PlanPageComponent() {
     const showSchedules = semesterFormat === 'sample'
       ? sampleSchedule!.schedules
       : allTruthy(
-        Object.values(userDocument.selectedSchedules).map((id) => (id ? schedules[id] : null)),
+        Object.values(selectedSchedules).map((id) => (id ? schedules[id] : null)),
       );
     const results = validateSchedules(
       selectedRequirements,
       showSchedules,
-      userDocument,
+      profile,
       classCache,
     );
     setValidationResults(results);
-  }, [selectedRequirements, classCache, sampleSchedule, semesterFormat, userDocument]);
+  }, [selectedRequirements, classCache, sampleSchedule, semesterFormat, profile]);
 
   return (
     <Layout className="w-full md:px-8" title="Plan" scheduleQueryConstraints={q}>

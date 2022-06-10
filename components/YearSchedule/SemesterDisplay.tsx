@@ -18,15 +18,14 @@ import CourseCard, { DragStatus } from '../Course/CourseCard';
 import FadeTransition from '../FadeTransition';
 import { Requirement } from '../../src/requirements/util';
 import ButtonMenu from './ButtonMenu';
-import { selectSampleSchedule, selectSemesterFormat } from '../../src/features/semesterFormat';
-import * as Schedules from '../../src/features/schedules';
-import { selectClassCache } from '../../src/features/classCache';
-import { selectUserUid, selectUserDocument } from '../../src/features/userData';
-import { useModal } from '../../src/features/modal';
+import { useModal } from '../../src/context/modal';
 import useSearchState, { SearchStateProvider } from '../../src/context/searchState';
 import Hits, { HitsDemo } from '../SearchComponents/Hits';
 import SearchBox, { SearchBoxDemo } from '../SearchComponents/SearchBox';
 import { ChosenScheduleContext } from '../../src/context/selectedSchedule';
+import {
+  Auth, ClassCache, Planner, Profile, Schedules,
+} from '../../src/features';
 
 const VIABILITY_COLORS: Record<Viability, string> = {
   Yes: 'bg-green-200',
@@ -36,7 +35,7 @@ const VIABILITY_COLORS: Record<Viability, string> = {
 };
 
 function SearchModal() {
-  const user = useAppSelector(selectUserUid);
+  const user = useAppSelector(Auth.selectUserUid);
   const { searchState, setSearchState } = useSearchState();
 
   return (
@@ -112,11 +111,11 @@ export default function SemesterComponent({
   highlight,
 }: SemesterComponentProps) {
   const dispatch = useAppDispatch();
-  const userDocument = useAppSelector(selectUserDocument);
-  const semesterFormat = useAppSelector(selectSemesterFormat);
+  const userDocument = useAppSelector(Profile.selectUserProfile);
+  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
+  const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
   const schedules = useAppSelector(Schedules.selectSchedules);
-  const classCache = useAppSelector(selectClassCache);
-  const sampleSchedule = useAppSelector(selectSampleSchedule);
+  const classCache = useAppSelector(ClassCache.selectClassCache);
   const { showCourse, showContents } = useModal();
 
   const editRef = useRef<HTMLInputElement>(null!);

@@ -8,10 +8,8 @@ import { unsplashParams } from '../../shared/util';
 import ExternalLink from '../ExternalLink';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
-import { selectSnapshotError, setSnapshotError } from '../../src/features/userData';
 import { getSchedulesRef, useAppDispatch, useAppSelector } from '../../src/hooks';
-import { overwriteSchedules } from '../../src/features/schedules';
-import { loadCourses } from '../../src/features/classCache';
+import { Auth, ClassCache, Schedules } from '../../src/features';
 
 interface LayoutProps {
   title?: string;
@@ -99,7 +97,7 @@ export default function Layout({
   scheduleQueryConstraints: queryConstraints = [],
 }: PropsWithChildren<LayoutProps>) {
   const dispatch = useAppDispatch();
-  const errors = useAppSelector(selectSnapshotError);
+  const errors = useAppSelector(Auth.selectSnapshotError);
   const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
 
   // listen for the requested schedules, load all of their classes into the class cache
@@ -112,14 +110,14 @@ export default function Layout({
       // load all of the classes into the class cache
       const scheduleEntries = snap.docs.map((doc) => doc.data());
       const classIds = scheduleEntries.flatMap((schedule) => schedule.classes.map(({ classId }) => classId));
-      dispatch(loadCourses(classIds));
-      dispatch(overwriteSchedules(scheduleEntries));
-    }, (err) => dispatch(setSnapshotError({ error: err })));
+      dispatch(ClassCache.loadCourses(classIds));
+      dispatch(Schedules.overwriteSchedules(scheduleEntries));
+    }, (err) => dispatch(Auth.setSnapshotError({ error: err })));
     // eslint-disable-next-line consistent-return
     return unsubSchedules;
   }, [queryConstraints]);
 
-  if (errors) console.error(errors);
+  if (errors) console.error('Error listening for user authentication', errors);
 
   return (
     <div className="flex flex-col min-h-screen overflow-auto">
@@ -135,8 +133,6 @@ export default function Layout({
       </Head>
 
       <Navbar />
-
-      {errors && <pre>{JSON.stringify(errors)}</pre>}
 
       <main className={className}>
         {children}

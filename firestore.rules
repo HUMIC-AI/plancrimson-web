@@ -19,6 +19,11 @@ service cloud.firestore {
       allow read: if request.auth != null;
     }
 
+    match /userProfiles/{uid} {
+      allow read: if loggedInStudent();
+      allow write: if loggedInStudent() && request.auth.uid == uid;
+    }
+
     match /users/{uid} {
       allow read, write: if loggedInStudent() && request.auth.uid == uid;
     }

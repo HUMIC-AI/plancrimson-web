@@ -1,8 +1,8 @@
 import { Dialog } from '@headlessui/react';
 import { DownloadPlan, SEASON_ORDER } from '../shared/firestoreTypes';
 import { allTruthy } from '../shared/util';
-import { useModal } from '../src/features/modal';
-import { createSchedule } from '../src/features/schedules';
+import { useModal } from '../src/context/modal';
+import { Schedules } from '../src/features';
 import { useAppDispatch } from '../src/hooks';
 
 function UploadForm() {
@@ -31,7 +31,7 @@ function UploadForm() {
           ) {
             throw new Error(`${schedule.title} invalid or missing fields`);
           }
-          return dispatch(createSchedule(schedule)).catch((err) => {
+          return dispatch(Schedules.createSchedule(schedule)).catch((err) => {
             throw new Error(`${schedule.title} threw error ${err.message}`);
           });
         }),

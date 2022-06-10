@@ -14,15 +14,14 @@ import CurrentRefinements, {
 } from '../components/SearchComponents/CurrentRefinements';
 import SortBy, { SortByDemo } from '../components/SearchComponents/SortBy';
 import useSearchState from '../src/context/searchState';
-import { selectUserUid } from '../src/features/userData';
-import { selectShowAttributes } from '../src/features/semesterFormat';
 import AttributeMenu from '../components/SearchComponents/AttributeMenu';
+import { Planner, Auth } from '../src/features';
 
 // we show a demo if the user is not logged in,
 // but do not allow them to send requests to the database
 export default function SearchPage() {
-  const user = useAppSelector(selectUserUid);
-  const showAttributes = useAppSelector(selectShowAttributes);
+  const user = useAppSelector(Auth.selectUserUid);
+  const showAttributes = useAppSelector(Planner.selectShowAttributes);
   const { searchState, setSearchState } = useSearchState();
 
   useEffect(() => {

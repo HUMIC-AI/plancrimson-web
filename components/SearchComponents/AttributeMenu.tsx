@@ -1,9 +1,9 @@
 import { FaAngleDoubleLeft } from 'react-icons/fa';
 import { adjustAttr, classNames } from '../../shared/util';
-import { setShowAttributes } from '../../src/features/semesterFormat';
 import { useAppDispatch, useLgBreakpoint } from '../../src/hooks';
 import Attribute from './Attribute';
 import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
+import { Planner } from '../../src/features';
 
 interface Props {
   lgOnly?: boolean;
@@ -29,7 +29,7 @@ export default function AttributeMenu({ lgOnly, withWrapper }: Props) {
         <button
           type="button"
           className="absolute inset-y-0 right-0 interactive"
-          onClick={() => dispatch(setShowAttributes(false))}
+          onClick={() => dispatch(Planner.setShowAttributes(false))}
         >
           <FaAngleDoubleLeft />
         </button>

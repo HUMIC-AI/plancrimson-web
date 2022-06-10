@@ -6,9 +6,7 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import useSWR from 'swr';
 import Layout from '../components/Layout/Layout';
-import { selectClassCache } from '../src/features/classCache';
-import { selectSchedules } from '../src/features/schedules';
-import { selectUserUid } from '../src/features/userData';
+import { Auth, ClassCache, Schedules } from '../src/features';
 import { getFriendsCollectionGroup, useAppSelector } from '../src/hooks';
 
 /**
@@ -23,7 +21,7 @@ async function incomingRequests(uid: string) {
 }
 
 function Friends() {
-  const uid = useAppSelector(selectUserUid);
+  const uid = useAppSelector(Auth.selectUserUid);
   const { data: friends, error } = useSWR(uid, incomingRequests);
 
   if (error) {
@@ -64,12 +62,12 @@ function Friends() {
 }
 
 export default function ConnectPage() {
-  const schedules = useAppSelector(selectSchedules);
-  const classCache = useAppSelector(selectClassCache);
+  const schedules = useAppSelector(Schedules.selectSchedules);
+  const classCache = useAppSelector(ClassCache.selectClassCache);
   const constraints = useMemo(() => [where('public', '==', true)], []);
 
   return (
-    <Layout title="Connect" scheduleQueryConstraints={constraints} className="space-y-12 pt-12">
+    <Layout title="Connect" scheduleQueryConstraints={constraints} className="mx-auto flex-1 space-y-12 pt-12">
       <h1>Connect with students with similar interests!</h1>
       <section>
         <Friends />

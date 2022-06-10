@@ -18,11 +18,9 @@ import {
   getUniqueSemesters,
   sortSchedules,
 } from '../../shared/util';
-import * as Schedules from '../../src/features/schedules';
 import {
-  selectExpandCards, selectSampleSchedule, selectSemesterFormat, selectShowReqs, setShowReqs, showAll, showSelected, toggleExpand,
-} from '../../src/features/semesterFormat';
-import { selectClassYear, selectUserUid } from '../../src/features/userData';
+  Auth, Planner, Profile, Schedules,
+} from '../../src/features';
 import {
   downloadJson, handleError, signInUser, useAppDispatch, useAppSelector,
 } from '../../src/hooks';
@@ -39,12 +37,12 @@ interface HeaderSectionProps {
 
 function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionProps) {
   const dispatch = useAppDispatch();
-  const selectedSchedules = useAppSelector(Schedules.selectSelectedSchedules);
-  const showReqs = useAppSelector(selectShowReqs);
-  const isExpanded = useAppSelector(selectExpandCards);
-  const semesterFormat = useAppSelector(selectSemesterFormat);
-  const sampleSchedule = useAppSelector(selectSampleSchedule);
   const userSchedules = useAppSelector(Schedules.selectSchedules);
+  const selectedSchedules = useAppSelector(Schedules.selectSelectedSchedules);
+  const showReqs = useAppSelector(Planner.selectShowReqs);
+  const isExpanded = useAppSelector(Planner.selectExpandCards);
+  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
+  const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
 
   return (
     <div className="text-white space-y-4">
@@ -53,7 +51,7 @@ function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionP
         <button
           title="Show requirements panel"
           type="button"
-          onClick={() => dispatch(setShowReqs(true))}
+          onClick={() => dispatch(Planner.setShowReqs(true))}
           className="interactive"
         >
           <FaAngleDoubleLeft />
@@ -69,7 +67,7 @@ function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionP
         <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
           <button
             type="button"
-            onClick={() => dispatch(toggleExpand())}
+            onClick={() => dispatch(Planner.toggleExpand())}
             className={classNames(
               isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
               'rounded-full hover:opacity-50 p-1 border',
@@ -82,9 +80,9 @@ function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionP
               type="button"
               onClick={() => {
                 if (semesterFormat === 'all') {
-                  dispatch(showSelected());
+                  dispatch(Planner.showSelected());
                 } else {
-                  dispatch(showAll());
+                  dispatch(Planner.showAll());
                 }
               }}
               className="py-1 px-2 bg-gray-600 interactive rounded"
@@ -142,7 +140,7 @@ function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionP
 
 function HiddenSchedules({ allSemesters } : { allSemesters: SemesterDisplayProps[] }) {
   const dispatch = useAppDispatch();
-  const userUid = useAppSelector(selectUserUid);
+  const userUid = useAppSelector(Auth.selectUserUid);
   const hiddenScheduleIds = useAppSelector(Schedules.selectHiddenScheduleIds);
   const hiddenSchedules = allSemesters.filter(
     ({ chosenScheduleId }) => chosenScheduleId && hiddenScheduleIds.includes(chosenScheduleId),
@@ -180,13 +178,13 @@ function HiddenSchedules({ allSemesters } : { allSemesters: SemesterDisplayProps
  */
 export default function PlanningSection({ highlightedRequirement } : { highlightedRequirement?: Requirement; }) {
   const dispatch = useAppDispatch();
-  const userUid = useAppSelector(selectUserUid);
+  const userUid = useAppSelector(Auth.selectUserUid);
   const {
     classYear, semesterFormat, sampleSchedule, schedules: userSchedules, selectedSchedules,
   } = useAppSelector((state) => ({
-    classYear: selectClassYear(state),
-    semesterFormat: selectSemesterFormat(state),
-    sampleSchedule: selectSampleSchedule(state),
+    classYear: Profile.selectClassYear(state),
+    semesterFormat: Planner.selectSemesterFormat(state),
+    sampleSchedule: Planner.selectSampleSchedule(state),
     schedules: Schedules.selectSchedules(state),
     selectedSchedules: Schedules.selectSelectedSchedules(state),
   }));

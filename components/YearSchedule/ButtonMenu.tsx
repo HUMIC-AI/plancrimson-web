@@ -12,10 +12,7 @@ import {
 import type { IconType } from 'react-icons/lib';
 import { v4 as uuidv4 } from 'uuid';
 import { Season } from '../../shared/firestoreTypes';
-import {
-  chooseSchedule, createSchedule, deleteSchedule, selectSchedule, togglePublic,
-} from '../../src/features/schedules';
-import { selectUserUid } from '../../src/features/userData';
+import { Auth, Schedules } from '../../src/features';
 import { downloadJson, useAppDispatch, useAppSelector } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 
@@ -85,13 +82,13 @@ function ButtonMenu({
   prevScheduleId,
 }: ButtonMenuProps) {
   const dispatch = useAppDispatch();
-  const userUid = useAppSelector(selectUserUid);
-  const chosenSchedule = useAppSelector(selectSchedule(chosenScheduleId));
+  const userUid = useAppSelector(Auth.selectUserUid);
+  const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
 
   const handleDuplicate = useCallback(async () => {
     if (!chosenSchedule) return;
     try {
-      const schedule = await dispatch(createSchedule({
+      const schedule = await dispatch(Schedules.createSchedule({
         ...chosenSchedule,
         force: true,
       }));
@@ -113,7 +110,7 @@ function ButtonMenu({
     );
     if (!confirmDelete) return;
     try {
-      await dispatch(deleteSchedule(chosenSchedule.title));
+      await dispatch(Schedules.deleteSchedule(chosenSchedule.title));
       handleChooseSchedule(prevScheduleId);
     } catch (err) {
       console.error(err);
@@ -157,7 +154,7 @@ function ButtonMenu({
               alert('You must be logged in!');
               return;
             }
-            const schedule = await dispatch(createSchedule({
+            const schedule = await dispatch(Schedules.createSchedule({
               id: uuidv4(),
               title: `${season} ${year}`,
               year,
@@ -171,7 +168,7 @@ function ButtonMenu({
               if ('errors' in schedule.payload) {
                 throw new Error(schedule.payload.errors.join(', '));
               }
-              await dispatch(chooseSchedule({
+              await dispatch(Schedules.chooseSchedule({
                 term: `${schedule.payload.year}${schedule.payload.season}`,
                 scheduleId: schedule.payload.id,
               }));
@@ -196,7 +193,7 @@ function ButtonMenu({
             />
             <CustomButton
               name={chosenSchedule.public ? 'Make private' : 'Make public'}
-              onClick={() => dispatch(togglePublic(chosenSchedule.id))}
+              onClick={() => dispatch(Schedules.togglePublic(chosenSchedule.id))}
               Icon={chosenSchedule.public ? FaUnlink : FaLink}
             />
           </>

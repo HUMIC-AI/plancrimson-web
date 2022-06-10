@@ -23,12 +23,8 @@ import FadeTransition from '../FadeTransition';
 import RequirementGroupComponent from './RequirementsDisplay';
 import { allTruthy, classNames } from '../../shared/util';
 import { allRequirements } from '../../src/requirements';
-import {
-  selectSampleSchedule, setShowReqs, showSample, showSelected,
-} from '../../src/features/semesterFormat';
-import { createSchedule, CreateSchedulePayload, chooseSchedule } from '../../src/features/schedules';
-import { selectUserUid } from '../../src/features/userData';
 import { handleError, useAppDispatch, useAppSelector } from '../../src/hooks';
+import { Auth, Planner, Schedules } from '../../src/features';
 
 interface RequirementsSectionProps {
   selectedRequirements: RequirementGroup;
@@ -43,10 +39,8 @@ interface RequirementsSectionProps {
 }
 
 function SuggestionForm() {
-  const { uid, email } = useAppSelector((state) => ({
-    email: state.user.userInfo?.email || null,
-    uid: selectUserUid(state),
-  }));
+  const uid = useAppSelector(Auth.selectUserUid);
+  const email = useAppSelector(Auth.selectEmail);
 
   const timeoutRef = useRef<number>();
 
@@ -156,9 +150,36 @@ interface SampleScheduleEntryProps {
 
 function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
   const dispatch = useAppDispatch();
-  const sampleSchedule = useAppSelector(selectSampleSchedule);
+  const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
 
   const isSelected = sampleSchedule?.name === schedule.name;
+
+  async function clone() {
+    const promises = schedule.schedules.map((s) => dispatch(Schedules.createSchedule({
+      ...s,
+      title: `${s.title} (${schedule.id})`,
+      force: true,
+    })));
+    const schedules = await Promise.all(promises);
+
+    try {
+      const errors = allTruthy(schedules.map(({ payload }) => ('errors' in payload ? payload.errors : null)));
+      if (errors.length) {
+        throw new Error(errors.map((err) => err.join(', ')).join('; '));
+      }
+      dispatch(Planner.showSelected());
+      schedules.forEach((s) => {
+        const { year, season, title: id } = s.payload as Schedules.CreateSchedulePayload;
+        dispatch(Schedules.chooseSchedule({
+          term: `${year}${season}`,
+          scheduleId: id,
+        }));
+      });
+      alert('Cloned successfully!');
+    } catch (err) {
+      handleError(err);
+    }
+  }
 
   return (
     <div className="flex items-center space-x-4">
@@ -170,9 +191,9 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
         )}
         onClick={() => {
           if (isSelected) {
-            dispatch(showSelected());
+            dispatch(Planner.showSelected());
           } else {
-            dispatch(showSample(schedule));
+            dispatch(Planner.showSample(schedule));
           }
         }}
       >
@@ -180,30 +201,7 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
       </button>
       <button
         type="button"
-        onClick={async () => {
-          const schedules = await Promise.all(schedule.schedules.map((s) => dispatch(createSchedule({
-            ...s,
-            title: `${s.title} (${schedule.id})`,
-            force: true,
-          }))));
-          try {
-            const errors = allTruthy(schedules.map(({ payload }) => ('errors' in payload ? payload.errors : null)));
-            if (errors.length) {
-              throw new Error(errors.map((err) => err.join(', ')).join('; '));
-            }
-            dispatch(showSelected());
-            schedules.forEach((s) => {
-              const { year, season, title: id } = s.payload as CreateSchedulePayload;
-              dispatch(chooseSchedule({
-                term: `${year}${season}`,
-                scheduleId: id,
-              }));
-            });
-            alert('Cloned successfully!');
-          } catch (err) {
-            handleError(err);
-          }
-        }}
+        onClick={clone}
         className="font-medium interactive"
       >
         Clone
@@ -271,7 +269,7 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
             <button
               type="button"
               className="interactive"
-              onClick={() => dispatch(setShowReqs(false))}
+              onClick={() => dispatch(Planner.setShowReqs(false))}
               title="Hide requirements panel"
             >
               <FaAngleDoubleRight />

@@ -10,12 +10,10 @@ import { classNames, sortSchedules } from '../../shared/util';
 import { ATTRIBUTE_DESCRIPTIONS, Class } from '../../shared/apiTypes';
 import Stats, { StatsComponent } from './Stats';
 import StateResults, { StateResultsComponent } from './StateResults';
-import { selectUserUid } from '../../src/features/userData';
 import { alertSignIn } from './searchUtils';
-import { selectShowAttributes, setShowAttributes } from '../../src/features/semesterFormat';
-import { selectSchedules } from '../../src/features/schedules';
 import useChosenScheduleContext from '../../src/context/selectedSchedule';
 import { useAppDispatch, useAppSelector, useLgBreakpoint } from '../../src/hooks';
+import { Auth, Planner, Schedules } from '../../src/features';
 
 const AttributeMenuDropdown = function () {
   return (
@@ -62,9 +60,9 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
   isSearchStalled,
 }) {
   const dispatch = useAppDispatch();
-  const schedules = useAppSelector(selectSchedules);
-  const user = useAppSelector(selectUserUid);
-  const showAttributes = useAppSelector(selectShowAttributes);
+  const schedules = useAppSelector(Schedules.selectSchedules);
+  const user = useAppSelector(Auth.selectUserUid);
+  const showAttributes = useAppSelector(Planner.selectShowAttributes);
   const isLg = useLgBreakpoint();
   const { chooseSchedule, chosenScheduleId } = useChosenScheduleContext();
 
@@ -75,7 +73,7 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
         {isLg && !showAttributes && (
         <button
           type="button"
-          onClick={() => dispatch(setShowAttributes(true))}
+          onClick={() => dispatch(Planner.setShowAttributes(true))}
           className="interactive"
         >
           <FaAngleDoubleRight />
@@ -133,7 +131,7 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
 export const SearchBoxComponent: React.FC<SearchBoxProvided> = function (
   props,
 ) {
-  const schedules = useAppSelector(selectSchedules);
+  const schedules = useAppSelector(Schedules.selectSchedules);
   const { chooseSchedule: selectSchedule, chosenScheduleId: selectedSchedule } = useChosenScheduleContext();
 
   return (

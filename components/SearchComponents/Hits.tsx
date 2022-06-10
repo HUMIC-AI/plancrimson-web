@@ -5,14 +5,14 @@ import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
 import { classNames, getClassId } from '../../shared/util';
 import CourseCard from '../Course/CourseCard';
-import { selectExpandCards, toggleExpand } from '../../src/features/semesterFormat';
-import { useModal } from '../../src/features/modal';
+import { useModal } from '../../src/context/modal';
 import sampleCourses from './sampleCourses.json';
 import { alertSignIn } from './searchUtils';
 import { DAY_SHORT } from '../../shared/firestoreTypes';
 import useChosenScheduleContext from '../../src/context/selectedSchedule';
 import useSearchState from '../../src/context/searchState';
 import { useAppDispatch, useAppSelector } from '../../src/hooks';
+import { Planner } from '../../src/features';
 
 interface ButtonProps {
   onClick: () => void;
@@ -26,7 +26,7 @@ function CustomButton({
   direction,
 }: ButtonProps) {
   const dispatch = useAppDispatch();
-  const isExpanded = useAppSelector(selectExpandCards);
+  const isExpanded = useAppSelector(Planner.selectExpandCards);
 
   return (
     <div className="relative">
@@ -47,7 +47,7 @@ function CustomButton({
       </button>
       <button
         type="button"
-        onClick={() => dispatch(toggleExpand())}
+        onClick={() => dispatch(Planner.toggleExpand())}
         className={classNames(
           'bg-gray-800 text-white',
           'rounded-full interactive py-1 px-3 absolute inset-y-0 left-full ml-4',

@@ -1,7 +1,7 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { FaTimes } from 'react-icons/fa';
-import { useModal } from '../src/features/modal';
+import { useModal } from '../src/context/modal';
 
 /**
  * Based on https://headlessui.dev/react/dialog

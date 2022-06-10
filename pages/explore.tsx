@@ -13,8 +13,8 @@ import embeddings from '../shared/assets/embeddings.json';
 import subjects from '../shared/assets/subjects.json';
 import { allTruthy, classNames } from '../shared/util';
 import useSearchState from '../src/context/searchState';
-import { loadCourses } from '../src/features/classCache';
-import { useModal } from '../src/features/modal';
+import * as ClassCache from '../src/features/classCache';
+import { useModal } from '../src/context/modal';
 import { meiliSearchClient, useAppDispatch } from '../src/hooks';
 
 const subjectNames = Object.keys(subjects).sort();
@@ -140,7 +140,7 @@ function ChartComponent({
       })
       .on('click', (_, d) => {
         alert(d.subject + d.catalogNumber);
-        dispatch(loadCourses([d.id])).then(({ payload }) => showCourse(payload[0]));
+        dispatch(ClassCache.loadCourses([d.id])).then(({ payload }) => showCourse(payload[0]));
       })
       .transition()
       .duration(500)

@@ -9,13 +9,12 @@ import {
 import { Provider } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { connectAuthEmulator, getAuth, onAuthStateChanged } from 'firebase/auth';
-import useSearchState, { SearchStateProvider } from '../src/context/searchState';
+import { SearchStateProvider } from '../src/context/searchState';
 import store from '../src/store';
 import { getUserRef, useAppDispatch, useAppSelector } from '../src/hooks';
-import * as UserData from '../src/features/userData';
-import * as Schedules from '../src/features/schedules';
-import { ModalProvider, useModal } from '../src/features/modal';
+import { ModalProvider, useModal } from '../src/context/modal';
 import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
+import { Auth, Profile, Schedules } from '../src/features';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -49,7 +48,7 @@ if (getApps().length === 0) {
 function GraduationYearDialog({ defaultYear } : { defaultYear: number }) {
   const { setOpen } = useModal();
   const [classYear, setYear] = useState(defaultYear);
-  const uid = useAppSelector(UserData.selectUserUid)!;
+  const uid = useAppSelector(Auth.selectUserUid)!;
   return (
     <form
       onSubmit={(e) => {
@@ -81,19 +80,19 @@ function GraduationYearDialog({ defaultYear } : { defaultYear: number }) {
 function MyApp({ Component, pageProps }: AppProps) {
   const auth = getAuth();
   const dispatch = useAppDispatch();
-  const uid = useAppSelector(UserData.selectUserUid);
+  const uid = useAppSelector(Auth.selectUserUid);
   const { showContents } = useModal();
 
   // When the user logs in/out, dispatch to redux
   useEffect(() => {
     const unsub = onAuthStateChanged(
       auth,
-      (u) => dispatch(UserData.signIn(u ? {
+      (u) => dispatch(Auth.signIn(u ? {
         uid: u.uid,
         email: u.email!,
         photoUrl: u.photoURL,
       } : null)),
-      (err) => dispatch(UserData.setSignInError(err)),
+      (err) => dispatch(Auth.setSignInError(err)),
     );
     return unsub;
   }, []);
@@ -111,7 +110,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         const { lastLoggedIn, ...data } = userSnap.data();
 
         // update last sign in, know this will always exist
-        dispatch(UserData.setLastSignIn(lastLoggedIn ? lastLoggedIn.toDate().toISOString() : null));
+        dispatch(Profile.setLastSignIn(lastLoggedIn ? lastLoggedIn.toDate().toISOString() : null));
 
         // need class year before other missing fields
         if (!data.classYear) {
@@ -125,7 +124,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           return;
         }
 
-        dispatch(UserData.setClassYear(data.classYear!));
+        dispatch(Profile.setClassYear(data.classYear!));
 
         // overwrite metadata
         dispatch(Schedules.overwriteScheduleMetadata({
@@ -135,13 +134,13 @@ function MyApp({ Component, pageProps }: AppProps) {
           hiddenScheduleIds: data.hiddenScheduleIds || [],
         }));
       },
-      (err) => dispatch(UserData.setSnapshotError({ error: err })),
+      (err) => dispatch(Auth.setSnapshotError({ error: err })),
     );
 
     // trigger initial write
     setDoc(userRef, { lastLoggedIn: serverTimestamp() }, { merge: true })
       .then(() => console.info('updated last login time'))
-      .catch((err) => dispatch(UserData.setSnapshotError({ error: err })));
+      .catch((err) => dispatch(Auth.setSnapshotError({ error: err })));
 
     return unsub;
   }, [uid]);

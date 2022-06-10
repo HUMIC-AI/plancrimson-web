@@ -4,8 +4,7 @@ import {
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import Layout from '../../components/Layout/Layout';
-import { selectSchedules } from '../../src/features/schedules';
-import { selectUserUid } from '../../src/features/userData';
+import { Auth, Schedules } from '../../src/features';
 import {
   getFriendRequestRef, sendFriendRequest, unfriend, useAppSelector,
 } from '../../src/hooks';
@@ -22,8 +21,8 @@ const statusMessage: Record<FriendStatus, string> = {
 export default function UserPage() {
   const router = useRouter();
   const userUid = router.query.userUid as string;
-  const uid = useAppSelector(selectUserUid);
-  const schedules = useAppSelector(selectSchedules);
+  const uid = useAppSelector(Auth.selectUserUid);
+  const schedules = useAppSelector(Schedules.selectSchedules);
   const [friendStatus, setFriendStatus] = useState<FriendStatus>('loading');
 
   useEffect(() => {

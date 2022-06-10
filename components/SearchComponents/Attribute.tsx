@@ -2,7 +2,7 @@ import { Disclosure } from '@headlessui/react';
 import React, { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { classNames, compareItems, compareWeekdays } from '../../shared/util';
-import { selectUserUid } from '../../src/features/userData';
+import { Auth } from '../../src/features';
 import { useAppSelector } from '../../src/hooks';
 import RefinementList, { RefinementListDemo } from './RefinementList';
 
@@ -12,7 +12,7 @@ interface AttributeProps {
 }
 
 const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = function ({ open, attribute, label }) {
-  const user = useAppSelector(selectUserUid);
+  const user = useAppSelector(Auth.selectUserUid);
 
   const [operator, setOperator] = useState<'and' | 'or'>('or');
 

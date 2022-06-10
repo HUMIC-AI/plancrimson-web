@@ -13,7 +13,7 @@ import {
   doesRRuleHaveDay,
 } from './calendarUtil';
 import { downloadJson, useAppDispatch, useAppSelector } from '../../src/hooks';
-import { customTime, selectCustomTime, selectCustomTimes } from '../../src/features/schedules';
+import { Schedules } from '../../src/features';
 
 const dayStartTime = 8; // time to start the calendar at
 const dayEndTime = 20;
@@ -37,7 +37,7 @@ type CalendarProps = {
 function MissingClass({ cls }: { cls: ExtendedClass }) {
   const dispatch = useAppDispatch();
   const classId = getClassId(cls);
-  const classTime = useAppSelector(selectCustomTime(classId));
+  const classTime = useAppSelector(Schedules.selectCustomTime(classId));
 
   const { register, handleSubmit } = useForm();
 
@@ -47,7 +47,7 @@ function MissingClass({ cls }: { cls: ExtendedClass }) {
     if ([start, end].some(Number.isNaN) || start >= end) {
       alert('Invalid time. Please try again.');
     } else {
-      dispatch(customTime({
+      dispatch(Schedules.customTime({
         classId,
         pattern: DAYS_OF_WEEK.filter((day) => data[day]),
         start,
@@ -190,7 +190,7 @@ function DayComponent({ events }: { events: EventAttributes[] }) {
 }
 
 const Calendar: React.FC<CalendarProps> = function ({ classes }) {
-  const customTimes = useAppSelector(selectCustomTimes);
+  const customTimes = useAppSelector(Schedules.selectCustomTimes);
 
   function extendCustomTime(cls: ExtendedClass): ExtendedClass {
     const classId = getClassId(cls);
