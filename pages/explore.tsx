@@ -1,12 +1,13 @@
 import { createRef, useEffect } from 'react';
 import * as three from 'three';
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { FlyControls } from 'three/examples/jsm/controls/FlyControls';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+// import { FlyControls } from 'three/examples/jsm/controls/FlyControls';
+import courses from '../shared/assets/allcourses-2022-06-08.json';
 import embeddings from '../shared/assets/tsne.json';
 
 type Mesh = three.Mesh<three.BufferGeometry, three.MeshPhongMaterial>;
 
-function initScene(canvas: HTMLCanvasElement) {
+function initScene(canvas: HTMLCanvasElement, labels: HTMLDivElement) {
   const scene = new three.Scene();
 
   const camera = new three.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
@@ -33,22 +34,30 @@ function initScene(canvas: HTMLCanvasElement) {
     scene.add(light);
   }
 
-  // const controls = new OrbitControls(camera, canvas);
-  const controls = new FlyControls(camera, canvas);
-  controls.dragToLook = true;
-  controls.movementSpeed = 0.05;
-  controls.rollSpeed = 0.0005;
+  const controls = new OrbitControls(camera, canvas);
+  // const controls = new FlyControls(camera, canvas);
+  // controls.dragToLook = true;
+  // controls.movementSpeed = 0.05;
+  // controls.rollSpeed = 0.0005;
 
   // circles
   {
     const geometry = new three.SphereGeometry(1, 6, 6);
     const f = (t: number) => t + 5 * Math.random();
-    scene.add(...embeddings.slice(0, 10).map(([x, y, z]) => {
+    const objects = embeddings.slice(0, 100).map(([x, y, z], i) => {
       const material = new three.MeshPhongMaterial({ color: 0x44aa88 });
       const mesh = new three.Mesh(geometry, material);
       mesh.position.set(f(x), f(y), f(z));
-      return mesh;
-    }));
+
+      const label = courses[i].SUBJECT + courses[i].CATALOG_NBR;
+      const elem = document.createElement('div');
+      elem.textContent = label;
+      elem.classList.add('absolute', 'text-lg', 'cursor-pointer');
+      labels.appendChild(elem);
+      return { mesh, elem };
+    });
+
+    scene.add(...objects.map((obj) => obj.mesh));
   }
 
   const raycaster = new three.Raycaster();
@@ -95,7 +104,7 @@ function initScene(canvas: HTMLCanvasElement) {
       intersected = null;
     }
 
-    controls.update(delta);
+    controls.update();
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
   }
@@ -103,11 +112,13 @@ function initScene(canvas: HTMLCanvasElement) {
 }
 
 export default function ExplorePage() {
+  const labels = createRef<HTMLDivElement>();
   const canvas = createRef<HTMLCanvasElement>();
-  useEffect(() => initScene(canvas.current!), []);
+  useEffect(() => initScene(canvas.current!, labels.current!), []);
   return (
     <div className="w-96 h-96 border-red-500 border-2">
       <canvas ref={canvas} className="outline-none w-full h-full" tabIndex={0} />
+      <div ref={labels} className="absolute w-full h-full cursor-pointer text-xl" />
     </div>
   );
 }
