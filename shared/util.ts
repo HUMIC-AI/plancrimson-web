@@ -8,7 +8,6 @@ import {
 import {
   Semester,
   SEASON_ORDER,
-  Season,
   ClassId,
   Schedule,
   DayOfWeek,
@@ -40,12 +39,12 @@ export function compareWeekdays(a: HasLabel, b: HasLabel) {
   );
 }
 
+/**
+ * @returns the calendar year and season that this course takes place
+ */
 export function getSemester(course: Class) {
-  const season = course.STRM === '2222'
-    ? 'Spring'
-    : ((course.STRM === '2218'
-      ? 'Fall'
-      : course.IS_SCL_DESCR_IS_SCL_DESCRH) as Season);
+  if (course.STRM in termToSeasonMap) return termToSeasonMap[course.STRM];
+  const season = course.IS_SCL_DESCR_IS_SCL_DESCRH.split(' ')[1];
   const academicYear = parseInt(course.ACAD_YEAR, 10);
   const year = season === 'Fall' ? academicYear - 1 : academicYear;
   return { year, season };
@@ -317,11 +316,12 @@ export function checkViable({
   };
 }
 
-export function termNumberToSeason(label: string) {
-  if (label === '2222') return 'Spring';
-  if (label === '2218') return 'Fall';
-  return label;
-}
+export const termToSeasonMap: Record<string, Semester> = {
+  2218: { year: 2021, season: 'Fall' },
+  2222: { year: 2022, season: 'Spring' },
+  2228: { year: 2022, season: 'Fall' },
+  2232: { year: 2023, season: 'Spring' },
+};
 
 export function adjustAttr(attr: string) {
   return ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr;

@@ -7,7 +7,7 @@ import evaluationImg from '../public/evaluation.png';
 
 export default function LandingPage() {
   return (
-    <Layout size="w-full from-gray-800 to-blue-900 bg-gradient-to-br text-white flex flex-col items-center px-8 sm:px-24 py-24">
+    <Layout className="w-full from-gray-800 to-blue-900 bg-gradient-to-br text-white flex flex-col items-center px-8 sm:px-24 py-24">
       {/* <div className="absolute inset-0 bg-blue-900">Hi</div> */}
       <h1 className="text-5xl sm:text-6xl uppercase tracking-wider font-black text-center">Plan Crimson</h1>
       <p className="italic text-xl text-center mt-8">Make the most of your Harvard education</p>

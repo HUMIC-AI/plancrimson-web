@@ -1,19 +1,29 @@
 import { FaAngleDoubleLeft } from 'react-icons/fa';
-import { adjustAttr } from '../../shared/util';
+import { adjustAttr, classNames } from '../../shared/util';
 import { setShowAttributes } from '../../src/features/semesterFormat';
 import { useAppDispatch, useLgBreakpoint } from '../../src/hooks';
 import Attribute from './Attribute';
 import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
 
+interface Props {
+  lgOnly?: boolean;
+  withWrapper?: boolean;
+}
+
 /**
  * Renders the list of attributes to filter classes by.
  */
-export default function AttributeMenu() {
+export default function AttributeMenu({ lgOnly, withWrapper }: Props) {
   const dispatch = useAppDispatch();
   const isLg = useLgBreakpoint();
 
   return (
-    <div className="flex-shrink-0 self-start w-64 p-2 hidden lg:flex flex-col space-y-2 from-gray-800 to-blue-900 bg-gradient-to-br rounded-md">
+    <div className={classNames(
+      'w-64 p-2 flex flex-col space-y-2 from-gray-800 to-blue-900 bg-gradient-to-br rounded-md overflow-auto',
+      lgOnly ? 'hidden lg:block' : false,
+      withWrapper ? 'flex-shrink-0 self-start' : false,
+    )}
+    >
       <h1 className="font-semibold text-white text-xl text-center relative">
         Filters
         <button
@@ -24,7 +34,7 @@ export default function AttributeMenu() {
           <FaAngleDoubleLeft />
         </button>
       </h1>
-      {isLg && MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
+      {(!lgOnly || isLg) && MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
         <Attribute attribute={attr} key={attr} label={adjustAttr(attr)} />
       ))}
       <span className="text-white text-xs p-1">

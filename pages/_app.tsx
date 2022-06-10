@@ -9,7 +9,7 @@ import {
 import { Provider } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { connectAuthEmulator, getAuth, onAuthStateChanged } from 'firebase/auth';
-import { SearchStateProvider } from '../src/context/searchState';
+import useSearchState, { SearchStateProvider } from '../src/context/searchState';
 import store from '../src/store';
 import { getUserRef, useAppDispatch, useAppSelector } from '../src/hooks';
 import * as UserData from '../src/features/userData';
@@ -156,7 +156,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   );
 }
 
-function Wrapper(props: AppProps) {
+export default function Wrapper(props: AppProps) {
   return (
     <Provider store={store}>
       <ModalProvider>
@@ -165,5 +165,3 @@ function Wrapper(props: AppProps) {
     </Provider>
   );
 }
-
-export default Wrapper;

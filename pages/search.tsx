@@ -33,33 +33,31 @@ export default function SearchPage() {
 
   return (
     <Layout>
-      <div className="container p-8 mx-auto">
-        <InstantSearch
-          indexName="courses"
-          searchClient={meiliSearchClient}
-          searchState={searchState}
-          onSearchStateChange={(newState) => {
-            setSearchState({ ...searchState, ...newState });
-          }}
-          stalledSearchDelay={500}
-        >
-          {user && <Configure hitsPerPage={12} />}
-          <div className="flex space-x-4">
-            <div className={showAttributes ? '' : 'hidden'}>
-              <AttributeMenu />
-            </div>
-
-            <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
-              {user ? <SearchBox /> : <SearchBoxDemo />}
-              <div className="grid grid-cols-[auto_1fr] gap-4">
-                {user ? <SortBy /> : <SortByDemo />}
-                {user ? <CurrentRefinements /> : <CurrentRefinementsDemo />}
-              </div>
-              {user ? <Hits /> : <HitsDemo />}
-            </div>
+      <InstantSearch
+        indexName="courses"
+        searchClient={meiliSearchClient}
+        searchState={searchState}
+        onSearchStateChange={(newState) => {
+          setSearchState({ ...searchState, ...newState });
+        }}
+        stalledSearchDelay={500}
+      >
+        {user && <Configure hitsPerPage={12} />}
+        <div className="flex space-x-4">
+          <div className={showAttributes ? '' : 'hidden'}>
+            <AttributeMenu withWrapper lgOnly />
           </div>
-        </InstantSearch>
-      </div>
+
+          <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
+            {user ? <SearchBox /> : <SearchBoxDemo />}
+            <div className="grid grid-cols-[auto_1fr] gap-4">
+              {user ? <SortBy /> : <SortByDemo />}
+              {user ? <CurrentRefinements /> : <CurrentRefinementsDemo />}
+            </div>
+            {user ? <Hits /> : <HitsDemo />}
+          </div>
+        </div>
+      </InstantSearch>
     </Layout>
   );
 }

@@ -4,10 +4,10 @@ import type { CurrentRefinementsProvided } from 'react-instantsearch-core';
 import { connectCurrentRefinements } from 'react-instantsearch-dom';
 import {
   adjustAttr,
-  termNumberToSeason,
   classNames,
   compareItems,
   compareWeekdays,
+  termToSeasonMap,
 } from '../../shared/util';
 import { alertSignIn } from './searchUtils';
 
@@ -50,13 +50,13 @@ export const CurrentRefinementsComponent: React.FC<Props> = function ({
                       <button
                         key={label}
                         type="button"
-                        name={termNumberToSeason(label)}
+                        name={termToSeasonMap[label]?.season || label}
                         className={classNames(
                           'py-1 px-2 hover-blue rounded flex items-center text-sm',
                         )}
                         onClick={() => refine(value)}
                       >
-                        {termNumberToSeason(label)}
+                        {termToSeasonMap[label]?.season || label}
                         <FaTimes className="ml-2" />
                       </button>
                     ))}
@@ -64,7 +64,7 @@ export const CurrentRefinementsComponent: React.FC<Props> = function ({
               </>
             ) : (
               <button type="button" onClick={() => refine(item.value)}>
-                {termNumberToSeason(item.label)}
+                {termToSeasonMap[item.label]?.season || item.label}
               </button>
             )}
           </Fragment>

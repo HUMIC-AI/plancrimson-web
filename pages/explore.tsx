@@ -1,124 +1,249 @@
-import { createRef, useEffect } from 'react';
-import * as three from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-// import { FlyControls } from 'three/examples/jsm/controls/FlyControls';
-import courses from '../shared/assets/allcourses-2022-06-08.json';
-import embeddings from '../shared/assets/tsne.json';
+import * as d3 from 'd3';
+import {
+  createRef, MutableRefObject, useEffect, useRef,
+} from 'react';
+import { FaInfo } from 'react-icons/fa';
+import type { InfiniteHitsProvided } from 'react-instantsearch-core';
+import { InstantSearch, connectInfiniteHits } from 'react-instantsearch-dom';
+import Layout from '../components/Layout/Layout';
+import AttributeMenu from '../components/SearchComponents/AttributeMenu';
+import Tooltip from '../components/Tooltip';
+import { ExtendedClass } from '../shared/apiTypes';
+import embeddings from '../shared/assets/embeddings.json';
+import subjects from '../shared/assets/subjects.json';
+import { allTruthy, classNames } from '../shared/util';
+import useSearchState from '../src/context/searchState';
+import { loadCourses } from '../src/features/classCache';
+import { useModal } from '../src/features/modal';
+import { meiliSearchClient, useAppDispatch } from '../src/hooks';
 
-type Mesh = three.Mesh<three.BufferGeometry, three.MeshPhongMaterial>;
+const subjectNames = Object.keys(subjects).sort();
+const subjectIndices = Object.fromEntries(subjectNames.map((name, i) => [name, i]));
 
-function initScene(canvas: HTMLCanvasElement, labels: HTMLDivElement) {
-  const scene = new three.Scene();
+type Embedding = {
+  x: number;
+  y: number;
+  subject: string;
+  catalogNumber: string;
+  title: string;
+  id: string;
+};
 
-  const camera = new three.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
-  camera.position.z = 50;
+type ObjectsRef = MutableRefObject<ReturnType<typeof initChart> | null>;
 
-  const renderer = new three.WebGLRenderer({ canvas, alpha: true });
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+// todo:
+// - focus on my courses
+// - get a random course
+// - add past courses
+// - better search functionality
 
-  const cube = (() => {
-    const geometry = new three.BoxGeometry(1, 1, 1);
-    const material = new three.MeshPhongMaterial({ color: 0x44aa88 });
-    return new three.Mesh(geometry, material);
-  })();
-  scene.add(cube);
+function initChart(chartDiv: HTMLDivElement) {
+  const chart = d3.select(chartDiv);
+  const width = chartDiv.clientWidth;
+  const height = chartDiv.clientHeight;
 
-  {
-    const light = new three.DirectionalLight(0xffddff, 1);
-    light.position.set(-1, 1, 1).normalize();
-    scene.add(light);
-  }
-  {
-    const light = new three.DirectionalLight(0xffffdd, 1);
-    light.position.set(1, 1, 1).normalize();
-    scene.add(light);
-  }
-
-  const controls = new OrbitControls(camera, canvas);
-  // const controls = new FlyControls(camera, canvas);
-  // controls.dragToLook = true;
-  // controls.movementSpeed = 0.05;
-  // controls.rollSpeed = 0.0005;
-
-  // circles
-  {
-    const geometry = new three.SphereGeometry(1, 6, 6);
-    const f = (t: number) => t + 5 * Math.random();
-    const objects = embeddings.slice(0, 100).map(([x, y, z], i) => {
-      const material = new three.MeshPhongMaterial({ color: 0x44aa88 });
-      const mesh = new three.Mesh(geometry, material);
-      mesh.position.set(f(x), f(y), f(z));
-
-      const label = courses[i].SUBJECT + courses[i].CATALOG_NBR;
-      const elem = document.createElement('div');
-      elem.textContent = label;
-      elem.classList.add('absolute', 'text-lg', 'cursor-pointer');
-      labels.appendChild(elem);
-      return { mesh, elem };
-    });
-
-    scene.add(...objects.map((obj) => obj.mesh));
-  }
-
-  const raycaster = new three.Raycaster();
-  const pointer = new three.Vector2();
-
-  // scene.children.forEach((node) => {
-  //   const axes = new three.AxesHelper();
-  //   if (axes.material instanceof three.Material) axes.material.depthTest = false;
-  //   axes.renderOrder = 1;
-  //   node.add(axes);
-  // });
-
-  // x red
-  // y green
-  // z blue
-  // scene.add(new three.AxesHelper());
-
-  canvas.addEventListener('mousemove', (ev) => {
-    // both go from -1 to 1 from bottom left to top right
-    pointer.x = (ev.clientX / canvas.clientWidth) * 2 - 1;
-    pointer.y = -(ev.clientY / canvas.clientHeight) * 2 + 1;
-    console.log(ev.clientX, ev.clientY, pointer.x, pointer.y);
+  let [minx, maxx, miny, maxy] = [0, 0, 0, 0];
+  Object.values(embeddings).forEach(({ x, y }) => {
+    minx = Math.min(minx, x);
+    maxx = Math.max(maxx, x);
+    miny = Math.min(miny, y);
+    maxy = Math.max(maxy, y);
   });
 
-  let intersected: Mesh | null;
+  const size = Math.min(width, height);
+  const range = (t: number) => [(t - size) / 2, (t + size) / 2];
 
-  function animate(delta: number) {
-    delta *= 0.001;
+  const scales = {
+    x: d3.scaleLinear([minx, maxx], range(width)),
+    y: d3.scaleLinear([miny, maxy], range(height)),
+    minx,
+    maxx,
+    miny,
+    maxy,
+  };
 
-    cube.rotation.x = delta;
-    cube.rotation.y = delta;
+  const zoom = d3.zoom<SVGSVGElement, unknown>().on('zoom', (ev) => {
+    const newX = ev.transform.rescaleX(scales.x);
+    const newY = ev.transform.rescaleY(scales.y);
+    svg.selectAll<SVGCircleElement, Embedding>('circle')
+      .attr('cx', (d) => newX(d.x))
+      .attr('cy', (d) => newY(d.y));
+  });
 
-    raycaster.setFromCamera(pointer, camera);
-    const intersects = raycaster.intersectObjects(scene.children, false);
-    if (intersects.length > 0) {
-      if (intersected !== intersects[0].object) {
-        if (intersected) intersected.material.emissive.setHex(intersected.userData.currentHex);
-        intersected = intersects[0].object as Mesh;
-        intersected.userData.currentHex = intersected.material.emissive.getHex();
-        intersected.material.emissive.setHex(0xff0000);
-      }
-    } else {
-      if (intersected) intersected.material.emissive.setHex(intersected.userData.currentHex);
-      intersected = null;
-    }
+  const svg = chart.append('svg')
+    .attr('width', width)
+    .attr('height', height)
+    .call(zoom);
 
-    controls.update();
-    renderer.render(scene, camera);
-    requestAnimationFrame(animate);
-  }
-  requestAnimationFrame(animate);
+  return {
+    svg,
+    g: svg.append('g'),
+    tooltip: chart.append('div')
+      .attr('class', 'absolute text-center -translate-x-1/2 -translate-y-full pointer-events-none w-48 rounded-sm bg-white bg-opacity-70')
+      .style('opacity', 0)
+      .datum(0),
+    scales,
+    zoom,
+  };
 }
 
-export default function ExplorePage() {
-  const labels = createRef<HTMLDivElement>();
-  const canvas = createRef<HTMLCanvasElement>();
-  useEffect(() => initScene(canvas.current!, labels.current!), []);
+function ChartComponent({
+  hits, hasPrevious, hasMore, refinePrevious, refineNext,
+}: InfiniteHitsProvided<ExtendedClass>) {
+  const dispatch = useAppDispatch();
+  const objects: ObjectsRef = useRef(null);
+  const { showCourse } = useModal();
+  const chart = createRef<HTMLDivElement>();
+
+  useEffect(() => {
+    objects.current = initChart(chart.current!);
+  }, []);
+  useEffect(() => {
+    const newData = allTruthy(hits.map((course): Embedding | null => {
+      const id = course.id as keyof typeof embeddings;
+      if (!embeddings[id]) {
+        console.error('no embedding for', id);
+        return null;
+      }
+      const { x, y } = embeddings[id] as Embedding;
+      return {
+        x, y, subject: course.SUBJECT, catalogNumber: course.CATALOG_NBR, title: course.Title, id: course.id,
+      };
+    }));
+
+    const { g, tooltip, scales } = objects.current!;
+    const dots = g.selectAll<SVGCircleElement, Embedding>('circle').data(newData, (d) => d.id);
+    dots.enter()
+      .append('circle')
+      .attr('cx', (d) => scales.x(d.x))
+      .attr('cy', (d) => scales.y(d.y))
+      .attr('r', 5)
+      .style('fill', (d) => `hsl(${Math.floor((subjectIndices[d.subject] / subjectNames.length) * 360)}, 100%, 50%)`)
+      .style('cursor', 'pointer')
+      .style('opacity', 0)
+      .on('mouseover', (_, d) => {
+        tooltip
+          .html(`<p class="font-bold">${d.subject + d.catalogNumber}</p><p>${d.title}</p>`)
+          .style('opacity', 1)
+          .datum((count) => count + 1);
+      })
+      .on('mousemove', (ev) => {
+        console.log(ev.offsetX, ev.offsetY);
+        tooltip
+          .style('left', `${ev.offsetX}px`)
+          .style('top', `${ev.offsetY - 10}px`);
+      })
+      .on('mouseleave', () => {
+        tooltip
+          .datum((count) => count - 1)
+          .style('opacity', (count) => (count === 0 ? 0 : 1));
+      })
+      .on('click', (_, d) => {
+        alert(d.subject + d.catalogNumber);
+        dispatch(loadCourses([d.id])).then(({ payload }) => showCourse(payload[0]));
+      })
+      .transition()
+      .duration(500)
+      .style('opacity', 1);
+    dots.exit().remove();
+  }, [hits]);
+
+  const buttonClass = (disabled: boolean) => classNames(
+    'text-white px-2 py-1 text-sm rounded-md',
+    disabled ? 'bg-gray-300' : 'bg-blue-900 interactive',
+  );
+
+  function focusRandom() {
+    const index = Math.floor(Math.random() * hits.length);
+    const {
+      svg, g, scales, tooltip,
+    } = objects.current!;
+    const focusItem = g.select(`circle:nth-child(${index + 1})`);
+    if (focusItem.size() === 0) { // just try again if the index doesn't work
+      focusRandom();
+      return;
+    }
+
+    const focus = focusItem.datum() as Embedding;
+    // show 1/5 of the total width and height
+    const spanx = (scales.maxx - scales.minx) / 5;
+    const spany = (scales.maxy - scales.miny) / 5;
+
+    scales.x.domain([focus.x - spanx / 2, focus.x + spanx / 2]);
+    scales.y.domain([focus.y - spany / 2, focus.y + spany / 2]);
+    svg.selectAll<SVGCircleElement, Embedding>('circle')
+      .transition()
+      .duration(500)
+      .attr('cx', (d) => scales.x(d.x))
+      .attr('cy', (d) => scales.y(d.y));
+
+    focusItem.attr('stroke', 'black');
+
+    const [centerx, centery] = [svg.attr('width'), svg.attr('height')].map((t) => parseInt(t, 10) / 2);
+    console.log(centerx, centery);
+    tooltip
+      .html(`<p class="font-bold">${focus.subject + focus.catalogNumber}</p><p>${focus.title}</p>`)
+      .style('opacity', 1)
+      .style('left', `${centerx}px`)
+      .style('top', `${centery - 10}px`);
+  }
+
   return (
-    <div className="w-96 h-96 border-red-500 border-2">
-      <canvas ref={canvas} className="outline-none w-full h-full" tabIndex={0} />
-      <div ref={labels} className="absolute w-full h-full cursor-pointer text-xl" />
+    <div className="flex-1 relative">
+      <div ref={chart} className="w-full h-full" />
+      <div className="absolute top-0 left-0 flex space-x-2 items-center">
+        <button
+          type="button"
+          onClick={refinePrevious}
+          disabled={!hasPrevious}
+          className={buttonClass(!hasPrevious)}
+        >
+          Load previous
+        </button>
+        <button
+          type="button"
+          onClick={refineNext}
+          disabled={!hasMore}
+          className={buttonClass(!hasMore)}
+        >
+          Load more
+        </button>
+        <button
+          type="button"
+          onClick={focusRandom}
+          className={buttonClass(false)}
+        >
+          Random
+        </button>
+        <Tooltip text="Currently limited to 1000 courses." direction="right">
+          <FaInfo />
+        </Tooltip>
+      </div>
     </div>
+  );
+}
+
+const Chart = connectInfiniteHits(ChartComponent);
+
+export default function ExplorePage() {
+  const { searchState, setSearchState } = useSearchState();
+
+  return (
+    <Layout className="flex-1 relative">
+      <InstantSearch
+        indexName="courses"
+        searchClient={meiliSearchClient}
+        searchState={searchState}
+        onSearchStateChange={(newState) => {
+          setSearchState({ ...searchState, ...newState });
+        }}
+        stalledSearchDelay={500}
+      >
+        <div className="absolute inset-2 flex space-x-2">
+          <AttributeMenu />
+          <Chart />
+        </div>
+      </InstantSearch>
+    </Layout>
   );
 }

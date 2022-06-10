@@ -50,7 +50,7 @@ export default function PlanPageComponent() {
   }, [selectedRequirements, classCache, sampleSchedule, semesterFormat, userDocument]);
 
   return (
-    <Layout size="w-full md:px-8" title="Plan" scheduleQueryConstraints={q}>
+    <Layout className="w-full md:px-8" title="Plan" scheduleQueryConstraints={q}>
       <div className={classNames(
         showReqs && 'md:grid-rows-1 md:grid-cols-[auto_1fr] items-stretch gap-4',
         'grid min-h-screen py-8',

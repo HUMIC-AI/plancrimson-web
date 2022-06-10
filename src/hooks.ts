@@ -85,7 +85,9 @@ export function useLgBreakpoint() {
   return isPast;
 }
 
-export const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey());
+export const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey(), {
+  paginationTotalHits: 1000,
+});
 
 export async function signInUser() {
   const auth = getAuth();

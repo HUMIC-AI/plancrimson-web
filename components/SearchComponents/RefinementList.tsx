@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { RefinementListProvided } from 'react-instantsearch-core';
 import { connectRefinementList } from 'react-instantsearch-dom';
-import { termNumberToSeason, classNames } from '../../shared/util';
+import { classNames, termToSeasonMap } from '../../shared/util';
 import { alertSignIn } from './searchUtils';
 
 type Props = Pick<RefinementListProvided, 'items' | 'refine'>;
@@ -52,7 +52,7 @@ export const RefinementListComponent = React.memo(
                   <span
                     className={classNames('ml-2', isRefined && 'font-semibold')}
                   >
-                    {termNumberToSeason(label)}
+                    {label in termToSeasonMap ? `${termToSeasonMap[label].season} ${termToSeasonMap[label].year}` : label}
                     {' '}
                     (
                     {count}

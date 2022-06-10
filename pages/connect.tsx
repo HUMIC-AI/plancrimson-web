@@ -69,7 +69,7 @@ export default function ConnectPage() {
   const constraints = useMemo(() => [where('public', '==', true)], []);
 
   return (
-    <Layout title="Connect" scheduleQueryConstraints={constraints} size="space-y-12 pt-12">
+    <Layout title="Connect" scheduleQueryConstraints={constraints} className="space-y-12 pt-12">
       <h1>Connect with students with similar interests!</h1>
       <section>
         <Friends />

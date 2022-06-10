@@ -47,7 +47,7 @@ export const classCacheSlice = createSlice({
 export const selectClassCache = (state: RootState) => state.classCache.cache;
 
 // loads all classes that aren't already in the cache
-export const loadClasses = (classIds: string[]) => async (dispatch: AppDispatch, getState: () => RootState) => {
+export const loadCourses = (classIds: string[]) => async (dispatch: AppDispatch, getState: () => RootState) => {
   const state = getState();
   const cache = selectClassCache(state);
   const classes = await Promise.all(classIds.map((classId) => {

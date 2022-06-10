@@ -4,18 +4,18 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { PropsWithChildren, useEffect } from 'react';
 import * as firestore from 'firebase/firestore';
-import { classNames, unsplashParams } from '../../shared/util';
+import { unsplashParams } from '../../shared/util';
 import ExternalLink from '../ExternalLink';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
 import { selectSnapshotError, setSnapshotError } from '../../src/features/userData';
 import { getSchedulesRef, useAppDispatch, useAppSelector } from '../../src/hooks';
 import { overwriteSchedules } from '../../src/features/schedules';
-import { loadClasses } from '../../src/features/classCache';
+import { loadCourses } from '../../src/features/classCache';
 
 interface LayoutProps {
   title?: string;
-  size?: string;
+  className?: string;
   scheduleQueryConstraints?: firestore.QueryConstraint[]
 }
 
@@ -95,7 +95,7 @@ function Footer() {
 export default function Layout({
   children,
   title,
-  size = 'container sm:p-8',
+  className = 'mx-auto flex-1 container sm:p-8',
   scheduleQueryConstraints: queryConstraints = [],
 }: PropsWithChildren<LayoutProps>) {
   const dispatch = useAppDispatch();
@@ -112,7 +112,7 @@ export default function Layout({
       // load all of the classes into the class cache
       const scheduleEntries = snap.docs.map((doc) => doc.data());
       const classIds = scheduleEntries.flatMap((schedule) => schedule.classes.map(({ classId }) => classId));
-      dispatch(loadClasses(classIds));
+      dispatch(loadCourses(classIds));
       dispatch(overwriteSchedules(scheduleEntries));
     }, (err) => dispatch(setSnapshotError({ error: err })));
     // eslint-disable-next-line consistent-return
@@ -138,7 +138,7 @@ export default function Layout({
 
       {errors && <pre>{JSON.stringify(errors)}</pre>}
 
-      <main className={classNames('mx-auto flex-1', size)}>
+      <main className={className}>
         {children}
       </main>
 
