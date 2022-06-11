@@ -28,10 +28,13 @@ export const DAY_SHORT = ['MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT'] as const;
 
 // ============================== /userProfiles ==============================
 
-export interface UserProfile<DateType> {
-  username: string | null;
+// public data
+export interface UserProfile {
+  username: string | null; // eg alexcai
+  displayName: string | null; // eg Alexander Cai
+  bio: string | null;
+  photoUrl: string | null;
   classYear: number | null;
-  lastLoggedIn: DateType | null;
   concentrationRanking: Concentration[] | null;
 }
 
@@ -39,7 +42,7 @@ export interface UserProfile<DateType> {
 
 // Contains a user's selected schedules, custom class times, and waived reqs.
 export interface UserDocument {
-  selectedSchedules: {
+  chosenSchedules: {
     [semester: Term]: string | null;
   };
 

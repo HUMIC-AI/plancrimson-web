@@ -20,15 +20,15 @@ import { Planner, Auth } from '../src/features';
 // we show a demo if the user is not logged in,
 // but do not allow them to send requests to the database
 export default function SearchPage() {
-  const user = useAppSelector(Auth.selectUserUid);
+  const userId = Auth.useAuthProperty('uid');
   const showAttributes = useAppSelector(Planner.selectShowAttributes);
   const { searchState, setSearchState } = useSearchState();
 
   useEffect(() => {
-    if (!user || typeof window === 'undefined') return;
+    if (!userId || typeof window === 'undefined') return;
     const stateFromQuery = qs.parse(window.location.search.slice(1));
     process.nextTick(() => setSearchState((prev: any) => ({ ...prev, ...stateFromQuery })));
-  }, [user]);
+  }, [userId]);
 
   return (
     <Layout>
@@ -41,19 +41,19 @@ export default function SearchPage() {
         }}
         stalledSearchDelay={500}
       >
-        {user && <Configure hitsPerPage={12} />}
+        {userId && <Configure hitsPerPage={12} />}
         <div className="flex space-x-4">
           <div className={showAttributes ? '' : 'hidden'}>
             <AttributeMenu withWrapper lgOnly />
           </div>
 
           <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
-            {user ? <SearchBox /> : <SearchBoxDemo />}
+            {userId ? <SearchBox /> : <SearchBoxDemo />}
             <div className="grid grid-cols-[auto_1fr] gap-4">
-              {user ? <SortBy /> : <SortByDemo />}
-              {user ? <CurrentRefinements /> : <CurrentRefinementsDemo />}
+              {userId ? <SortBy /> : <SortByDemo />}
+              {userId ? <CurrentRefinements /> : <CurrentRefinementsDemo />}
             </div>
-            {user ? <Hits /> : <HitsDemo />}
+            {userId ? <Hits /> : <HitsDemo />}
           </div>
         </div>
       </InstantSearch>

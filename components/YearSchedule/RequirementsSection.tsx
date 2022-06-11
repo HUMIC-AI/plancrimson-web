@@ -40,8 +40,8 @@ interface RequirementsSectionProps {
 }
 
 function SuggestionForm() {
-  const uid = useAppSelector(Auth.selectUserUid);
-  const email = useAppSelector(Auth.selectEmail);
+  const uid = Auth.useAuthProperty('uid');
+  const email = Auth.useAuthProperty('email');
 
   const timeoutRef = useRef<number>();
 

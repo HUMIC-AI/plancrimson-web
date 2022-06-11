@@ -139,14 +139,14 @@ function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionP
 
 function HiddenSchedules({ allSemesters } : { allSemesters: SemesterDisplayProps[] }) {
   const dispatch = useAppDispatch();
-  const userUid = useAppSelector(Auth.selectUserUid);
+  const userId = Auth.useAuthProperty('uid');
   const hiddenScheduleIds = useAppSelector(Schedules.selectHiddenScheduleIds);
   const hiddenSchedules = allSemesters.filter(
     ({ chosenScheduleId }) => chosenScheduleId && hiddenScheduleIds.includes(chosenScheduleId),
   );
 
   function handleShowSchedule(scheduleId: string) {
-    if (!userUid) return;
+    if (!userId) return;
     dispatch(Schedules.toggleHidden(scheduleId));
   }
 
@@ -177,7 +177,7 @@ function HiddenSchedules({ allSemesters } : { allSemesters: SemesterDisplayProps
  */
 export default function PlanningSection({ highlightedRequirement } : { highlightedRequirement?: Requirement; }) {
   const dispatch = useAppDispatch();
-  const userUid = useAppSelector(Auth.selectUserUid);
+  const userId = Auth.useAuthProperty('uid');
   const {
     classYear, semesterFormat, sampleSchedule, schedules: userSchedules, selectedSchedules,
   } = useAppSelector((state) => ({
@@ -292,12 +292,12 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
 
   // add a schedule whose semester is before the current earliest semester
   function addPrevSemester() {
-    if (!userUid) return;
+    if (!userId) return;
     const earliest = sortSchedules(userSchedules)[0];
     const [season, year] = earliest.season === 'Spring'
       ? ['Fall' as Season, earliest.year - 1]
       : ['Spring' as Season, earliest.year];
-    dispatch(Schedules.createDefaultSchedule({ season, year }, userUid)).catch(handleError);
+    dispatch(Schedules.createDefaultSchedule({ season, year }, userId)).catch(handleError);
   }
 
   return (
@@ -321,7 +321,7 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
             <div ref={leftScrollRef} />
 
             {/* If the user is signed in, show the semesters. Otherwise show "Sign in to get started" */}
-            {userUid ? (
+            {userId ? (
               <>
                 {/* add previous semester button */}
                 {semesterFormat === 'selected' && classYear && (

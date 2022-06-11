@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "script": "node build/scripts",
-    "test": "jest"
+    "test": "firebase emulators:exec jest"
   },
   "resolutions": {
     "eslint-plugin-import": "2.26.0"

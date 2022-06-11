@@ -19,7 +19,7 @@ import {
 
 export default function PlanPageComponent() {
   const dispatch = useAppDispatch();
-  const userUid = useAppSelector(Auth.selectUserUid);
+  const userId = Auth.useAuthProperty('uid');
   const classYear = useAppSelector(Profile.selectClassYear);
   const profile = useAppSelector(Profile.selectUserProfile);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
@@ -30,7 +30,7 @@ export default function PlanPageComponent() {
   const classCache = useAppSelector(ClassCache.selectClassCache);
 
   // we load all user schedules
-  const q = useMemo(() => (userUid ? [where('ownerUid', '==', userUid)] : []), [userUid]);
+  const q = useMemo(() => (userId ? [where('ownerUid', '==', userId)] : []), [userId]);
 
   const [validationResults, setValidationResults] = useState<GroupResult | null>(null);
   const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(collegeRequirements);
@@ -40,13 +40,12 @@ export default function PlanPageComponent() {
   // check if the user has no schedules
   // if so, create them
   useEffect(() => {
-    if (!userUid || !classYear) return;
+    if (!userId || !classYear) return;
     getDocs(query(Schema.Collection.schedules(), ...q)).then((snap) => {
       if (snap.empty) {
-        const promises = getUniqueSemesters(classYear).map(({ year, season }) => dispatch(Schedules.createDefaultSchedule({ year, season }, userUid)));
+        const promises = getUniqueSemesters(classYear).map(({ year, season }) => dispatch(Schedules.createDefaultSchedule({ year, season }, userId)));
         Promise.allSettled(promises).then((resolved) => {
           console.log('created default schedules', resolved);
-          // dispatch(Schedules.chooseSchedule({ term:  }))
           resolved.forEach((result) => {
             if (result.status === 'fulfilled') {
               const schedule = result.value.payload as Schedule;
@@ -56,7 +55,7 @@ export default function PlanPageComponent() {
         });
       }
     });
-  }, [userUid, classYear]);
+  }, [userId, classYear]);
 
   useEffect(() => {
     const showSchedules = semesterFormat === 'sample'

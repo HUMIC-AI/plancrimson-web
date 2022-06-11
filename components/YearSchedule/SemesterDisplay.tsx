@@ -35,7 +35,7 @@ const VIABILITY_COLORS: Record<Viability, string> = {
 };
 
 function SearchModal() {
-  const user = useAppSelector(Auth.selectUserUid);
+  const userId = Auth.useAuthProperty('uid');
   const { searchState, setSearchState } = useSearchState();
 
   return (
@@ -48,12 +48,12 @@ function SearchModal() {
       }}
       stalledSearchDelay={500}
     >
-      {user && <Configure hitsPerPage={4} />}
+      {userId && <Configure hitsPerPage={4} />}
       <div className="flex space-x-4">
         {/* <AttributeMenu /> */}
         <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
-          {user ? <SearchBox /> : <SearchBoxDemo />}
-          {user ? <Hits /> : <HitsDemo />}
+          {userId ? <SearchBox /> : <SearchBoxDemo />}
+          {userId ? <Hits /> : <HitsDemo />}
         </div>
       </div>
     </InstantSearch>

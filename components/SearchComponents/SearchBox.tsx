@@ -61,7 +61,7 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
 }) {
   const dispatch = useAppDispatch();
   const schedules = useAppSelector(Schedules.selectSchedules);
-  const user = useAppSelector(Auth.selectUserUid);
+  const uid = Auth.useAuthProperty('uid');
   const showAttributes = useAppSelector(Planner.selectShowAttributes);
   const isLg = useLgBreakpoint();
   const { chooseSchedule, chosenScheduleId } = useChosenScheduleContext();
@@ -110,7 +110,7 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
 
       {/* caption text */}
       <div className="flex flex-wrap text-xs space-x-2 text-gray-400">
-        {user ? (
+        {uid ? (
           <>
             {isSearchStalled && <span>Loading...</span>}
             <Stats />

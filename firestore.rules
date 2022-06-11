@@ -8,7 +8,7 @@ service cloud.firestore {
 
     function loggedInStudent() {
       // anything that ends in @harvard.edu or .harvard.edu or is whitelisted
-      return request.auth != null && (request.auth.token.email.matches(".+[@.]harvard[.]edu$") || isWhitelisted());
+      return request.auth != null && 'email' in request.auth.token && (request.auth.token.email.matches(".+[@.]harvard[.]edu$") || isWhitelisted());
     }
 
     function friendRequestPath(from, to) {
@@ -19,7 +19,7 @@ service cloud.firestore {
       allow read: if request.auth != null;
     }
 
-    match /userProfiles/{uid} {
+    match /profiles/{uid} {
       allow read: if loggedInStudent();
       allow write: if loggedInStudent() && request.auth.uid == uid;
     }

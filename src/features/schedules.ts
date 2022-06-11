@@ -10,7 +10,6 @@ import {
 import { allTruthy, ErrorData } from '../../shared/util';
 import type { AppDispatch, RootState } from '../store';
 import { Schema } from '../hooks';
-import { selectUserUid } from './userAuth';
 
 type SchedulesState = UserDocument & {
   schedules: ScheduleMap,
@@ -19,7 +18,7 @@ type SchedulesState = UserDocument & {
 
 const initialState: SchedulesState = {
   schedules: {},
-  selectedSchedules: {},
+  chosenSchedules: {},
   customTimes: {},
   waivedRequirements: {},
   errors: [],
@@ -37,7 +36,7 @@ type AddCoursePayload = { classId: string; scheduleId: string }[];
 type CustomTimePayload = CustomTimeRecord & {
   classId: string;
 };
-type SelectSchedulePayload = {
+type ChooseSchedulePayload = {
   term: Term;
   scheduleId: string | null;
 };
@@ -177,9 +176,9 @@ export const schedulesSlice = createSlice({
      * A user selects a given schedule for a given term.
      * @param action The term and the schedule to select for that term.
      */
-    selectSchedule(state, action: PayloadAction<SelectSchedulePayload>) {
-      const { term, scheduleId: scheduleUid } = action.payload;
-      state.selectedSchedules[term] = scheduleUid;
+    chooseSchedule(state, action: PayloadAction<ChooseSchedulePayload>) {
+      const { term, scheduleId } = action.payload;
+      state.chosenSchedules[term] = scheduleId;
     },
   },
 });
@@ -192,7 +191,7 @@ export const selectSchedule = (scheduleId: string | null) => function (state: Ro
   // eslint-disable-next-line react/destructuring-assignment
   return scheduleId === null ? null : state.schedules.schedules[scheduleId];
 };
-export const selectSelectedSchedules = (state: RootState) => state.schedules.selectedSchedules;
+export const selectSelectedSchedules = (state: RootState) => state.schedules.chosenSchedules;
 export const selectHiddenScheduleIds = (state: RootState) => state.schedules.hiddenScheduleIds;
 export const selectCustomTimes = (state: RootState) => state.schedules.customTimes;
 export const selectCustomTime = (classId: string) => (state: RootState) => state.schedules.customTimes[classId];
@@ -247,7 +246,7 @@ function createActionCreator<Payload>(
       }));
     }
     const result = dispatch(createAction(payload));
-    const uid = selectUserUid(getState());
+    const uid = getState().auth.userInfo?.uid;
     if (uid) await syncSchedules(uid, getState().schedules);
     return result;
   };
@@ -320,7 +319,7 @@ export const addCourse = createActionCreator<AddCoursePayload>(
   schedulesSlice.actions.addCourse,
 );
 
-export const chooseSchedule = createActionCreator<SelectSchedulePayload>(
+export const chooseSchedule = createActionCreator<ChooseSchedulePayload>(
   (state, { scheduleId: scheduleUid }) => (scheduleUid && !state.schedules[scheduleUid] ? ['schedule not found'] : []),
-  schedulesSlice.actions.selectSchedule,
+  schedulesSlice.actions.chooseSchedule,
 );

@@ -12,7 +12,7 @@ import {
   FaTimes, FaBars, FaCalendarCheck, FaUser,
 } from 'react-icons/fa';
 import { classNames } from '../../shared/util';
-import { Auth } from '../../src/features';
+import { Auth, Profile } from '../../src/features';
 import {
   handleError, signInUser, useAppDispatch, useAppSelector,
 } from '../../src/hooks';
@@ -47,9 +47,10 @@ const paths = [
 // Profile dropdown
 function UserMenu() {
   const dispatch = useAppDispatch();
-  const uid = useAppSelector(Auth.selectUserUid);
-  const photoUrl = useAppSelector(Auth.selectPhotoUrl);
-  const email = useAppSelector(Auth.selectEmail);
+  const username = useAppSelector(Profile.selectUsername);
+  const uid = Auth.useAuthProperty('uid');
+  const photoUrl = Auth.useAuthProperty('photoUrl');
+  const email = Auth.useAuthProperty('email');
 
   const buttonStyles = (active: boolean) => classNames(
     active ? 'bg-white' : '',
@@ -92,6 +93,15 @@ function UserMenu() {
             'origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white focus:outline-none',
           )}
         >
+          {uid && (
+          <Menu.Item>
+            {({ active }) => (
+              <Link href={`/user/${username}`}>
+                <a className={buttonStyles(active)}>Profile</a>
+              </Link>
+            )}
+          </Menu.Item>
+          )}
           <Menu.Item>
             {({ active }) => (
               <button
@@ -115,7 +125,7 @@ function UserMenu() {
               </button>
             )}
           </Menu.Item>
-          {uid && (
+          {process.env.NODE_ENV === 'development' && uid && (
           <Menu.Item>
             {({ active }) => (
               <button

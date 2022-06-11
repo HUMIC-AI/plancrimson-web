@@ -8,22 +8,17 @@ import axios from 'axios';
 import {
   doc, getDoc, setDoc, setLogLevel,
 } from 'firebase/firestore';
-import { readFileSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
+import { signInUser } from '../src/hooks';
 
 // https://firebase.google.com/docs/firestore/security/test-rules-emulator
-// to run:
-// firebase emulators:exec --only database "npm run test-database"
 
 let testEnv: RulesTestEnvironment;
 
 beforeAll(async () => {
   setLogLevel('error');
 
-  testEnv = await initializeTestEnvironment({
-    firestore: {
-      rules: readFileSync(`${__dirname}/../firestore.rules`, 'utf8'),
-    },
-  });
+  testEnv = await initializeTestEnvironment({ projectId: 'demo-test' });
 });
 
 beforeEach(async () => {
@@ -42,8 +37,19 @@ afterAll(async () => {
 });
 
 describe('User profiles', () => {
+  it('should create a profile document and a user document when signing in', async () => {
+    const user = await signInUser('alice@college.harvard.edu');
+    expect(user).toBeDefined();
+    expect(user!.email).toBe('alice@college.harvard.edu');
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore();
+      await assertSucceeds(getDoc(doc(db, `users/${user!.uid}`)));
+      await assertSucceeds(getDoc(doc(db, `profiles/${user!.uid}`)));
+    });
+  });
+
   it('should let me create my profile', async () => {
-    const alice = testEnv.authenticatedContext('alice').firestore();
+    const alice = testEnv.authenticatedContext('alice', { email: 'alice@college.harvard.edu' }).firestore();
     const bob = testEnv.unauthenticatedContext().firestore();
 
     await assertSucceeds(setDoc(doc(alice, 'users/alice'), { data: 'hello world' }));

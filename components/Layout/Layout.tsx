@@ -144,3 +144,30 @@ export default function Layout({
     </div>
   );
 }
+
+export function LoadingPage() {
+  return (
+    <Layout>
+      <ul className="space-y-4">
+        {new Array(5).fill(null).map((_, i) => (
+          <li
+            // eslint-disable-next-line react/no-array-index-key
+            key={i}
+            className="bg-blue-300 animate-pulse rounded"
+            style={{ animationDelay: `${i * 250}ms` }}
+          >
+            &nbsp;
+          </li>
+        ))}
+      </ul>
+    </Layout>
+  );
+}
+
+export function UnauthorizedPage() {
+  return (
+    <Layout>
+      <p>You are not authorized to access this content!</p>
+    </Layout>
+  );
+}

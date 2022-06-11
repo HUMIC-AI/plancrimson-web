@@ -81,7 +81,7 @@ function ButtonMenu({
   prevScheduleId,
 }: ButtonMenuProps) {
   const dispatch = useAppDispatch();
-  const userUid = useAppSelector(Auth.selectUserUid);
+  const userId = Auth.useAuthProperty('uid');
   const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
 
   const handleDuplicate = useCallback(async () => {
@@ -147,11 +147,11 @@ function ButtonMenu({
         <CustomButton
           name="New schedule"
           onClick={async () => {
-            if (!userUid) {
+            if (!userId) {
               alert('You must be logged in!');
               return;
             }
-            const schedule = await dispatch(Schedules.createDefaultSchedule({ season, year }, userUid));
+            const schedule = await dispatch(Schedules.createDefaultSchedule({ season, year }, userId));
             try {
               if ('errors' in schedule.payload) {
                 throw new Error(schedule.payload.errors.join(', '));

@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { DependencyList, useEffect, useState } from 'react';
 import {
-  getFirestore, DocumentReference, doc, Timestamp, collection, CollectionReference, setDoc, collectionGroup, Query, deleteDoc,
+  getFirestore, DocumentReference, doc, collection, CollectionReference, setDoc, collectionGroup, Query, deleteDoc,
 } from 'firebase/firestore';
 import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
 import {
-  getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup,
+  getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, User,
 } from 'firebase/auth';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import type {
@@ -17,10 +17,10 @@ const LG_BREAKPOINT = 1024;
 
 export const Schema = {
   profile(uid: string) {
-    return doc(getFirestore(), 'userProfiles', uid) as DocumentReference<Partial<UserProfile<Timestamp>>>;
+    return doc(getFirestore(), 'profiles', uid) as DocumentReference<UserProfile>;
   },
   user(uid: string) {
-    return doc(getFirestore(), 'users', uid) as DocumentReference<Partial<UserDocument>>;
+    return doc(getFirestore(), 'users', uid) as DocumentReference<UserDocument>;
   },
   schedule(scheduleUid: string) {
     return doc(getFirestore(), 'schedules', scheduleUid) as DocumentReference<Schedule>;
@@ -29,6 +29,9 @@ export const Schema = {
     return doc(getFirestore(), 'allFriends', from, 'friends', to) as DocumentReference<FriendRequest>;
   },
   Collection: {
+    profiles() {
+      return collection(getFirestore(), 'profiles') as CollectionReference<UserProfile>;
+    },
     schedules() {
       return collection(getFirestore(), 'schedules') as CollectionReference<Schedule>;
     },
@@ -90,26 +93,58 @@ export function useLgBreakpoint() {
   return isPast;
 }
 
+export function useElapsed(ms: number, deps: DependencyList) {
+  // timer
+  const [elapsed, setElapsed] = useState(false);
+
+  useEffect(() => {
+    setElapsed(false);
+    const timeout = setTimeout(() => setElapsed(true), ms);
+    return () => clearTimeout(timeout);
+  }, deps);
+
+  return elapsed;
+}
+
 export const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey(), {
   paginationTotalHits: 1000,
 });
 
 export async function signInUser() {
   const auth = getAuth();
+  let user: User;
   if (process.env.NODE_ENV === 'development') {
-    const email = prompt('Enter email:');
+    const email = prompt('Enter email:')!;
     if (!email) return;
     const sub = Buffer.from(email).toString('base64');
-    await signInWithCredential(auth, GoogleAuthProvider.credential(JSON.stringify({ sub, email })));
-    return;
+    const newUser = await signInWithCredential(auth, GoogleAuthProvider.credential(JSON.stringify({ sub, email })));
+    user = newUser.user;
+  } else {
+    // we don't need any additional scopes
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      hd: 'college.harvard.edu',
+    });
+    const newUser = await signInWithPopup(auth, provider);
+    user = newUser.user;
   }
 
-  // we don't need any additional scopes
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({
-    hd: 'college.harvard.edu',
-  });
-  await signInWithPopup(auth, provider);
+  await setDoc(Schema.profile(user.uid), {
+    // we assume people don't use strange characters in their academic emails
+    username: user.email!.slice(0, user.email!.lastIndexOf('@')),
+    displayName: user.displayName,
+    photoUrl: user.photoURL,
+  }, { merge: true });
+
+  const initialDoc: UserDocument = {
+    chosenSchedules: {},
+    customTimes: {},
+    hiddenScheduleIds: [],
+    waivedRequirements: {},
+  };
+
+  await setDoc(Schema.user(user.uid), initialDoc, { merge: true });
+  return user;
 }
 
 export function handleError(err: unknown) {

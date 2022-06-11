@@ -3,7 +3,7 @@ import '../src/index.css';
 import type { AppProps } from 'next/app';
 import { getApps, initializeApp } from 'firebase/app';
 import {
-  connectFirestoreEmulator, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc,
+  connectFirestoreEmulator, getFirestore, onSnapshot, setDoc, updateDoc,
 } from 'firebase/firestore';
 // import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { Provider } from 'react-redux';
@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 import { connectAuthEmulator, getAuth, onAuthStateChanged } from 'firebase/auth';
 import { SearchStateProvider } from '../src/context/searchState';
 import store from '../src/store';
-import { Schema, useAppDispatch, useAppSelector } from '../src/hooks';
+import { Schema, useAppDispatch } from '../src/hooks';
 import { ModalProvider, useModal } from '../src/context/modal';
 import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
 import { Auth, Profile, Schedules } from '../src/features';
@@ -45,10 +45,9 @@ if (getApps().length === 0) {
 /**
  * Ask the user for their graduation year.
  */
-function GraduationYearDialog({ defaultYear } : { defaultYear: number }) {
+function GraduationYearDialog({ defaultYear, uid } : { defaultYear: number; uid: string; }) {
   const { setOpen } = useModal();
   const [classYear, setYear] = useState(defaultYear);
-  const uid = useAppSelector(Auth.selectUserUid)!;
   return (
     <form
       onSubmit={(e) => {
@@ -80,20 +79,24 @@ function GraduationYearDialog({ defaultYear } : { defaultYear: number }) {
 function MyApp({ Component, pageProps }: AppProps) {
   const auth = getAuth();
   const dispatch = useAppDispatch();
-  const uid = useAppSelector(Auth.selectUserUid);
+  const uid = Auth.useAuthProperty('uid');
   const { showContents } = useModal();
 
   // When the user logs in/out, dispatch to redux
   useEffect(() => {
     const unsub = onAuthStateChanged(
       auth,
-      (u) => dispatch(Auth.signIn(u ? {
-        uid: u.uid,
-        email: u.email!,
-        photoUrl: u.photoURL,
-      } : null)),
+      (u) => {
+        console.log('auth state changed', u);
+        dispatch(Auth.signIn(u ? {
+          uid: u.uid,
+          email: u.email!,
+          photoUrl: u.photoURL,
+        } : null));
+      },
       (err) => dispatch(Auth.setSignInError(err)),
     );
+
     return unsub;
   }, []);
 
@@ -107,12 +110,9 @@ function MyApp({ Component, pageProps }: AppProps) {
         // only refresh on new data from Firestore
         if (!snap.exists() || snap.metadata.fromCache) return;
 
-        const {
-          lastLoggedIn, username, classYear,
-        } = snap.data();
+        const { username, classYear } = snap.data();
 
         // update last sign in, know this will always exist
-        dispatch(Profile.setLastSignIn(lastLoggedIn ? lastLoggedIn.toDate().toISOString() : null));
         if (username) dispatch(Profile.setUsername(username));
 
         // need class year before other missing fields
@@ -121,7 +121,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           const now = new Date();
           showContents({
             title: 'Set graduation year',
-            content: <GraduationYearDialog defaultYear={now.getFullYear() + (now.getMonth() > 5 ? 4 : 3)} />,
+            content: <GraduationYearDialog defaultYear={now.getFullYear() + (now.getMonth() > 5 ? 4 : 3)} uid={uid} />,
             noExit: true,
           });
         } else {
@@ -137,15 +137,15 @@ function MyApp({ Component, pageProps }: AppProps) {
       const data = snap.data()!;
       dispatch(Schedules.overwriteScheduleMetadata({
         customTimes: data.customTimes || {},
-        selectedSchedules: data.selectedSchedules || {},
+        chosenSchedules: data.chosenSchedules || {},
         waivedRequirements: data.waivedRequirements || {},
         hiddenScheduleIds: data.hiddenScheduleIds || [],
       }));
     });
 
     // trigger initial write
-    setDoc(profileRef, { lastLoggedIn: serverTimestamp() }, { merge: true })
-      .then(() => console.info('updated last login time'))
+    setDoc(profileRef, { }, { merge: true })
+      .then(() => console.info('updated'))
       .catch((err) => dispatch(Auth.setSnapshotError({ error: err })));
 
     return () => {

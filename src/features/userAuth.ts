@@ -1,6 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { FirestoreError } from 'firebase/firestore';
-import type { RootState } from '../store';
+import { useAppSelector } from '../hooks';
+import type { AppDispatch, RootState } from '../store';
+import { setPhotoUrl } from './profile';
 
 // authentication info, not from Firestore
 interface AuthInfo {
@@ -10,13 +12,13 @@ interface AuthInfo {
 }
 
 interface AuthState {
-  userInfo: AuthInfo | null;
+  userInfo: AuthInfo | null | undefined;
   signInError: Error | null;
   snapshotError: FirestoreError | null;
 }
 
 const initialState: AuthState = {
-  userInfo: null,
+  userInfo: undefined,
   signInError: null,
   snapshotError: null,
 };
@@ -26,9 +28,7 @@ export const authSlice = createSlice({
   initialState,
   reducers: {
     signIn(state, action: PayloadAction<AuthInfo | null>) {
-      if (action.payload !== null) {
-        state.userInfo = action.payload;
-      }
+      state.userInfo = action.payload;
     },
     signOut(state) {
       state.userInfo = null;
@@ -42,11 +42,12 @@ export const authSlice = createSlice({
   },
 });
 
-export const {
-  signIn, signOut, setSignInError, setSnapshotError,
-} = authSlice.actions;
+export const { signOut, setSignInError, setSnapshotError } = authSlice.actions;
 
-export const selectPhotoUrl = (state: RootState) => state.auth.userInfo?.photoUrl || null;
-export const selectUserUid = (state: RootState) => state.auth.userInfo?.uid || null;
-export const selectEmail = (state: RootState) => state.auth.userInfo?.email || null;
+export const signIn = (payload: AuthInfo | null) => (dispatch: AppDispatch) => {
+  if (payload?.photoUrl) dispatch(setPhotoUrl(payload.photoUrl));
+  dispatch(authSlice.actions.signIn(payload));
+};
+
+export const useAuthProperty = (prop: keyof AuthInfo) => useAppSelector((state: RootState) => (state.auth.userInfo ? state.auth.userInfo[prop] : state.auth.userInfo));
 export const selectSnapshotError = (state: RootState) => state.auth.snapshotError;

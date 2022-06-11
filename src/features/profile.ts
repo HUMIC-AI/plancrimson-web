@@ -3,12 +3,12 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { UserProfile } from '../../shared/firestoreTypes';
 import type { RootState } from '../store';
 
-type UserDataState = UserProfile<string>;
-
-const initialState: UserDataState = {
+const initialState: UserProfile = {
   username: null,
+  bio: null,
+  displayName: null,
+  photoUrl: null,
   classYear: null,
-  lastLoggedIn: null,
   concentrationRanking: null,
 };
 
@@ -19,28 +19,27 @@ export const userProfileSlice = createSlice({
   name: 'userData',
   initialState,
   reducers: {
+    setPhotoUrl(state, action: PayloadAction<string>) {
+      state.photoUrl = action.payload;
+    },
     setUsername(state, action: PayloadAction<string>) {
       state.username = action.payload;
+    },
+    setBio(state, action: PayloadAction<string>) {
+      state.bio = action.payload;
     },
     setClassYear(state, action: PayloadAction<number>) {
       state.classYear = action.payload;
     },
-    setLastSignIn(state, action: PayloadAction<string | null>) {
-      state.lastLoggedIn = action.payload;
-    },
   },
 });
 
-export const { setUsername, setLastSignIn, setClassYear } = userProfileSlice.actions;
+export const {
+  setPhotoUrl, setUsername, setClassYear,
+} = userProfileSlice.actions;
 
 // ========================= SELECTORS =========================
 
 export const selectUsername = (state: RootState) => state.profile.username;
 export const selectClassYear = (state: RootState) => state.profile.classYear;
-export const selectLastLoggedIn = (state: RootState) => state.profile.lastLoggedIn;
-export const selectUserProfile = (state: RootState): UserProfile<string> => ({
-  username: state.profile.username,
-  classYear: state.profile.classYear,
-  lastLoggedIn: state.profile.lastLoggedIn,
-  concentrationRanking: state.profile.concentrationRanking,
-});
+export const selectUserProfile = (state: RootState): UserProfile => state.profile;
