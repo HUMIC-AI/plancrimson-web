@@ -5,11 +5,11 @@ import {
   onSnapshot, query, where,
 } from 'firebase/firestore';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import Layout, { errorMessages, ErrorPage, LoadingPage } from '../../components/Layout/Layout';
+import { ScheduleSection } from '../../components/UserLink';
 import { FriendRequest, Schema } from '../../shared/firestoreTypes';
 import { Auth, Schedules } from '../../src/features';
 import {
@@ -41,7 +41,7 @@ async function fetchProfile(username: string) {
 
 // this is a little jank but should be fine.
 // check if user1 and user2 (ids) are friends.
-function useFriendStatus(user1?: string | null, user2?: string | null): FriendStatus {
+function useFriendStatus(user1: string | null | undefined, user2: string | null | undefined, refresh: boolean): FriendStatus {
   const [status, setStatus] = useState<FriendStatus>('loading');
   const [ref, setRef] = useState<DocumentReference<FriendRequest> | null>();
 
@@ -64,7 +64,7 @@ function useFriendStatus(user1?: string | null, user2?: string | null): FriendSt
         }
       })();
     }
-  }, [user1, user2]);
+  }, [user1, user2, refresh]);
 
   // once an existing friend request is found, we listen to it
   useEffect(() => {
@@ -95,9 +95,10 @@ export default function UserPage() {
   const uid = Auth.useAuthProperty('uid');
   const scheduleMap = useAppSelector(Schedules.selectSchedules);
   const elapsed = useElapsed(5000, [username]);
+  const [refresh, setRefresh] = useState(true);
 
   const { data: pageProfile, error } = useSWR(username, fetchProfile);
-  const friendStatus = useFriendStatus(uid, pageProfile?.userId);
+  const friendStatus = useFriendStatus(uid, pageProfile?.userId, refresh);
 
   const queryConstraints = useMemo(() => {
     if (!uid || !pageProfile) return [];
@@ -145,8 +146,10 @@ export default function UserPage() {
               onClick={() => {
                 if (friendStatus === 'friends' || friendStatus === 'pending') {
                   unfriend(uid, pageProfile.userId);
+                  setRefresh(!refresh);
                 } else if (friendStatus === 'none') {
                   sendFriendRequest(uid, pageProfile.userId);
+                  setRefresh(!refresh);
                 }
               }}
               className="px-2 py-1 mt-2 rounded interactive bg-blue-900 text-white"
@@ -164,11 +167,7 @@ export default function UserPage() {
             <ul>
               {schedules.map((schedule) => (
                 <li key={schedule.id}>
-                  <Link href={`/schedule/${schedule.id}`}>
-                    <a>
-                      {schedule.title}
-                    </a>
-                  </Link>
+                  <ScheduleSection schedule={schedule} />
                 </li>
               ))}
             </ul>

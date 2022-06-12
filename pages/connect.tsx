@@ -1,89 +1,158 @@
 import { Tab } from '@headlessui/react';
 import {
-  DocumentSnapshot,
+  deleteDoc,
   getDoc,
-  getDocs, query, where,
+  onSnapshot, query, updateDoc, where,
 } from 'firebase/firestore';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useMemo } from 'react';
-import useSWR from 'swr';
+import {
+  useEffect, useMemo, useState,
+} from 'react';
 import Layout, { errorMessages, ErrorPage, LoadingPage } from '../components/Layout/Layout';
-import { Schema, UserProfile } from '../shared/firestoreTypes';
+import { ScheduleSection } from '../components/UserLink';
+import { FriendRequest, Schema, UserProfileWithId } from '../shared/firestoreTypes';
 import { allTruthy } from '../shared/util';
-import { Auth, ClassCache, Schedules } from '../src/features';
-import { useAppSelector, useElapsed } from '../src/hooks';
+import { Auth, Schedules } from '../src/features';
+import { useAppSelector, useElapsed, useProfiles } from '../src/hooks';
 
-/**
- * just an async query instead of a snapshot listener
- * @returns a list of user ids that this user is friends with
- */
-async function fetchFriendRequests(uid: string) {
+function useFriendRequests(uid: string | null | undefined) {
+  const [incoming, setIncoming] = useState<(FriendRequest & { id: string })[]>([]);
+  const [outgoing, setOutgoing] = useState<(FriendRequest & { id: string })[]>([]);
+
   const incomingQ = query(Schema.Collection.allFriends(), where('to', '==', uid));
   const outgoingQ = query(Schema.Collection.allFriends(), where('from', '==', uid));
-  const inSnap = await getDocs(incomingQ);
-  const outSnap = await getDocs(outgoingQ);
-  const incoming = inSnap.docs.map((d) => ({ ...d.data(), id: d.id }));
-  const outgoing = outSnap.docs.map((d) => ({ ...d.data(), id: d.id }));
-  const promises: Array<Promise<DocumentSnapshot<UserProfile>>> = [];
-  new Set([...incoming, ...outgoing].flatMap((req) => [req.from, req.to])).forEach(((id) => promises.push(getDoc(Schema.profile(id)))));
-  const users = await Promise.all(promises);
-  return {
-    incoming, outgoing, profiles: Object.fromEntries(users.map((profile) => [profile.id, profile.data()])),
-  };
+
+  useEffect(() => {
+    if (!uid) return;
+    const unsubIn = onSnapshot(incomingQ, (snap) => setIncoming(snap.docs.map((d) => ({ ...d.data(), id: d.id }))));
+    const unsubOut = onSnapshot(outgoingQ, (snap) => setOutgoing(snap.docs.map((d) => ({ ...d.data(), id: d.id }))));
+    return () => {
+      unsubIn();
+      unsubOut();
+    };
+  }, [uid]);
+
+  return { incoming, outgoing };
 }
 
-function ProfileList({ profiles }: { profiles: Array<UserProfile> }) {
+function ProfileList({ profiles, Button }: { profiles: Array<UserProfileWithId>, Button: React.FC<{ profile: UserProfileWithId }> }) {
   return (
-    <ul>
+    <div className="grid grid-cols-[auto_1fr] gap-4">
       {profiles.map((profile) => (
-        <li key={profile.username}>
-          {profile.photoUrl
-            ? <Image src={profile.photoUrl} className="w-8 h-8 rounded-full" />
-            : <div className="w-8 h-8 bg-blue-300 rounded-full" />}
-          <span className="ml-2">
+        <li key={profile.id} className="contents">
+          <div className="flex items-center">
+            {profile.photoUrl
+              ? <Image src={profile.photoUrl} className="w-8 h-8 rounded-full" />
+              : <div className="w-8 h-8 bg-blue-300 rounded-full" />}
+
             <Link href={`/user/${profile.username}`}>
-              <a>
+              <a className="font-bold ml-2">
                 {profile.username}
               </a>
             </Link>
-          </span>
+          </div>
+
+          <div>
+            <Button profile={profile} />
+          </div>
         </li>
       ))}
-    </ul>
+    </div>
+  );
+}
+
+
+function UnfriendButton({ profile }: { profile: UserProfileWithId }) {
+  const userId = Auth.useAuthProperty('uid');
+
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        const outgoing = await getDoc(Schema.friendRequest(userId!, profile.id));
+        if (outgoing.exists()) {
+          await deleteDoc(outgoing.ref);
+        } else {
+          await deleteDoc(Schema.friendRequest(profile.id, userId!));
+        }
+      }}
+      className="interactive px-2 py-1 bg-blue-900 text-white rounded"
+    >
+      Unfriend
+    </button>
+  );
+}
+
+function IncomingRequestButtons({ profile }: { profile: UserProfileWithId }) {
+  const userId = Auth.useAuthProperty('uid');
+
+  const ref = Schema.friendRequest(profile.id, userId!);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          updateDoc(ref, { accepted: true }).catch((err) => console.error('error accepting request', err));
+        }}
+        className="interactive px-2 py-1 bg-blue-900 text-white rounded"
+      >
+        Accept
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          deleteDoc(ref).catch((err) => console.error('error rejecting request', err));
+        }}
+        className="interactive px-2 py-1 bg-blue-900 text-white rounded ml-2"
+      >
+        Reject
+      </button>
+    </>
   );
 }
 
 function Friends() {
   const userId = Auth.useAuthProperty('uid');
-  const { data, error } = useSWR(userId, fetchFriendRequests);
+  const { incoming, outgoing } = useFriendRequests(userId);
 
-  if (error) {
-    console.error(error);
-    return <pre>{JSON.stringify(error)}</pre>;
-  }
+  const userIds = useMemo(() => {
+    const ids: string[] = [];
+    new Set([...incoming, ...outgoing].flatMap((req) => [req.from, req.to])).forEach((id) => ids.push(id));
+    return ids;
+  }, [incoming, outgoing]);
 
-  if (!data) return <p>Loading...</p>;
+  const profiles = useProfiles(userIds);
 
-  const { incoming, outgoing, profiles } = data;
-  const tabClass = ({ selected }: { selected: boolean }) => `${selected ? 'bg-blue-500' : 'bg-blue-300'} px-4 py-2 rounded outline-none`;
+  const tabClass = ({ selected }: { selected: boolean }) => `${selected ? 'bg-blue-500' : 'bg-blue-300'} px-4 py-2 outline-none`;
   const friends = allTruthy([...incoming.map((req) => (req.accepted ? profiles[req.from] : null)), ...outgoing.map((req) => (req.accepted ? profiles[req.to] : null))]);
   const incomingPending = allTruthy(incoming.map((req) => (req.accepted ? null : profiles[req.from])));
+
   return (
     <Tab.Group>
-      <Tab.List className="grid grid-cols-2">
+      <Tab.List className="grid grid-cols-2 rounded-t-xl overflow-hidden">
         <Tab className={tabClass}>My friends</Tab>
         <Tab className={tabClass}>Incoming requests</Tab>
       </Tab.List>
-      <Tab.Panels className="p-4 bg-gray-200">
+      <Tab.Panels className="p-4 bg-gray-200 rounded-b-xl overflow-hidden">
         <Tab.Panel>
           {friends.length > 0
-            ? <ProfileList profiles={friends} />
+            ? (
+              <ProfileList
+                profiles={friends}
+                Button={UnfriendButton}
+              />
+            )
             : <p>You haven&rsquo;t added any friends yet.</p>}
         </Tab.Panel>
         <Tab.Panel>
           {incomingPending.length > 0
-            ? <ProfileList profiles={incomingPending} />
+            ? (
+              <ProfileList
+                profiles={incomingPending}
+                Button={IncomingRequestButtons}
+              />
+            )
             : <p>No pending friend requests</p>}
         </Tab.Panel>
       </Tab.Panels>
@@ -94,7 +163,6 @@ function Friends() {
 export default function ConnectPage() {
   const userId = Auth.useAuthProperty('uid');
   const schedules = useAppSelector(Schedules.selectSchedules);
-  const classCache = useAppSelector(ClassCache.selectClassCache);
   const constraints = useMemo(() => [where('public', '==', true)], []);
   const elapsed = useElapsed(5000, []);
 
@@ -108,41 +176,21 @@ export default function ConnectPage() {
   }
 
   return (
-    <Layout title="Connect" scheduleQueryConstraints={constraints} className="mx-auto flex-1 w-full max-w-screen-md space-y-8 mt-8">
+    <Layout title="Connect" scheduleQueryConstraints={constraints} className="mx-auto flex-1 w-full max-w-screen-md space-y-8 my-8">
       <h1>Connect with students with similar interests!</h1>
       <section>
         <Friends />
       </section>
       <section>
-        <h2 className="text-3xl">Classmates</h2>
+        <h2 className="text-3xl mb-2">Classmates</h2>
         <p>Find and connect with classmates!</p>
       </section>
       <section>
         <h2 className="text-3xl">Public schedules</h2>
         <ul className="mt-6">
           {Object.values(schedules).map((schedule) => (
-            <li key={schedule.id} className="rounded-xl shadow-xl bg-blue-300 px-6 py-2">
-              <div>
-                <h3 className="text-xl">
-                  {schedule.title}
-                </h3>
-                <p>
-                  by
-                  {' '}
-                  <Link href={`/user/${schedule.ownerUid}`}>
-                    <a>
-                      {schedule.ownerUid}
-                    </a>
-                  </Link>
-                </p>
-              </div>
-              <ul>
-                {schedule.classes.map((classData) => classData.classId in classCache && (
-                  <li key={classData.classId}>
-                    {classCache[classData.classId].Title}
-                  </li>
-                ))}
-              </ul>
+            <li key={schedule.id}>
+              <ScheduleSection schedule={schedule} />
             </li>
           ))}
         </ul>

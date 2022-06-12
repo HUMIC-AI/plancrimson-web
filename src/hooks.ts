@@ -1,13 +1,16 @@
 import { DependencyList, useEffect, useState } from 'react';
-import { setDoc, deleteDoc } from 'firebase/firestore';
+import { setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import {
   getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, User,
 } from 'firebase/auth';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import { Schema, UserDocument } from '../shared/firestoreTypes';
+import { Schema, UserDocument, UserProfile } from '../shared/firestoreTypes';
 import type { AppDispatch, RootState } from './store';
+import { allTruthy } from '../shared/util';
+
 
 const LG_BREAKPOINT = 1024;
+
 
 export function downloadJson(filename: string, data: object | string, extension = 'json') {
   if (typeof window === 'undefined') return;
@@ -22,6 +25,7 @@ export function downloadJson(filename: string, data: object | string, extension 
   a.remove();
 }
 
+
 /**
  * @param to the uid of the user to send a friend request to
  */
@@ -33,12 +37,14 @@ export function sendFriendRequest(from: string, to: string) {
   });
 }
 
+
 export function unfriend(from: string, to: string) {
   return Promise.allSettled([
     deleteDoc(Schema.friendRequest(from, to)),
     deleteDoc(Schema.friendRequest(to, from)),
   ]);
 }
+
 
 export function useLgBreakpoint() {
   const [isPast, setIsPast] = useState(false);
@@ -61,6 +67,7 @@ export function useLgBreakpoint() {
   return isPast;
 }
 
+
 export function useElapsed(ms: number, deps: DependencyList) {
   // timer
   const [elapsed, setElapsed] = useState(false);
@@ -73,6 +80,7 @@ export function useElapsed(ms: number, deps: DependencyList) {
 
   return elapsed;
 }
+
 
 export async function signInUser() {
   const auth = getAuth();
@@ -110,10 +118,38 @@ export async function signInUser() {
   return user;
 }
 
+
+export async function getProfile(id: string): Promise<UserProfile & { id: string }> {
+  const cached = localStorage.getItem(`profile/${id}`);
+  if (cached) return JSON.parse(cached);
+  const snap = await getDoc(Schema.profile(id));
+  if (!snap.exists()) {
+    throw new Error(`user ${id} not found`);
+  }
+  return { ...snap.data()!, id };
+}
+
+
+export function useProfiles(ids: string[]) {
+  const [profiles, setProfiles] = useState<Record<string, UserProfile & { id: string }>>({});
+
+  useEffect(() => {
+    (async () => {
+      const settled = await Promise.allSettled(ids.map(getProfile));
+      const users = allTruthy(settled.map((result) => (result.status === 'fulfilled' ? result.value : null)));
+      setProfiles(Object.fromEntries(users.map((user) => [user.id, user])));
+    })();
+  }, [ids]);
+
+  return profiles;
+}
+
+
 export function handleError(err: unknown) {
   alert('An unexpected error occurred! Please try again later.');
   console.error(err);
 }
+
 
 export function useAppDispatch() { return useDispatch<AppDispatch>(); }
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

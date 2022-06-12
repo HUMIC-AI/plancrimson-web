@@ -4,18 +4,18 @@ import {
   signOut,
   getAuth,
 } from 'firebase/auth';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Fragment } from 'react';
 import {
-  FaTimes, FaBars, FaCalendarCheck, FaUser,
+  FaTimes, FaBars, FaCalendarCheck,
 } from 'react-icons/fa';
 import { classNames } from '../../shared/util';
 import { Auth, Profile } from '../../src/features';
 import {
   handleError, signInUser, useAppDispatch, useAppSelector,
 } from '../../src/hooks';
+import { ImageWrapper } from '../UserLink';
 
 
 const paths = [
@@ -151,7 +151,6 @@ const LargeOnly = {
   },
 };
 
-
 // Profile dropdown
 function UserMenu() {
   const dispatch = useAppDispatch();
@@ -172,17 +171,7 @@ function UserMenu() {
         className="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
       >
         <span className="sr-only">Open user menu</span>
-        {photoUrl ? (
-          <Image
-            className="h-8 w-8 rounded-full"
-            src={photoUrl}
-            width={32}
-            height={32}
-            alt=""
-          />
-        ) : (
-          <FaUser className="h-8 w-8 text-white" />
-        )}
+        <ImageWrapper url={photoUrl} />
       </Menu.Button>
 
       <Transition

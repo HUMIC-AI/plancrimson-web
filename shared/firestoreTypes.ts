@@ -73,6 +73,10 @@ export interface UserProfile {
   concentrationRanking: Concentration[] | null;
 }
 
+export interface UserProfileWithId extends UserProfile {
+  id: string;
+}
+
 // ============================== /users ==============================
 
 // Contains a user's selected schedules, custom class times, and waived reqs.

@@ -115,6 +115,7 @@ type CourseCardProps = {
   inSearchContext?: boolean;
   setDragStatus?: React.Dispatch<React.SetStateAction<DragStatus>>;
   warnings?: string;
+  interactive?: boolean;
 };
 
 /**
@@ -134,6 +135,7 @@ export default function CourseCard({
   setDragStatus,
   inSearchContext = true,
   warnings,
+  interactive = true,
 }: CourseCardProps) {
   const isExpanded = useAppSelector(Planner.selectExpandCards);
   const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
@@ -226,7 +228,7 @@ export default function CourseCard({
                   <FaInfo />
                 </button>
 
-                <ToggleButton chosenScheduleId={chosenScheduleId!} course={course} />
+                {interactive && <ToggleButton chosenScheduleId={chosenScheduleId!} course={course} />}
               </span>
             </p>
             <h3 className={classNames(isExpanded || 'text-sm')}>
