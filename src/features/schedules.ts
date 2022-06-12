@@ -1,277 +1,79 @@
 /* eslint-disable no-param-reassign */
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
-  ActionCreatorWithPayload, createSlice, PayloadAction, ThunkAction,
-} from '@reduxjs/toolkit';
-import { deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
+  deleteDoc, getDoc, setDoc, updateDoc,
+} from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  Schema, CustomTimeRecord, Schedule, ScheduleMap, SEASON_ORDER, Semester, Term, UserDocument,
+  Schema, Schedule, ScheduleMap, Semester, UserClassData,
 } from '../../shared/firestoreTypes';
-import { allTruthy, ErrorData } from '../../shared/util';
 import type { AppDispatch, RootState } from '../store';
 
-type SchedulesState = UserDocument & {
-  schedules: ScheduleMap,
-  errors: ErrorData[];
-};
+const initialState: ScheduleMap = {};
 
-const initialState: SchedulesState = {
-  schedules: {},
-  chosenSchedules: {},
-  customTimes: {},
-  waivedRequirements: {},
-  errors: [],
-  hiddenScheduleIds: [],
-};
-
-// Payloads for the various actions
-type RemoveClassesPayload = Array<{
-  classId: string;
-  scheduleId?: string;
-}>;
-type RenameSchedulePayload = { scheduleId: string, newTitle: string };
-type DeleteSchedulePayload = string;
-type AddCoursePayload = { classId: string; scheduleId: string }[];
-type CustomTimePayload = CustomTimeRecord & {
-  classId: string;
-};
-type ChooseSchedulePayload = {
-  term: Term;
-  scheduleId: string | null;
-};
+type CoursesPayload = { courses: UserClassData[]; scheduleId: string };
+type PublicPayload = { scheduleId: string, public: boolean };
 
 export const schedulesSlice = createSlice({
   name: 'schedules',
   initialState,
   reducers: {
-    /**
-     * Overwrite the existing schedule metadata.
-     * @param action The new state to overwrite with, typically from Firestore.
-     */
-    overwriteScheduleMetadata(state, action: PayloadAction<UserDocument>) {
-      Object.assign(state, action.payload);
-    },
-
-    /**
-     * Overwrites all schedules in the state.
-     * @param action A mapping from ids to schedules
-     */
     overwriteSchedules(state, action: PayloadAction<Schedule[]>) {
-      state.schedules = {};
+      Object.keys(state).forEach((key) => delete state[key]);
       action.payload.forEach((schedule) => {
-        state.schedules[schedule.id] = schedule;
+        state[schedule.id] = schedule;
       });
     },
 
-    /**
-     * Create a new schedule locally.
-     */
     create(state, action: PayloadAction<Schedule>) {
       const { id, ...data } = action.payload;
-      state.schedules[id] = { id, ...data };
+      state[id] = { id, ...data };
     },
 
-    /**
-     * Remove a schedule locally.
-     * @param action The class to remove and the schedule to remove it from.
-     * (If omitted, will remove from all schedules.)
-     */
-    remove(state, action: PayloadAction<RemoveClassesPayload>) {
-      action.payload.forEach(({ classId, scheduleId: fromScheduleId }) => {
-        if (fromScheduleId) {
-          const schedule = state.schedules[fromScheduleId];
-          schedule.classes = schedule.classes.filter(
-            ({ classId: id }) => id !== classId,
-          );
-        } else {
-          // remove this class from all schedules
-          Object.values(state.schedules).forEach((schedule) => {
-            const updatedClasses = schedule.classes.filter(
-              ({ classId: id }) => id !== classId,
-            );
-            if (updatedClasses.length !== schedule.classes.length) {
-              schedule.classes = updatedClasses;
-            }
-          });
-        }
-      });
+    setCourses(state, action: PayloadAction<CoursesPayload>) {
+      const { scheduleId, courses } = action.payload;
+      state[scheduleId].classes = courses;
     },
 
-    /**
-     * Deletes a schedule.
-     * @param action The id of the schedule to delete.
-     */
     deleteSchedule(state, action: PayloadAction<string>) {
-      delete state.schedules[action.payload];
+      delete state[action.payload];
     },
 
-    /**
-     * Rename a schedule.
-     * @param action The ID of the schedule to rename and the new title.
-     */
-    rename(state, action: PayloadAction<RenameSchedulePayload>) {
-      const { scheduleId, newTitle } = action.payload;
-      state.schedules[scheduleId].title = newTitle;
+    rename(state, action: PayloadAction<{ scheduleId: string, title: string }>) {
+      const { scheduleId, title } = action.payload;
+      state[scheduleId].title = title;
     },
 
-    /**
-     * Toggles whether or not a given schedule is hidden.
-     * @param action The uid of the schedule to toggle.
-     */
-    toggleHidden(state, action: PayloadAction<string>) {
-      const index = state.hiddenScheduleIds.indexOf(action.payload);
-      if (index === -1) state.hiddenScheduleIds.push(action.payload);
-      else state.hiddenScheduleIds.splice(index, 1);
+    setPublic(state, action: PayloadAction<PublicPayload>) {
+      state[action.payload.scheduleId].public = action.payload.public;
     },
 
-    /**
-     * Toggles a given schedule's publicity
-     * @param action the id of the schedule to toggle
-     */
-    togglePublic(state, action: PayloadAction<string>) {
-      state.schedules[action.payload].public = !state.schedules[action.payload].public;
-    },
-
-    /**
-     * Add an error to the state.
-     * @param action The error to add
-     */
-    error(state, action: PayloadAction<ErrorData>) {
-      state.errors.push(action.payload);
-    },
-
-    /**
-     * Adds a course to a schedule.
-     * @param action A list of tuples,
-     * each containing the class uid and the uid of the schedule to add it to.
-     */
-    addCourse(state, action: PayloadAction<AddCoursePayload>) {
-      action.payload.forEach(({ classId, scheduleId }) => {
-        const { classes } = state.schedules[scheduleId];
-        if (!classes.find(({ classId: id }) => id === classId)) {
-          classes.push({ classId });
-        }
-      });
-    },
-
-    /**
-     * Remove all classes from a schedule.
-     * @param action the uid of the schedule to clear.
-     */
     clearSchedule(state, action: PayloadAction<string>) {
-      state.schedules[action.payload].classes.length = 0;
-    },
-
-    /**
-     * Lets a user input a custom time for a given class.
-     * @param action See {@link CustomTimePayload}
-     */
-    customTime(state, action: PayloadAction<CustomTimePayload>) {
-      const { classId, ...timeData } = action.payload;
-      state.customTimes[classId] = timeData;
-    },
-
-    /**
-     * A user selects a given schedule for a given term.
-     * @param action The term and the schedule to select for that term.
-     */
-    chooseSchedule(state, action: PayloadAction<ChooseSchedulePayload>) {
-      const { term, scheduleId } = action.payload;
-      state.chosenSchedules[term] = scheduleId;
+      state[action.payload].classes.length = 0;
     },
   },
 });
 
 // ========================= SELECTORS =========================
 
-export const selectScheduleData = (state: RootState) => state.schedules;
-export const selectSchedules = (state: RootState) => state.schedules.schedules;
-export const selectSchedule = (scheduleId: string | null) => function (state: RootState) {
-  // eslint-disable-next-line react/destructuring-assignment
-  return scheduleId === null ? null : state.schedules.schedules[scheduleId];
+export const selectSchedules = (state: RootState) => state.schedules;
+export const selectSchedule = (scheduleId: string | null) => function ({ schedules }: RootState) {
+  if (scheduleId === null) return null;
+  return schedules[scheduleId];
 };
-export const selectSelectedSchedules = (state: RootState) => state.schedules.chosenSchedules;
-export const selectHiddenScheduleIds = (state: RootState) => state.schedules.hiddenScheduleIds;
-export const selectCustomTimes = (state: RootState) => state.schedules.customTimes;
-export const selectCustomTime = (classId: string) => (state: RootState) => state.schedules.customTimes[classId];
 
 // ========================= ACTION CREATORS =========================
 
-const {
-  create, remove, rename, deleteSchedule: delSchedule, error,
-} = schedulesSlice.actions;
+export const { overwriteSchedules, clearSchedule } = schedulesSlice.actions;
 
-export const {
-  overwriteSchedules, overwriteScheduleMetadata, customTime, clearSchedule,
-} = schedulesSlice.actions;
-
-/**
- * Uploads the entire local state to Firestore.
- * @param uid user uid
- * @param schedules the entire state. We exclude `errors` and `schedules` to return only the metadata.
- */
-const syncSchedules = (uid: string, { schedules, errors, ...metadata }: SchedulesState) => Promise.all([
-  // @ts-ignore
-  updateDoc(Schema.user(uid), metadata),
-  Promise.all(Object.entries(schedules).map(
-    ([scheduleUid, schedule]) => {
-      console.log(scheduleUid, schedule);
-      return setDoc(Schema.schedule(scheduleUid), schedule, { merge: true });
-    },
-  )),
-]);
-
-type Validator<Payload> = (state: Readonly<SchedulesState>, payload: Payload) => string[];
-type Dispatcher<Payload> = (payload: Payload & { sender?: string }) => ThunkAction<Promise<PayloadAction<Payload | ErrorData>>, RootState, undefined, PayloadAction<Payload | ErrorData>>;
-
-/**
- * Wraps an action creator with some error handling and remote sync.
- * @param validatePayload takes in the current state and the payload and returns a list of errors.
- * @param createAction Takes the payload and creates an action
- * (typically one of the methods from schedulesSlice.actions).
- * @returns A wrapped action creator that will dispatch errors if any are encountered,
- * otherwise dispatches the change and updates the remote state to match the local.
- */
-function createActionCreator<Payload>(
-  validatePayload: Validator<Payload>,
-  createAction: ActionCreatorWithPayload<Payload>,
-): Dispatcher<Payload> {
-  return (payload) => async (dispatch, getState) => {
-    const errors = validatePayload(getState().schedules, payload);
-    if (errors.length) {
-      return dispatch(error({
-        sender: payload.sender,
-        errors,
-      }));
-    }
-    const result = dispatch(createAction(payload));
-    const uid = getState().auth.userInfo?.uid;
-    if (uid) await syncSchedules(uid, getState().schedules);
-    return result;
-  };
-}
-
-export const createSchedule = createActionCreator<Schedule>(
-  (state, {
-    title: id, year, season, classes = [],
-  }) => {
-    const errors: string[] = [];
-    if (id in state.schedules) {
-      errors.push('schedule already exists');
-    }
-    if (typeof year !== 'number') {
-      errors.push('year must be a valid number');
-    }
-    if (!(season in SEASON_ORDER)) {
-      errors.push('season must be a valid season');
-    }
-    if (!Array.isArray(classes)) {
-      errors.push('classes must be an array');
-    }
-    return errors;
-  },
-  create,
-);
+export const createSchedule = (schedule: Schedule) => async (dispatch: AppDispatch, getState: () => RootState) => {
+  const state = getState();
+  if (schedule.id in state) {
+    throw new Error('schedule already exists');
+  }
+  await setDoc(Schema.schedule(schedule.id), schedule);
+  return dispatch(schedulesSlice.actions.create(schedule));
+};
 
 export const createDefaultSchedule = ({ season, year }: Semester, uid: string) => createSchedule({
   id: uuidv4(),
@@ -283,42 +85,39 @@ export const createDefaultSchedule = ({ season, year }: Semester, uid: string) =
   public: false,
 });
 
-export const toggleHidden = createActionCreator<string>(
-  () => [],
-  schedulesSlice.actions.toggleHidden,
-);
-
-export const removeCourses = createActionCreator<RemoveClassesPayload>(
-  () => [],
-  remove,
-);
-
-export const renameSchedule = createActionCreator<RenameSchedulePayload>(
-  (state, { scheduleId }) => {
-    if (!(scheduleId in state.schedules)) {
-      return ['schedule not found'];
-    }
-    return [];
-  },
-  rename,
-);
-
-export const togglePublic = createActionCreator<string>(
-  (state, id) => (id in state.schedules ? [] : ['schedule not found']),
-  schedulesSlice.actions.togglePublic,
-);
-
-export const deleteSchedule = (id: DeleteSchedulePayload) => async (dispatch: AppDispatch) => {
-  await deleteDoc(Schema.schedule(id));
-  dispatch(delSchedule(id));
+export const removeCourses = (payload: { scheduleId: string, courseIds: string[] }) => async (dispatch: AppDispatch) => {
+  const { scheduleId, courseIds } = payload;
+  const snap = await getDoc(Schema.schedule(scheduleId));
+  if (!snap.exists()) throw new Error('schedule does not exist');
+  const classes = snap.data()!.classes.filter(({ classId }) => !courseIds.includes(classId));
+  await updateDoc(snap.ref, { classes });
+  return dispatch(schedulesSlice.actions.setCourses({ scheduleId, courses: classes }));
 };
 
-export const addCourse = createActionCreator<AddCoursePayload>(
-  (state, courses) => allTruthy(courses.map(({ scheduleId }) => (scheduleId in state.schedules ? null : `schedule ${scheduleId} not found`))),
-  schedulesSlice.actions.addCourse,
-);
+export const renameSchedule = ({ scheduleId, title }: { scheduleId: string, title: string }) => async (dispatch: AppDispatch) => {
+  await updateDoc(Schema.schedule(scheduleId), { title });
+  return dispatch(schedulesSlice.actions.rename({ scheduleId, title }));
+};
 
-export const chooseSchedule = createActionCreator<ChooseSchedulePayload>(
-  (state, { scheduleId: scheduleUid }) => (scheduleUid && !state.schedules[scheduleUid] ? ['schedule not found'] : []),
-  schedulesSlice.actions.chooseSchedule,
-);
+export const setPublic = (payload: PublicPayload) => async (dispatch: AppDispatch) => {
+  await updateDoc(Schema.schedule(payload.scheduleId), { public: payload.public });
+  return dispatch(schedulesSlice.actions.setPublic(payload));
+};
+
+export const deleteSchedule = (id: string) => async (dispatch: AppDispatch) => {
+  await deleteDoc(Schema.schedule(id));
+  return dispatch(schedulesSlice.actions.deleteSchedule(id));
+};
+
+export const addCourses = ({ scheduleId, courses }: CoursesPayload) => async (dispatch: AppDispatch) => {
+  const snap = await getDoc(Schema.schedule(scheduleId));
+  if (!snap.exists) throw new Error('schedule not found');
+  const { classes } = snap.data()!;
+  courses.forEach(({ classId }) => {
+    if (!classes.find(({ classId: id }) => id === classId)) {
+      classes.push({ classId });
+    }
+  });
+  await updateDoc(snap.ref, { classes });
+  return dispatch(schedulesSlice.actions.setCourses({ scheduleId, courses: classes }));
+};

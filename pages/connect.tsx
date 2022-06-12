@@ -8,7 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import useSWR from 'swr';
-import Layout, { ErrorPage, LoadingPage } from '../components/Layout/Layout';
+import Layout, { errorMessages, ErrorPage, LoadingPage } from '../components/Layout/Layout';
 import { Schema, UserProfile } from '../shared/firestoreTypes';
 import { allTruthy } from '../shared/util';
 import { Auth, ClassCache, Schedules } from '../src/features';
@@ -99,7 +99,7 @@ export default function ConnectPage() {
   const elapsed = useElapsed(5000, []);
 
   if (userId === null) {
-    return <ErrorPage.Unauthorized />;
+    return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
   }
 
   if (typeof userId === 'undefined') {

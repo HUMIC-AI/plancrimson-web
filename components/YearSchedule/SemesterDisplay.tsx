@@ -1,8 +1,7 @@
 import React, {
-  useCallback, useMemo, useRef, useState,
+  useMemo, useRef, useState,
 } from 'react';
-import { FaCheck, FaMinus, FaPlus } from 'react-icons/fa';
-import { Configure, InstantSearch } from 'react-instantsearch-dom';
+import { FaCheck, FaMinus } from 'react-icons/fa';
 import {
   allTruthy,
   checkViable,
@@ -11,23 +10,18 @@ import {
   findConflicts,
   getSchedulesBySemester,
 } from '../../shared/util';
-import { Semester, Viability } from '../../shared/firestoreTypes';
-import { useAppDispatch, useAppSelector, useElapsed } from '../../src/hooks';
+import { Schedule, Semester, Viability } from '../../shared/firestoreTypes';
+import { useAppDispatch, useAppSelector } from '../../src/hooks';
 import ScheduleChooser from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
 import FadeTransition from '../FadeTransition';
 import { Requirement } from '../../src/requirements/util';
 import ButtonMenu from './ButtonMenu';
 import { useModal } from '../../src/context/modal';
-import useSearchState, { SearchStateProvider } from '../../src/context/searchState';
-import Hits, { HitsDemo } from '../SearchComponents/Hits';
-import SearchBox, { SearchBoxDemo } from '../SearchComponents/SearchBox';
-import { ChosenScheduleContext } from '../../src/context/selectedSchedule';
 import {
-  Auth, ClassCache, Planner, Profile, Schedules,
+  ClassCache, Planner, Profile, Schedules,
 } from '../../src/features';
-import { useMeiliClient } from '../../src/meili';
-import { ErrorPage, LoadingPage } from '../Layout/Layout';
+import AddCoursesButton from '../CourseSearchModal';
 
 const VIABILITY_COLORS: Record<Viability, string> = {
   Yes: 'bg-green-200',
@@ -70,95 +64,52 @@ export default function SemesterComponent({
   highlight,
 }: SemesterComponentProps) {
   const dispatch = useAppDispatch();
-  const userDocument = useAppSelector(Profile.selectUserProfile);
+  const profile = useAppSelector(Profile.selectUserProfile);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
   const schedules = useAppSelector(Schedules.selectSchedules);
   const classCache = useAppSelector(ClassCache.selectClassCache);
-  const { showCourse, showContents } = useModal();
-
-  const editRef = useRef<HTMLInputElement>(null!);
-
-  // independent to sync up the transitions nicely
-  const [showSelector, setShowSelector] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [scheduleTitle, setScheduleTitle] = useState<string>();
 
   // the schedules for this semester to show
-  const currentSchedules = getSchedulesBySemester(schedules, semester);
-  const chosenSchedule = (() => {
-    if (semesterFormat === 'sample') {
-      return sampleSchedule?.schedules.find((schedule) => schedule.id === chosenScheduleId)!;
-    }
-    if (chosenScheduleId) return schedules[chosenScheduleId];
-    return null;
-  })();
-
-  const conflicts = chosenSchedule
-    ? findConflicts(allTruthy(chosenSchedule.classes.map(({ classId }) => classCache[classId])))
-    : null;
+  let chosenSchedule: Schedule | null = null;
+  if (semesterFormat === 'sample') {
+    chosenSchedule = sampleSchedule!.schedules.find((schedule) => schedule.id === chosenScheduleId)!;
+  } else if (chosenScheduleId) {
+    chosenSchedule = schedules[chosenScheduleId];
+  }
 
   const draggedClass = dragStatus.dragging && classCache[dragStatus.data.classId];
 
   const viableDrop = useMemo(
-    () => (userDocument.classYear && draggedClass && chosenSchedule
+    () => (profile.classYear && draggedClass && chosenSchedule
       ? checkViable({
         cls: draggedClass,
         schedule: chosenSchedule,
-        classYear: userDocument.classYear,
+        classYear: profile.classYear,
         classCache,
       })
       : null),
-    [classCache, userDocument, draggedClass, chosenSchedule],
+    [classCache, profile, draggedClass, chosenSchedule],
   );
 
-  function handleMinimize() {
-    if (!chosenSchedule) return;
-    dispatch(Schedules.toggleHidden(chosenSchedule.id));
-  }
-
-  const handleDrop: React.DragEventHandler<HTMLDivElement> = useCallback(
-    (ev) => {
-      ev.preventDefault();
-
-      if (dragStatus.dragging && chosenScheduleId && viableDrop) {
-        if (viableDrop.viability === 'No') {
-          alert(viableDrop.reason);
-        } else if (chosenScheduleId !== dragStatus.data.originScheduleId) {
-          const doAdd = viableDrop.viability !== 'Unlikely'
-            // eslint-disable-next-line no-restricted-globals
-            || confirm(`${viableDrop.reason} Continue anyways?`);
-          if (doAdd) {
-            const { classId, originScheduleId } = dragStatus.data;
-            dispatch(Schedules.addCourse([{ classId, scheduleId: chosenScheduleId }]));
-            dispatch(Schedules.removeCourses([{ classId, scheduleId: originScheduleId }]));
-          }
-        }
-      }
-
-      setDragStatus({ dragging: false });
-    },
-    [dragStatus, chosenScheduleId, viableDrop],
-  );
-
-  // eslint-disable-next-line consistent-return
-  const handleRenameSchedule: React.FormEventHandler<HTMLFormElement> = async (ev) => {
+  function handleDrop(ev: React.DragEvent<HTMLDivElement>) {
     ev.preventDefault();
-    if (!chosenScheduleId) {
-      return alert('no schedule selected to rename');
-    }
-    if (!scheduleTitle) return alert('invalid title given');
-    const { payload } = await dispatch(Schedules.renameSchedule({ scheduleId: chosenScheduleId, newTitle: scheduleTitle }));
-    if ('errors' in payload) {
-      console.error(new Error(payload.errors.join(', ')));
-      alert('Oops, couldn\'t rename your schedule. Please try again later.');
-    } else {
-      handleChooseSchedule(payload.newTitle);
-      setEditing(false);
-    }
-  };
 
-  const prevScheduleId = currentSchedules[0]?.title === chosenSchedule?.id ? null : (currentSchedules[0]?.title || null);
+    setDragStatus({ dragging: false });
+
+    if (!dragStatus.dragging || !chosenScheduleId || !viableDrop) return;
+
+    if (viableDrop.viability === 'No') {
+      alert(viableDrop.reason);
+    } else if (chosenScheduleId !== dragStatus.data.originScheduleId) {
+      const doAdd = viableDrop.viability !== 'Unlikely' || confirm(`${viableDrop.reason} Continue anyways?`);
+      if (doAdd) {
+        const { classId, originScheduleId } = dragStatus.data;
+        dispatch(Schedules.addCourses({ scheduleId: chosenScheduleId, courses: [{ classId }] }));
+        dispatch(Schedules.removeCourses({ scheduleId: originScheduleId, courseIds: [classId] }));
+      }
+    }
+  }
 
   return (
     <div
@@ -173,9 +124,14 @@ export default function SemesterComponent({
       )}
       style={{ width: `${colWidth}px` }}
     >
-      <button type="button" className="absolute top-2 right-2 text-sm hover:opacity-50" onClick={handleMinimize}>
+      <button
+        type="button"
+        className="absolute top-2 right-2 text-sm hover:opacity-50"
+        onClick={() => chosenScheduleId && dispatch(Planner.setHidden({ scheduleId: chosenScheduleId, hidden: true }))}
+      >
         <FaMinus />
       </button>
+
       <div
         className="flex flex-col md:h-full"
         onDragOver={(ev) => {
@@ -185,76 +141,13 @@ export default function SemesterComponent({
         }}
         onDrop={handleDrop}
       >
-        {/* First component of display: header */}
-        <div className="flex flex-col items-stretch space-y-2 p-4 border-black border-b-2">
-          {/* only show */}
-          {semesterFormat !== 'all' && (
-            <h1 className="text-lg text-center min-w-max font-semibold">
-              {semester.season}
-              {' '}
-              {semester.year}
-            </h1>
-          )}
-
-          <FadeTransition
-            show={editing}
-            unmount={false}
-            beforeEnter={() => setShowSelector(false)}
-            afterLeave={() => setShowSelector(true)}
-          >
-            <form
-              className="relative"
-              onSubmit={handleRenameSchedule}
-            >
-              <input
-                type="text"
-                value={scheduleTitle}
-                onChange={({ currentTarget }) => setScheduleTitle(
-                  currentTarget.value
-                    .replace(/[^a-zA-Z0-9-_ ]/g, '')
-                    .slice(0, 30),
-                )}
-                className="w-full py-1 pl-2 pr-7 rounded focus:shadow shadow-inner border-2"
-                ref={editRef}
-              />
-              <button
-                type="submit"
-                className="absolute inset-y-0 right-2 flex items-center"
-              >
-                <FaCheck />
-              </button>
-            </form>
-          </FadeTransition>
-
-          {semesterFormat !== 'sample' && showSelector && (
-            <ScheduleChooser
-              scheduleIds={currentSchedules.sort(compareSemesters).map((s) => s.id)}
-              chosenScheduleId={chosenSchedule?.id || null}
-              handleChooseSchedule={(scheduleId) => handleChooseSchedule(scheduleId)}
-              direction="center"
-              parentWidth={`${colWidth}px`}
-              showTerm={semesterFormat === 'all' ? 'on' : 'auto'}
-              highlight={
-                typeof highlight !== 'undefined'
-                && highlight === chosenSchedule?.id
-              }
-              showDropdown={semesterFormat !== 'all'}
-            />
-          )}
-
-          {semesterFormat !== 'sample' && (
-            <ButtonMenu
-              prevScheduleId={prevScheduleId}
-              {...{
-                season: semester.season,
-                year: semester.year,
-                chosenScheduleId,
-                handleChooseSchedule,
-                setScheduleTitle,
-              }}
-            />
-          )}
-        </div>
+        <HeaderSection
+          chosenScheduleId={chosenScheduleId}
+          handleChooseSchedule={handleChooseSchedule}
+          semester={semester}
+          highlight={highlight}
+          colWidth={colWidth}
+        />
 
         {/* {selectedSchedule.classes.length > 0 && (
         <p className="text-sm">
@@ -268,119 +161,171 @@ export default function SemesterComponent({
         </p>
         )} */}
 
-        {/* Second component: actual classes */}
-        <div className="flex-1 p-4 md:overflow-auto h-max">
-          <div className="flex flex-col items-stretch min-h-[12rem] space-y-4">
-            {chosenSchedule
-              && (
-              <>
-                {/* add course button */}
-                <button
-                  type="button"
-                  className="flex items-center justify-center rounded-xl bg-blue-300 interactive py-2"
-                  onClick={() => showContents({
-                    title: 'Add a course',
-                    content: <ModalWrapper selected={chosenScheduleId} />,
-                  })}
-                >
-                  <FaPlus />
-                </button>
-                {/* <Link href={{ pathname: '/search', query: { selected: selectedSchedule?.id } }}> */}
-                {/* </Link> */}
-
-                {chosenSchedule.classes.map(({ classId: id }) => (id && classCache[id] ? (
-                  <CourseCard
-                    key={id}
-                    course={classCache[id]}
-                    handleExpand={() => showCourse(classCache[id])}
-                    highlight={
-                      highlightedRequirement
-                      && highlightedRequirement.reducer(
-                        highlightedRequirement.initialValue || 0,
-                        classCache[id],
-                        chosenSchedule!,
-                        userDocument,
-                      ) !== null
-                    }
-                    chosenScheduleId={chosenSchedule.id}
-                    setDragStatus={
-                      semesterFormat === 'sample' ? undefined : setDragStatus
-                    }
-                    inSearchContext={false}
-                    warnings={(conflicts?.[id]?.length || 0) > 0 ? `This class conflicts with: ${conflicts![id].map((i) => classCache[i].SUBJECT + classCache[i].CATALOG_NBR).join(', ')}` : undefined}
-                  />
-                ) : (
-                  <div key={id}>Loading course data...</div>
-                )))}
-              </>
-              )}
-          </div>
-        </div>
+        {chosenSchedule && (
+        <CoursesSection
+          schedule={chosenSchedule}
+          highlightedRequirement={highlightedRequirement}
+          setDragStatus={setDragStatus}
+        />
+        )}
       </div>
     </div>
   );
 }
 
-function SearchModal() {
-  const userId = Auth.useAuthProperty('uid');
-  const { client, error } = useMeiliClient(userId || null);
-  const { searchState, setSearchState } = useSearchState();
-  const elapsed = useElapsed(5000, []);
 
-  if (userId === null) {
-    return (
-      <div className="flex space-x-4">
-        <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
-          <SearchBoxDemo />
-          <HitsDemo />
-        </div>
-      </div>
-    );
+type HeaderProps = {
+  highlight: string | undefined;
+  semester: Semester;
+  handleChooseSchedule: React.Dispatch<string | null>;
+  chosenScheduleId: string | null;
+  colWidth: number;
+};
+
+function HeaderSection({
+  highlight, semester, handleChooseSchedule, chosenScheduleId, colWidth,
+}: HeaderProps) {
+  const dispatch = useAppDispatch();
+  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
+  const schedules = useAppSelector(Schedules.selectSchedules);
+  const currentSchedules = getSchedulesBySemester(schedules, semester);
+
+  // independent to sync up the transitions nicely
+  const [scheduleTitle, setScheduleTitle] = useState<string>();
+  const [showSelector, setShowSelector] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const editRef = useRef<HTMLInputElement>(null!);
+
+  const prevScheduleId = currentSchedules[0]?.title === chosenScheduleId ? null : (currentSchedules[0]?.title || null);
+
+  async function handleRenameSchedule(ev: React.FormEvent) {
+    ev.preventDefault();
+    if (!chosenScheduleId) {
+      alert('no schedule selected to rename');
+      return;
+    }
+    if (!scheduleTitle) {
+      alert('invalid title given');
+      return;
+    }
+    await dispatch(Schedules.renameSchedule({ scheduleId: chosenScheduleId, title: scheduleTitle }));
+    handleChooseSchedule(chosenScheduleId);
+    setEditing(false);
   }
 
-  if (error) {
-    return <ErrorPage>Couldn&rsquo;t access the search client. Please try again later!</ErrorPage>;
-  }
-
-  if (typeof userId === 'undefined') {
-    if (elapsed) return <LoadingPage />;
-    return null;
-  }
+  const doHighlight = typeof highlight !== 'undefined' && highlight === chosenScheduleId;
 
   return (
-    <InstantSearch
-      indexName="courses"
-      searchClient={client}
-      searchState={searchState}
-      onSearchStateChange={(newState) => {
-        setSearchState({ ...searchState, ...newState });
-      }}
-      stalledSearchDelay={500}
-    >
-      <Configure hitsPerPage={4} />
-      <div className="flex space-x-4">
-        <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
-          <SearchBox />
-          <Hits />
-        </div>
-      </div>
-    </InstantSearch>
+    <div className="flex flex-col items-stretch space-y-2 p-4 border-black border-b-2">
+      {/* only show */}
+      {semesterFormat !== 'all' && (
+      <h1 className="text-lg text-center min-w-max font-semibold">
+        {semester.season}
+        {' '}
+        {semester.year}
+      </h1>
+      )}
+
+      <FadeTransition
+        show={editing}
+        unmount={false}
+        beforeEnter={() => setShowSelector(false)}
+        afterLeave={() => setShowSelector(true)}
+      >
+        <form
+          className="relative"
+          onSubmit={handleRenameSchedule}
+        >
+          <input
+            type="text"
+            value={scheduleTitle}
+            onChange={({ currentTarget }) => setScheduleTitle(
+              currentTarget.value
+                .replace(/[^a-zA-Z0-9-_ ]/g, '')
+                .slice(0, 30),
+            )}
+            className="w-full py-1 pl-2 pr-7 rounded focus:shadow shadow-inner border-2"
+            ref={editRef}
+          />
+          <button
+            type="submit"
+            className="absolute inset-y-0 right-2 flex items-center"
+          >
+            <FaCheck />
+          </button>
+        </form>
+      </FadeTransition>
+
+      {semesterFormat !== 'sample' && showSelector && (
+      <ScheduleChooser
+        scheduleIds={currentSchedules.sort(compareSemesters).map((s) => s.id)}
+        chosenScheduleId={chosenScheduleId}
+        handleChooseSchedule={(scheduleId) => handleChooseSchedule(scheduleId)}
+        direction="center"
+        parentWidth={`${colWidth}px`}
+        showTerm={semesterFormat === 'all' ? 'on' : 'auto'}
+        highlight={doHighlight}
+        showDropdown={semesterFormat !== 'all'}
+      />
+      )}
+
+      {semesterFormat !== 'sample' && (
+      <ButtonMenu
+        prevScheduleId={prevScheduleId}
+        {...{
+          season: semester.season,
+          year: semester.year,
+          chosenScheduleId,
+          handleChooseSchedule,
+          setScheduleTitle,
+        }}
+      />
+      )}
+    </div>
   );
 }
 
-function ModalWrapper({ selected }: { selected: string | null }) {
-  const [chosenScheduleId, chooseSchedule] = useState(selected);
 
-  const context = useMemo(() => ({
-    chooseSchedule,
-    chosenScheduleId,
-  }), [chosenScheduleId]);
+function CoursesSection({ schedule, highlightedRequirement, setDragStatus }: {
+  schedule: Schedule;
+  highlightedRequirement: Requirement | undefined;
+  setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>;
+}) {
+  const { showCourse } = useModal();
+  const profile = useAppSelector(Profile.selectUserProfile);
+  const classCache = useAppSelector(ClassCache.selectClassCache);
+  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
+  const conflicts = findConflicts(allTruthy(schedule.classes.map(({ classId }) => classCache[classId])));
+
+  const doHighlight = (id: string) => highlightedRequirement && highlightedRequirement.reducer(
+    highlightedRequirement.initialValue || 0,
+    classCache[id],
+    schedule!,
+    profile,
+  ) !== null;
+
+  const warnings = (id: string) => ((conflicts[id]?.length || 0) > 0 ? `This class conflicts with: ${conflicts![id].map((i) => classCache[i].SUBJECT + classCache[i].CATALOG_NBR).join(', ')}` : undefined);
 
   return (
-    <SearchStateProvider oneCol>
-      <ChosenScheduleContext.Provider value={context}>
-        <SearchModal />
-      </ChosenScheduleContext.Provider>
-    </SearchStateProvider>
+    <div className="flex-1 p-4 md:overflow-auto h-max">
+      <div className="flex flex-col items-stretch min-h-[12rem] space-y-4">
+        <AddCoursesButton schedule={schedule} />
+
+        {schedule.classes.map(({ classId: id }) => (id && classCache[id] ? (
+          <CourseCard
+            key={id}
+            course={classCache[id]}
+            handleExpand={() => showCourse(classCache[id])}
+            highlight={doHighlight(id)}
+            chosenScheduleId={schedule.id}
+            setDragStatus={semesterFormat === 'sample' ? undefined : setDragStatus}
+            inSearchContext={false}
+            warnings={warnings(id)}
+          />
+        ) : (
+          <div key={id}>Loading course data...</div>
+        )))}
+      </div>
+    </div>
   );
 }

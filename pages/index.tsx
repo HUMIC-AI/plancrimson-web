@@ -6,7 +6,7 @@ import RequirementsSection from '../components/YearSchedule/RequirementsSection'
 import { Schema, Schedule } from '../shared/firestoreTypes';
 import { allTruthy, classNames, getUniqueSemesters } from '../shared/util';
 import {
-  Auth, ClassCache, Planner, Profile, Schedules,
+  Auth, ClassCache, Planner, Profile, Schedules, Settings,
 } from '../src/features';
 import { useAppDispatch, useAppSelector } from '../src/hooks';
 import validateSchedules from '../src/requirements';
@@ -17,7 +17,7 @@ import {
   RequirementGroup,
 } from '../src/requirements/util';
 
-export default function PlanPageComponent() {
+export default function PlanPage() {
   const dispatch = useAppDispatch();
   const userId = Auth.useAuthProperty('uid');
   const classYear = useAppSelector(Profile.selectClassYear);
@@ -25,12 +25,9 @@ export default function PlanPageComponent() {
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
   const showReqs = useAppSelector(Planner.selectShowReqs);
-  const selectedSchedules = useAppSelector(Schedules.selectSelectedSchedules);
+  const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
   const schedules = useAppSelector(Schedules.selectSchedules);
   const classCache = useAppSelector(ClassCache.selectClassCache);
-
-  // we load all user schedules
-  const q = useMemo(() => (userId ? [where('ownerUid', '==', userId)] : []), [userId]);
 
   const [validationResults, setValidationResults] = useState<GroupResult | null>(null);
   const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(collegeRequirements);
@@ -39,29 +36,31 @@ export default function PlanPageComponent() {
 
   // check if the user has no schedules
   // if so, create them
+  const q = useMemo(() => (userId ? [where('ownerUid', '==', userId)] : []), [userId]);
   useEffect(() => {
-    if (!userId || !classYear) return;
-    getDocs(query(Schema.Collection.schedules(), ...q)).then((snap) => {
-      if (snap.empty) {
-        const promises = getUniqueSemesters(classYear).map(({ year, season }) => dispatch(Schedules.createDefaultSchedule({ year, season }, userId)));
-        Promise.allSettled(promises).then((resolved) => {
-          console.log('created default schedules', resolved);
-          resolved.forEach((result) => {
-            if (result.status === 'fulfilled') {
-              const schedule = result.value.payload as Schedule;
-              dispatch(Schedules.chooseSchedule({ term: `${schedule.year}${schedule.season}`, scheduleId: schedule.id }));
-            }
-          });
-        });
-      }
-    });
+    if (q.length === 0 || !classYear) return;
+
+    (async () => {
+      const snap = await getDocs(query(Schema.Collection.schedules(), ...q));
+      if (!snap.empty || !userId) return;
+      const promises = getUniqueSemesters(classYear).map(({ year, season }) => dispatch(Schedules.createDefaultSchedule({ year, season }, userId)));
+      const settled = await Promise.allSettled(promises);
+      settled.forEach((result) => {
+        if (result.status === 'fulfilled') {
+          const schedule = result.value.payload as Schedule;
+          dispatch(Settings.chooseSchedule({ term: `${schedule.year}${schedule.season}`, scheduleId: schedule.id }));
+        } else {
+          console.error('error creating schedules', result.reason);
+        }
+      });
+    })();
   }, [userId, classYear]);
 
   useEffect(() => {
     const showSchedules = semesterFormat === 'sample'
       ? sampleSchedule!.schedules
       : allTruthy(
-        Object.values(selectedSchedules).map((id) => (id ? schedules[id] : null)),
+        Object.values(chosenSchedules).map((id) => (id ? schedules[id] : null)),
       );
     const results = validateSchedules(
       selectedRequirements,

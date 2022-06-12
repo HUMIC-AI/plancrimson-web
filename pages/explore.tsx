@@ -5,7 +5,7 @@ import {
 import { FaInfo, FaSpinner } from 'react-icons/fa';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { InstantSearch, connectInfiniteHits, Configure } from 'react-instantsearch-dom';
-import Layout, { ErrorPage, LoadingPage } from '../components/Layout/Layout';
+import Layout, { errorMessages, ErrorPage, LoadingPage } from '../components/Layout/Layout';
 import AttributeMenu from '../components/SearchComponents/AttributeMenu';
 import Tooltip from '../components/Tooltip';
 import type { ExtendedClass } from '../shared/apiTypes';
@@ -106,10 +106,8 @@ function ChartComponent({
   useEffect(() => {
     if (demo) return;
     if (hasMore) {
-      console.log('getting more', hasMore);
       setTimeout(() => refineNext(), SEARCH_DELAY);
     } else if (hasPrevious) {
-      console.log('getting prev', hasPrevious);
       setTimeout(() => refinePrevious(), SEARCH_DELAY);
     }
   }, [demo, hits.length, hasMore, hasPrevious]);
@@ -203,7 +201,6 @@ function ChartComponent({
     focusItem.attr('stroke', 'black');
 
     const [centerx, centery] = [svg.attr('width'), svg.attr('height')].map((t) => parseInt(t, 10) / 2);
-    console.log(centerx, centery);
     tooltip
       .html(`<p class="font-bold">${focus.subject + focus.catalogNumber}</p><p>${focus.title}</p>`)
       .style('opacity', 1)
@@ -212,7 +209,7 @@ function ChartComponent({
   }
 
   return (
-    <div className="flex-1 relative">
+    <div className="md:flex-1 relative h-96">
       <div ref={chart} className="w-full h-full" />
       <div className="absolute top-0 left-0 flex space-x-2 items-center">
         <button
@@ -246,8 +243,8 @@ export default function ExplorePage() {
 
   if (userId === null) {
     return (
-      <Layout className="flex-1 relative">
-        <div className="absolute inset-2 flex space-x-2">
+      <Layout className="md:flex-1 md:relative">
+        <div className="md:absolute md:inset-2 flex flex-col md:flex-row space-x-2">
           <AttributeMenu />
           <ChartComponent hits={sampleCourses as ExtendedClass[]} demo client={null} />
         </div>
@@ -256,11 +253,11 @@ export default function ExplorePage() {
   }
 
   if (!client || error) {
-    return <ErrorPage>There was an error connecting to the search client. Please try again later!</ErrorPage>;
+    return <ErrorPage>{errorMessages.meiliClient}</ErrorPage>;
   }
 
   return (
-    <Layout className="flex-1 relative">
+    <Layout className="md:flex-1 md:relative">
       <InstantSearch
         indexName="courses"
         searchClient={client}
@@ -271,7 +268,7 @@ export default function ExplorePage() {
         stalledSearchDelay={500}
       >
         <Configure hitsPerPage={50} />
-        <div className="absolute inset-2 flex space-x-2">
+        <div className="md:absolute md:inset-2 flex flex-col md:flex-row space-x-2">
           <AttributeMenu showSubjectColor />
           <Chart demo={false} client={client} />
         </div>

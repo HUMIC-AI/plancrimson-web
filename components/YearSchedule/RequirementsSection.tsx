@@ -21,11 +21,14 @@ import {
 import ExternalLink from '../ExternalLink';
 import FadeTransition from '../FadeTransition';
 import RequirementGroupComponent from './RequirementsDisplay';
-import { allTruthy, classNames } from '../../shared/util';
+import { classNames } from '../../shared/util';
 import { allRequirements } from '../../src/requirements';
 import { handleError, useAppDispatch, useAppSelector } from '../../src/hooks';
-import { Auth, Planner, Schedules } from '../../src/features';
+import {
+  Auth, Planner, Schedules, Settings,
+} from '../../src/features';
 import { Schedule } from '../../shared/firestoreTypes';
+
 
 interface RequirementsSectionProps {
   selectedRequirements: RequirementGroup;
@@ -163,14 +166,10 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
     const schedules = await Promise.all(promises);
 
     try {
-      const errors = allTruthy(schedules.map(({ payload }) => ('errors' in payload ? payload.errors : null)));
-      if (errors.length) {
-        throw new Error(errors.map((err) => err.join(', ')).join('; '));
-      }
       dispatch(Planner.showSelected());
       schedules.forEach((s) => {
         const { year, season, title: id } = s.payload as Schedule;
-        dispatch(Schedules.chooseSchedule({
+        dispatch(Settings.chooseSchedule({
           term: `${year}${season}`,
           scheduleId: id,
         }));

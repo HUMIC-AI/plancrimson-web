@@ -18,7 +18,7 @@ import {
   sortSchedules,
 } from '../../shared/util';
 import {
-  Auth, Planner, Profile, Schedules,
+  Auth, Planner, Profile, Schedules, Settings,
 } from '../../src/features';
 import {
   downloadJson, handleError, signInUser, useAppDispatch, useAppSelector,
@@ -37,7 +37,7 @@ interface HeaderSectionProps {
 function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionProps) {
   const dispatch = useAppDispatch();
   const userSchedules = useAppSelector(Schedules.selectSchedules);
-  const selectedSchedules = useAppSelector(Schedules.selectSelectedSchedules);
+  const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
   const showReqs = useAppSelector(Planner.selectShowReqs);
   const isExpanded = useAppSelector(Planner.selectExpandCards);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
@@ -115,7 +115,7 @@ function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionP
                 );
                 if (yn) {
                   allTruthy(
-                    Object.values(selectedSchedules).map((id) => (id ? userSchedules[id] : null)),
+                    Object.values(chosenSchedules).map((id) => (id ? userSchedules[id] : null)),
                   ).forEach((schedule) => dispatch(Schedules.clearSchedule(schedule.id)));
                 }
               }}
@@ -139,16 +139,8 @@ function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionP
 
 function HiddenSchedules({ allSemesters } : { allSemesters: SemesterDisplayProps[] }) {
   const dispatch = useAppDispatch();
-  const userId = Auth.useAuthProperty('uid');
-  const hiddenScheduleIds = useAppSelector(Schedules.selectHiddenScheduleIds);
-  const hiddenSchedules = allSemesters.filter(
-    ({ chosenScheduleId }) => chosenScheduleId && hiddenScheduleIds.includes(chosenScheduleId),
-  );
-
-  function handleShowSchedule(scheduleId: string) {
-    if (!userId) return;
-    dispatch(Schedules.toggleHidden(scheduleId));
-  }
+  const hiddenScheduleIds = useAppSelector(Planner.selectHiddenIds);
+  const hiddenSchedules = allSemesters.filter(({ chosenScheduleId }) => chosenScheduleId && hiddenScheduleIds[chosenScheduleId]);
 
   if (hiddenSchedules.length === 0) return null;
 
@@ -160,7 +152,9 @@ function HiddenSchedules({ allSemesters } : { allSemesters: SemesterDisplayProps
           <li key={data.chosenScheduleId! + data.semester.year + data.semester.season} className="ml-2">
             <button
               type="button"
-              onClick={() => handleShowSchedule(data.chosenScheduleId!)}
+              onClick={() => {
+                dispatch(Planner.setHidden({ scheduleId: data.chosenScheduleId!, hidden: true }));
+              }}
               className="interactive"
             >
               {data.chosenScheduleId}
@@ -172,21 +166,21 @@ function HiddenSchedules({ allSemesters } : { allSemesters: SemesterDisplayProps
   );
 }
 
-/** *
- * Renders all of a user's semesters.
- */
+
+// render all of the user's semesters
 export default function PlanningSection({ highlightedRequirement } : { highlightedRequirement?: Requirement; }) {
   const dispatch = useAppDispatch();
   const userId = Auth.useAuthProperty('uid');
   const {
-    classYear, semesterFormat, sampleSchedule, schedules: userSchedules, selectedSchedules,
+    classYear, semesterFormat, sampleSchedule, schedules: userSchedules,
   } = useAppSelector((state) => ({
     classYear: Profile.selectClassYear(state),
     semesterFormat: Planner.selectSemesterFormat(state),
     sampleSchedule: Planner.selectSampleSchedule(state),
     schedules: Schedules.selectSchedules(state),
-    selectedSchedules: Schedules.selectSelectedSchedules(state),
   }));
+  const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
+
 
   const [dragStatus, setDragStatus] = useState<DragStatus>({
     dragging: false,
@@ -233,7 +227,7 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
     };
   }, []);
 
-  const chooseSchedule = (year: number, season: Season, scheduleId: string | null) => dispatch(Schedules.chooseSchedule({
+  const chooseSchedule = (year: number, season: Season, scheduleId: string | null) => dispatch(Settings.chooseSchedule({
     term: `${year}${season}`,
     scheduleId,
   }));
@@ -256,7 +250,7 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
         ).map(({ year, season }) => ({
           key: `${year}${season}`,
           semester: { year, season },
-          chosenScheduleId: selectedSchedules[`${year}${season}`] || null,
+          chosenScheduleId: chosenSchedules[`${year}${season}`] || null,
         }));
       case 'all':
         return Object.values(userSchedules)
@@ -265,20 +259,20 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
             key: id,
             semester: { year, season },
             chosenScheduleId: id,
-            highlight: selectedSchedules[`${year}${season}`] || undefined,
+            highlight: chosenSchedules[`${year}${season}`] || undefined,
           }));
       default:
         return [];
     }
-  }, [classYear, sampleSchedule?.schedules, userSchedules, selectedSchedules, semesterFormat]);
+  }, [classYear, sampleSchedule?.schedules, userSchedules, chosenSchedules, semesterFormat]);
 
   const totalCourses = useMemo(
-    () => Object.values(selectedSchedules).reduce(
+    () => Object.values(chosenSchedules).reduce(
       (acc, scheduleId) => acc
           + ((scheduleId && userSchedules[scheduleId]?.classes.length) || 0),
       0,
     ),
-    [userSchedules, selectedSchedules],
+    [userSchedules, chosenSchedules],
   );
 
   const downloadData: DownloadPlan = {

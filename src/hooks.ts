@@ -103,7 +103,6 @@ export async function signInUser() {
   const initialDoc: UserDocument = {
     chosenSchedules: {},
     customTimes: {},
-    hiddenScheduleIds: [],
     waivedRequirements: {},
   };
 

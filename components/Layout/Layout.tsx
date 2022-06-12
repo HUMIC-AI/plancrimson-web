@@ -109,15 +109,17 @@ export default function Layout({
     }
     const q = Firestore.query(Schema.Collection.schedules(), ...constraints);
     const unsubSchedules = Firestore.onSnapshot(q, (snap) => {
-    // load all of the classes into the class cache
       const scheduleEntries = snap.docs.map((doc) => doc.data());
       const classIds = scheduleEntries.flatMap((schedule) => schedule.classes.map(({ classId }) => classId));
+
+      // load all of the classes into the class cache
       if (client) dispatch(ClassCache.loadCourses(client.MeiliSearchClient.index('courses'), classIds));
+
       dispatch(Schedules.overwriteSchedules(scheduleEntries));
     }, (err) => dispatch(Auth.setSnapshotError({ error: err })));
-    // eslint-disable-next-line consistent-return
+
     return unsubSchedules;
-  }, [constraints]);
+  }, [constraints, client]);
 
   if (errors) console.error('Error listening for user authentication', errors);
 
@@ -168,22 +170,17 @@ export function LoadingPage() {
   );
 }
 
-function ErrorPage({ children }: PropsWithChildren<{}>) {
+export function ErrorPage({ children }: PropsWithChildren<{}>) {
   return (
-    <Layout>
-      <p>
+    <Layout className="flex-1 flex flex-col items-center">
+      <p className="mt-8 bg-red-300 shadow p-8 rounded-xl">
         {children}
       </p>
     </Layout>
   );
 }
 
-ErrorPage.Unauthorized = function () {
-  return (
-    <Layout>
-      <p>You are not authorized to access this content!</p>
-    </Layout>
-  );
+export const errorMessages = {
+  unauthorized: 'You are not authorized to access this content!',
+  meiliClient: 'There was an error getting the search client. Please try again later',
 };
-
-export { ErrorPage };

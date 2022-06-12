@@ -5,29 +5,32 @@ import {
   onSnapshot, query, where,
 } from 'firebase/firestore';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
-import Layout, { ErrorPage, LoadingPage } from '../../components/Layout/Layout';
+import Layout, { errorMessages, ErrorPage, LoadingPage } from '../../components/Layout/Layout';
 import { FriendRequest, Schema } from '../../shared/firestoreTypes';
 import { Auth, Schedules } from '../../src/features';
 import {
   sendFriendRequest, unfriend, useAppSelector, useElapsed,
 } from '../../src/hooks';
 
-type FriendStatus = 'loading' | 'none' | 'friends' | 'pending';
+type FriendStatus = 'loading' | 'self' | 'none' | 'friends' | 'pending';
 
 const statusMessage: Record<FriendStatus, string> = {
   loading: 'Loading...',
+  self: '',
   none: 'Add friend',
   friends: 'Friends',
   pending: 'Cancel request',
 };
 
+// get the profile of the user with the given username
 async function fetchProfile(username: string) {
   const snap = await getDocs(query(Schema.Collection.profiles(), where('username', '==', username)));
   if (snap.empty) {
-    throw new Error('No users found with that username');
+    throw new Error('No users found with that username.');
   } else if (snap.size > 1) {
     throw new Error('Multiple users found with that username. This should not occur');
   } else {
@@ -45,19 +48,22 @@ function useFriendStatus(user1?: string | null, user2?: string | null): FriendSt
   // at most one of the two below will exist
   useEffect(() => {
     if (!user1 || !user2) return;
-    (async () => {
-      let snap = await getDoc(Schema.friendRequest(user1, user2));
-      if (snap.exists()) {
-        setRef(snap.ref);
-        return;
-      }
-      snap = await getDoc(Schema.friendRequest(user2, user1));
-      if (snap.exists()) {
-        setRef(snap.ref);
-      } else {
-        setStatus('none');
-      }
-    })();
+    if (user1 === user2) setStatus('self');
+    else {
+      (async () => {
+        let snap = await getDoc(Schema.friendRequest(user1, user2));
+        if (snap.exists()) {
+          setRef(snap.ref);
+          return;
+        }
+        snap = await getDoc(Schema.friendRequest(user2, user1));
+        if (snap.exists()) {
+          setRef(snap.ref);
+        } else {
+          setStatus('none');
+        }
+      })();
+    }
   }, [user1, user2]);
 
   // once an existing friend request is found, we listen to it
@@ -95,12 +101,16 @@ export default function UserPage() {
 
   const queryConstraints = useMemo(() => {
     if (!uid || !pageProfile) return [];
-    if (friendStatus === 'friends') return [where('ownerUid', '==', pageProfile.userId)];
+
+    if (friendStatus === 'friends' || friendStatus === 'self') {
+      return [where('ownerUid', '==', pageProfile.userId)];
+    }
+
     return [where('ownerUid', '==', pageProfile.userId), where('public', '==', true)];
   }, [uid]);
 
   if (uid === null) {
-    return <ErrorPage.Unauthorized />;
+    return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
   }
 
   if (typeof uid === 'undefined') {
@@ -109,12 +119,7 @@ export default function UserPage() {
   }
 
   if (error) {
-    console.error('error fetching profile', error);
-    return (
-      <Layout>
-        <pre>{JSON.stringify(error)}</pre>
-      </Layout>
-    );
+    return <ErrorPage>{error.message}</ErrorPage>;
   }
 
   if (!pageProfile) {
@@ -134,7 +139,7 @@ export default function UserPage() {
           <div className="ml-8">
             <h1 className="text-3xl">{pageProfile.username}</h1>
 
-            {pageProfile.userId !== uid && (
+            {friendStatus !== 'self' && (
             <button
               type="button"
               onClick={() => {
@@ -157,7 +162,15 @@ export default function UserPage() {
 
           {schedules.length > 0 ? (
             <ul>
-              {schedules.map((schedule) => <li key={schedule.id}>{schedule.title}</li>)}
+              {schedules.map((schedule) => (
+                <li key={schedule.id}>
+                  <Link href={`/schedule/${schedule.id}`}>
+                    <a>
+                      {schedule.title}
+                    </a>
+                  </Link>
+                </li>
+              ))}
             </ul>
           ) : <p>No schedules yet</p>}
         </section>

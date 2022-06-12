@@ -324,6 +324,10 @@ export function checkViable({
   };
 }
 
+// ENSURE that this does NOT contain any school terms that are NOT stored in the database.
+// on the planning page, clicking on the "add course" plus button will filter for the matching term,
+// and so will return nothing for any terms that are included here but which are not yet stored
+// in the database.
 export const termToSeasonMap: Record<string, Semester> = {
   2218: { year: 2021, season: 'Fall' },
   2222: { year: 2022, season: 'Spring' },

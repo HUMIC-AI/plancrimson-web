@@ -5,44 +5,38 @@ import {
   FaClone,
   FaPlus,
   FaTrash,
-  FaDownload,
   FaLink,
   FaUnlink,
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
 import { Season } from '../../shared/firestoreTypes';
-import { Auth, Schedules } from '../../src/features';
-import { downloadJson, useAppDispatch, useAppSelector } from '../../src/hooks';
+import { Auth, Schedules, Settings } from '../../src/features';
+import { useAppDispatch, useAppSelector } from '../../src/hooks';
 import Tooltip from '../Tooltip';
+
 
 const buttonStyles = 'inline-block p-1 rounded bg-black bg-opacity-0 hover:text-black hover:bg-opacity-50 transition-colors';
 
-type BaseButtonProps = {
+type BaseProps = {
   name: string;
   Icon: IconType;
 };
 
-type ButtonProps = BaseButtonProps & {
+type ButtonProps = BaseProps & {
   onClick: React.MouseEventHandler<HTMLButtonElement>;
 };
 
-type LinkProps = BaseButtonProps & {
+type LinkProps = BaseProps & {
   isLink: true;
-  scheduleId: string;
   pathname: string;
 };
 
+// the rest props serve for both buttons and links
 function CustomButton({ name, Icon, ...rest }: ButtonProps | LinkProps) {
   if ('isLink' in rest) {
     return (
       <Tooltip text={name} direction="bottom">
-        <Link
-          href={{
-            pathname: rest.pathname,
-            query: { selected: rest.scheduleId },
-          }}
-        >
-          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+        <Link href={rest.pathname}>
           <a className={buttonStyles}>
             <Icon />
           </a>
@@ -64,6 +58,7 @@ function CustomButton({ name, Icon, ...rest }: ButtonProps | LinkProps) {
     </Tooltip>
   );
 }
+
 
 interface ButtonMenuProps {
   chosenScheduleId: string | null;
@@ -88,9 +83,6 @@ function ButtonMenu({
     if (!chosenSchedule) return;
     try {
       const schedule = await dispatch(Schedules.createSchedule({ ...chosenSchedule }));
-      if ('errors' in schedule.payload) {
-        throw new Error(schedule.payload.errors.join(', '));
-      }
       handleChooseSchedule(schedule.payload.id);
     } catch (err) {
       console.error(err);
@@ -99,9 +91,7 @@ function ButtonMenu({
   }, [chosenSchedule]);
 
   const handleDelete = useCallback(async () => {
-    console.log({ chosenSchedule });
     if (!chosenSchedule) return;
-    // eslint-disable-next-line no-restricted-globals
     const confirmDelete = confirm(
       `Are you sure you want to delete your schedule ${chosenSchedule.title}?`,
     );
@@ -125,9 +115,8 @@ function ButtonMenu({
             <CustomButton
               name="Calendar view"
               isLink
-              scheduleId={chosenSchedule.title}
               Icon={FaCalendarWeek}
-              pathname="/schedule"
+              pathname={`/schedule/${chosenSchedule.id}`}
             />
 
             <CustomButton
@@ -135,12 +124,6 @@ function ButtonMenu({
               onClick={handleDuplicate}
               Icon={FaClone}
             />
-
-            {/* <CustomButton
-              name="Clear"
-              onClick={() => dispatch(clearSchedule(selectedSchedule.id))}
-              Icon={FaEraser}
-            /> */}
           </>
         )}
 
@@ -153,10 +136,7 @@ function ButtonMenu({
             }
             const schedule = await dispatch(Schedules.createDefaultSchedule({ season, year }, userId));
             try {
-              if ('errors' in schedule.payload) {
-                throw new Error(schedule.payload.errors.join(', '));
-              }
-              await dispatch(Schedules.chooseSchedule({
+              await dispatch(Settings.chooseSchedule({
                 term: `${schedule.payload.year}${schedule.payload.season}`,
                 scheduleId: schedule.payload.id,
               }));
@@ -172,16 +152,8 @@ function ButtonMenu({
           <>
             <CustomButton name="Delete" onClick={handleDelete} Icon={FaTrash} />
             <CustomButton
-              name="Download schedule"
-              onClick={() => downloadJson(
-                `${chosenSchedule.title} (Plan Crimson)`,
-                { schedules: [chosenSchedule] },
-              )}
-              Icon={FaDownload}
-            />
-            <CustomButton
               name={chosenSchedule.public ? 'Make private' : 'Make public'}
-              onClick={() => dispatch(Schedules.togglePublic(chosenSchedule.id))}
+              onClick={() => dispatch(Schedules.setPublic({ scheduleId: chosenSchedule.id, public: !chosenSchedule.public }))}
               Icon={chosenSchedule.public ? FaUnlink : FaLink}
             />
           </>

@@ -4,7 +4,7 @@ import qs from 'qs';
 import { useAppSelector, useElapsed } from '../src/hooks';
 
 // components
-import Layout, { ErrorPage, LoadingPage } from '../components/Layout/Layout';
+import Layout, { errorMessages, ErrorPage, LoadingPage } from '../components/Layout/Layout';
 import SearchBox, {
   SearchBoxDemo,
 } from '../components/SearchComponents/SearchBox';
@@ -60,11 +60,12 @@ export default function SearchPage() {
   }
 
   if (error) {
-    return <ErrorPage>There was an error getting the search client. Please try again later.</ErrorPage>;
+    return <ErrorPage>{errorMessages.meiliClient}</ErrorPage>;
   }
 
   if (!client) {
-    return <LoadingPage />;
+    if (elapsed) return <LoadingPage />;
+    return <Layout />;
   }
 
   return (

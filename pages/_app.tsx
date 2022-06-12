@@ -14,7 +14,9 @@ import store from '../src/store';
 import { useAppDispatch } from '../src/hooks';
 import { ModalProvider, useModal } from '../src/context/modal';
 import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
-import { Auth, Profile, Schedules } from '../src/features';
+import {
+  Auth, Profile, Settings,
+} from '../src/features';
 import { Schema } from '../shared/firestoreTypes';
 
 // Your web app's Firebase configuration
@@ -135,11 +137,10 @@ function MyApp({ Component, pageProps }: AppProps) {
     const unsubUserData = onSnapshot(userDataRef, (snap) => {
       if (!snap.exists() || snap.metadata.fromCache) return;
       const data = snap.data()!;
-      dispatch(Schedules.overwriteScheduleMetadata({
+      dispatch(Settings.overwriteSettings({
         customTimes: data.customTimes || {},
         chosenSchedules: data.chosenSchedules || {},
         waivedRequirements: data.waivedRequirements || {},
-        hiddenScheduleIds: data.hiddenScheduleIds || [],
       }));
     });
 

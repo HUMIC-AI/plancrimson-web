@@ -51,6 +51,7 @@ function ToggleButton({ chosenScheduleId, course } : { chosenScheduleId: string;
   // linked to plus button in top right corner.
   function addClass() {
     if (!chosenSchedule || !classYear) return;
+
     const viability = checkViable({
       cls: course,
       schedule: chosenSchedule,
@@ -66,10 +67,11 @@ function ToggleButton({ chosenScheduleId, course } : { chosenScheduleId: string;
       const yn = confirm(`${viability.reason} Continue anyways?`);
       if (!yn) return;
     }
-    dispatch(Schedules.addCourse([{
-      classId: getClassId(course),
+
+    dispatch(Schedules.addCourses({
+      courses: [{ classId: getClassId(course) }],
       scheduleId: chosenSchedule.id,
-    }]));
+    }));
   }
 
   if (!chosenSchedule) return null;
@@ -93,10 +95,10 @@ function ToggleButton({ chosenScheduleId, course } : { chosenScheduleId: string;
     <button
       type="button"
       name="Remove class from schedule"
-      onClick={() => dispatch(Schedules.removeCourses([{
-        classId: getClassId(course),
-        scheduleId: chosenSchedule.title,
-      }]))}
+      onClick={() => dispatch(Schedules.removeCourses({
+        courseIds: [getClassId(course)],
+        scheduleId: chosenSchedule.id,
+      }))}
       className={buttonStyles}
     >
       <FaTimes />

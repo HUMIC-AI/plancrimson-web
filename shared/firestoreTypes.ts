@@ -96,9 +96,6 @@ export interface UserDocument {
       classes: string[];
     };
   };
-
-  // TODO move this to session storage instead of firestore
-  hiddenScheduleIds: string[]; // hidden schedules
 }
 
 export interface CustomTimeRecord {

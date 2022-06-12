@@ -15,7 +15,10 @@ import useChosenScheduleContext from '../../src/context/selectedSchedule';
 import { useAppDispatch, useAppSelector, useLgBreakpoint } from '../../src/hooks';
 import { Auth, Planner, Schedules } from '../../src/features';
 
-const AttributeMenuDropdown = function () {
+
+type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean };
+
+function AttributeMenuDropdown() {
   return (
     <div className="relative">
       <Disclosure as={Fragment}>
@@ -40,6 +43,7 @@ const AttributeMenuDropdown = function () {
                   attribute={attr}
                   key={attr}
                   label={ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr}
+                  showSubjectColor={false}
                 />
               ))}
               <span className="text-white text-xs p-1">
@@ -52,13 +56,15 @@ const AttributeMenuDropdown = function () {
       </Disclosure>
     </div>
   );
-};
+}
 
-const SearchBar: React.FC<SearchBoxProvided> = function ({
+
+function SearchBar({
   currentRefinement,
   refine,
   isSearchStalled,
-}) {
+  scheduleChooser = true,
+}: SearchBoxProps) {
   const dispatch = useAppDispatch();
   const schedules = useAppSelector(Schedules.selectSchedules);
   const uid = Auth.useAuthProperty('uid');
@@ -79,6 +85,7 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
           <FaAngleDoubleRight />
         </button>
         )}
+
         <input
           type="search"
           placeholder="Search classes"
@@ -95,6 +102,8 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
             'focus:outline-none focus:shadow-lg shadow transition-shadow',
           )}
         />
+
+        {scheduleChooser && (
         <div className="hidden sm:block">
           <ScheduleChooser
             scheduleIds={sortSchedules(schedules).map((schedule) => schedule.id)}
@@ -104,6 +113,8 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
             showDropdown
           />
         </div>
+        )}
+
         {!isLg && <AttributeMenuDropdown />}
       </div>
       {/* end box containing search bar and attribute menu */}
@@ -126,20 +137,20 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
       {/* end caption text */}
     </div>
   );
-};
+}
 
-export const SearchBoxComponent: React.FC<SearchBoxProvided> = function (
-  props,
-) {
+
+export function SearchBoxComponent({ scheduleChooser = true, ...props }: SearchBoxProps) {
   const schedules = useAppSelector(Schedules.selectSchedules);
   const { chooseSchedule: selectSchedule, chosenScheduleId: selectedSchedule } = useChosenScheduleContext();
 
   return (
     <div className="flex flex-col space-y-4 items-start">
       <div className="flex space-x-4 w-full">
-        <SearchBar {...props} />
+        <SearchBar {...props} scheduleChooser={scheduleChooser} />
       </div>
 
+      {scheduleChooser && (
       <div className="sm:hidden relative">
         <ScheduleChooser
           scheduleIds={sortSchedules(schedules).map((schedule) => schedule.id)}
@@ -149,9 +160,11 @@ export const SearchBoxComponent: React.FC<SearchBoxProvided> = function (
           showDropdown
         />
       </div>
+      )}
     </div>
   );
-};
+}
+
 
 export function SearchBoxDemo() {
   return (
@@ -163,4 +176,5 @@ export function SearchBoxDemo() {
   );
 }
 
-export default connectSearchBox(SearchBoxComponent);
+
+export default connectSearchBox<SearchBoxProps>(SearchBoxComponent);

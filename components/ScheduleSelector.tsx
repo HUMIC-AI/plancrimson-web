@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
 import { Semester } from '../shared/firestoreTypes';
 import { classNames } from '../shared/util';
-import { Schedules } from '../src/features';
+import { Schedules, Settings } from '../src/features';
 import { useAppDispatch, useAppSelector } from '../src/hooks';
 import FadeTransition from './FadeTransition';
 
@@ -47,7 +47,7 @@ function ButtonTitle({
   function saveTitle(e: any) {
     e.preventDefault();
     if (!chosenScheduleId || !newTitle || newTitle === chosenScheduleId) return;
-    dispatch(Schedules.renameSchedule({ scheduleId: chosenScheduleId, newTitle }));
+    dispatch(Schedules.renameSchedule({ scheduleId: chosenScheduleId, title: newTitle }));
   }
 
   if (!schedule || !newTitle) return null;
@@ -77,7 +77,7 @@ function ButtonTitle({
         <button
           type="button"
           className="w-4 ml-2"
-          onClick={() => dispatch(Schedules.chooseSchedule({
+          onClick={() => dispatch(Settings.chooseSchedule({
             term: `${schedule.year}${schedule.season}`,
             scheduleId: schedule?.title || null,
           }))}
