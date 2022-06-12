@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { updateDoc } from 'firebase/firestore';
 import {
-  CustomTimeRecord, Schema, Term, UserDocument,
+  CustomTimeRecord, getInitialSettings, Schema, Term, UserSettings,
 } from '../../shared/firestoreTypes';
 import type { AppDispatch, RootState } from '../store';
 
@@ -14,17 +14,13 @@ type ChooseSchedulePayload = {
   scheduleId: string | null;
 };
 
-const initialState: UserDocument = {
-  chosenSchedules: {},
-  customTimes: {},
-  waivedRequirements: {},
-};
+const initialState = getInitialSettings();
 
 export const settingsSlice = createSlice({
   name: 'settings',
   initialState,
   reducers: {
-    overwriteSettings(state, action: PayloadAction<UserDocument>) {
+    overwriteSettings(state, action: PayloadAction<UserSettings>) {
       Object.assign(state, action.payload);
     },
     customTime(state, action: PayloadAction<CustomTimePayload>) {
@@ -44,7 +40,7 @@ export const chooseSchedule = ({ scheduleId, term }: ChooseSchedulePayload) => a
   const uid = getState().auth.userInfo?.uid;
   if (!uid) throw new Error('not signed in');
   // @ts-ignore
-  await updateDoc(Schema.user(uid), { [`chosenSchedules.${term}`]: scheduleId! });
+  await updateDoc(Schema.user(uid), { [`chosenSchedules.${term}`]: scheduleId });
   dispatch(settingsSlice.actions.chooseSchedule({ scheduleId, term }));
 };
 

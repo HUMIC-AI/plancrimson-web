@@ -41,6 +41,7 @@ export default function PlanPage() {
     if (q.length === 0 || !classYear) return;
 
     (async () => {
+      console.log('KJLANKDS', classYear);
       const snap = await getDocs(query(Schema.Collection.schedules(), ...q));
       if (!snap.empty || !userId) return;
       const promises = getUniqueSemesters(classYear).map(({ year, season }) => dispatch(Schedules.createDefaultSchedule({ year, season }, userId)));

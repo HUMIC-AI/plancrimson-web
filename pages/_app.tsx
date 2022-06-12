@@ -17,7 +17,7 @@ import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
 import {
   Auth, Profile, Settings,
 } from '../src/features';
-import { Schema } from '../shared/firestoreTypes';
+import { getInitialSettings, Schema } from '../shared/firestoreTypes';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -90,11 +90,16 @@ function MyApp({ Component, pageProps }: AppProps) {
     const unsub = onAuthStateChanged(
       auth,
       (u) => {
-        dispatch(Auth.signIn(u ? {
-          uid: u.uid,
-          email: u.email!,
-          photoUrl: u.photoURL,
-        } : null));
+        if (u) {
+          dispatch(Auth.setAuthInfo({
+            uid: u.uid,
+            email: u.email!,
+          }));
+          dispatch(Profile.setPhotoUrl(u.photoURL));
+        } else { // just signed out
+          dispatch(Auth.setAuthInfo(null));
+          dispatch(Settings.overwriteSettings(getInitialSettings()));
+        }
       },
       (err) => dispatch(Auth.setSignInError(err)),
     );
@@ -109,6 +114,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     const unsubProfile = onSnapshot(
       profileRef,
       (snap) => {
+        console.log('ASKDFJA');
         // only refresh on new data from Firestore
         if (!snap.exists() || snap.metadata.fromCache) return;
 
@@ -119,7 +125,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
         // need class year before other missing fields
         if (!classYear) {
-          console.warn('missing class year');
+          console.log('missing class year');
           const now = new Date();
           showContents({
             title: 'Set graduation year',

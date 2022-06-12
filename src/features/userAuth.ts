@@ -2,12 +2,10 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { FirestoreError } from 'firebase/firestore';
 import { useAppSelector } from '../hooks';
 import type { AppDispatch, RootState } from '../store';
-import { setPhotoUrl } from './profile';
 
 // authentication info, not from Firestore
 interface AuthInfo {
   uid: string;
-  photoUrl: string | null;
   email: string;
 }
 
@@ -27,11 +25,8 @@ export const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    signIn(state, action: PayloadAction<AuthInfo | null>) {
+    setAuthInfo(state, action: PayloadAction<AuthInfo | null>) {
       state.userInfo = action.payload;
-    },
-    signOut(state) {
-      state.userInfo = null;
     },
     setSignInError(state, action: PayloadAction<Error>) {
       state.signInError = action.payload;
@@ -42,11 +37,10 @@ export const authSlice = createSlice({
   },
 });
 
-export const { signOut, setSignInError, setSnapshotError } = authSlice.actions;
+export const { setSignInError, setSnapshotError } = authSlice.actions;
 
-export const signIn = (payload: AuthInfo | null) => (dispatch: AppDispatch) => {
-  if (payload?.photoUrl) dispatch(setPhotoUrl(payload.photoUrl));
-  dispatch(authSlice.actions.signIn(payload));
+export const setAuthInfo = (payload: AuthInfo | null) => (dispatch: AppDispatch) => {
+  dispatch(authSlice.actions.setAuthInfo(payload));
 };
 
 export const useAuthProperty = (prop: keyof AuthInfo) => useAppSelector((state: RootState) => (state.auth.userInfo ? state.auth.userInfo[prop] : state.auth.userInfo));

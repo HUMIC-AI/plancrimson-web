@@ -6,7 +6,7 @@ export const Schema = {
     return Firestore.doc(Firestore.getFirestore(), 'profiles', uid) as Firestore.DocumentReference<UserProfile>;
   },
   user(uid: string) {
-    return Firestore.doc(Firestore.getFirestore(), 'users', uid) as Firestore.DocumentReference<UserDocument>;
+    return Firestore.doc(Firestore.getFirestore(), 'users', uid) as Firestore.DocumentReference<UserSettings>;
   },
   schedule(scheduleUid: string) {
     return Firestore.doc(Firestore.getFirestore(), 'schedules', scheduleUid) as Firestore.DocumentReference<Schedule>;
@@ -80,7 +80,7 @@ export interface UserProfileWithId extends UserProfile {
 // ============================== /users ==============================
 
 // Contains a user's selected schedules, custom class times, and waived reqs.
-export interface UserDocument {
+export interface UserSettings {
   chosenSchedules: {
     [semester: Term]: string | null;
   };
@@ -99,6 +99,14 @@ export interface UserDocument {
       waived: boolean;
       classes: string[];
     };
+  };
+}
+
+export function getInitialSettings(): UserSettings {
+  return {
+    chosenSchedules: {},
+    customTimes: {},
+    waivedRequirements: {},
   };
 }
 

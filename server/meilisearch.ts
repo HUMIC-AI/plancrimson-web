@@ -1,10 +1,10 @@
 import { MeiliSearch } from 'meilisearch';
 import { ExtendedClass } from '../shared/apiTypes';
-import { getMeiliApiKey, getMeiliHost } from '../shared/util';
+import { getMeiliHost } from '../src/meili';
 
 const ClassIndex = new MeiliSearch({
   host: getMeiliHost(),
-  apiKey: getMeiliApiKey(),
+  apiKey: process.env.MEILI_PRIVATE,
 }).index<ExtendedClass>('courses');
 
 export default ClassIndex;

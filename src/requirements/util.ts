@@ -1,7 +1,7 @@
 import React from 'react';
 import { Class } from '../../shared/apiTypes';
 import {
-  Schedule, Semester, UserDocument, UserProfile,
+  Schedule, Semester, UserSettings, UserProfile,
 } from '../../shared/firestoreTypes';
 
 /**

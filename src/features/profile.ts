@@ -19,7 +19,7 @@ export const userProfileSlice = createSlice({
   name: 'userData',
   initialState,
   reducers: {
-    setPhotoUrl(state, action: PayloadAction<string>) {
+    setPhotoUrl(state, action: PayloadAction<string | null>) {
       state.photoUrl = action.payload;
     },
     setUsername(state, action: PayloadAction<string>) {
@@ -40,6 +40,7 @@ export const {
 
 // ========================= SELECTORS =========================
 
+export const selectPhotoUrl = (state: RootState) => state.profile.photoUrl;
 export const selectUsername = (state: RootState) => state.profile.username;
 export const selectClassYear = (state: RootState) => state.profile.classYear;
-export const selectUserProfile = (state: RootState): UserProfile => state.profile;
+export const selectUserProfile = (state: RootState) => state.profile;

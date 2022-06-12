@@ -80,16 +80,16 @@ function ScheduleRow({ schedule, course }: { schedule: Schedule; course: Extende
       if (viabilityStatus !== null && viabilityStatus.viability === 'No') {
         alert('This course is not being offered in this semester!');
       } else {
-        dispatch(Schedules.addCourse([{
-          classId: getClassId(course),
+        dispatch(Schedules.addCourses({
+          courses: [{ classId: getClassId(course) }],
           scheduleId: schedule.id,
-        }]));
+        }));
       }
     } else {
-      dispatch(Schedules.removeCourses([{
-        classId: getClassId(course),
+      dispatch(Schedules.removeCourses({
+        courseIds: [getClassId(course)],
         scheduleId: schedule.id,
-      }]));
+      }));
     }
   }
 

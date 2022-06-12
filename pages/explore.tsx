@@ -104,7 +104,7 @@ type ChartProps =
   | (Partial<InfiniteHitsProvided<ExtendedClass>> & { demo: true; client: null });
 
 function ChartComponent({
-  hits: foundHits, client, hasPrevious, hasMore, refinePrevious, refineNext, demo,
+  hits: foundHits = [], client, hasPrevious, hasMore, refinePrevious, refineNext, demo,
 }: ChartProps) {
   const dispatch = useAppDispatch();
   const objects: ObjectsRef = useRef(null);
@@ -119,12 +119,12 @@ function ChartComponent({
 
   useEffect(() => {
     if (demo) return;
-    if (hasMore) {
+    if (hasMore && refineNext) {
       setTimeout(() => refineNext(), SEARCH_DELAY);
-    } else if (hasPrevious) {
+    } else if (hasPrevious && refinePrevious) {
       setTimeout(() => refinePrevious(), SEARCH_DELAY);
     }
-  }, [demo, hits.length, hasMore, hasPrevious]);
+  }, [demo, hits.length, hasMore, refineNext, hasPrevious, refinePrevious]);
 
   useEffect(() => {
     let maxMetric = 0;
@@ -137,7 +137,6 @@ function ChartComponent({
       const [x, y] = embeddings[id];
       const metric = radiusMetric === 'uniform' ? 0 : (parseFloat(course[radiusMetric]?.toString() || '') || 0);
       maxMetric = Math.max(metric, maxMetric);
-      console.log(maxMetric);
       return {
         x,
         y,
@@ -189,14 +188,14 @@ function ChartComponent({
       .duration(100)
       .attr('r', (d) => (maxMetric === 0 ? minRadius : minRadius + (maxRadius - minRadius) * (d.metric / maxMetric)));
 
-    if (!demo) {
+    if (!demo && client) {
       newDots.on('click', (_, d) => {
         dispatch(ClassCache.loadCourses(client.MeiliSearchClient.index('courses'), [d.id])).then(({ payload }) => showCourse(payload[0]));
       });
     }
 
     dots.exit().remove();
-  }, [hits, radiusMetric]);
+  }, [hits, radiusMetric, demo, client]);
 
   const buttonClass = (disabled: boolean) => classNames(
     'text-white px-2 py-1 text-sm rounded-md shadow',

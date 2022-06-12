@@ -4,7 +4,7 @@ import {
   getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, User,
 } from 'firebase/auth';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import { Schema, UserDocument, UserProfile } from '../shared/firestoreTypes';
+import { getInitialSettings, Schema, UserProfile } from '../shared/firestoreTypes';
 import type { AppDispatch, RootState } from './store';
 import { allTruthy } from '../shared/util';
 
@@ -108,13 +108,7 @@ export async function signInUser() {
     photoUrl: user.photoURL,
   }, { merge: true });
 
-  const initialDoc: UserDocument = {
-    chosenSchedules: {},
-    customTimes: {},
-    waivedRequirements: {},
-  };
-
-  await setDoc(Schema.user(user.uid), initialDoc, { merge: true });
+  await setDoc(Schema.user(user.uid), getInitialSettings(), { merge: true });
   return user;
 }
 

@@ -1,12 +1,7 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
 import { Disclosure, Menu, Transition } from '@headlessui/react';
-import {
-  signOut,
-  getAuth,
-} from 'firebase/auth';
+import { signOut, getAuth } from 'firebase/auth';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Fragment } from 'react';
 import {
   FaTimes, FaBars, FaCalendarCheck,
 } from 'react-icons/fa';
@@ -155,8 +150,8 @@ const LargeOnly = {
 function UserMenu() {
   const dispatch = useAppDispatch();
   const username = useAppSelector(Profile.selectUsername);
+  const photoUrl = useAppSelector(Profile.selectPhotoUrl);
   const uid = Auth.useAuthProperty('uid');
-  const photoUrl = Auth.useAuthProperty('photoUrl');
   const email = Auth.useAuthProperty('email');
 
   const buttonStyles = (active: boolean) => classNames(
@@ -213,7 +208,7 @@ function UserMenu() {
                   try {
                     if (uid) {
                       await signOut(getAuth());
-                      dispatch(Auth.signOut());
+                      dispatch(Auth.setAuthInfo(null));
                     } else {
                       await signInUser();
                     }
