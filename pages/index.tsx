@@ -41,9 +41,8 @@ export default function PlanPage() {
     if (q.length === 0 || !classYear) return;
 
     (async () => {
-      console.log('KJLANKDS', classYear);
-      const snap = await getDocs(query(Schema.Collection.schedules(), ...q));
-      if (!snap.empty || !userId) return;
+      const snap = await getDocs(query(Schema.Collection.schedules(), ...q)).catch((err) => console.error('error querying for user schedules', err));
+      if (!snap || !snap.empty || !userId) return;
       const promises = getUniqueSemesters(classYear).map(({ year, season }) => dispatch(Schedules.createDefaultSchedule({ year, season }, userId)));
       const settled = await Promise.allSettled(promises);
       settled.forEach((result) => {
@@ -51,7 +50,7 @@ export default function PlanPage() {
           const schedule = result.value.payload as Schedule;
           dispatch(Settings.chooseSchedule({ term: `${schedule.year}${schedule.season}`, scheduleId: schedule.id }));
         } else {
-          console.error('error creating schedules', result.reason);
+          console.error('error creating default schedules', result.reason);
         }
       });
     })();

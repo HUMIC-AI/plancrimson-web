@@ -17,9 +17,11 @@ export function getMeiliHost() {
   return host;
 }
 
-export async function getMeiliApiKey() {
+async function getMeiliApiKey() {
   const metadata = await getDoc(Schema.metadata());
-  return metadata.data()?.meiliApiKey;
+  const key = metadata.data()?.meiliApiKey;
+  if (!key && process.env.NODE_ENV !== 'development') throw new Error('metadata not found');
+  return key;
 }
 
 export function useMeiliClient(uid: string | null | undefined) {
@@ -35,10 +37,15 @@ export function useMeiliClient(uid: string | null | undefined) {
     setError(null);
 
     getMeiliApiKey()
-      .then((key) => setClient(instantMeiliSearch(getMeiliHost(), key, {
-        paginationTotalHits: 200,
-      })))
-      .catch(() => setError('error fetching MeiliSearch API key'));
+      .then((key) => {
+        setClient(instantMeiliSearch(getMeiliHost(), key, {
+          paginationTotalHits: 500,
+        }));
+      })
+      .catch((err) => {
+        console.error('error fetching api key:', err);
+        setError('error fetching MeiliSearch API key');
+      });
   }, [uid]);
 
   return { client, error };

@@ -2,8 +2,8 @@ rules_version = '2'
 service cloud.firestore {
   match /databases/{database}/documents {
     function isWhitelisted() {
-      let metadata = get(/databases/$(database)/documents/metadata/metadata);
-      return metadata != null && request.auth.token.email in metadata.data.whitelist;
+      let path = /databases/$(database)/documents/metadata/metadata;
+      return exists(path) && request.auth.token.email in get(path).data.whitelist;
     }
 
     function loggedInStudent() {

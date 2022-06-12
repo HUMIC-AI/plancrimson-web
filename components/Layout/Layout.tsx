@@ -8,7 +8,7 @@ import { unsplashParams } from '../../shared/util';
 import ExternalLink from '../ExternalLink';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
-import { useAppDispatch, useAppSelector } from '../../src/hooks';
+import { useAppDispatch } from '../../src/hooks';
 import { Auth, ClassCache, Schedules } from '../../src/features';
 import { Schema } from '../../shared/firestoreTypes';
 import { useMeiliClient } from '../../src/meili';
@@ -96,7 +96,6 @@ export default function Layout({
   className = 'mx-auto flex-1 container sm:p-8',
   scheduleQueryConstraints: constraints = [],
 }: PropsWithChildren<LayoutProps>) {
-  const errors = useAppSelector(Auth.selectSnapshotError);
   const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
 
   const dispatch = useAppDispatch();
@@ -116,12 +115,12 @@ export default function Layout({
       if (client) dispatch(ClassCache.loadCourses(client.MeiliSearchClient.index('courses'), classIds));
 
       dispatch(Schedules.overwriteSchedules(scheduleEntries));
-    }, (err) => dispatch(Auth.setSnapshotError({ error: err })));
+    }, (err) => {
+      console.error('error listening for schedules (in the layout):', err);
+    });
 
     return unsubSchedules;
   }, [constraints, client]);
-
-  if (errors) console.error('Error listening for user authentication', errors);
 
   const description = 'Wait no longer to plan out your concentration. For Harvard College students. Q Reports, Course Evaluations, my.harvard, and more, all in one place.';
 

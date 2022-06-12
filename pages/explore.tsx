@@ -6,6 +6,7 @@ import { FaChevronDown, FaInfo, FaSpinner } from 'react-icons/fa';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { InstantSearch, connectInfiniteHits, Configure } from 'react-instantsearch-dom';
 import { Listbox } from '@headlessui/react';
+import { getDocs, query, where } from 'firebase/firestore';
 import Layout, { errorMessages, ErrorPage, LoadingPage } from '../components/Layout/Layout';
 import AttributeMenu from '../components/SearchComponents/AttributeMenu';
 import Tooltip from '../components/Tooltip';
@@ -20,8 +21,9 @@ import { InstantMeiliSearchInstance, useMeiliClient } from '../src/meili';
 import { Auth } from '../src/features';
 import sampleCourses from '../shared/assets/sampleCourses.json';
 import FadeTransition from '../components/FadeTransition';
+import { Schema } from '../shared/firestoreTypes';
 
-const SEARCH_DELAY = 500;
+const SEARCH_DELAY = 1000;
 const minRadius = 5;
 const maxRadius = 15;
 const metrics = {
@@ -103,10 +105,38 @@ type ChartProps =
   | (InfiniteHitsProvided<ExtendedClass> & { demo: false; client: InstantMeiliSearchInstance })
   | (Partial<InfiniteHitsProvided<ExtendedClass>> & { demo: true; client: null });
 
+// turn a list of courses into data for d3
+function makeData(courses: ExtendedClass[], radiusMetric: keyof typeof metrics) {
+  let maxMetric = 0;
+
+  const data = allTruthy(courses.map((course): Embedding | null => {
+    const id = course.id as keyof typeof embeddings;
+    if (!embeddings[id]) {
+      console.error('no embedding for', id);
+      return null;
+    }
+    const [x, y] = embeddings[id];
+    const metric = radiusMetric === 'uniform' ? 0 : (parseFloat(course[radiusMetric]?.toString() || '') || 0);
+    maxMetric = Math.max(metric, maxMetric);
+    return {
+      x,
+      y,
+      subject: course.SUBJECT,
+      catalogNumber: course.CATALOG_NBR,
+      title: course.Title,
+      id: course.id,
+      metric,
+    };
+  }));
+
+  return [data, maxMetric] as const;
+}
+
 function ChartComponent({
   hits: foundHits = [], client, hasPrevious, hasMore, refinePrevious, refineNext, demo,
 }: ChartProps) {
   const dispatch = useAppDispatch();
+  const uid = Auth.useAuthProperty('uid');
   const objects: ObjectsRef = useRef(null);
   const { showCourse } = useModal();
   const chart = createRef<HTMLDivElement>();
@@ -126,30 +156,25 @@ function ChartComponent({
     }
   }, [demo, hits.length, hasMore, refineNext, hasPrevious, refinePrevious]);
 
-  useEffect(() => {
-    let maxMetric = 0;
-    const newData = allTruthy(hits.map((course): Embedding | null => {
-      const id = course.id as keyof typeof embeddings;
-      if (!embeddings[id]) {
-        console.error('no embedding for', id);
-        return null;
-      }
-      const [x, y] = embeddings[id];
-      const metric = radiusMetric === 'uniform' ? 0 : (parseFloat(course[radiusMetric]?.toString() || '') || 0);
-      maxMetric = Math.max(metric, maxMetric);
-      return {
-        x,
-        y,
-        subject: course.SUBJECT,
-        catalogNumber: course.CATALOG_NBR,
-        title: course.Title,
-        id: course.id,
-        metric,
-      };
-    }));
+  function getDots() {
+    return objects.current!.g.selectAll<SVGCircleElement, Embedding>('circle');
+  }
 
-    const { g, tooltip, scales } = objects.current!;
-    const dots = g.selectAll<SVGCircleElement, Embedding>('circle').data(newData, (d) => d.id);
+  useEffect(() => {
+    const [newData, maxMetric] = makeData(hits, radiusMetric);
+    const dots = getDots().data(newData, (d) => d.id);
+    addDots(dots, maxMetric);
+  }, [hits, radiusMetric, demo, client]);
+
+  const buttonClass = (disabled: boolean) => classNames(
+    'text-white px-2 py-1 text-sm rounded-md shadow',
+    disabled ? 'bg-gray-300' : 'bg-blue-900 interactive',
+  );
+
+  // enter new dots into d3
+  function addDots(dots: d3.Selection<SVGCircleElement, Embedding, SVGGElement, unknown>, maxMetric: number) {
+    const { scales, tooltip } = objects.current!;
+
     const newDots = dots.enter()
       .append('circle')
       .attr('cx', (d) => scales.x(d.x))
@@ -183,24 +208,21 @@ function ChartComponent({
       .duration(SEARCH_DELAY)
       .style('opacity', 1);
 
-    g.selectAll<SVGCircleElement, Embedding>('circle')
+    if (!demo && client) {
+      newDots.on('click', (_, d) => {
+        dispatch(ClassCache.loadCourses(client.MeiliSearchClient.index('courses'), [d.id]))
+          .then((courses) => showCourse(courses[0]));
+      });
+    }
+
+    getDots()
       .transition('r')
       .duration(100)
       .attr('r', (d) => (maxMetric === 0 ? minRadius : minRadius + (maxRadius - minRadius) * (d.metric / maxMetric)));
 
-    if (!demo && client) {
-      newDots.on('click', (_, d) => {
-        dispatch(ClassCache.loadCourses(client.MeiliSearchClient.index('courses'), [d.id])).then(({ payload }) => showCourse(payload[0]));
-      });
-    }
-
     dots.exit().remove();
-  }, [hits, radiusMetric, demo, client]);
+  }
 
-  const buttonClass = (disabled: boolean) => classNames(
-    'text-white px-2 py-1 text-sm rounded-md shadow',
-    disabled ? 'bg-gray-300' : 'bg-blue-900 interactive',
-  );
 
   function focusRandom() {
     const index = Math.floor(Math.random() * hits.length);
@@ -220,7 +242,7 @@ function ChartComponent({
 
     scales.x.domain([focus.x - spanx / 2, focus.x + spanx / 2]);
     scales.y.domain([focus.y - spany / 2, focus.y + spany / 2]);
-    svg.selectAll<SVGCircleElement, Embedding>('circle')
+    getDots()
       .transition()
       .duration(500)
       .attr('cx', (d) => scales.x(d.x))
@@ -236,6 +258,21 @@ function ChartComponent({
       .style('top', `${centery - 10}px`);
   }
 
+  async function focusMine(meiliClient: InstantMeiliSearchInstance, userId: string) {
+    objects.current!.g.selectAll('circle').data();
+    const q = query(Schema.Collection.schedules(), where('ownerUid', '==', userId));
+    const { docs } = await getDocs(q);
+    const courseIds = docs.flatMap((doc) => doc.data().classes.map(({ classId }) => classId));
+    const loaded = await dispatch(ClassCache.loadCourses(meiliClient.MeiliSearchClient.index('courses'), courseIds));
+    const dots = getDots();
+    const data = dots.data();
+    const [newData, maxMetric] = makeData(loaded, radiusMetric);
+    const allDots = dots.data<Embedding>([...data, ...newData], (d) => d.id);
+    addDots(allDots, maxMetric);
+
+    console.log('DATA', data);
+  }
+
   return (
     <div className="md:flex-1 relative min-h-[28rem]">
       <div ref={chart} className="w-full h-full" />
@@ -247,6 +284,15 @@ function ChartComponent({
         >
           Random
         </button>
+        {uid && client && (
+          <button
+            type="button"
+            onClick={() => focusMine(client, uid)}
+            className={buttonClass(false)}
+          >
+            My courses
+          </button>
+        )}
         <Listbox as="div" className="relative inline-block" value={radiusMetric} onChange={setRadiusMetric}>
           <div>
             <Listbox.Button className="flex items-center justify-center bg-blue-900 text-white text-sm px-2 py-1 rounded-md interactive shadow">

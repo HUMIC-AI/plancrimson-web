@@ -120,9 +120,10 @@ export async function getProfile(id: string): Promise<UserProfile & { id: string
   if (!snap.exists()) {
     throw new Error(`user ${id} not found`);
   }
-  return { ...snap.data()!, id };
+  const profile = { ...snap.data()!, id };
+  localStorage.setItem(`profile/${id}`, JSON.stringify(profile));
+  return profile;
 }
-
 
 export function useProfiles(ids: string[]) {
   const [profiles, setProfiles] = useState<Record<string, UserProfile & { id: string }>>({});

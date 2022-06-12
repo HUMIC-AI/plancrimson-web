@@ -160,7 +160,7 @@ function UserMenu() {
   );
 
   return (
-    <Menu as="div" className="ml-3 relative z-50">
+    <Menu as="div" className="ml-3 relative">
       <Menu.Button
         name="Open user menu"
         className="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"

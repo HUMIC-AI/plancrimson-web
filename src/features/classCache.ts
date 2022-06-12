@@ -38,15 +38,21 @@ export const classCacheSlice = createSlice({
 export const selectClassCache = (state: RootState) => state.classCache.cache;
 
 // loads all classes that aren't already in the cache
-export const loadCourses = (index: Index<ExtendedClass<string | string[], string | string[]>>, classIds: string[]) => async (dispatch: AppDispatch, getState: () => RootState) => {
-  const state = getState();
-  const cache = selectClassCache(state);
-  const classes = await Promise.all(classIds.map((classId) => {
-    if (classId in cache) {
-      return Promise.resolve(null);
-    }
-    return index.getDocument(classId);
-  }));
-  const fetchedClasses = allTruthy(classes);
-  return dispatch(classCacheSlice.actions.loadClasses(fetchedClasses));
-};
+export function loadCourses(
+  index: Index<ExtendedClass<string | string[], string | string[]>>,
+  classIds: string[],
+) {
+  return async (dispatch: AppDispatch, getState: () => RootState) => {
+    const state = getState();
+    const cache = selectClassCache(state);
+    const classes = await Promise.all(classIds.map((classId) => {
+      if (classId in cache) {
+        return Promise.resolve(cache[classId]);
+      }
+      return index.getDocument(classId);
+    }));
+    const fetchedClasses = allTruthy(classes);
+    dispatch(classCacheSlice.actions.loadClasses(fetchedClasses));
+    return classes;
+  };
+}

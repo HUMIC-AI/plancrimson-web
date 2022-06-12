@@ -57,7 +57,7 @@ function GraduationYearDialog({ defaultYear, uid } : { defaultYear: number; uid:
         e.preventDefault();
         updateDoc(Schema.profile(uid), 'classYear', classYear)
           .then(() => setOpen(false))
-          .catch((err) => console.error(err));
+          .catch((err) => console.error(`error updating class year for ${uid}`, err));
       }}
       className="bg-white p-4"
     >
@@ -90,6 +90,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     const unsub = onAuthStateChanged(
       auth,
       (u) => {
+        console.log('auth state:', u);
         if (u) {
           dispatch(Auth.setAuthInfo({
             uid: u.uid,
@@ -101,7 +102,10 @@ function MyApp({ Component, pageProps }: AppProps) {
           dispatch(Settings.overwriteSettings(getInitialSettings()));
         }
       },
-      (err) => dispatch(Auth.setSignInError(err)),
+      (err) => {
+        console.error('error listening for auth state change:', err);
+        dispatch(Auth.setSignInError(err));
+      },
     );
 
     return unsub;
@@ -110,13 +114,13 @@ function MyApp({ Component, pageProps }: AppProps) {
   useEffect(() => {
     if (!uid) return;
 
+    console.log('starting profile listener');
+
     const profileRef = Schema.profile(uid);
     const unsubProfile = onSnapshot(
       profileRef,
       (snap) => {
-        console.log('ASKDFJA');
-        // only refresh on new data from Firestore
-        if (!snap.exists() || snap.metadata.fromCache) return;
+        if (!snap.exists()) return;
 
         const { username, classYear } = snap.data();
 
@@ -125,7 +129,6 @@ function MyApp({ Component, pageProps }: AppProps) {
 
         // need class year before other missing fields
         if (!classYear) {
-          console.log('missing class year');
           const now = new Date();
           showContents({
             title: 'Set graduation year',
@@ -136,7 +139,9 @@ function MyApp({ Component, pageProps }: AppProps) {
           dispatch(Profile.setClassYear(classYear));
         }
       },
-      (err) => dispatch(Auth.setSnapshotError({ error: err })),
+      (err) => {
+        console.error(`error listening to ${profileRef.path}:`, err);
+      },
     );
 
     const userDataRef = Schema.user(uid);
@@ -148,12 +153,9 @@ function MyApp({ Component, pageProps }: AppProps) {
         chosenSchedules: data.chosenSchedules || {},
         waivedRequirements: data.waivedRequirements || {},
       }));
+    }, (err) => {
+      console.error(`error listening to ${userDataRef.path}:`, err);
     });
-
-    // trigger initial write
-    setDoc(profileRef, { }, { merge: true })
-      .then(() => console.info('updated'))
-      .catch((err) => dispatch(Auth.setSnapshotError({ error: err })));
 
     return () => {
       unsubProfile();
