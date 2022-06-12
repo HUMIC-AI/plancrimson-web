@@ -180,8 +180,9 @@ export default function Navbar() {
                     </a>
                   </Link>
                 </div>
+
                 <div className="hidden sm:block sm:ml-6">
-                  <div className="flex space-x-4">
+                  <div className="flex space-x-4 items-center">
                     {paths.map((item) => (
                       // pass the query between pages to preserve the selected schedule
                       <Link
@@ -196,7 +197,7 @@ export default function Navbar() {
                             item.href === pathname
                               ? 'bg-gray-800 text-white'
                               : 'text-gray-300 hover:bg-gray-800 hover:text-white',
-                            'px-3 py-2 rounded-md text-sm font-medium',
+                            'px-3 py-2 rounded-md text-sm font-medium text-center',
                           )}
                           aria-current={
                             item.href === pathname ? 'page' : undefined

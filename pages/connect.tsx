@@ -8,11 +8,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import useSWR from 'swr';
-import Layout, { LoadingPage, UnauthorizedPage } from '../components/Layout/Layout';
-import { UserProfile } from '../shared/firestoreTypes';
+import Layout, { ErrorPage, LoadingPage } from '../components/Layout/Layout';
+import { Schema, UserProfile } from '../shared/firestoreTypes';
 import { allTruthy } from '../shared/util';
 import { Auth, ClassCache, Schedules } from '../src/features';
-import { Schema, useAppSelector, useElapsed } from '../src/hooks';
+import { useAppSelector, useElapsed } from '../src/hooks';
 
 /**
  * just an async query instead of a snapshot listener
@@ -99,7 +99,7 @@ export default function ConnectPage() {
   const elapsed = useElapsed(5000, []);
 
   if (userId === null) {
-    return <UnauthorizedPage />;
+    return <ErrorPage.Unauthorized />;
   }
 
   if (typeof userId === 'undefined') {

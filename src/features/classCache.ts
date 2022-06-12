@@ -2,13 +2,9 @@
 import {
   createSlice, PayloadAction,
 } from '@reduxjs/toolkit';
-import MeiliSearch from 'meilisearch';
-import { ExtendedClass } from '../../shared/apiTypes';
-import {
-  allTruthy,
-  getMeiliApiKey,
-  getMeiliHost,
-} from '../../shared/util';
+import type { Index } from 'meilisearch';
+import type { ExtendedClass } from '../../shared/apiTypes';
+import { allTruthy } from '../../shared/util';
 import type { AppDispatch, RootState } from '../store';
 
 export interface ClassCache {
@@ -19,11 +15,6 @@ export interface ClassCacheState {
   cache: ClassCache;
   errors: string[];
 }
-
-const index = new MeiliSearch({
-  host: getMeiliHost(),
-  apiKey: getMeiliApiKey(),
-}).index<ExtendedClass>('courses');
 
 const initialState: ClassCacheState = {
   cache: {},
@@ -47,7 +38,7 @@ export const classCacheSlice = createSlice({
 export const selectClassCache = (state: RootState) => state.classCache.cache;
 
 // loads all classes that aren't already in the cache
-export const loadCourses = (classIds: string[]) => async (dispatch: AppDispatch, getState: () => RootState) => {
+export const loadCourses = (index: Index<ExtendedClass<string | string[], string | string[]>>, classIds: string[]) => async (dispatch: AppDispatch, getState: () => RootState) => {
   const state = getState();
   const cache = selectClassCache(state);
   const classes = await Promise.all(classIds.map((classId) => {

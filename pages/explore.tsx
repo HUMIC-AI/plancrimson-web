@@ -2,23 +2,24 @@ import * as d3 from 'd3';
 import {
   createRef, MutableRefObject, useEffect, useRef,
 } from 'react';
-import { FaInfo } from 'react-icons/fa';
+import { FaInfo, FaSpinner } from 'react-icons/fa';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
-import { InstantSearch, connectInfiniteHits } from 'react-instantsearch-dom';
-import Layout from '../components/Layout/Layout';
+import { InstantSearch, connectInfiniteHits, Configure } from 'react-instantsearch-dom';
+import Layout, { ErrorPage, LoadingPage } from '../components/Layout/Layout';
 import AttributeMenu from '../components/SearchComponents/AttributeMenu';
 import Tooltip from '../components/Tooltip';
-import { ExtendedClass } from '../shared/apiTypes';
+import type { ExtendedClass } from '../shared/apiTypes';
 import embeddings from '../shared/assets/embeddings.json';
-import subjects from '../shared/assets/subjects.json';
-import { allTruthy, classNames } from '../shared/util';
+import { allTruthy, classNames, getSubjectColor } from '../shared/util';
 import useSearchState from '../src/context/searchState';
 import * as ClassCache from '../src/features/classCache';
 import { useModal } from '../src/context/modal';
-import { meiliSearchClient, useAppDispatch } from '../src/hooks';
+import { useAppDispatch, useElapsed } from '../src/hooks';
+import { InstantMeiliSearchInstance, useMeiliClient } from '../src/meili';
+import { Auth } from '../src/features';
+import sampleCourses from '../shared/assets/sampleCourses.json';
 
-const subjectNames = Object.keys(subjects).sort();
-const subjectIndices = Object.fromEntries(subjectNames.map((name, i) => [name, i]));
+const SEARCH_DELAY = 500;
 
 type Embedding = {
   x: number;
@@ -28,12 +29,10 @@ type Embedding = {
   title: string;
   id: string;
 };
-
 type ObjectsRef = MutableRefObject<ReturnType<typeof initChart> | null>;
 
 // todo:
 // - focus on my courses
-// - get a random course
 // - add past courses
 // - better search functionality
 
@@ -43,7 +42,7 @@ function initChart(chartDiv: HTMLDivElement) {
   const height = chartDiv.clientHeight;
 
   let [minx, maxx, miny, maxy] = [0, 0, 0, 0];
-  Object.values(embeddings).forEach(({ x, y }) => {
+  Object.values(embeddings).forEach(([x, y]) => {
     minx = Math.min(minx, x);
     maxx = Math.max(maxx, x);
     miny = Math.min(miny, y);
@@ -87,17 +86,34 @@ function initChart(chartDiv: HTMLDivElement) {
   };
 }
 
+type ChartProps =
+  | (InfiniteHitsProvided<ExtendedClass> & { demo: false; client: InstantMeiliSearchInstance })
+  | (Partial<InfiniteHitsProvided<ExtendedClass>> & { demo: true; client: null });
+
 function ChartComponent({
-  hits, hasPrevious, hasMore, refinePrevious, refineNext,
-}: InfiniteHitsProvided<ExtendedClass>) {
+  hits: foundHits, client, hasPrevious, hasMore, refinePrevious, refineNext, demo,
+}: ChartProps) {
   const dispatch = useAppDispatch();
   const objects: ObjectsRef = useRef(null);
   const { showCourse } = useModal();
   const chart = createRef<HTMLDivElement>();
+  const hits = demo ? sampleCourses as ExtendedClass[] : foundHits;
 
   useEffect(() => {
     objects.current = initChart(chart.current!);
   }, []);
+
+  useEffect(() => {
+    if (demo) return;
+    if (hasMore) {
+      console.log('getting more', hasMore);
+      setTimeout(() => refineNext(), SEARCH_DELAY);
+    } else if (hasPrevious) {
+      console.log('getting prev', hasPrevious);
+      setTimeout(() => refinePrevious(), SEARCH_DELAY);
+    }
+  }, [demo, hits.length, hasMore, hasPrevious]);
+
   useEffect(() => {
     const newData = allTruthy(hits.map((course): Embedding | null => {
       const id = course.id as keyof typeof embeddings;
@@ -105,7 +121,7 @@ function ChartComponent({
         console.error('no embedding for', id);
         return null;
       }
-      const { x, y } = embeddings[id] as Embedding;
+      const [x, y] = embeddings[id];
       return {
         x, y, subject: course.SUBJECT, catalogNumber: course.CATALOG_NBR, title: course.Title, id: course.id,
       };
@@ -113,14 +129,16 @@ function ChartComponent({
 
     const { g, tooltip, scales } = objects.current!;
     const dots = g.selectAll<SVGCircleElement, Embedding>('circle').data(newData, (d) => d.id);
-    dots.enter()
+    const newDots = dots.enter()
       .append('circle')
       .attr('cx', (d) => scales.x(d.x))
       .attr('cy', (d) => scales.y(d.y))
-      .attr('r', 5)
-      .style('fill', (d) => `hsl(${Math.floor((subjectIndices[d.subject] / subjectNames.length) * 360)}, 100%, 50%)`)
+      .attr('r', 10)
+      .style('fill', (d) => getSubjectColor(d.subject))
       .style('cursor', 'pointer')
-      .style('opacity', 0)
+      .style('opacity', 0);
+
+    newDots
       .on('mouseover', (_, d) => {
         tooltip
           .html(`<p class="font-bold">${d.subject + d.catalogNumber}</p><p>${d.title}</p>`)
@@ -128,7 +146,6 @@ function ChartComponent({
           .datum((count) => count + 1);
       })
       .on('mousemove', (ev) => {
-        console.log(ev.offsetX, ev.offsetY);
         tooltip
           .style('left', `${ev.offsetX}px`)
           .style('top', `${ev.offsetY - 10}px`);
@@ -137,14 +154,20 @@ function ChartComponent({
         tooltip
           .datum((count) => count - 1)
           .style('opacity', (count) => (count === 0 ? 0 : 1));
-      })
-      .on('click', (_, d) => {
-        alert(d.subject + d.catalogNumber);
-        dispatch(ClassCache.loadCourses([d.id])).then(({ payload }) => showCourse(payload[0]));
-      })
+      });
+
+    newDots
       .transition()
-      .duration(500)
+      .delay((_, i) => SEARCH_DELAY * (i / newDots.size()))
+      .duration(SEARCH_DELAY)
       .style('opacity', 1);
+
+    if (!demo) {
+      newDots.on('click', (_, d) => {
+        dispatch(ClassCache.loadCourses(client.MeiliSearchClient.index('courses'), [d.id])).then(({ payload }) => showCourse(payload[0]));
+      });
+    }
+
     dots.exit().remove();
   }, [hits]);
 
@@ -194,22 +217,6 @@ function ChartComponent({
       <div className="absolute top-0 left-0 flex space-x-2 items-center">
         <button
           type="button"
-          onClick={refinePrevious}
-          disabled={!hasPrevious}
-          className={buttonClass(!hasPrevious)}
-        >
-          Load previous
-        </button>
-        <button
-          type="button"
-          onClick={refineNext}
-          disabled={!hasMore}
-          className={buttonClass(!hasMore)}
-        >
-          Load more
-        </button>
-        <button
-          type="button"
           onClick={focusRandom}
           className={buttonClass(false)}
         >
@@ -218,6 +225,7 @@ function ChartComponent({
         <Tooltip text="Currently limited to 1000 courses." direction="right">
           <FaInfo />
         </Tooltip>
+        <FaSpinner className={classNames('animate-spin', (!hasMore && !hasPrevious) && 'hidden')} />
       </div>
     </div>
   );
@@ -227,21 +235,45 @@ const Chart = connectInfiniteHits(ChartComponent);
 
 export default function ExplorePage() {
   const { searchState, setSearchState } = useSearchState();
+  const userId = Auth.useAuthProperty('uid');
+  const { client, error } = useMeiliClient(userId);
+  const elapsed = useElapsed(5000, []);
+
+  if (typeof userId === 'undefined') {
+    if (elapsed) return <LoadingPage />;
+    return <Layout />;
+  }
+
+  if (userId === null) {
+    return (
+      <Layout className="flex-1 relative">
+        <div className="absolute inset-2 flex space-x-2">
+          <AttributeMenu />
+          <ChartComponent hits={sampleCourses as ExtendedClass[]} demo client={null} />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!client || error) {
+    return <ErrorPage>There was an error connecting to the search client. Please try again later!</ErrorPage>;
+  }
 
   return (
     <Layout className="flex-1 relative">
       <InstantSearch
         indexName="courses"
-        searchClient={meiliSearchClient}
+        searchClient={client}
         searchState={searchState}
         onSearchStateChange={(newState) => {
           setSearchState({ ...searchState, ...newState });
         }}
         stalledSearchDelay={500}
       >
+        <Configure hitsPerPage={50} />
         <div className="absolute inset-2 flex space-x-2">
-          <AttributeMenu />
-          <Chart />
+          <AttributeMenu showSubjectColor />
+          <Chart demo={false} client={client} />
         </div>
       </InstantSearch>
     </Layout>

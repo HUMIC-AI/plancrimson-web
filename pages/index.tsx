@@ -3,12 +3,12 @@ import { useState, useEffect, useMemo } from 'react';
 import Layout from '../components/Layout/Layout';
 import PlanningSection from '../components/YearSchedule/PlanningSection';
 import RequirementsSection from '../components/YearSchedule/RequirementsSection';
-import { Schedule } from '../shared/firestoreTypes';
+import { Schema, Schedule } from '../shared/firestoreTypes';
 import { allTruthy, classNames, getUniqueSemesters } from '../shared/util';
 import {
   Auth, ClassCache, Planner, Profile, Schedules,
 } from '../src/features';
-import { Schema, useAppDispatch, useAppSelector } from '../src/hooks';
+import { useAppDispatch, useAppSelector } from '../src/hooks';
 import validateSchedules from '../src/requirements';
 import collegeRequirements from '../src/requirements/college';
 import {

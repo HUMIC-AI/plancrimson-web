@@ -15,6 +15,7 @@ import {
   Viability,
   ScheduleMap,
 } from './firestoreTypes';
+import subjects from './assets/subjects.json';
 import seasPlan from './assets/seasPlan.json';
 import { getSchoolYear } from '../src/requirements/util';
 import { Class, ATTRIBUTE_DESCRIPTIONS, Evaluation } from './apiTypes';
@@ -25,6 +26,13 @@ export const unsplashParams = '?utm_source=Plan+Crimson&utm_medium=referral';
 type HasLabel = {
   label: string;
 };
+
+export const subjectNames = Object.keys(subjects).sort();
+export const subjectIndices = Object.fromEntries(subjectNames.map((name, i) => [name, i]));
+
+export function getSubjectColor(subject: string) {
+  return `hsl(${Math.floor((subjectIndices[subject] / subjectNames.length) * 360)}, 100%, 50%)`;
+}
 
 export function compareItems(a: HasLabel, b: HasLabel) {
   if (a.label < b.label) return -1;
@@ -358,30 +366,6 @@ export function getEvaluationId(evaluation: Evaluation) {
     .map((val) => val || 'UNKNOWN')
     .join('-')
     .replace(/[^a-zA-Z0-9]/g, '-');
-}
-
-export function getMeiliHost() {
-  const host = process.env.NODE_ENV === 'production'
-    ? process.env.NEXT_PUBLIC_MEILI_IP
-    : (process.env.NEXT_PUBLIC_DEV_MEILI_IP || 'http://127.0.0.1:7700');
-
-  if (!host) {
-    throw new Error('must configure the MEILI_IP environment variable');
-  }
-
-  return host;
-}
-
-export function getMeiliApiKey() {
-  const key = process.env.NEXT_PUBLIC_MEILI_API_KEY;
-
-  if (process.env.NODE_ENV === 'production' && !key) {
-    throw new Error(
-      'must configure the MeiliSearch API key through the NEXT_PUBLIC_MEILI_API_KEY environment variable',
-    );
-  }
-
-  return key;
 }
 
 export function throwMissingContext<T>(): T {

@@ -1,45 +1,13 @@
 import { DependencyList, useEffect, useState } from 'react';
-import {
-  getFirestore, DocumentReference, doc, collection, CollectionReference, setDoc, collectionGroup, Query, deleteDoc,
-} from 'firebase/firestore';
-import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
+import { setDoc, deleteDoc } from 'firebase/firestore';
 import {
   getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, User,
 } from 'firebase/auth';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import type {
-  FriendRequest, Schedule, UserDocument, UserProfile,
-} from '../shared/firestoreTypes';
-import { getMeiliHost, getMeiliApiKey } from '../shared/util';
+import { Schema, UserDocument } from '../shared/firestoreTypes';
 import type { AppDispatch, RootState } from './store';
 
 const LG_BREAKPOINT = 1024;
-
-export const Schema = {
-  profile(uid: string) {
-    return doc(getFirestore(), 'profiles', uid) as DocumentReference<UserProfile>;
-  },
-  user(uid: string) {
-    return doc(getFirestore(), 'users', uid) as DocumentReference<UserDocument>;
-  },
-  schedule(scheduleUid: string) {
-    return doc(getFirestore(), 'schedules', scheduleUid) as DocumentReference<Schedule>;
-  },
-  friendRequest(from: string, to: string) {
-    return doc(getFirestore(), 'allFriends', from, 'friends', to) as DocumentReference<FriendRequest>;
-  },
-  Collection: {
-    profiles() {
-      return collection(getFirestore(), 'profiles') as CollectionReference<UserProfile>;
-    },
-    schedules() {
-      return collection(getFirestore(), 'schedules') as CollectionReference<Schedule>;
-    },
-    allFriends() {
-      return collectionGroup(getFirestore(), 'friends') as Query<FriendRequest>;
-    },
-  },
-};
 
 export function downloadJson(filename: string, data: object | string, extension = 'json') {
   if (typeof window === 'undefined') return;
@@ -105,10 +73,6 @@ export function useElapsed(ms: number, deps: DependencyList) {
 
   return elapsed;
 }
-
-export const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey(), {
-  paginationTotalHits: 1000,
-});
 
 export async function signInUser() {
   const auth = getAuth();

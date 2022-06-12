@@ -5,11 +5,10 @@ import {
 import { deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  CustomTimeRecord, Schedule, ScheduleMap, SEASON_ORDER, Semester, Term, UserDocument,
+  Schema, CustomTimeRecord, Schedule, ScheduleMap, SEASON_ORDER, Semester, Term, UserDocument,
 } from '../../shared/firestoreTypes';
 import { allTruthy, ErrorData } from '../../shared/util';
 import type { AppDispatch, RootState } from '../store';
-import { Schema } from '../hooks';
 
 type SchedulesState = UserDocument & {
   schedules: ScheduleMap,

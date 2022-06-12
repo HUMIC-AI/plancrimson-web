@@ -13,3 +13,9 @@ the public course info can be fetched from https://info.seas.harvard.edu/courses
 - for each course, contains the semesters that it's offered in
 
 `csTags.json` is scraped with `/scripts/fetchCsTags.ts`
+
+for getting `subjects.json`:
+
+```bash
+jq -s '[.[] | .[]] | [.[] | {(.SUBJECT): .IS_SCL_DESCR_IS_SCL_DESCRD}] | sort | add' allcourses-2022-06-08.json allcourses.json
+```

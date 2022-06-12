@@ -3,21 +3,21 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { PropsWithChildren, useEffect } from 'react';
-import * as firestore from 'firebase/firestore';
+import * as Firestore from 'firebase/firestore';
 import { unsplashParams } from '../../shared/util';
 import ExternalLink from '../ExternalLink';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
-import { Schema, useAppDispatch, useAppSelector } from '../../src/hooks';
+import { useAppDispatch, useAppSelector } from '../../src/hooks';
 import { Auth, ClassCache, Schedules } from '../../src/features';
+import { Schema } from '../../shared/firestoreTypes';
+import { useMeiliClient } from '../../src/meili';
 
 interface LayoutProps {
   title?: string;
   className?: string;
-  scheduleQueryConstraints?: firestore.QueryConstraint[]
+  scheduleQueryConstraints?: Firestore.QueryConstraint[]
 }
-
-const description = 'Wait no longer to plan out your concentration. For Harvard College students. Q Reports, Course Evaluations, my.harvard, and more, all in one place.';
 
 function Footer() {
   const { query } = useRouter();
@@ -94,30 +94,34 @@ export default function Layout({
   children,
   title,
   className = 'mx-auto flex-1 container sm:p-8',
-  scheduleQueryConstraints: queryConstraints = [],
+  scheduleQueryConstraints: constraints = [],
 }: PropsWithChildren<LayoutProps>) {
-  const dispatch = useAppDispatch();
   const errors = useAppSelector(Auth.selectSnapshotError);
   const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
 
-  // listen for the requested schedules, load all of their classes into the class cache
+  const dispatch = useAppDispatch();
+  const userId = Auth.useAuthProperty('uid');
+  const { client } = useMeiliClient(userId);
+
   useEffect(() => {
-    if (queryConstraints.length === 0) {
+    if (constraints.length === 0) {
       return;
     }
-    const q = firestore.query(Schema.Collection.schedules(), ...queryConstraints);
-    const unsubSchedules = firestore.onSnapshot(q, (snap) => {
-      // load all of the classes into the class cache
+    const q = Firestore.query(Schema.Collection.schedules(), ...constraints);
+    const unsubSchedules = Firestore.onSnapshot(q, (snap) => {
+    // load all of the classes into the class cache
       const scheduleEntries = snap.docs.map((doc) => doc.data());
       const classIds = scheduleEntries.flatMap((schedule) => schedule.classes.map(({ classId }) => classId));
-      dispatch(ClassCache.loadCourses(classIds));
+      if (client) dispatch(ClassCache.loadCourses(client.MeiliSearchClient.index('courses'), classIds));
       dispatch(Schedules.overwriteSchedules(scheduleEntries));
     }, (err) => dispatch(Auth.setSnapshotError({ error: err })));
     // eslint-disable-next-line consistent-return
     return unsubSchedules;
-  }, [queryConstraints]);
+  }, [constraints]);
 
   if (errors) console.error('Error listening for user authentication', errors);
+
+  const description = 'Wait no longer to plan out your concentration. For Harvard College students. Q Reports, Course Evaluations, my.harvard, and more, all in one place.';
 
   return (
     <div className="flex flex-col min-h-screen overflow-auto">
@@ -164,10 +168,22 @@ export function LoadingPage() {
   );
 }
 
-export function UnauthorizedPage() {
+function ErrorPage({ children }: PropsWithChildren<{}>) {
+  return (
+    <Layout>
+      <p>
+        {children}
+      </p>
+    </Layout>
+  );
+}
+
+ErrorPage.Unauthorized = function () {
   return (
     <Layout>
       <p>You are not authorized to access this content!</p>
     </Layout>
   );
-}
+};
+
+export { ErrorPage };

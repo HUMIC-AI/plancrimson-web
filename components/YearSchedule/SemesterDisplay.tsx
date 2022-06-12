@@ -12,7 +12,7 @@ import {
   getSchedulesBySemester,
 } from '../../shared/util';
 import { Semester, Viability } from '../../shared/firestoreTypes';
-import { meiliSearchClient, useAppDispatch, useAppSelector } from '../../src/hooks';
+import { useAppDispatch, useAppSelector, useElapsed } from '../../src/hooks';
 import ScheduleChooser from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
 import FadeTransition from '../FadeTransition';
@@ -26,6 +26,8 @@ import { ChosenScheduleContext } from '../../src/context/selectedSchedule';
 import {
   Auth, ClassCache, Planner, Profile, Schedules,
 } from '../../src/features';
+import { useMeiliClient } from '../../src/meili';
+import { ErrorPage, LoadingPage } from '../Layout/Layout';
 
 const VIABILITY_COLORS: Record<Viability, string> = {
   Yes: 'bg-green-200',
@@ -33,49 +35,6 @@ const VIABILITY_COLORS: Record<Viability, string> = {
   Unlikely: 'bg-yellow-200',
   No: 'bg-red-300',
 };
-
-function SearchModal() {
-  const userId = Auth.useAuthProperty('uid');
-  const { searchState, setSearchState } = useSearchState();
-
-  return (
-    <InstantSearch
-      indexName="courses"
-      searchClient={meiliSearchClient}
-      searchState={searchState}
-      onSearchStateChange={(newState) => {
-        setSearchState({ ...searchState, ...newState });
-      }}
-      stalledSearchDelay={500}
-    >
-      {userId && <Configure hitsPerPage={4} />}
-      <div className="flex space-x-4">
-        {/* <AttributeMenu /> */}
-        <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
-          {userId ? <SearchBox /> : <SearchBoxDemo />}
-          {userId ? <Hits /> : <HitsDemo />}
-        </div>
-      </div>
-    </InstantSearch>
-  );
-}
-
-function ModalWrapper({ selected }: { selected: string | null }) {
-  const [chosenScheduleId, chooseSchedule] = useState(selected);
-
-  const context = useMemo(() => ({
-    chooseSchedule,
-    chosenScheduleId,
-  }), [chosenScheduleId]);
-
-  return (
-    <SearchStateProvider oneCol>
-      <ChosenScheduleContext.Provider value={context}>
-        <SearchModal />
-      </ChosenScheduleContext.Provider>
-    </SearchStateProvider>
-  );
-}
 
 export interface SemesterDisplayProps {
   semester: Semester;
@@ -359,5 +318,69 @@ export default function SemesterComponent({
         </div>
       </div>
     </div>
+  );
+}
+
+function SearchModal() {
+  const userId = Auth.useAuthProperty('uid');
+  const { client, error } = useMeiliClient(userId || null);
+  const { searchState, setSearchState } = useSearchState();
+  const elapsed = useElapsed(5000, []);
+
+  if (userId === null) {
+    return (
+      <div className="flex space-x-4">
+        <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
+          <SearchBoxDemo />
+          <HitsDemo />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <ErrorPage>Couldn&rsquo;t access the search client. Please try again later!</ErrorPage>;
+  }
+
+  if (typeof userId === 'undefined') {
+    if (elapsed) return <LoadingPage />;
+    return null;
+  }
+
+  return (
+    <InstantSearch
+      indexName="courses"
+      searchClient={client}
+      searchState={searchState}
+      onSearchStateChange={(newState) => {
+        setSearchState({ ...searchState, ...newState });
+      }}
+      stalledSearchDelay={500}
+    >
+      <Configure hitsPerPage={4} />
+      <div className="flex space-x-4">
+        <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
+          <SearchBox />
+          <Hits />
+        </div>
+      </div>
+    </InstantSearch>
+  );
+}
+
+function ModalWrapper({ selected }: { selected: string | null }) {
+  const [chosenScheduleId, chooseSchedule] = useState(selected);
+
+  const context = useMemo(() => ({
+    chooseSchedule,
+    chosenScheduleId,
+  }), [chosenScheduleId]);
+
+  return (
+    <SearchStateProvider oneCol>
+      <ChosenScheduleContext.Provider value={context}>
+        <SearchModal />
+      </ChosenScheduleContext.Provider>
+    </SearchStateProvider>
   );
 }

@@ -8,12 +8,13 @@ import { Planner } from '../../src/features';
 interface Props {
   lgOnly?: boolean;
   withWrapper?: boolean;
+  showSubjectColor?: boolean;
 }
 
 /**
  * Renders the list of attributes to filter classes by.
  */
-export default function AttributeMenu({ lgOnly, withWrapper }: Props) {
+export default function AttributeMenu({ lgOnly, withWrapper, showSubjectColor = false }: Props) {
   const dispatch = useAppDispatch();
   const isLg = useLgBreakpoint();
 
@@ -35,7 +36,7 @@ export default function AttributeMenu({ lgOnly, withWrapper }: Props) {
         </button>
       </h1>
       {(!lgOnly || isLg) && MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
-        <Attribute attribute={attr} key={attr} label={adjustAttr(attr)} />
+        <Attribute attribute={attr} key={attr} label={adjustAttr(attr)} showSubjectColor={showSubjectColor} />
       ))}
       <span className="text-white text-xs p-1">
         If filters are not showing up, clear your search and try again.

@@ -11,10 +11,11 @@ import { useEffect, useState } from 'react';
 import { connectAuthEmulator, getAuth, onAuthStateChanged } from 'firebase/auth';
 import { SearchStateProvider } from '../src/context/searchState';
 import store from '../src/store';
-import { Schema, useAppDispatch } from '../src/hooks';
+import { useAppDispatch } from '../src/hooks';
 import { ModalProvider, useModal } from '../src/context/modal';
 import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
 import { Auth, Profile, Schedules } from '../src/features';
+import { Schema } from '../shared/firestoreTypes';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -87,7 +88,6 @@ function MyApp({ Component, pageProps }: AppProps) {
     const unsub = onAuthStateChanged(
       auth,
       (u) => {
-        console.log('auth state changed', u);
         dispatch(Auth.signIn(u ? {
           uid: u.uid,
           email: u.email!,

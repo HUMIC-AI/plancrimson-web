@@ -8,11 +8,11 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
-import Layout, { LoadingPage, UnauthorizedPage } from '../../components/Layout/Layout';
-import { FriendRequest } from '../../shared/firestoreTypes';
+import Layout, { ErrorPage, LoadingPage } from '../../components/Layout/Layout';
+import { FriendRequest, Schema } from '../../shared/firestoreTypes';
 import { Auth, Schedules } from '../../src/features';
 import {
-  Schema, sendFriendRequest, unfriend, useAppSelector, useElapsed,
+  sendFriendRequest, unfriend, useAppSelector, useElapsed,
 } from '../../src/hooks';
 
 type FriendStatus = 'loading' | 'none' | 'friends' | 'pending';
@@ -100,7 +100,7 @@ export default function UserPage() {
   }, [uid]);
 
   if (uid === null) {
-    return <UnauthorizedPage />;
+    return <ErrorPage.Unauthorized />;
   }
 
   if (typeof uid === 'undefined') {

@@ -6,7 +6,7 @@ import { ExtendedClass } from '../../shared/apiTypes';
 import { classNames, getClassId } from '../../shared/util';
 import CourseCard from '../Course/CourseCard';
 import { useModal } from '../../src/context/modal';
-import sampleCourses from './sampleCourses.json';
+import sampleCourses from '../../shared/assets/sampleCourses.json';
 import { alertSignIn } from './searchUtils';
 import { DAY_SHORT } from '../../shared/firestoreTypes';
 import useChosenScheduleContext from '../../src/context/selectedSchedule';

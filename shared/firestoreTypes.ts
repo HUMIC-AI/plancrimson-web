@@ -1,4 +1,34 @@
+import * as Firestore from 'firebase/firestore';
 import { Concentration } from './assets/concentrations';
+
+export const Schema = {
+  profile(uid: string) {
+    return Firestore.doc(Firestore.getFirestore(), 'profiles', uid) as Firestore.DocumentReference<UserProfile>;
+  },
+  user(uid: string) {
+    return Firestore.doc(Firestore.getFirestore(), 'users', uid) as Firestore.DocumentReference<UserDocument>;
+  },
+  schedule(scheduleUid: string) {
+    return Firestore.doc(Firestore.getFirestore(), 'schedules', scheduleUid) as Firestore.DocumentReference<Schedule>;
+  },
+  friendRequest(from: string, to: string) {
+    return Firestore.doc(Firestore.getFirestore(), 'allFriends', from, 'friends', to) as Firestore.DocumentReference<FriendRequest>;
+  },
+  metadata() {
+    return Firestore.doc(Firestore.getFirestore(), 'metadata', 'metadata') as Firestore.DocumentReference<Metadata>;
+  },
+  Collection: {
+    profiles() {
+      return Firestore.collection(Firestore.getFirestore(), 'profiles') as Firestore.CollectionReference<UserProfile>;
+    },
+    schedules() {
+      return Firestore.collection(Firestore.getFirestore(), 'schedules') as Firestore.CollectionReference<Schedule>;
+    },
+    allFriends() {
+      return Firestore.collectionGroup(Firestore.getFirestore(), 'friends') as Firestore.Query<FriendRequest>;
+    },
+  },
+};
 
 export const SEASON_ORDER = {
   Winter: 0,
@@ -25,6 +55,11 @@ export const DAYS_OF_WEEK = [
 ] as const;
 
 export const DAY_SHORT = ['MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT'] as const;
+
+export interface Metadata {
+  whiteList: string[];
+  meiliApiKey: string;
+}
 
 // ============================== /userProfiles ==============================
 

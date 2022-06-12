@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { RefinementListProvided } from 'react-instantsearch-core';
 import { connectRefinementList } from 'react-instantsearch-dom';
-import { classNames, termToSeasonMap } from '../../shared/util';
+import { classNames, getSubjectColor, termToSeasonMap } from '../../shared/util';
 import { alertSignIn } from './searchUtils';
+import subjects from '../../shared/assets/subjects.json';
 
-type Props = Pick<RefinementListProvided, 'items' | 'refine'>;
+type Props = Pick<RefinementListProvided, 'items' | 'refine'> & { showSubjectColor: boolean };
 
 /**
  * A pure component which renders the list of refinements.
@@ -12,7 +13,7 @@ type Props = Pick<RefinementListProvided, 'items' | 'refine'>;
  * "AFRAMER (88), AFRIKAAN (2), etc" with a checkbox beside each one.
  */
 export const RefinementListComponent = React.memo(
-  ({ items, refine }: Props) => {
+  ({ items, refine, showSubjectColor }: Props) => {
     const [miniSearch, setMiniSearch] = useState('');
 
     const re = useMemo(() => new RegExp(miniSearch, 'i'), [miniSearch]);
@@ -51,6 +52,7 @@ export const RefinementListComponent = React.memo(
                   />
                   <span
                     className={classNames('ml-2', isRefined && 'font-semibold')}
+                    style={{ color: (showSubjectColor && label in subjects) ? getSubjectColor(label) : 'inherit' }}
                   >
                     {label in termToSeasonMap ? `${termToSeasonMap[label].season} ${termToSeasonMap[label].year}` : label}
                     {' '}
@@ -73,7 +75,7 @@ export const RefinementListComponent = React.memo(
  * @param items eg for the "SUBJECT" attribute, its elements will correspond to "AFRAMER", "AFRIKAAN", etc
  * @returns a {@link RefinementListComponent} that renders the items
  */
-const InnerWrapper: React.FC<Props> = function ({ items, refine }) {
+const InnerWrapper: React.FC<Props> = function ({ items, refine, showSubjectColor }) {
   const [allItems, setAllItems] = useState<typeof items>([]);
 
   useEffect(() => {
@@ -98,7 +100,7 @@ const InnerWrapper: React.FC<Props> = function ({ items, refine }) {
     });
   }, [items]);
 
-  return <RefinementListComponent items={allItems} refine={refine} />;
+  return <RefinementListComponent items={allItems} refine={refine} showSubjectColor={showSubjectColor} />;
 };
 
 export function RefinementListDemo() {
@@ -123,6 +125,7 @@ export function RefinementListDemo() {
         },
       ]}
       refine={alertSignIn}
+      showSubjectColor={false}
     />
   );
 }
