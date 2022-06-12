@@ -36,7 +36,7 @@ export function useMeiliClient(uid: string | null | undefined) {
 
     getMeiliApiKey()
       .then((key) => setClient(instantMeiliSearch(getMeiliHost(), key, {
-        paginationTotalHits: 1000,
+        paginationTotalHits: 200,
       })))
       .catch(() => setError('error fetching MeiliSearch API key'));
   }, [uid]);
