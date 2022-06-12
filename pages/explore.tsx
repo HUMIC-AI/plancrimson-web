@@ -1,10 +1,11 @@
 import * as d3 from 'd3';
 import {
-  createRef, MutableRefObject, useEffect, useRef,
+  createRef, MutableRefObject, useEffect, useRef, useState,
 } from 'react';
-import { FaInfo, FaSpinner } from 'react-icons/fa';
+import { FaChevronDown, FaInfo, FaSpinner } from 'react-icons/fa';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { InstantSearch, connectInfiniteHits, Configure } from 'react-instantsearch-dom';
+import { Listbox } from '@headlessui/react';
 import Layout, { errorMessages, ErrorPage, LoadingPage } from '../components/Layout/Layout';
 import AttributeMenu from '../components/SearchComponents/AttributeMenu';
 import Tooltip from '../components/Tooltip';
@@ -18,8 +19,19 @@ import { useAppDispatch, useElapsed } from '../src/hooks';
 import { InstantMeiliSearchInstance, useMeiliClient } from '../src/meili';
 import { Auth } from '../src/features';
 import sampleCourses from '../shared/assets/sampleCourses.json';
+import FadeTransition from '../components/FadeTransition';
 
 const SEARCH_DELAY = 500;
+const minRadius = 5;
+const maxRadius = 15;
+const metrics = {
+  uniform: 'None',
+  meanClassSize: 'Class size',
+  meanRating: 'Rating',
+  meanRecommendation: 'Recommended',
+  meanHours: 'Workload',
+};
+const metricNames = Object.keys(metrics).sort() as (keyof typeof metrics)[];
 
 type Embedding = {
   x: number;
@@ -28,6 +40,7 @@ type Embedding = {
   catalogNumber: string;
   title: string;
   id: string;
+  metric: number;
 };
 type ObjectsRef = MutableRefObject<ReturnType<typeof initChart> | null>;
 
@@ -98,6 +111,7 @@ function ChartComponent({
   const { showCourse } = useModal();
   const chart = createRef<HTMLDivElement>();
   const hits = demo ? sampleCourses as ExtendedClass[] : foundHits;
+  const [radiusMetric, setRadiusMetric] = useState<keyof typeof metrics>('uniform');
 
   useEffect(() => {
     objects.current = initChart(chart.current!);
@@ -113,6 +127,7 @@ function ChartComponent({
   }, [demo, hits.length, hasMore, hasPrevious]);
 
   useEffect(() => {
+    let maxMetric = 0;
     const newData = allTruthy(hits.map((course): Embedding | null => {
       const id = course.id as keyof typeof embeddings;
       if (!embeddings[id]) {
@@ -120,8 +135,17 @@ function ChartComponent({
         return null;
       }
       const [x, y] = embeddings[id];
+      const metric = radiusMetric === 'uniform' ? 0 : (parseFloat(course[radiusMetric]?.toString() || '') || 0);
+      maxMetric = Math.max(metric, maxMetric);
+      console.log(maxMetric);
       return {
-        x, y, subject: course.SUBJECT, catalogNumber: course.CATALOG_NBR, title: course.Title, id: course.id,
+        x,
+        y,
+        subject: course.SUBJECT,
+        catalogNumber: course.CATALOG_NBR,
+        title: course.Title,
+        id: course.id,
+        metric,
       };
     }));
 
@@ -131,8 +155,8 @@ function ChartComponent({
       .append('circle')
       .attr('cx', (d) => scales.x(d.x))
       .attr('cy', (d) => scales.y(d.y))
-      .attr('r', 10)
       .style('fill', (d) => getSubjectColor(d.subject))
+      .attr('r', (minRadius + maxRadius) / 2)
       .style('cursor', 'pointer')
       .style('opacity', 0);
 
@@ -155,10 +179,15 @@ function ChartComponent({
       });
 
     newDots
-      .transition()
-      .delay((_, i) => SEARCH_DELAY * (i / newDots.size()))
+      .transition('opacity')
+      .delay((_, i) => SEARCH_DELAY * 2 * (i / newDots.size()))
       .duration(SEARCH_DELAY)
       .style('opacity', 1);
+
+    g.selectAll<SVGCircleElement, Embedding>('circle')
+      .transition('r')
+      .duration(100)
+      .attr('r', (d) => (maxMetric === 0 ? minRadius : minRadius + (maxRadius - minRadius) * (d.metric / maxMetric)));
 
     if (!demo) {
       newDots.on('click', (_, d) => {
@@ -167,10 +196,10 @@ function ChartComponent({
     }
 
     dots.exit().remove();
-  }, [hits]);
+  }, [hits, radiusMetric]);
 
   const buttonClass = (disabled: boolean) => classNames(
-    'text-white px-2 py-1 text-sm rounded-md',
+    'text-white px-2 py-1 text-sm rounded-md shadow',
     disabled ? 'bg-gray-300' : 'bg-blue-900 interactive',
   );
 
@@ -209,7 +238,7 @@ function ChartComponent({
   }
 
   return (
-    <div className="md:flex-1 relative h-96">
+    <div className="md:flex-1 relative min-h-[28rem]">
       <div ref={chart} className="w-full h-full" />
       <div className="absolute top-0 left-0 flex space-x-2 items-center">
         <button
@@ -219,6 +248,30 @@ function ChartComponent({
         >
           Random
         </button>
+        <Listbox as="div" className="relative inline-block" value={radiusMetric} onChange={setRadiusMetric}>
+          <div>
+            <Listbox.Button className="flex items-center justify-center bg-blue-900 text-white text-sm px-2 py-1 rounded-md interactive shadow">
+              {metrics[radiusMetric]}
+              <FaChevronDown className="ml-2 text-xs" />
+            </Listbox.Button>
+          </div>
+          <FadeTransition>
+            <Listbox.Options as="div" className="absolute top-full mt-2 rounded shadow-xl border-2 border-gray-400 overflow-hidden list-none">
+              {metricNames.map((metric) => (
+                <Listbox.Option key={metric} value={metric}>
+                  {({ selected }) => (
+                    <button
+                      type="button"
+                      className={classNames(selected ? 'bg-gray-300' : 'bg-white hover:bg-gray-200 transition-colors', 'px-2 py-1 w-full')}
+                    >
+                      {metrics[metric]}
+                    </button>
+                  )}
+                </Listbox.Option>
+              ))}
+            </Listbox.Options>
+          </FadeTransition>
+        </Listbox>
         <Tooltip text="Currently limited to 1000 courses." direction="right">
           <FaInfo />
         </Tooltip>
