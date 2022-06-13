@@ -25,23 +25,14 @@ import Tooltip from '../../Tooltip';
  */
 export default function PlanningPanel({ course }: { course: ExtendedClass }) {
   const schedules = useAppSelector(Schedules.selectSchedules);
-  return (
-    <Tab.Panel>
-      {Object.keys(schedules).length > 0 ? (
-        <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
-          {sortSchedules(schedules).map((schedule) => (
-            <ScheduleRow
-              key={schedule.title}
-              course={course}
-              schedule={schedule}
-            />
-          ))}
-        </div>
-      ) : (
+
+  if (Object.keys(schedules).length === 0) {
+    return (
+      <Tab.Panel>
         <p>
           Get started by
           {' '}
-          <Link href="/schedule">
+          <Link href="/">
             {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
             <a className="font-bold interactive">
               creating a schedule
@@ -49,7 +40,21 @@ export default function PlanningPanel({ course }: { course: ExtendedClass }) {
           </Link>
           !
         </p>
-      )}
+      </Tab.Panel>
+    );
+  }
+
+  return (
+    <Tab.Panel>
+      <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
+        {sortSchedules(schedules).map((schedule) => (
+          <ScheduleRow
+            key={schedule.title}
+            course={course}
+            schedule={schedule}
+          />
+        ))}
+      </div>
     </Tab.Panel>
   );
 }

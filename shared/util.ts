@@ -148,7 +148,7 @@ export function getSchedulesBySemester(
   );
 }
 
-export function getAllClassIds(schedules: Schedule[]) {
+export function getAllClassIds(schedules: Schedule[]): string[] {
   return schedules.flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
 }
 

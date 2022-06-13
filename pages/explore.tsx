@@ -12,7 +12,9 @@ import AttributeMenu from '../components/SearchComponents/AttributeMenu';
 import Tooltip from '../components/Tooltip';
 import type { ExtendedClass } from '../shared/apiTypes';
 import embeddings from '../shared/assets/embeddings.json';
-import { allTruthy, classNames, getSubjectColor } from '../shared/util';
+import {
+  allTruthy, classNames, getAllClassIds, getSubjectColor,
+} from '../shared/util';
 import useSearchState from '../src/context/searchState';
 import * as ClassCache from '../src/features/classCache';
 import { useModal } from '../src/context/modal';
@@ -130,9 +132,11 @@ function ChartComponent({
     }
   }, [demo, elapsed]);
 
-  function getDots() {
-    return objects.current!.g.selectAll<SVGCircleElement, Embedding>('circle');
-  }
+  const getDots = () => objects.current!.g.selectAll<SVGCircleElement, Embedding>('circle');
+
+  const getRadius = (metric: number, maxMetric: number) => (
+    maxMetric === 0 ? minRadius : minRadius + (maxRadius - minRadius) * (metric / maxMetric)
+  );
 
   // assume that queries will not return the same number of hits
   useEffect(() => {
@@ -187,7 +191,7 @@ function ChartComponent({
     getDots()
       .transition('r')
       .duration(100)
-      .attr('r', (d) => (maxMetric === 0 ? minRadius : minRadius + (maxRadius - minRadius) * (d.metric / maxMetric)));
+      .attr('r', (d) => getRadius(d.metric, maxMetric));
 
     dots.exit().remove();
   }, [demo, client]);
@@ -227,16 +231,28 @@ function ChartComponent({
   }
 
   async function focusMine(meiliClient: InstantMeiliSearchInstance, userId: string) {
-    objects.current!.g.selectAll('circle').data();
     const q = query(Schema.Collection.schedules(), where('ownerUid', '==', userId));
     const { docs } = await getDocs(q);
-    const courseIds = docs.flatMap((doc) => doc.data().classes.map(({ classId }) => classId));
+    const courseIds = getAllClassIds(docs.map((doc) => doc.data()));
+
     const loaded = await dispatch(ClassCache.loadCourses(meiliClient.MeiliSearchClient.index('courses'), courseIds));
+
     const dots = getDots();
     const data = dots.data();
-    const [newData, maxMetric] = makeData(loaded, radiusMetric);
+    const [newData, maxMetric] = makeData(loaded.filter((e) => !data.find((d) => d.id === e.id)), radiusMetric);
     const allDots = dots.data<Embedding>([...data, ...newData], (d) => d.id);
     addDots(allDots, maxMetric);
+
+    getDots()
+      .filter((d) => courseIds.includes(d.id))
+      .attr('stroke', 'black')
+      .transition()
+      .duration(500)
+      .style('opacity', 1)
+      .attr('r', maxRadius * 2)
+      .transition()
+      .duration(500)
+      .attr('r', (d) => getRadius(d.metric, maxMetric));
 
     console.log('DATA', data);
   }

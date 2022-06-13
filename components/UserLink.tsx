@@ -42,7 +42,7 @@ export function ScheduleSection({ schedule }: { schedule: Schedule }) {
   const { showCourse } = useModal();
   const ownerUid = useMemo(() => [schedule.ownerUid], [schedule.ownerUid]);
   const profiles = useProfiles(ownerUid);
-  const profile = profiles[schedule.ownerUid];
+  const profile = profiles?.[schedule.ownerUid];
 
   return (
     <div className="rounded-xl shadow-xl bg-blue-300 p-4">
