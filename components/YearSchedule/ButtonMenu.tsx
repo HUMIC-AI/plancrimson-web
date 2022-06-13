@@ -9,6 +9,7 @@ import {
   FaUnlink,
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
+import { v4 as uuidv4 } from 'uuid';
 import { Season } from '../../shared/firestoreTypes';
 import { Auth, Schedules, Settings } from '../../src/features';
 import { useAppDispatch, useAppSelector } from '../../src/hooks';
@@ -82,10 +83,10 @@ function ButtonMenu({
   const handleDuplicate = useCallback(async () => {
     if (!chosenSchedule) return;
     try {
-      const schedule = await dispatch(Schedules.createSchedule({ ...chosenSchedule }));
+      const schedule = await dispatch(Schedules.createSchedule({ ...chosenSchedule, id: uuidv4(), title: `${chosenSchedule.title} copy` }));
       handleChooseSchedule(schedule.payload.id);
     } catch (err) {
-      console.error(err);
+      console.error('error duplicating schedule:', err);
       alert("Couldn't duplicate your schedule. Please try again later.");
     }
   }, [chosenSchedule]);

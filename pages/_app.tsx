@@ -93,7 +93,6 @@ function MyApp({ Component, pageProps }: AppProps) {
     const unsub = onAuthStateChanged(
       auth,
       (u) => {
-        console.log('auth state:', u);
         if (u) {
           dispatch(Auth.setAuthInfo({
             uid: u.uid,
@@ -116,8 +115,6 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   useEffect(() => {
     if (!uid) return;
-
-    console.log('starting profile listener');
 
     const profileRef = Schema.profile(uid);
     const unsubProfile = onSnapshot(

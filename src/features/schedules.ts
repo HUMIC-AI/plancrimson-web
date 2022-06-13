@@ -68,7 +68,7 @@ export const { overwriteSchedules, clearSchedule } = schedulesSlice.actions;
 
 export const createSchedule = (schedule: Schedule) => async (dispatch: AppDispatch, getState: () => RootState) => {
   const state = getState();
-  if (schedule.id in state) {
+  if (schedule.id in state.schedules) {
     throw new Error('schedule already exists');
   }
   await setDoc(Schema.schedule(schedule.id), schedule);

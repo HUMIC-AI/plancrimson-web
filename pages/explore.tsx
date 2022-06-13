@@ -253,8 +253,6 @@ function ChartComponent({
       .transition()
       .duration(500)
       .attr('r', (d) => getRadius(d.metric, maxMetric));
-
-    console.log('DATA', data);
   }
 
   const buttonClass = (disabled: boolean) => classNames(
