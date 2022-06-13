@@ -1,5 +1,6 @@
 /* eslint-disable no-param-reassign */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { Term } from '../../shared/types';
 import type { SampleSchedule } from '../requirements/util';
 import type { RootState } from '../store';
 
@@ -10,6 +11,7 @@ interface SemesterFormat {
   showAttributes: boolean;
   showRequirements: boolean;
   hiddenIds: Record<string, boolean>;
+  hiddenTerms: Record<Term, boolean>;
 }
 
 const initialState: SemesterFormat = {
@@ -19,6 +21,7 @@ const initialState: SemesterFormat = {
   showAttributes: true,
   showRequirements: false,
   hiddenIds: {},
+  hiddenTerms: {},
 };
 
 export const semesterFormatSlice = createSlice({
@@ -45,15 +48,21 @@ export const semesterFormatSlice = createSlice({
     setShowReqs: (state, action: PayloadAction<boolean>) => {
       state.showRequirements = action.payload;
     },
-    setHidden: (state, action: PayloadAction<{ scheduleId: string, hidden: boolean }>) => {
-      const { scheduleId, hidden } = action.payload;
-      state.hiddenIds[scheduleId] = hidden;
+    setHiddenId: (state, action: PayloadAction<{ id: string, hidden: boolean }>) => {
+      const { id, hidden } = action.payload;
+      if (hidden) state.hiddenIds[id] = true;
+      else delete state.hiddenIds[id];
+    },
+    setHiddenTerm: (state, action: PayloadAction<{ term: Term, hidden: boolean }>) => {
+      const { term, hidden } = action.payload;
+      if (hidden) state.hiddenTerms[term] = true;
+      else delete state.hiddenTerms[term];
     },
   },
 });
 
 export const {
-  showAll, showSelected, showSample, toggleExpand, setShowAttributes, setShowReqs, setHidden,
+  showAll, showSelected, showSample, toggleExpand, setShowAttributes, setShowReqs, setHiddenId, setHiddenTerm,
 } = semesterFormatSlice.actions;
 
 // ========================= SELECTORS =========================
@@ -64,3 +73,4 @@ export const selectExpandCards = (state: RootState) => state.semesterFormat.expa
 export const selectShowAttributes = (state: RootState) => state.semesterFormat.showAttributes;
 export const selectShowReqs = (state: RootState) => state.semesterFormat.showRequirements;
 export const selectHiddenIds = (state: RootState) => state.semesterFormat.hiddenIds;
+export const selectHiddenTerms = (state: RootState) => state.semesterFormat.hiddenTerms;

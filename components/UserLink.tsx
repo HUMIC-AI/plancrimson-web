@@ -19,10 +19,13 @@ export function ImageWrapper({ url, size = 'sm' }: { url: string | null | undefi
   if (url) {
     return (
       <Image
-        className="h-8 w-8 rounded-full"
+        className={classNames(
+          size === 'sm' ? 'h-8 w-8' : 'h-16 w-16',
+          'rounded-full',
+        )}
         src={url}
         width={size === 'sm' ? 32 : 64}
-        height={size === 'md' ? 32 : 64}
+        height={size === 'sm' ? 32 : 64}
       />
     );
   }

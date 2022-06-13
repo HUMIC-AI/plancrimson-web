@@ -69,7 +69,7 @@ interface ButtonMenuProps {
   prevScheduleId: string | null;
 }
 
-function ButtonMenu({
+export default function ButtonMenu({
   chosenScheduleId,
   handleChooseSchedule,
   year,
@@ -163,5 +163,3 @@ function ButtonMenu({
     </div>
   );
 }
-
-export default ButtonMenu;

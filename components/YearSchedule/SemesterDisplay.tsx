@@ -19,7 +19,7 @@ import { Requirement } from '../../src/requirements/util';
 import ButtonMenu from './ButtonMenu';
 import { useModal } from '../../src/context/modal';
 import {
-  ClassCache, Planner, Profile, Schedules,
+  ClassCache, Planner, Profile, Schedules, Settings,
 } from '../../src/features';
 import AddCoursesButton from '../CourseSearchModal';
 
@@ -38,7 +38,6 @@ export interface SemesterDisplayProps {
 
 interface SemesterComponentProps extends SemesterDisplayProps {
   highlightedRequirement: Requirement | undefined;
-  handleChooseSchedule: React.Dispatch<string | null>;
   dragStatus: DragStatus;
   setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>;
   colWidth: number;
@@ -56,7 +55,6 @@ interface SemesterComponentProps extends SemesterDisplayProps {
 export default function SemesterComponent({
   semester,
   chosenScheduleId,
-  handleChooseSchedule,
   highlightedRequirement,
   dragStatus,
   setDragStatus,
@@ -127,7 +125,13 @@ export default function SemesterComponent({
       <button
         type="button"
         className="absolute top-2 right-2 text-sm hover:opacity-50"
-        onClick={() => chosenScheduleId && dispatch(Planner.setHidden({ scheduleId: chosenScheduleId, hidden: true }))}
+        onClick={() => {
+          if (semesterFormat === 'selected') {
+            dispatch(Planner.setHiddenTerm({ term: `${semester.year}${semester.season}`, hidden: true }));
+          } else if (chosenScheduleId) {
+            dispatch(Planner.setHiddenId({ id: chosenScheduleId, hidden: true }));
+          }
+        }}
       >
         <FaMinus />
       </button>
@@ -143,7 +147,6 @@ export default function SemesterComponent({
       >
         <HeaderSection
           chosenScheduleId={chosenScheduleId}
-          handleChooseSchedule={handleChooseSchedule}
           semester={semester}
           highlight={highlight}
           colWidth={colWidth}
@@ -177,13 +180,12 @@ export default function SemesterComponent({
 type HeaderProps = {
   highlight: string | undefined;
   semester: Semester;
-  handleChooseSchedule: React.Dispatch<string | null>;
   chosenScheduleId: string | null;
   colWidth: number;
 };
 
 function HeaderSection({
-  highlight, semester, handleChooseSchedule, chosenScheduleId, colWidth,
+  highlight, semester, chosenScheduleId, colWidth,
 }: HeaderProps) {
   const dispatch = useAppDispatch();
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
@@ -209,11 +211,15 @@ function HeaderSection({
       return;
     }
     await dispatch(Schedules.renameSchedule({ scheduleId: chosenScheduleId, title: scheduleTitle }));
-    handleChooseSchedule(chosenScheduleId);
     setEditing(false);
   }
 
   const doHighlight = typeof highlight !== 'undefined' && highlight === chosenScheduleId;
+
+  const chooseSchedule = (scheduleId: string | null) => dispatch(Settings.chooseSchedule({
+    term: `${semester.year}${semester.season}`,
+    scheduleId,
+  }));
 
   return (
     <div className="flex flex-col items-stretch space-y-2 p-4 border-black border-b-2">
@@ -260,7 +266,7 @@ function HeaderSection({
       <ScheduleChooser
         scheduleIds={currentSchedules.sort(compareSemesters).map((s) => s.id)}
         chosenScheduleId={chosenScheduleId}
-        handleChooseSchedule={(scheduleId) => handleChooseSchedule(scheduleId)}
+        handleChooseSchedule={chooseSchedule}
         direction="center"
         parentWidth={`${colWidth}px`}
         showTerm={semesterFormat === 'all' ? 'on' : 'auto'}
@@ -272,13 +278,10 @@ function HeaderSection({
       {semesterFormat !== 'sample' && (
       <ButtonMenu
         prevScheduleId={prevScheduleId}
-        {...{
-          season: semester.season,
-          year: semester.year,
-          chosenScheduleId,
-          handleChooseSchedule,
-          setScheduleTitle,
-        }}
+        handleChooseSchedule={chooseSchedule}
+        season={semester.season}
+        year={semester.year}
+        chosenScheduleId={chosenScheduleId}
       />
       )}
     </div>

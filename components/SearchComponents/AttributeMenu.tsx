@@ -1,6 +1,6 @@
 import { FaAngleDoubleLeft } from 'react-icons/fa';
-import { adjustAttr, classNames } from '../../shared/util';
-import { useAppDispatch, useLgBreakpoint } from '../../src/hooks';
+import { adjustAttr, breakpoints, classNames } from '../../shared/util';
+import { useAppDispatch, useBreakpoint } from '../../src/hooks';
 import Attribute from './Attribute';
 import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
 import { Planner } from '../../src/features';
@@ -16,7 +16,7 @@ interface Props {
  */
 export default function AttributeMenu({ lgOnly, withWrapper, showSubjectColor = false }: Props) {
   const dispatch = useAppDispatch();
-  const isLg = useLgBreakpoint();
+  const isLg = useBreakpoint(breakpoints.lg);
 
   return (
     <div className={classNames(

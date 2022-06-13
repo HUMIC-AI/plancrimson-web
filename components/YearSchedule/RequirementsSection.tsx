@@ -37,8 +37,6 @@ interface RequirementsSectionProps {
   validationResults: GroupResult | null;
   highlightedRequirement: Requirement | undefined;
   highlightRequirement: React.Dispatch<React.SetStateAction<Requirement | undefined>>;
-  notification: boolean;
-  setNotification: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function RequirementsSection({
@@ -47,8 +45,6 @@ export default function RequirementsSection({
   validationResults,
   highlightedRequirement,
   highlightRequirement,
-  notification,
-  setNotification,
 }: RequirementsSectionProps) {
   const dispatch = useAppDispatch();
   const showReqs = useAppSelector(selectShowReqs);
@@ -56,6 +52,7 @@ export default function RequirementsSection({
   const bottomRef = useRef<HTMLDivElement>(null!);
   const [topIntersecting, setTopIntersecting] = useState(false);
   const [bottomIntersecting, setBottomIntersecting] = useState(false);
+  const [notification, setNotification] = useState(true);
 
   useEffect(() => {
     const topObserver = new IntersectionObserver(([{ isIntersecting }]) => {
@@ -75,7 +72,8 @@ export default function RequirementsSection({
   return (
     <div className={classNames(
       showReqs && 'md:rounded-lg',
-      'relative mb-12 md:mb-0 border-gray-300 space-y-4 md:border-2 md:shadow-lg md:max-w-xs lg:max-w-sm xl:max-w-md w-screen sm:overflow-auto sm:resize-x',
+      'relative mb-12 md:mb-0 border-gray-300 space-y-4 md:border-2 md:shadow-lg sm:overflow-auto sm:resize-x',
+      'md:max-w-xs lg:max-w-sm xl:max-w-md w-screen', // container effect
     )}
     >
       <div className="md:absolute md:inset-4 flex flex-col space-y-4">
