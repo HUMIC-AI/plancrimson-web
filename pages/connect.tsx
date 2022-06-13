@@ -1,4 +1,6 @@
 import { Tab } from '@headlessui/react';
+import axios from 'axios';
+import { getAuth } from 'firebase/auth';
 import {
   deleteDoc, getDoc, updateDoc, where,
 } from 'firebase/firestore';
@@ -193,9 +195,16 @@ function useSuggestedProfiles() {
     }
 
     if (stale) {
-      const functions = getFunctions();
-      const suggestProfiles = httpsCallable<undefined, [string, number][]>(functions, 'suggestProfiles');
-      suggestProfiles()
+      const user = getAuth().currentUser;
+      if (!user) {
+        console.error('not signed in');
+        return;
+      }
+      user.getIdToken(true)
+        .then((token) => {
+          console.log(token);
+          return axios({ url: '/api/suggestProfiles', headers: { authorization: `Bearer ${token}` } });
+        })
         .then(({ data }) => {
           sessionStorage.setItem('suggestProfiles/lastUpdated', Date.now().toString());
           sessionStorage.setItem('suggestProfiles/profiles', JSON.stringify(data));

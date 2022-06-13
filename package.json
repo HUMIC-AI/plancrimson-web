@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "db": "firebase emulators:start",
-    "dev": "next dev",
+    "dev": "cross-env FIRESTORE_EMULATOR_HOST='localhost:8080' FIREBASE_AUTH_EMULATOR_HOST='127.0.0.1:9099' next dev",
     "build": "next build",
     "watch": "tsc -w --noEmit false --outDir build --module commonjs",
     "start": "next start",
@@ -65,6 +65,7 @@
     "@welldone-software/why-did-you-render": "^6.2.3",
     "algoliasearch": "^4.11.0",
     "autoprefixer": "^10.4.0",
+    "cross-env": "^7.0.3",
     "eslint": "^8.4.1",
     "eslint-config-airbnb": "^19.0.2",
     "eslint-config-airbnb-typescript": "^16.1.0",
