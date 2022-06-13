@@ -2,7 +2,6 @@ import '../server/initFirebase';
 import { getAuth, UserRecord } from 'firebase-admin/auth';
 import { BulkWriter, FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import { Schedule } from '../shared/types';
 
 // returns a list of promises for the bulkWriter.
 // should be idempotent -- running this multiple times will be a no-op
