@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import {
-  createRef, MutableRefObject, useEffect, useRef, useState,
+  createRef, MutableRefObject, useCallback, useEffect, useRef, useState,
 } from 'react';
 import { FaChevronDown, FaInfo, FaSpinner } from 'react-icons/fa';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
@@ -23,6 +23,7 @@ import sampleCourses from '../shared/assets/sampleCourses.json';
 import FadeTransition from '../components/FadeTransition';
 import { Schema } from '../shared/firestoreTypes';
 
+
 const SEARCH_DELAY = 1000;
 const minRadius = 5;
 const maxRadius = 15;
@@ -35,6 +36,61 @@ const metrics = {
 };
 const metricNames = Object.keys(metrics).sort() as (keyof typeof metrics)[];
 
+
+export default function ExplorePage() {
+  const { searchState, setSearchState } = useSearchState();
+  const userId = Auth.useAuthProperty('uid');
+  const { client, error } = useMeiliClient(userId);
+  const elapsed = useElapsed(500, []);
+
+  if (typeof userId === 'undefined') {
+    if (elapsed) return <LoadingPage />;
+    return <Layout />;
+  }
+
+  if (userId === null) {
+    return (
+      <Layout className="md:flex-1 md:relative">
+        <div className="md:absolute md:inset-2 flex flex-col md:flex-row space-x-2">
+          <AttributeMenu />
+          <ChartComponent hits={sampleCourses as ExtendedClass[]} demo client={null} />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!client || error) {
+    return <ErrorPage>{errorMessages.meiliClient}</ErrorPage>;
+  }
+
+  return (
+    <Layout className="md:flex-1 md:relative">
+      <InstantSearch
+        indexName="courses"
+        searchClient={client}
+        searchState={searchState}
+        onSearchStateChange={(newState) => {
+          setSearchState({ ...searchState, ...newState });
+        }}
+        stalledSearchDelay={500}
+      >
+        <Configure hitsPerPage={50} />
+        <div className="md:absolute md:inset-2 flex flex-col md:flex-row space-x-2">
+          <AttributeMenu showSubjectColor />
+          <Chart demo={false} client={client} />
+        </div>
+      </InstantSearch>
+    </Layout>
+  );
+}
+
+
+type ObjectsRef = MutableRefObject<ReturnType<typeof initChart> | null>;
+
+type ChartProps =
+  | (InfiniteHitsProvided<ExtendedClass> & { demo: false; client: InstantMeiliSearchInstance })
+  | (Partial<InfiniteHitsProvided<ExtendedClass>> & { demo: true; client: null });
+
 type Embedding = {
   x: number;
   y: number;
@@ -44,93 +100,6 @@ type Embedding = {
   id: string;
   metric: number;
 };
-type ObjectsRef = MutableRefObject<ReturnType<typeof initChart> | null>;
-
-// todo:
-// - focus on my courses
-// - add past courses
-// - better search functionality
-
-function initChart(chartDiv: HTMLDivElement) {
-  const chart = d3.select(chartDiv);
-  const width = chartDiv.clientWidth;
-  const height = chartDiv.clientHeight;
-
-  let [minx, maxx, miny, maxy] = [0, 0, 0, 0];
-  Object.values(embeddings).forEach(([x, y]) => {
-    minx = Math.min(minx, x);
-    maxx = Math.max(maxx, x);
-    miny = Math.min(miny, y);
-    maxy = Math.max(maxy, y);
-  });
-
-  const size = Math.min(width, height);
-  const range = (t: number) => [(t - size) / 2, (t + size) / 2];
-
-  const scales = {
-    x: d3.scaleLinear([minx, maxx], range(width)),
-    y: d3.scaleLinear([miny, maxy], range(height)),
-    minx,
-    maxx,
-    miny,
-    maxy,
-  };
-
-  const zoom = d3.zoom<SVGSVGElement, unknown>().on('zoom', (ev) => {
-    const newX = ev.transform.rescaleX(scales.x);
-    const newY = ev.transform.rescaleY(scales.y);
-    svg.selectAll<SVGCircleElement, Embedding>('circle')
-      .attr('cx', (d) => newX(d.x))
-      .attr('cy', (d) => newY(d.y));
-  });
-
-  const svg = chart.append('svg')
-    .attr('width', width)
-    .attr('height', height)
-    .call(zoom);
-
-  return {
-    svg,
-    g: svg.append('g'),
-    tooltip: chart.append('div')
-      .attr('class', 'absolute text-center -translate-x-1/2 -translate-y-full pointer-events-none w-48 rounded-sm bg-white bg-opacity-70')
-      .style('opacity', 0)
-      .datum(0),
-    scales,
-    zoom,
-  };
-}
-
-type ChartProps =
-  | (InfiniteHitsProvided<ExtendedClass> & { demo: false; client: InstantMeiliSearchInstance })
-  | (Partial<InfiniteHitsProvided<ExtendedClass>> & { demo: true; client: null });
-
-// turn a list of courses into data for d3
-function makeData(courses: ExtendedClass[], radiusMetric: keyof typeof metrics) {
-  let maxMetric = 0;
-
-  const data = allTruthy(courses.map((course): Embedding | null => {
-    const id = course.id as keyof typeof embeddings;
-    if (!embeddings[id]) {
-      console.error('no embedding for', id);
-      return null;
-    }
-    const [x, y] = embeddings[id];
-    const metric = radiusMetric === 'uniform' ? 0 : (parseFloat(course[radiusMetric]?.toString() || '') || 0);
-    maxMetric = Math.max(metric, maxMetric);
-    return {
-      x,
-      y,
-      subject: course.SUBJECT,
-      catalogNumber: course.CATALOG_NBR,
-      title: course.Title,
-      id: course.id,
-      metric,
-    };
-  }));
-
-  return [data, maxMetric] as const;
-}
 
 function ChartComponent({
   hits: foundHits = [], client, hasPrevious, hasMore, refinePrevious, refineNext, demo,
@@ -147,32 +116,33 @@ function ChartComponent({
     objects.current = initChart(chart.current!);
   }, []);
 
+  // only listen to elapsed, so that we search every SEARCH_DELAY seconds
+  // restart timer once hits update
+  const elapsed = useElapsed(SEARCH_DELAY, [hits.length]);
+
   useEffect(() => {
     if (demo) return;
-    if (hasMore && refineNext) {
-      setTimeout(() => refineNext(), SEARCH_DELAY);
-    } else if (hasPrevious && refinePrevious) {
-      setTimeout(() => refinePrevious(), SEARCH_DELAY);
+
+    if (hasMore) {
+      refineNext();
+    } else if (hasPrevious) {
+      refinePrevious();
     }
-  }, [demo, hits.length, hasMore, refineNext, hasPrevious, refinePrevious]);
+  }, [demo, elapsed]);
 
   function getDots() {
     return objects.current!.g.selectAll<SVGCircleElement, Embedding>('circle');
   }
 
+  // assume that queries will not return the same number of hits
   useEffect(() => {
     const [newData, maxMetric] = makeData(hits, radiusMetric);
     const dots = getDots().data(newData, (d) => d.id);
     addDots(dots, maxMetric);
-  }, [hits, radiusMetric, demo, client]);
-
-  const buttonClass = (disabled: boolean) => classNames(
-    'text-white px-2 py-1 text-sm rounded-md shadow',
-    disabled ? 'bg-gray-300' : 'bg-blue-900 interactive',
-  );
+  }, [hits.length, radiusMetric]);
 
   // enter new dots into d3
-  function addDots(dots: d3.Selection<SVGCircleElement, Embedding, SVGGElement, unknown>, maxMetric: number) {
+  const addDots = useCallback((dots: d3.Selection<SVGCircleElement, Embedding, SVGGElement, unknown>, maxMetric: number) => {
     const { scales, tooltip } = objects.current!;
 
     const newDots = dots.enter()
@@ -204,7 +174,6 @@ function ChartComponent({
 
     newDots
       .transition('opacity')
-      .delay((_, i) => SEARCH_DELAY * 2 * (i / newDots.size()))
       .duration(SEARCH_DELAY)
       .style('opacity', 1);
 
@@ -221,8 +190,7 @@ function ChartComponent({
       .attr('r', (d) => (maxMetric === 0 ? minRadius : minRadius + (maxRadius - minRadius) * (d.metric / maxMetric)));
 
     dots.exit().remove();
-  }
-
+  }, [demo, client]);
 
   function focusRandom() {
     const index = Math.floor(Math.random() * hits.length);
@@ -272,6 +240,11 @@ function ChartComponent({
 
     console.log('DATA', data);
   }
+
+  const buttonClass = (disabled: boolean) => classNames(
+    'text-white px-2 py-1 text-sm rounded-md shadow',
+    disabled ? 'bg-gray-300' : 'bg-blue-900 interactive',
+  );
 
   return (
     <div className="md:flex-1 relative min-h-[28rem]">
@@ -328,49 +301,79 @@ function ChartComponent({
 
 const Chart = connectInfiniteHits(ChartComponent);
 
-export default function ExplorePage() {
-  const { searchState, setSearchState } = useSearchState();
-  const userId = Auth.useAuthProperty('uid');
-  const { client, error } = useMeiliClient(userId);
-  const elapsed = useElapsed(5000, []);
+// turn a list of courses into data for d3
+function makeData(courses: ExtendedClass[], radiusMetric: keyof typeof metrics) {
+  let maxMetric = 0;
 
-  if (typeof userId === 'undefined') {
-    if (elapsed) return <LoadingPage />;
-    return <Layout />;
-  }
+  const data = allTruthy(courses.map((course): Embedding | null => {
+    const id = course.id as keyof typeof embeddings;
+    if (!embeddings[id]) {
+      console.error('no embedding for', id);
+      return null;
+    }
+    const [x, y] = embeddings[id];
+    const metric = radiusMetric === 'uniform' ? 0 : (parseFloat(course[radiusMetric]?.toString() || '') || 0);
+    maxMetric = Math.max(metric, maxMetric);
+    return {
+      x,
+      y,
+      subject: course.SUBJECT,
+      catalogNumber: course.CATALOG_NBR,
+      title: course.Title,
+      id: course.id,
+      metric,
+    };
+  }));
 
-  if (userId === null) {
-    return (
-      <Layout className="md:flex-1 md:relative">
-        <div className="md:absolute md:inset-2 flex flex-col md:flex-row space-x-2">
-          <AttributeMenu />
-          <ChartComponent hits={sampleCourses as ExtendedClass[]} demo client={null} />
-        </div>
-      </Layout>
-    );
-  }
+  return [data, maxMetric] as const;
+}
 
-  if (!client || error) {
-    return <ErrorPage>{errorMessages.meiliClient}</ErrorPage>;
-  }
+function initChart(chartDiv: HTMLDivElement) {
+  const chart = d3.select(chartDiv);
+  const width = chartDiv.clientWidth;
+  const height = chartDiv.clientHeight;
 
-  return (
-    <Layout className="md:flex-1 md:relative">
-      <InstantSearch
-        indexName="courses"
-        searchClient={client}
-        searchState={searchState}
-        onSearchStateChange={(newState) => {
-          setSearchState({ ...searchState, ...newState });
-        }}
-        stalledSearchDelay={500}
-      >
-        <Configure hitsPerPage={50} />
-        <div className="md:absolute md:inset-2 flex flex-col md:flex-row space-x-2">
-          <AttributeMenu showSubjectColor />
-          <Chart demo={false} client={client} />
-        </div>
-      </InstantSearch>
-    </Layout>
-  );
+  let [minx, maxx, miny, maxy] = [0, 0, 0, 0];
+  Object.values(embeddings).forEach(([x, y]) => {
+    minx = Math.min(minx, x);
+    maxx = Math.max(maxx, x);
+    miny = Math.min(miny, y);
+    maxy = Math.max(maxy, y);
+  });
+
+  const size = Math.min(width, height);
+  const range = (t: number) => [(t - size) / 2, (t + size) / 2];
+
+  const scales = {
+    x: d3.scaleLinear([minx, maxx], range(width)),
+    y: d3.scaleLinear([miny, maxy], range(height)),
+    minx,
+    maxx,
+    miny,
+    maxy,
+  };
+
+  const zoom = d3.zoom<SVGSVGElement, unknown>().on('zoom', (ev) => {
+    const newX = ev.transform.rescaleX(scales.x);
+    const newY = ev.transform.rescaleY(scales.y);
+    svg.selectAll<SVGCircleElement, Embedding>('circle')
+      .attr('cx', (d) => newX(d.x))
+      .attr('cy', (d) => newY(d.y));
+  });
+
+  const svg = chart.append('svg')
+    .attr('width', width)
+    .attr('height', height)
+    .call(zoom);
+
+  return {
+    svg,
+    g: svg.append('g'),
+    tooltip: chart.append('div')
+      .attr('class', 'absolute text-center -translate-x-1/2 -translate-y-full pointer-events-none w-48 rounded-sm bg-white bg-opacity-70')
+      .style('opacity', 0)
+      .datum(0),
+    scales,
+    zoom,
+  };
 }

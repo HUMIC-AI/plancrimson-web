@@ -1,10 +1,14 @@
 import { DependencyList, useEffect, useState } from 'react';
-import { setDoc, deleteDoc, getDoc } from 'firebase/firestore';
+import {
+  setDoc, deleteDoc, getDoc, onSnapshot, query, where,
+} from 'firebase/firestore';
 import {
   getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, User,
 } from 'firebase/auth';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import { getInitialSettings, Schema, UserProfile } from '../shared/firestoreTypes';
+import {
+  FriendRequest, getInitialSettings, Schema, UserProfile, UserProfileWithId,
+} from '../shared/firestoreTypes';
 import type { AppDispatch, RootState } from './store';
 import { allTruthy } from '../shared/util';
 
@@ -135,10 +139,12 @@ export async function getProfile(id: string): Promise<UserProfile & { id: string
   return profile;
 }
 
-export function useProfiles(ids: string[]) {
-  const [profiles, setProfiles] = useState<Record<string, UserProfile & { id: string }>>({});
+export function useProfiles(ids: string[] | undefined) {
+  const [profiles, setProfiles] = useState<Record<string, UserProfileWithId>>();
 
   useEffect(() => {
+    if (!ids) return;
+
     (async () => {
       const settled = await Promise.allSettled(ids.map(getProfile));
       const users = allTruthy(settled.map((result) => {
@@ -151,6 +157,29 @@ export function useProfiles(ids: string[]) {
   }, [ids]);
 
   return profiles;
+}
+
+
+export function useFriendRequests(uid: string | null | undefined) {
+  const [incoming, setIncoming] = useState<(FriendRequest & { id: string })[]>([]);
+  const [outgoing, setOutgoing] = useState<(FriendRequest & { id: string })[]>([]);
+
+  useEffect(() => {
+    if (!uid) return;
+
+    const incomingQ = query(Schema.Collection.allFriends(), where('to', '==', uid));
+    const outgoingQ = query(Schema.Collection.allFriends(), where('from', '==', uid));
+
+    const unsubIn = onSnapshot(incomingQ, (snap) => setIncoming(snap.docs.map((d) => ({ ...d.data(), id: d.id }))));
+    const unsubOut = onSnapshot(outgoingQ, (snap) => setOutgoing(snap.docs.map((d) => ({ ...d.data(), id: d.id }))));
+
+    return () => {
+      unsubIn();
+      unsubOut();
+    };
+  }, [uid]);
+
+  return { incoming, outgoing };
 }
 
 
