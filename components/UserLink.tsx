@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FaUser } from 'react-icons/fa';
 import { useMemo } from 'react';
-import { Schedule } from '../shared/firestoreTypes';
+import { Schedule } from '../shared/types';
 import { useModal } from '../src/context/modal';
 import { ClassCache } from '../src/features';
 import { useAppSelector, useProfiles } from '../src/hooks';

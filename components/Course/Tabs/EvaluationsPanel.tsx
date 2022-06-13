@@ -2,7 +2,7 @@ import { Tab } from '@headlessui/react';
 import React, { useMemo } from 'react';
 import useSWR from 'swr';
 import { ExtendedClass, Evaluation } from '../../../shared/apiTypes';
-import { Season } from '../../../shared/firestoreTypes';
+import { Season } from '../../../shared/types';
 import {
   getEvaluations,
   compareSemesters,

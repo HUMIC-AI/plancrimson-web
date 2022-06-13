@@ -5,8 +5,9 @@ import {
 } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  Schema, Schedule, ScheduleMap, Semester, UserClassData,
-} from '../../shared/firestoreTypes';
+  Schedule, ScheduleMap, Semester, UserClassData,
+} from '../../shared/types';
+import Schema from '../../shared/schema';
 import type { AppDispatch, RootState } from '../store';
 
 const initialState: ScheduleMap = {};

@@ -11,7 +11,7 @@ import {
   HoursStats,
   ReasonsForEnrolling,
 } from '../shared/apiTypes';
-import { Season } from '../shared/firestoreTypes';
+import { Season } from '../shared/types';
 import { allTruthy } from '../shared/util';
 import { getFilePath } from './util';
 

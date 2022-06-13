@@ -10,7 +10,7 @@ import {
   findConflicts,
   getSchedulesBySemester,
 } from '../../shared/util';
-import { Schedule, Semester, Viability } from '../../shared/firestoreTypes';
+import { Schedule, Semester, Viability } from '../../shared/types';
 import { useAppDispatch, useAppSelector } from '../../src/hooks';
 import ScheduleChooser from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';

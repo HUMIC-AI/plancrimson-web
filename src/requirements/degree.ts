@@ -1,5 +1,6 @@
-import { getClassId, getNumCredits } from '../../shared/util';
-import { FAILING_GRADES, PASSING_GRADES } from '../../shared/firestoreTypes';
+import {
+  FAILING_GRADES, getClassId, getNumCredits, PASSING_GRADES,
+} from '../../shared/util';
 import { getSchoolYear, Requirement, RequirementGroup } from './util';
 
 const totalCredits: Requirement = {

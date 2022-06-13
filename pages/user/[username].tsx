@@ -9,7 +9,8 @@ import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import Layout, { errorMessages, ErrorPage, LoadingPage } from '../../components/Layout/Layout';
 import { ImageWrapper, ScheduleSection } from '../../components/UserLink';
-import { FriendRequest, Schema } from '../../shared/firestoreTypes';
+import { FriendRequest } from '../../shared/types';
+import Schema from '../../shared/schema';
 import { Auth, Schedules } from '../../src/features';
 import {
   sendFriendRequest, unfriend, useAppSelector, useElapsed,

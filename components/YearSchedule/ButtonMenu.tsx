@@ -10,7 +10,7 @@ import {
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
 import { v4 as uuidv4 } from 'uuid';
-import { Season } from '../../shared/firestoreTypes';
+import { Season } from '../../shared/types';
 import { Auth, Schedules, Settings } from '../../src/features';
 import { useAppDispatch, useAppSelector } from '../../src/hooks';
 import Tooltip from '../Tooltip';

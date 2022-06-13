@@ -3,9 +3,11 @@ import { Disclosure } from '@headlessui/react';
 import React, { Fragment } from 'react';
 import { useForm, FieldValues } from 'react-hook-form';
 import { createEvents, DateArray, EventAttributes } from 'ics';
-import { ExtendedClass } from '../../shared/apiTypes';
-import { DAYS_OF_WEEK, DAY_SHORT, Schedule } from '../../shared/firestoreTypes';
-import { allTruthy, getClassId } from '../../shared/util';
+import type { ExtendedClass } from '../../shared/apiTypes';
+import type { Schedule } from '../../shared/types';
+import {
+  allTruthy, getClassId, DAYS_OF_WEEK, DAY_SHORT,
+} from '../../shared/util';
 import {
   strToDec,
   decToStr,

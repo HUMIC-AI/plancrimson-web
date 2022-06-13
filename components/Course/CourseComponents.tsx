@@ -3,8 +3,7 @@ import {
   FaUser, FaMapMarkerAlt, FaCalendarDay, FaClock,
 } from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
-import { DAYS_OF_WEEK } from '../../shared/firestoreTypes';
-import { classNames } from '../../shared/util';
+import { classNames, DAYS_OF_WEEK } from '../../shared/util';
 import Highlight from '../SearchComponents/Highlight';
 
 type CourseProps = {

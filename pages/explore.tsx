@@ -23,7 +23,7 @@ import { InstantMeiliSearchInstance, useMeiliClient } from '../src/meili';
 import { Auth } from '../src/features';
 import sampleCourses from '../shared/assets/sampleCourses.json';
 import FadeTransition from '../components/FadeTransition';
-import { Schema } from '../shared/firestoreTypes';
+import Schema from '../shared/schema';
 
 
 const SEARCH_DELAY = 1000;
@@ -43,7 +43,7 @@ export default function ExplorePage() {
   const { searchState, setSearchState } = useSearchState();
   const userId = Auth.useAuthProperty('uid');
   const { client, error } = useMeiliClient(userId);
-  const elapsed = useElapsed(500, []);
+  const elapsed = useElapsed(1000, []);
 
   if (typeof userId === 'undefined') {
     if (elapsed) return <LoadingPage />;
@@ -61,8 +61,13 @@ export default function ExplorePage() {
     );
   }
 
-  if (!client || error) {
+  if (error) {
     return <ErrorPage>{errorMessages.meiliClient}</ErrorPage>;
+  }
+
+  if (!client) {
+    if (elapsed) return <LoadingPage />;
+    return <Layout />;
   }
 
   return (

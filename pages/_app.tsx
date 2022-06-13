@@ -16,8 +16,8 @@ import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
 import {
   Auth, Profile, Schedules, Settings,
 } from '../src/features';
-import { getInitialSettings, Schema } from '../shared/firestoreTypes';
-import { getUniqueSemesters } from '../shared/util';
+import Schema from '../shared/schema';
+import { getInitialSettings, getUniqueSemesters } from '../shared/util';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional

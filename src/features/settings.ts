@@ -1,9 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { updateDoc } from 'firebase/firestore';
-import {
-  CustomTimeRecord, getInitialSettings, Schema, Term, UserSettings,
-} from '../../shared/firestoreTypes';
+import type {
+  CustomTimeRecord, Term, UserSettings,
+} from '../../shared/types';
+import Schema from '../../shared/schema';
 import type { AppDispatch, RootState } from '../store';
+import { getInitialSettings } from '../../shared/util';
 
 type CustomTimePayload = CustomTimeRecord & {
   classId: string;

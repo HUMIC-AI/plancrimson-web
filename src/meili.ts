@@ -1,7 +1,7 @@
 import { instantMeiliSearch, InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
 import { getDoc } from 'firebase/firestore';
 import { useState, useEffect } from 'react';
-import { Schema } from '../shared/firestoreTypes';
+import Schema from '../shared/schema';
 
 export type { InstantMeiliSearchInstance };
 

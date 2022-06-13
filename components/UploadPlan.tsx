@@ -1,6 +1,6 @@
 import { Dialog } from '@headlessui/react';
-import { DownloadPlan, SEASON_ORDER } from '../shared/firestoreTypes';
-import { allTruthy } from '../shared/util';
+import type { DownloadPlan } from '../shared/types';
+import { allTruthy, SEASON_ORDER } from '../shared/util';
 import { useModal } from '../src/context/modal';
 import { Schedules } from '../src/features';
 import { useAppDispatch } from '../src/hooks';

@@ -27,7 +27,7 @@ import { handleError, useAppDispatch, useAppSelector } from '../../src/hooks';
 import {
   Auth, Planner, Schedules, Settings,
 } from '../../src/features';
-import { Schedule } from '../../shared/firestoreTypes';
+import { Schedule } from '../../shared/types';
 import { selectShowReqs } from '../../src/features/semesterFormat';
 
 

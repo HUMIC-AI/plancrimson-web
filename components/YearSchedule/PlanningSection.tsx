@@ -9,7 +9,7 @@ import {
   FaChevronRight,
   FaPlus,
 } from 'react-icons/fa';
-import { DownloadPlan, Season } from '../../shared/firestoreTypes';
+import { DownloadPlan, Season } from '../../shared/types';
 import {
   allTruthy,
   classNames,
@@ -158,16 +158,18 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
 
   return (
     <div className={classNames(
-      showReqs && 'md:rounded-lg',
-      'relative bg-gray-800 md:p-4 md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full md:h-full',
+      showReqs && 'md:rounded-lg md:shadow-lg ',
+      'relative bg-gray-800 md:p-4 row-start-1 md:row-auto overflow-auto max-w-full md:h-full',
     )}
     >
-      <div className="flex flex-col space-y-4 md:h-full">
-        <HeaderSection
-          totalCourses={totalCourses}
-          resizeRef={resizeRef}
-          downloadData={downloadData}
-        />
+      <div className="flex flex-col md:h-full">
+        <div className={userId ? 'mb-4' : 'hidden mb-4'}>
+          <HeaderSection
+            totalCourses={totalCourses}
+            resizeRef={resizeRef}
+            downloadData={downloadData}
+          />
+        </div>
 
         {/* begin semesters display */}
         <div className="relative overflow-x-auto flex-1">
@@ -384,7 +386,7 @@ function HiddenSchedules({ allSemesters } : { allSemesters: SemesterDisplayProps
   if (hiddenSchedules.length === 0) return null;
 
   return (
-    <div className="flex text-white items-center">
+    <div className="flex text-white items-center mt-4">
       <h3>Hidden schedules:</h3>
       <ul className="flex items-center">
         {hiddenSchedules.map((data) => (

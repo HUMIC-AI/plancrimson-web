@@ -1,7 +1,7 @@
 import ExternalLink from '../../components/ExternalLink';
 import { Class } from '../../shared/apiTypes';
-import { FAILING_GRADES, Grade } from '../../shared/firestoreTypes';
-import { getClassId } from '../../shared/util';
+import type { Grade } from '../../shared/types';
+import { FAILING_GRADES, getClassId } from '../../shared/util';
 import { Requirement, RequirementGroup } from './util';
 
 const genedRequirement = (

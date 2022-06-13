@@ -1,8 +1,8 @@
 import React from 'react';
 import { Class } from '../../shared/apiTypes';
-import {
-  Schedule, Semester, UserSettings, UserProfile,
-} from '../../shared/firestoreTypes';
+import type {
+  Schedule, Semester, UserProfile,
+} from '../../shared/types';
 
 /**
  * Only works for users on a typical four-year schedule.

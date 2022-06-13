@@ -6,11 +6,12 @@ import {
   getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, User,
 } from 'firebase/auth';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import {
-  FriendRequest, getInitialSettings, Schema, UserProfile, UserProfileWithId,
-} from '../shared/firestoreTypes';
+import type {
+  FriendRequest, UserProfile, UserProfileWithId,
+} from '../shared/types';
+import Schema from '../shared/schema';
 import type { AppDispatch, RootState } from './store';
-import { allTruthy } from '../shared/util';
+import { allTruthy, getInitialSettings } from '../shared/util';
 
 
 const LG_BREAKPOINT = 1024;

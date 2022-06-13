@@ -2,7 +2,7 @@
  * API types for reverse engineering my.harvard and the Q Guide.
  */
 
-import { DayOfWeek, Season } from './firestoreTypes';
+import type { DayOfWeek, Season } from './types';
 
 export type SearchParams = Partial<{
   search: string;
@@ -13,12 +13,7 @@ export type SearchParams = Partial<{
   updateDb: boolean;
 }>;
 
-export type FailedClasses = Record<
-string,
-{
-  error: string;
-}
->;
+export type FailedClasses = Record<string, { error: string }>;
 
 export type SearchResults =
   | {

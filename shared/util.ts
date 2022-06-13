@@ -5,21 +5,30 @@ import {
   query,
   where,
 } from 'firebase/firestore';
-import {
+import type {
   Semester,
-  SEASON_ORDER,
-  ClassId,
   Schedule,
   DayOfWeek,
-  DAYS_OF_WEEK,
   Viability,
   ScheduleMap,
-} from './firestoreTypes';
+  UserSettings,
+} from './types';
 import subjects from './assets/subjects.json';
 import seasPlan from './assets/seasPlan.json';
 import { getSchoolYear } from '../src/requirements/util';
 import { Class, ATTRIBUTE_DESCRIPTIONS, Evaluation } from './apiTypes';
 import type { ClassCache } from '../src/features/classCache';
+import { DAYS_OF_WEEK, SEASON_ORDER } from './constants';
+
+export * from './constants';
+
+export function getInitialSettings(): UserSettings {
+  return {
+    chosenSchedules: {},
+    customTimes: {},
+    waivedRequirements: {},
+  };
+}
 
 export const unsplashParams = '?utm_source=Plan+Crimson&utm_medium=referral';
 
@@ -73,7 +82,7 @@ export function allTruthy<T>(list: T[]) {
   return list.filter(Boolean) as NonNullable<T>[];
 }
 
-export function getClassId(course: Class): ClassId {
+export function getClassId(course: Class): string {
   return course.Key.replace(/[^a-zA-Z0-9-_]/g, '-');
 }
 
@@ -189,8 +198,8 @@ function doesConflict(class1: Class, class2: Class) {
  * @param classes the list of classes to search for conflicts between.
  * @returns A map from class uids to the list of uids that the class conflicts with.
  */
-export function findConflicts(classes: Class[]): Record<ClassId, ClassId[]> {
-  const conflicts: Record<ClassId, ClassId[]> = {};
+export function findConflicts(classes: Class[]): Record<string, string[]> {
+  const conflicts: Record<string, string[]> = {};
   classes.forEach((cls) => {
     conflicts[getClassId(cls)] = [];
   });

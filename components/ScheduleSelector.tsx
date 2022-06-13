@@ -2,7 +2,7 @@
 import { Listbox } from '@headlessui/react';
 import React, { useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
-import { Semester } from '../shared/firestoreTypes';
+import { Semester } from '../shared/types';
 import { classNames } from '../shared/util';
 import { Schedules, Settings } from '../src/features';
 import { useAppDispatch, useAppSelector } from '../src/hooks';
@@ -202,7 +202,7 @@ function ScheduleChooser({
             : (
               <Listbox.Button
                 name="Select schedule"
-                className="text-center w-full border rounded-xl py-2 interactive"
+                className="text-center w-full border rounded-xl py-1 px-2 interactive"
               >
                 Select a schedule
               </Listbox.Button>

@@ -54,12 +54,13 @@ export default function PlanPage() {
     <Layout
       className={classNames(
         showReqs && 'md:p-8 md:grid-rows-1 md:grid-cols-[auto_1fr] items-stretch gap-4',
-        'w-full grid min-h-screen',
+        userId ? 'min-h-screen' : 'flex-1',
+        'w-full grid',
       )}
       title="Plan"
       scheduleQueryConstraints={q}
     >
-      {showReqs && (
+      {showReqs && userId && (
         <RequirementsSection
           {...{
             selectedRequirements,

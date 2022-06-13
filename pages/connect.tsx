@@ -11,7 +11,8 @@ import {
 } from 'react';
 import Layout, { errorMessages, ErrorPage, LoadingPage } from '../components/Layout/Layout';
 import { ImageWrapper, ScheduleSection } from '../components/UserLink';
-import { Schema, UserProfileWithId } from '../shared/firestoreTypes';
+import { UserProfileWithId } from '../shared/types';
+import Schema from '../shared/schema';
 import { allTruthy } from '../shared/util';
 import { Auth, Schedules } from '../src/features';
 import {

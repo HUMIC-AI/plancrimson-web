@@ -1,7 +1,7 @@
-import { ExtendedClass } from '../../shared/apiTypes';
-import {
-  ClassId, Schedule, UserProfile,
-} from '../../shared/firestoreTypes';
+import type { ExtendedClass } from '../../shared/apiTypes';
+import type {
+  Schedule, UserProfile,
+} from '../../shared/types';
 import { allTruthy, getClassId } from '../../shared/util';
 import type { ClassCache } from '../features/classCache';
 import collegeRequirements from './college';
@@ -45,7 +45,7 @@ function validateSchedule<Accumulator>(
   const allClasses: ExtendedClass[] = allTruthy(
     schedule.classes.map(({ classId }) => classCache[classId]),
   );
-  const usedClasses: ClassId[] = [];
+  const usedClasses: string[] = [];
   const validationResult = allClasses.reduce((acc, cls) => {
     const result = req.reducer(acc, cls, schedule, userData);
     if (result === null) return acc;
@@ -64,7 +64,7 @@ function validateReq(
   if (typeof req.validate === 'undefined') {
     throw new Error('requirement with no validator');
   }
-  const classes: ClassId[] = [];
+  const classes: string[] = [];
   const reducerResults = schedules.reduce((acc, schedule) => {
     const [value, usedClasses] = validateSchedule(
       acc,

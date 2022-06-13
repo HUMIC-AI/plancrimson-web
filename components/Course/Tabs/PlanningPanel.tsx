@@ -8,7 +8,7 @@ import {
   FaSmile,
 } from 'react-icons/fa';
 import { ExtendedClass } from '../../../shared/apiTypes';
-import { Schedule } from '../../../shared/firestoreTypes';
+import { Schedule } from '../../../shared/types';
 import {
   sortSchedules,
   getClassId,

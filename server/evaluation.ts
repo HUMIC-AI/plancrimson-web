@@ -5,7 +5,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import * as ApiTypes from '../shared/apiTypes';
 import fetcher, { FetchError } from '../shared/fetcher';
 import { allTruthy, getClassId } from '../shared/util';
-import { Season } from '../shared/firestoreTypes';
+import { Season } from '../shared/types';
 
 type Scraper<T> = ($: CheerioAPI, el: BasicAcceptedElems<AnyNode>) => T;
 

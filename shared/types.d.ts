@@ -1,64 +1,24 @@
-import * as Firestore from 'firebase/firestore';
 import { Concentration } from './assets/concentrations';
-
-export const Schema = {
-  profile(uid: string) {
-    return Firestore.doc(Firestore.getFirestore(), 'profiles', uid) as Firestore.DocumentReference<UserProfile>;
-  },
-  user(uid: string) {
-    return Firestore.doc(Firestore.getFirestore(), 'users', uid) as Firestore.DocumentReference<UserSettings>;
-  },
-  schedule(scheduleUid: string) {
-    return Firestore.doc(Firestore.getFirestore(), 'schedules', scheduleUid) as Firestore.DocumentReference<Schedule>;
-  },
-  friendRequest(from: string, to: string) {
-    return Firestore.doc(Firestore.getFirestore(), 'allFriends', from, 'friends', to) as Firestore.DocumentReference<FriendRequest>;
-  },
-  metadata() {
-    return Firestore.doc(Firestore.getFirestore(), 'metadata', 'metadata') as Firestore.DocumentReference<Metadata>;
-  },
-  Collection: {
-    profiles() {
-      return Firestore.collection(Firestore.getFirestore(), 'profiles') as Firestore.CollectionReference<UserProfile>;
-    },
-    schedules() {
-      return Firestore.collection(Firestore.getFirestore(), 'schedules') as Firestore.CollectionReference<Schedule>;
-    },
-    allFriends() {
-      return Firestore.collectionGroup(Firestore.getFirestore(), 'friends') as Firestore.Query<FriendRequest>;
-    },
-  },
-};
-
-export const SEASON_ORDER = {
-  Winter: 0,
-  Spring: 1,
-  Summer: 2,
-  Fall: 3,
-} as const;
+import {
+  DAYS_OF_WEEK, FAILING_GRADES, PASSING_GRADES, SEASON_ORDER,
+} from './constants';
 
 export type Season = keyof typeof SEASON_ORDER;
-
+export type DayOfWeek = typeof DAYS_OF_WEEK[number];
 export type Semester = { year: number; season: Season };
+export type Term = `${number}${Season}`;
 
-export type ClassId = string;
-
-// also used for sorting
-export const DAYS_OF_WEEK = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
-] as const;
-
-export const DAY_SHORT = ['MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT'] as const;
+// ============================== /metadata/metadata ==============================
 
 export interface Metadata {
   whiteList: string[];
   meiliApiKey: string;
+}
+
+// ============================== /alerts ==============================
+
+export interface Alert {
+  alert: string;
 }
 
 // ============================== /userProfiles ==============================
@@ -102,14 +62,6 @@ export interface UserSettings {
   };
 }
 
-export function getInitialSettings(): UserSettings {
-  return {
-    chosenSchedules: {},
-    customTimes: {},
-    waivedRequirements: {},
-  };
-}
-
 export interface CustomTimeRecord {
   pattern: DayOfWeek[],
   start: number; // decimal hour
@@ -117,10 +69,6 @@ export interface CustomTimeRecord {
   startDate: string; // yyyy-mm-dd
   endDate: string; // yyyy-mm-dd
 }
-
-export type DayOfWeek = typeof DAYS_OF_WEEK[number];
-
-export type Term = `${number}${Season}`;
 
 // ============================== /schedules ==============================
 
@@ -140,32 +88,6 @@ export interface UserClassData {
   classId: string;
   grade?: Grade;
 }
-
-// see https://infoforfaculty.fas.harvard.edu/book/grading-system
-export const PASSING_GRADES = [
-  'A',
-  'A-',
-  'B+',
-  'B',
-  'B-',
-  'C+',
-  'C',
-  'C-',
-  'D+',
-  'D',
-  'D-',
-  'PA', // A to D-
-  'SAT', // A to C-
-] as const;
-
-export const FAILING_GRADES = [
-  'E',
-  'ABS',
-  'EXL',
-  'EXT',
-  'FL',
-  'UNSAT',
-] as const;
 
 export type Grade = typeof PASSING_GRADES[number] | typeof FAILING_GRADES[number];
 

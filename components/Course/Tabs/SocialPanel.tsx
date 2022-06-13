@@ -4,7 +4,7 @@ import {
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import type { ExtendedClass } from '../../../shared/apiTypes';
-import { Schedule } from '../../../shared/firestoreTypes';
+import { Schedule } from '../../../shared/types';
 
 export default function SocialPanel({ course }: { course: ExtendedClass }) {
   const [publicSchedules, setPublicSchedules] = useState<Schedule[]>([]);

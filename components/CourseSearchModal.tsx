@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import { Configure, InstantSearch, ToggleRefinement } from 'react-instantsearch-dom';
-import type { Schedule } from '../shared/firestoreTypes';
+import type { Schedule } from '../shared/types';
 import { classNames, termToSeasonMap } from '../shared/util';
 import { useModal } from '../src/context/modal';
 import useSearchState, { SearchStateProvider } from '../src/context/searchState';

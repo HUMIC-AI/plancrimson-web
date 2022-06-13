@@ -2,15 +2,16 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { PropsWithChildren, useEffect } from 'react';
+import React, { PropsWithChildren, useEffect, useState } from 'react';
 import * as Firestore from 'firebase/firestore';
+import { getDocs, QueryConstraint } from 'firebase/firestore';
 import { unsplashParams } from '../../shared/util';
 import ExternalLink from '../ExternalLink';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
 import { useAppDispatch } from '../../src/hooks';
 import { Auth, ClassCache, Schedules } from '../../src/features';
-import { Schema } from '../../shared/firestoreTypes';
+import Schema from '../../shared/schema';
 import { useMeiliClient } from '../../src/meili';
 
 interface LayoutProps {
@@ -98,6 +99,43 @@ export default function Layout({
 }: PropsWithChildren<LayoutProps>) {
   const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
 
+  const alerts = useAlerts();
+
+  useSchedules(constraints);
+
+  const description = 'Wait no longer to plan out your concentration. For Harvard College students. Q Reports, Course Evaluations, my.harvard, and more, all in one place.';
+
+  return (
+    <>
+      <Head>
+        <title>{pageTitle}</title>
+        <link rel="icon" href="favicon.svg" type="image/x-icon" />
+        <meta name="description" content={description} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content="https://plancrimson.xyz/demo.png" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://plancrimson.xyz/" />
+      </Head>
+
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+
+        {alerts.map((alert) => <div key={alert}>{alert}</div>)}
+
+        <main className={className}>
+          {children}
+        </main>
+      </div>
+
+      <Footer />
+
+      <CustomModal />
+    </>
+  );
+}
+
+function useSchedules(constraints: QueryConstraint[]) {
   const dispatch = useAppDispatch();
   const userId = Auth.useAuthProperty('uid');
   const { client } = useMeiliClient(userId);
@@ -121,33 +159,20 @@ export default function Layout({
 
     return unsubSchedules;
   }, [constraints, client]);
+}
 
-  const description = 'Wait no longer to plan out your concentration. For Harvard College students. Q Reports, Course Evaluations, my.harvard, and more, all in one place.';
+function useAlerts() {
+  const [alerts, setAlerts] = useState<string[]>([]);
 
-  return (
-    <div className="flex flex-col min-h-screen overflow-auto">
-      <Head>
-        <title>{pageTitle}</title>
-        <link rel="icon" href="favicon.svg" type="image/x-icon" />
-        <meta name="description" content={description} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={description} />
-        <meta property="og:image" content="https://plancrimson.xyz/demo.png" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://plancrimson.xyz/" />
-      </Head>
+  useEffect(() => {
+    getDocs(Schema.Collection.alerts())
+      .then((snap) => setAlerts(snap.docs.map((doc) => doc.data().alert)))
+      .catch((err) => {
+        console.error('an error occurred when fetching alerts', err);
+      });
+  }, []);
 
-      <Navbar />
-
-      <main className={className}>
-        {children}
-      </main>
-
-      <Footer />
-
-      <CustomModal />
-    </div>
-  );
+  return alerts;
 }
 
 export function LoadingPage() {
