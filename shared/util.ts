@@ -12,6 +12,8 @@ import type {
   Viability,
   ScheduleMap,
   UserSettings,
+  Term,
+  Season,
 } from './types';
 import subjects from './assets/subjects.json';
 import seasPlan from './assets/seasPlan.json';
@@ -26,6 +28,14 @@ export const breakpoints = {
   md: 768,
   lg: 1024,
 };
+
+export function termToSemester(term: Term): Semester {
+  const season = Object.keys(SEASON_ORDER).find((s) => term.endsWith(s)) as Season;
+  if (!season) throw new Error('invalid term');
+  const year = parseInt(term.slice(0, term.lastIndexOf(season)), 10);
+  if (isNaN(year)) throw new Error('invalid term');
+  return { year, season };
+}
 
 export function getInitialSettings(): UserSettings {
   return {

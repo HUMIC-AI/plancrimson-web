@@ -9,13 +9,14 @@ import {
   FaChevronRight,
   FaPlus,
 } from 'react-icons/fa';
-import { DownloadPlan, Season } from '../../shared/types';
+import type { DownloadPlan, Season, Term } from '../../shared/types';
 import {
   allTruthy,
   classNames,
   compareSemesters,
   getUniqueSemesters,
   sortSchedules,
+  termToSemester,
 } from '../../shared/util';
 import {
   Auth,
@@ -210,9 +211,11 @@ export function SemestersList({
   resizeRef, highlightedRequirement,
 }: WithResizeRef & { highlightedRequirement: Requirement | undefined }) {
   const dispatch = useAppDispatch();
+  const userId = Auth.useAuthProperty('uid')!;
   const userSchedules = useAppSelector(Schedules.selectSchedules);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
-  const userId = Auth.useAuthProperty('uid')!;
+  const hiddenIds = useAppSelector(Planner.selectHiddenIds);
+  const hiddenTerms = useAppSelector(Planner.selectHiddenTerms);
   const classYear = useAppSelector(Profile.selectClassYear);
 
   // default w-56 = 224px
@@ -271,10 +274,7 @@ export function SemestersList({
     dispatch(Schedules.createDefaultSchedule({ season, year }, userId)).catch(handleError);
   }
 
-  const chooseSchedule = (year: number, season: Season, scheduleId: string | null) => dispatch(Settings.chooseSchedule({
-    term: `${year}${season}`,
-    scheduleId,
-  }));
+  console.log(hiddenIds, hiddenTerms, semesterFormat);
 
   return (
     <div className="relative overflow-x-auto flex-1 mt-4">
@@ -300,20 +300,30 @@ export function SemestersList({
         </button>
         )}
 
-        {columns.map((column) => (
-          <SemesterComponent
-            {...{
-              ...column,
-              colWidth,
-              dragStatus,
-              setDragStatus,
-              highlightedRequirement,
-              handleChooseSchedule(id) {
-                chooseSchedule(column.semester.year, column.semester.season, id);
-              },
-            }}
-          />
-        ))}
+        {columns
+          .filter((column) => {
+            if (semesterFormat === 'all') {
+              if (column.chosenScheduleId && column.chosenScheduleId in hiddenIds) {
+                return false;
+              }
+              return true;
+            }
+            if ((`${column.semester.year}${column.semester.season}` as Term) in hiddenTerms) {
+              return false;
+            }
+            return true;
+          })
+          .map((column) => (
+            <SemesterComponent
+              {...{
+                ...column,
+                colWidth,
+                dragStatus,
+                setDragStatus,
+                highlightedRequirement,
+              }}
+            />
+          ))}
 
         {/* when dragging, drag over this area to scroll right */}
         <div ref={rightScrollRef} />
@@ -351,29 +361,44 @@ export function SemestersList({
 
 export function HiddenSchedules() {
   const dispatch = useAppDispatch();
-  const hiddenScheduleIds = useAppSelector(Planner.selectHiddenIds);
-  const columns = useColumns();
-  const hiddenSchedules = useMemo(() => columns.filter(({ chosenScheduleId }) => chosenScheduleId && hiddenScheduleIds[chosenScheduleId]), [columns]);
+  const format = useAppSelector(Planner.selectSemesterFormat);
+  const hiddenTerms = useAppSelector(Planner.selectHiddenTerms);
+  const hiddenIds = useAppSelector(Planner.selectHiddenIds);
+  const schedules = useAppSelector(Schedules.selectSchedules);
+  const hidden = format === 'all' ? hiddenIds : hiddenTerms;
 
-  if (hiddenSchedules.length === 0) return null;
+  if (Object.keys(hidden).length === 0) return null;
 
   return (
     <div className="flex text-white items-center mt-4">
       <h3>Hidden schedules:</h3>
       <ul className="flex items-center">
-        {hiddenSchedules.map((data) => (
-          <li key={data.chosenScheduleId! + data.semester.year + data.semester.season} className="ml-2">
-            <button
-              type="button"
-              onClick={() => {
-                dispatch(Planner.setHidden({ scheduleId: data.chosenScheduleId!, hidden: true }));
-              }}
-              className="interactive"
-            >
-              {data.chosenScheduleId}
-            </button>
-          </li>
-        ))}
+        {Object.keys(hidden).map((data) => {
+          let title: string;
+          if (format === 'all') {
+            title = schedules[data].title || data;
+          } else {
+            const semester = termToSemester(data as Term);
+            title = `${semester.season} ${semester.year}`;
+          }
+          return (
+            <li key={title} className="ml-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (format === 'all') {
+                    dispatch(Planner.setHiddenId({ id: data, hidden: false }));
+                  } else {
+                    dispatch(Planner.setHiddenTerm({ term: data as Term, hidden: false }));
+                  }
+                }}
+                className="interactive"
+              >
+                {title}
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
