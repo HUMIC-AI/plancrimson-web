@@ -3,12 +3,14 @@
   "private": true,
   "scripts": {
     "db": "firebase emulators:start",
-    "dev": "cross-env FIRESTORE_EMULATOR_HOST='localhost:8080' FIREBASE_AUTH_EMULATOR_HOST='127.0.0.1:9099' next dev",
+    "use-emulators": "cross-env FIRESTORE_EMULATOR_HOST='localhost:8080' FIREBASE_AUTH_EMULATOR_HOST='127.0.0.1:9099'",
+    "dev": "npm run use-emulators next dev",
     "build": "next build",
     "watch": "tsc -w --noEmit false --outDir build --module commonjs",
     "start": "next start",
     "lint": "next lint",
     "script": "node build/scripts",
+    "script:dev": "npm run use-emulators npm run script",
     "test": "firebase emulators:exec jest"
   },
   "resolutions": {

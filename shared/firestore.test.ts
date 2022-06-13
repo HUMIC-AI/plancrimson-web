@@ -38,7 +38,7 @@ afterAll(async () => {
 
 describe('User profiles', () => {
   it('should create a profile document and a user document when signing in', async () => {
-    const user = await signInUser('alice@college.harvard.edu');
+    const user = await signInUser();
     expect(user).toBeDefined();
     expect(user!.email).toBe('alice@college.harvard.edu');
     await testEnv.withSecurityRulesDisabled(async (ctx) => {

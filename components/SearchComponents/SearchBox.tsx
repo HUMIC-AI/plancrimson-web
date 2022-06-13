@@ -6,14 +6,14 @@ import type { SearchBoxProvided } from 'react-instantsearch-core';
 import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
 import Attribute from './Attribute';
 import ScheduleChooser from '../ScheduleSelector';
-import { classNames, sortSchedules } from '../../shared/util';
-import { ATTRIBUTE_DESCRIPTIONS, Class } from '../../shared/apiTypes';
+import { ATTRIBUTE_DESCRIPTIONS, classNames, sortSchedules } from '../../shared/util';
 import Stats, { StatsComponent } from './Stats';
 import StateResults, { StateResultsComponent } from './StateResults';
 import { alertSignIn } from './searchUtils';
 import useChosenScheduleContext from '../../src/context/selectedSchedule';
 import { useAppDispatch, useAppSelector, useLgBreakpoint } from '../../src/hooks';
 import { Auth, Planner, Schedules } from '../../src/features';
+import type { Class } from '../../shared/apiTypes';
 
 
 type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean };

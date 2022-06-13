@@ -76,7 +76,7 @@ export interface CustomTimeRecord {
  * The Firestore schema for the /schedules collection.
  */
 export interface Schedule extends Semester {
-  id: string; // global unique id
+  id: string; // global unique id, a uuidv4 (NOT a firestore default assigned id)
   title: string;
   ownerUid: string; // uid of the user that created this schedule
   public: boolean;

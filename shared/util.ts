@@ -16,7 +16,7 @@ import type {
 import subjects from './assets/subjects.json';
 import seasPlan from './assets/seasPlan.json';
 import { getSchoolYear } from '../src/requirements/util';
-import { Class, ATTRIBUTE_DESCRIPTIONS, Evaluation } from './apiTypes';
+import type { AttributeDescriptions, Class, Evaluation } from './apiTypes';
 import type { ClassCache } from '../src/features/classCache';
 import { DAYS_OF_WEEK, SEASON_ORDER } from './constants';
 
@@ -29,6 +29,16 @@ export function getInitialSettings(): UserSettings {
     waivedRequirements: {},
   };
 }
+
+export const ATTRIBUTE_DESCRIPTIONS: AttributeDescriptions = {
+  STRM: 'Term',
+  SUBJECT: 'Subject',
+  DAY_OF_WEEK: 'Day of week',
+  ACAD_ORG: 'Department',
+  LOCATION_DESCR_LOCATION: 'Location',
+  SSR_COMPONENTDESCR: 'Class type',
+  IS_SCL_DESCR100_HU_SCL_ATTR_LEVL: 'Level',
+};
 
 export const unsplashParams = '?utm_source=Plan+Crimson&utm_medium=referral';
 

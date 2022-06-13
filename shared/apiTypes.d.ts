@@ -287,16 +287,6 @@ type AttributeDescriptions = Partial<{
   [attr in keyof Class]: string;
 }>;
 
-export const ATTRIBUTE_DESCRIPTIONS: AttributeDescriptions = {
-  STRM: 'Term',
-  SUBJECT: 'Subject',
-  DAY_OF_WEEK: 'Day of week',
-  ACAD_ORG: 'Department',
-  LOCATION_DESCR_LOCATION: 'Location',
-  SSR_COMPONENTDESCR: 'Class type',
-  IS_SCL_DESCR100_HU_SCL_ATTR_LEVL: 'Level',
-};
-
 // const searchableAttributes = [
 //   'Title', // eg "Abstraction and Design in Computation"
 //   'SUBJECT', // eg "COMPSCI"

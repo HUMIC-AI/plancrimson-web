@@ -43,4 +43,3 @@ export const FAILING_GRADES = [
   'FL',
   'UNSAT',
 ] as const;
-

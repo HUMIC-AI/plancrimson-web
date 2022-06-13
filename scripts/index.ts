@@ -6,6 +6,7 @@ import fetchCsTags from './fetchCsTags';
 import fetchEvaluations from './fetchEvaluations';
 import fetchOldEvaluations from './fetchOldEvaluations';
 import fetchSyllabi from './fetchSyllabi';
+import migration20220610 from './migrations';
 import fetchStatistics from './statistics';
 import uploadData from './uploadData';
 import uploadEvaluations from './uploadEvaluations';
@@ -50,6 +51,11 @@ const commands = [
   fetchCsTags,
   newLabel('Statistics'),
   fetchStatistics,
+  newLabel('Accounts'),
+  {
+    label: 'Migrate users',
+    run: migration20220610
+  }
 ];
 
 async function main() {
