@@ -4,7 +4,6 @@ import { getAuth } from 'firebase/auth';
 import {
   deleteDoc, getDoc, updateDoc, where,
 } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -81,7 +80,7 @@ const Panels = {
 
     return (
       <ul className="mt-6">
-        {Object.values(schedules).map((schedule) => (
+        {Object.values(schedules).filter((schedule) => schedule.public).map((schedule) => (
           <li key={schedule.id}>
             <ScheduleSection schedule={schedule} />
           </li>
@@ -143,7 +142,7 @@ const Panels = {
     }
 
     return (
-      <ul className="flex flex-wrap">
+      <ul className="flex flex-wrap justify-around">
         {suggestedProfiles.map(([profileId, numSharedCourses]) => {
           const profile = profiles[profileId];
           return (
@@ -201,10 +200,7 @@ function useSuggestedProfiles() {
         return;
       }
       user.getIdToken(true)
-        .then((token) => {
-          console.log(token);
-          return axios({ url: '/api/suggestProfiles', headers: { authorization: `Bearer ${token}` } });
-        })
+        .then((token) => axios({ url: '/api/suggestProfiles', headers: { authorization: `Bearer ${token}` } }))
         .then(({ data }) => {
           sessionStorage.setItem('suggestProfiles/lastUpdated', Date.now().toString());
           sessionStorage.setItem('suggestProfiles/profiles', JSON.stringify(data));

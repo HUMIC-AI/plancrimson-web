@@ -5,8 +5,6 @@ import { getApps, initializeApp } from 'firebase/app';
 import {
   connectFirestoreEmulator, getFirestore, onSnapshot, updateDoc,
 } from 'firebase/firestore';
-import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
-// import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { Provider } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { connectAuthEmulator, getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -16,15 +14,17 @@ import { useAppDispatch } from '../src/hooks';
 import { ModalProvider, useModal } from '../src/context/modal';
 import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
 import {
-  Auth, Profile, Settings,
+  Auth, Profile, Schedules, Settings,
 } from '../src/features';
 import { getInitialSettings, Schema } from '../shared/firestoreTypes';
+import { getUniqueSemesters } from '../shared/util';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: 'AIzaSyAtHudtGRcdGwEuXPnfb8Q4JjcUOYVVcEg',
-  authDomain: 'plancrimson.com',
+  // authDomain: 'plancrimson.com',
+  authDomain: 'harvard-concentration-planner.web.app',
   projectId: 'harvard-concentration-planner',
   storageBucket: 'harvard-concentration-planner.appspot.com',
   messagingSenderId: '770496895607',
@@ -32,7 +32,6 @@ const firebaseConfig = {
   measurementId: 'G-F4RKHQJFH3',
 };
 
-// first initialize app
 if (getApps().length === 0) {
   initializeApp(firebaseConfig);
 
@@ -41,10 +40,8 @@ if (getApps().length === 0) {
   if (process.env.NODE_ENV === 'development') {
     const auth = getAuth();
     const db = getFirestore();
-    const functions = getFunctions();
     connectAuthEmulator(auth, 'http://127.0.0.1:9099');
     connectFirestoreEmulator(db, '127.0.0.1', 8080);
-    connectFunctionsEmulator(functions, 'localhost', 5001);
   }
 }
 
@@ -52,15 +49,25 @@ if (getApps().length === 0) {
  * Ask the user for their graduation year.
  */
 function GraduationYearDialog({ defaultYear, uid } : { defaultYear: number; uid: string; }) {
+  const dispatch = useAppDispatch();
   const { setOpen } = useModal();
   const [classYear, setYear] = useState(defaultYear);
+
   return (
     <form
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        updateDoc(Schema.profile(uid), 'classYear', classYear)
-          .then(() => setOpen(false))
-          .catch((err) => console.error(`error updating class year for ${uid}`, err));
+
+        const promises = getUniqueSemesters(classYear).map(async ({ year, season }) => {
+          const { payload: schedule } = await dispatch(Schedules.createDefaultSchedule({ year, season }, uid));
+          await dispatch(Settings.chooseSchedule({ term: `${schedule.year}${schedule.season}`, scheduleId: schedule.id }));
+        });
+        const settled = await Promise.allSettled(promises);
+        settled.forEach((result) => result.status === 'rejected' && console.error('error creating default schedules', result.reason));
+
+        await updateDoc(Schema.profile(uid), 'classYear', classYear).catch((err) => console.error(`error updating class year for ${uid}`, err));
+
+        setOpen(false);
       }}
       className="bg-white p-4"
     >
@@ -92,7 +99,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   useEffect(() => {
     const unsub = onAuthStateChanged(
       auth,
-      (u) => {
+      async (u) => {
         if (u) {
           dispatch(Auth.setAuthInfo({
             uid: u.uid,
@@ -102,6 +109,8 @@ function MyApp({ Component, pageProps }: AppProps) {
         } else { // just signed out
           dispatch(Auth.setAuthInfo(null));
           dispatch(Settings.overwriteSettings(getInitialSettings()));
+          dispatch(Profile.signOut());
+          dispatch(Schedules.overwriteSchedules([]));
         }
       },
       (err) => {

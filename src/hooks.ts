@@ -101,7 +101,8 @@ export async function signInUser() {
     provider.setCustomParameters({
       hd: 'college.harvard.edu',
     });
-    const newUser = await signInWithPopup(auth, provider);
+    const newUser = await signInWithPopup(auth, provider).catch((err) => console.error('error signing in with popup:', err));
+    if (!newUser) return;
     user = newUser.user;
   }
 

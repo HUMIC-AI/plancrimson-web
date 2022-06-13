@@ -28,144 +28,6 @@ import type { DragStatus } from '../Course/CourseCard';
 import UploadPlan from '../UploadPlan';
 import SemesterComponent, { SemesterDisplayProps } from './SemesterDisplay';
 
-interface HeaderSectionProps {
-  totalCourses: number;
-  resizeRef: React.MutableRefObject<HTMLDivElement>;
-  downloadData: any;
-}
-
-function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionProps) {
-  const dispatch = useAppDispatch();
-  const userSchedules = useAppSelector(Schedules.selectSchedules);
-  const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
-  const showReqs = useAppSelector(Planner.selectShowReqs);
-  const isExpanded = useAppSelector(Planner.selectExpandCards);
-  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
-  const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
-
-  return (
-    <div className="text-white space-y-4">
-      <div className="flex flex-col items-center justify-center lg:flex-row xl:justify-start gap-4">
-        {!showReqs && (
-        <button
-          title="Show requirements panel"
-          type="button"
-          onClick={() => dispatch(Planner.setShowReqs(true))}
-          className="interactive"
-        >
-          <FaAngleDoubleLeft />
-        </button>
-        )}
-        <span className="whitespace-nowrap">
-          Total courses:
-          {' '}
-          {totalCourses}
-          {' '}
-          / 32
-        </span>
-        <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
-          <button
-            type="button"
-            onClick={() => dispatch(Planner.toggleExpand())}
-            className={classNames(
-              isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
-              'rounded-full hover:opacity-50 p-1 border',
-            )}
-          >
-            <FaArrowsAltV />
-          </button>
-          {semesterFormat !== 'sample' && (
-            <button
-              type="button"
-              onClick={() => {
-                if (semesterFormat === 'all') {
-                  dispatch(Planner.showSelected());
-                } else {
-                  dispatch(Planner.showAll());
-                }
-              }}
-              className="py-1 px-2 bg-gray-600 interactive rounded"
-            >
-              {semesterFormat === 'all'
-                ? 'Showing all schedules'
-                : 'Showing only selected schedules'}
-            </button>
-          )}
-          <button
-            type="button"
-            className="interactive underline"
-            onClick={() => downloadJson(
-              semesterFormat === 'sample'
-                ? `Sample ${sampleSchedule?.id} - Plan Crimson`
-                : 'Selected schedules - Plan Crimson',
-              downloadData,
-            )}
-          >
-            Download all
-          </button>
-          <UploadPlan />
-          {semesterFormat !== 'sample' && (
-            <button
-              type="button"
-              className="interactive underline"
-              onClick={() => {
-                // eslint-disable-next-line no-restricted-globals
-                const yn = confirm(
-                  'Are you sure? This will remove all courses from all selected schedules!',
-                );
-                if (yn) {
-                  allTruthy(
-                    Object.values(chosenSchedules).map((id) => (id ? userSchedules[id] : null)),
-                  ).forEach((schedule) => dispatch(Schedules.clearSchedule(schedule.id)));
-                }
-              }}
-            >
-              Reset all
-            </button>
-          )}
-        </div>
-      </div>
-      <div className="flex justify-center xl:justify-start">
-        <div
-          ref={resizeRef}
-          className="flex justify-center rounded py-1 w-24 min-w-[96px] max-w-full resize-x bg-gray-600 overflow-auto"
-        >
-          <FaArrowsAltH />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function HiddenSchedules({ allSemesters } : { allSemesters: SemesterDisplayProps[] }) {
-  const dispatch = useAppDispatch();
-  const hiddenScheduleIds = useAppSelector(Planner.selectHiddenIds);
-  const hiddenSchedules = allSemesters.filter(({ chosenScheduleId }) => chosenScheduleId && hiddenScheduleIds[chosenScheduleId]);
-
-  if (hiddenSchedules.length === 0) return null;
-
-  return (
-    <div className="flex text-white items-center">
-      <h3>Hidden schedules:</h3>
-      <ul className="flex items-center">
-        {hiddenSchedules.map((data) => (
-          <li key={data.chosenScheduleId! + data.semester.year + data.semester.season} className="ml-2">
-            <button
-              type="button"
-              onClick={() => {
-                dispatch(Planner.setHidden({ scheduleId: data.chosenScheduleId!, hidden: true }));
-              }}
-              className="interactive"
-            >
-              {data.chosenScheduleId}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 
 // render all of the user's semesters
 export default function PlanningSection({ highlightedRequirement } : { highlightedRequirement?: Requirement; }) {
@@ -180,7 +42,7 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
     schedules: Schedules.selectSchedules(state),
   }));
   const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
-
+  const showReqs = useAppSelector(Planner.selectShowReqs);
 
   const [dragStatus, setDragStatus] = useState<DragStatus>({
     dragging: false,
@@ -295,7 +157,11 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
   }
 
   return (
-    <div className="relative bg-gray-800 md:p-4 md:rounded-lg md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full md:h-full">
+    <div className={classNames(
+      showReqs && 'md:rounded-lg',
+      'relative bg-gray-800 md:p-4 md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full md:h-full',
+    )}
+    >
       <div className="flex flex-col space-y-4 md:h-full">
         <HeaderSection
           totalCourses={totalCourses}
@@ -308,7 +174,7 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
           {/* on small screens, this extends as far as necessary */}
           {/* on medium screens and larger, put this into its own box */}
           <div
-            className="md:absolute md:inset-0 grid grid-flow-col rounded-t-lg md:rounded-b-lg overflow-auto"
+            className="md:absolute md:inset-0 grid grid-flow-col rounded-t-lg rounded-b-lg overflow-auto"
             ref={semestersContainerRef}
           >
             {/* when dragging a card, drag over this area to scroll left */}
@@ -373,6 +239,7 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
                 <FaChevronLeft />
               </div>
               )}
+
               {rightIntersecting || (
               <div
                 className="absolute inset-y-0 right-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
@@ -390,6 +257,150 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
 
         <HiddenSchedules allSemesters={columns} />
       </div>
+    </div>
+  );
+}
+
+
+interface HeaderSectionProps {
+  totalCourses: number;
+  resizeRef: React.MutableRefObject<HTMLDivElement>;
+  downloadData: any;
+}
+
+function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionProps) {
+  const dispatch = useAppDispatch();
+  const userSchedules = useAppSelector(Schedules.selectSchedules);
+  const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
+  const showReqs = useAppSelector(Planner.selectShowReqs);
+  const isExpanded = useAppSelector(Planner.selectExpandCards);
+  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
+  const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
+
+  return (
+    <div className="text-white relative">
+      {!showReqs && (
+      <button
+        title="Show requirements panel"
+        type="button"
+        onClick={() => dispatch(Planner.setShowReqs(true))}
+        className="interactive absolute top-1 left-2"
+      >
+        <FaAngleDoubleLeft />
+      </button>
+      )}
+
+      <div className="flex flex-col items-center justify-center gap-4">
+
+        <span className="whitespace-nowrap">
+          Total courses:
+          {' '}
+          {totalCourses}
+          {' '}
+          / 32
+        </span>
+
+        <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
+          <button
+            type="button"
+            onClick={() => dispatch(Planner.toggleExpand())}
+            className={classNames(
+              isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
+              'rounded-full hover:opacity-50 p-1 border',
+            )}
+          >
+            <FaArrowsAltV />
+          </button>
+          {semesterFormat !== 'sample' && (
+            <button
+              type="button"
+              onClick={() => {
+                if (semesterFormat === 'all') {
+                  dispatch(Planner.showSelected());
+                } else {
+                  dispatch(Planner.showAll());
+                }
+              }}
+              className="py-1 px-2 bg-gray-600 interactive rounded"
+            >
+              {semesterFormat === 'all'
+                ? 'Showing all schedules'
+                : 'Showing only selected schedules'}
+            </button>
+          )}
+          <button
+            type="button"
+            className="interactive underline"
+            onClick={() => downloadJson(
+              semesterFormat === 'sample'
+                ? `Sample ${sampleSchedule?.id} - Plan Crimson`
+                : 'Selected schedules - Plan Crimson',
+              downloadData,
+            )}
+          >
+            Download all
+          </button>
+
+          <UploadPlan />
+
+          {semesterFormat !== 'sample' && (
+            <button
+              type="button"
+              className="interactive underline"
+              onClick={() => {
+                // eslint-disable-next-line no-restricted-globals
+                const yn = confirm(
+                  'Are you sure? This will remove all courses from all selected schedules!',
+                );
+                if (yn) {
+                  allTruthy(
+                    Object.values(chosenSchedules).map((id) => (id ? userSchedules[id] : null)),
+                  ).forEach((schedule) => dispatch(Schedules.clearSchedule(schedule.id)));
+                }
+              }}
+            >
+              Reset all
+            </button>
+          )}
+        </div>
+
+        <div
+          ref={resizeRef}
+          className="flex justify-center rounded py-1 w-24 min-w-[96px] max-w-full resize-x bg-gray-600 overflow-auto"
+        >
+          <FaArrowsAltH />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function HiddenSchedules({ allSemesters } : { allSemesters: SemesterDisplayProps[] }) {
+  const dispatch = useAppDispatch();
+  const hiddenScheduleIds = useAppSelector(Planner.selectHiddenIds);
+  const hiddenSchedules = allSemesters.filter(({ chosenScheduleId }) => chosenScheduleId && hiddenScheduleIds[chosenScheduleId]);
+
+  if (hiddenSchedules.length === 0) return null;
+
+  return (
+    <div className="flex text-white items-center">
+      <h3>Hidden schedules:</h3>
+      <ul className="flex items-center">
+        {hiddenSchedules.map((data) => (
+          <li key={data.chosenScheduleId! + data.semester.year + data.semester.season} className="ml-2">
+            <button
+              type="button"
+              onClick={() => {
+                dispatch(Planner.setHidden({ scheduleId: data.chosenScheduleId!, hidden: true }));
+              }}
+              className="interactive"
+            >
+              {data.chosenScheduleId}
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

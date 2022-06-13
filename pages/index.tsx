@@ -1,14 +1,13 @@
-import { getDocs, query, where } from 'firebase/firestore';
+import { where } from 'firebase/firestore';
 import { useState, useEffect, useMemo } from 'react';
 import Layout from '../components/Layout/Layout';
 import PlanningSection from '../components/YearSchedule/PlanningSection';
 import RequirementsSection from '../components/YearSchedule/RequirementsSection';
-import { Schema, Schedule } from '../shared/firestoreTypes';
-import { allTruthy, classNames, getUniqueSemesters } from '../shared/util';
+import { allTruthy, classNames } from '../shared/util';
 import {
   Auth, ClassCache, Planner, Profile, Schedules, Settings,
 } from '../src/features';
-import { useAppDispatch, useAppSelector } from '../src/hooks';
+import { useAppSelector } from '../src/hooks';
 import validateSchedules from '../src/requirements';
 import collegeRequirements from '../src/requirements/college';
 import {
@@ -18,9 +17,7 @@ import {
 } from '../src/requirements/util';
 
 export default function PlanPage() {
-  const dispatch = useAppDispatch();
   const userId = Auth.useAuthProperty('uid');
-  const classYear = useAppSelector(Profile.selectClassYear);
   const profile = useAppSelector(Profile.selectUserProfile);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
@@ -37,24 +34,6 @@ export default function PlanPage() {
   // check if the user has no schedules
   // if so, create them
   const q = useMemo(() => (userId ? [where('ownerUid', '==', userId)] : []), [userId]);
-  useEffect(() => {
-    if (q.length === 0 || !classYear) return;
-
-    (async () => {
-      const snap = await getDocs(query(Schema.Collection.schedules(), ...q)).catch((err) => console.error('error querying for user schedules', err));
-      if (!snap || !snap.empty || !userId) return;
-      const promises = getUniqueSemesters(classYear).map(({ year, season }) => dispatch(Schedules.createDefaultSchedule({ year, season }, userId)));
-      const settled = await Promise.allSettled(promises);
-      settled.forEach((result) => {
-        if (result.status === 'fulfilled') {
-          const schedule = result.value.payload as Schedule;
-          dispatch(Settings.chooseSchedule({ term: `${schedule.year}${schedule.season}`, scheduleId: schedule.id }));
-        } else {
-          console.error('error creating default schedules', result.reason);
-        }
-      });
-    })();
-  }, [userId, classYear]);
 
   useEffect(() => {
     const showSchedules = semesterFormat === 'sample'
@@ -72,13 +51,15 @@ export default function PlanPage() {
   }, [selectedRequirements, classCache, sampleSchedule, semesterFormat, profile]);
 
   return (
-    <Layout className="w-full md:px-8" title="Plan" scheduleQueryConstraints={q}>
-      <div className={classNames(
-        showReqs && 'md:grid-rows-1 md:grid-cols-[auto_1fr] items-stretch gap-4',
-        'grid min-h-screen py-8',
+    <Layout
+      className={classNames(
+        showReqs && 'md:p-8 md:grid-rows-1 md:grid-cols-[auto_1fr] items-stretch gap-4',
+        'w-full grid min-h-screen',
       )}
-      >
-        {showReqs && (
+      title="Plan"
+      scheduleQueryConstraints={q}
+    >
+      {showReqs && (
         <RequirementsSection
           {...{
             selectedRequirements,
@@ -90,10 +71,9 @@ export default function PlanPage() {
             validationResults,
           }}
         />
-        )}
+      )}
 
-        <PlanningSection highlightedRequirement={highlightedRequirement} />
-      </div>
+      <PlanningSection highlightedRequirement={highlightedRequirement} />
     </Layout>
   );
 }

@@ -125,9 +125,9 @@ function ChartComponent({
   useEffect(() => {
     if (demo) return;
 
-    if (hasMore) {
+    if (hasMore && refineNext) {
       refineNext();
-    } else if (hasPrevious) {
+    } else if (hasPrevious && refinePrevious) {
       refinePrevious();
     }
   }, [demo, elapsed]);

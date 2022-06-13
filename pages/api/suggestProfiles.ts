@@ -17,7 +17,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const token = await admin.auth().verifyIdToken(auth.slice('Bearer '.length));
     uid = token.uid;
   } catch (err) {
-    console.log('failed verification');
     res.status(401).send('Unauthenticated');
     return;
   }
@@ -39,7 +38,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const profiles: Record<string, string[]> = { [uid]: [] };
   schedules.docs.forEach((schedule) => {
     const owner = schedule.data().ownerUid;
-    if (friendIds.includes(owner)) return;
     if (!profiles[owner]) profiles[owner] = [];
     schedule.data().classes.forEach(({ classId }: { classId: string }) => {
       profiles[owner].push(classId);
@@ -47,9 +45,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   });
 
   const counts: Record<string, number> = {};
-  Object.entries(profiles).forEach(([userId, courses]) => {
-    counts[userId] = profiles[uid].filter((id) => courses.includes(id)).length;
-  });
+  Object.entries(profiles)
+    .filter(([id]) => id !== uid && !friendIds.includes(id))
+    .forEach(([userId, courses]) => {
+      counts[userId] = profiles[uid].filter((id) => courses.includes(id)).length;
+    });
   const ranked = Object.entries(counts)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     .sort(([a, aCount], [b, bCount]) => aCount - bCount);

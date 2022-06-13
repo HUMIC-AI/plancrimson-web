@@ -31,11 +31,18 @@ export const userProfileSlice = createSlice({
     setClassYear(state, action: PayloadAction<number>) {
       state.classYear = action.payload;
     },
+    signOut(state) {
+      Object.keys(state).forEach((k) => {
+        const key = k as keyof UserProfile;
+        delete state[key];
+        state[key] = null;
+      });
+    },
   },
 });
 
 export const {
-  setPhotoUrl, setUsername, setClassYear,
+  setPhotoUrl, setUsername, setClassYear, signOut,
 } = userProfileSlice.actions;
 
 // ========================= SELECTORS =========================

@@ -28,6 +28,7 @@ import {
   Auth, Planner, Schedules, Settings,
 } from '../../src/features';
 import { Schedule } from '../../shared/firestoreTypes';
+import { selectShowReqs } from '../../src/features/semesterFormat';
 
 
 interface RequirementsSectionProps {
@@ -35,12 +36,181 @@ interface RequirementsSectionProps {
   setSelectedRequirements: React.Dispatch<RequirementGroup>;
   validationResults: GroupResult | null;
   highlightedRequirement: Requirement | undefined;
-  highlightRequirement: React.Dispatch<
-  React.SetStateAction<Requirement | undefined>
-  >;
+  highlightRequirement: React.Dispatch<React.SetStateAction<Requirement | undefined>>;
   notification: boolean;
   setNotification: React.Dispatch<React.SetStateAction<boolean>>;
 }
+
+export default function RequirementsSection({
+  selectedRequirements: selectedReqGroup,
+  setSelectedRequirements,
+  validationResults,
+  highlightedRequirement,
+  highlightRequirement,
+  notification,
+  setNotification,
+}: RequirementsSectionProps) {
+  const dispatch = useAppDispatch();
+  const showReqs = useAppSelector(selectShowReqs);
+  const topRef = useRef<HTMLDivElement>(null!);
+  const bottomRef = useRef<HTMLDivElement>(null!);
+  const [topIntersecting, setTopIntersecting] = useState(false);
+  const [bottomIntersecting, setBottomIntersecting] = useState(false);
+
+  useEffect(() => {
+    const topObserver = new IntersectionObserver(([{ isIntersecting }]) => {
+      setTopIntersecting(isIntersecting);
+    });
+    topObserver.observe(topRef.current);
+    const bottomObserver = new IntersectionObserver(([{ isIntersecting }]) => {
+      setBottomIntersecting(isIntersecting);
+    });
+    bottomObserver.observe(bottomRef.current);
+    return () => {
+      topObserver.disconnect();
+      bottomObserver.disconnect();
+    };
+  }, []);
+
+  return (
+    <div className={classNames(
+      showReqs && 'md:rounded-lg',
+      'relative mb-12 md:mb-0 border-gray-300 space-y-4 md:border-2 md:shadow-lg md:max-w-xs lg:max-w-sm xl:max-w-md w-screen sm:overflow-auto sm:resize-x',
+    )}
+    >
+      <div className="md:absolute md:inset-4 flex flex-col space-y-4">
+        <Listbox
+          value={selectedReqGroup.groupId}
+          onChange={(groupId) => setSelectedRequirements(
+            allRequirements.find(
+              (requirements) => requirements.groupId === groupId,
+            )!,
+          )}
+          as="div"
+          className="relative"
+        >
+          <div className="flex items-center">
+            <Listbox.Button className="flex justify-between items-center w-full shadow py-2 px-3 border-2 rounded text-left font-medium">
+              {selectedReqGroup.groupId}
+              <FaChevronDown />
+            </Listbox.Button>
+
+            <button
+              type="button"
+              className="interactive p-2 rounded-xl ml-4"
+              onClick={() => dispatch(Planner.setShowReqs(false))}
+              title="Hide requirements panel"
+            >
+              <FaAngleDoubleRight />
+            </button>
+          </div>
+
+          <FadeTransition>
+            <Listbox.Options className="absolute w-full bg-gray-800 rounded-b-lg overflow-hidden shadow border z-20">
+              {allRequirements.map(({ groupId }) => (
+                <Listbox.Option
+                  key={groupId}
+                  value={groupId}
+                  className="odd:bg-gray-300 even:bg-white interactive py-2 px-4 cursor-pointer"
+                >
+                  {groupId}
+                </Listbox.Option>
+              ))}
+            </Listbox.Options>
+          </FadeTransition>
+        </Listbox>
+
+        <Disclosure>
+          <Disclosure.Button className="leading-none text-sm underline text-gray-600 py-2 interactive w-max mx-auto px-4">
+            Suggest new programs and concentrations
+          </Disclosure.Button>
+          <FadeTransition>
+            <Disclosure.Panel className="px-4">
+              <SuggestionForm />
+            </Disclosure.Panel>
+          </FadeTransition>
+        </Disclosure>
+
+        {selectedReqGroup.sampleSchedules && (
+          <Disclosure>
+            <Disclosure.Button className="leading-none text-sm underline text-gray-600 pl-2 interactive">
+              Sample schedules
+            </Disclosure.Button>
+            <FadeTransition>
+              <Disclosure.Panel className="px-4 text-sm">
+                <ul>
+                  {selectedReqGroup.sampleSchedules.map((schedule) => (
+                    <li key={schedule.name}>
+                      <SampleScheduleEntry schedule={schedule} />
+                    </li>
+                  ))}
+                </ul>
+              </Disclosure.Panel>
+            </FadeTransition>
+          </Disclosure>
+        )}
+
+        <FadeTransition show={notification}>
+          <div className="relative rounded-lg bg-blue-300 py-2 lg:py-4 px-6 mx-4 md:mx-0 text-sm text-left italic">
+            <div className="flex flex-col space-y-2">
+              <span>
+                Remember that this is an unofficial tool
+                {' '}
+                <strong>only</strong>
+                ,
+                is still under development, and is not affiliated with Harvard.
+              </span>
+              <span>
+                For up-to-date requirements, consult the
+                {' '}
+                <ExternalLink href="https://handbook.college.harvard.edu/">
+                  Harvard College Student Handbook
+                </ExternalLink>
+                {' '}
+                or your Advising Report, which can be found by going to
+                {' '}
+                <ExternalLink href="https://my.harvard.edu/">
+                  my.harvard
+                </ExternalLink>
+                {' '}
+                and clicking on &ldquo;My Program&rdquo;.
+              </span>
+              <span>More concentrations and programs coming soon!</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setNotification(false)}
+              className="absolute top-2 right-2 not-italic text-xl interactive"
+            >
+              <FaTimes />
+            </button>
+          </div>
+        </FadeTransition>
+
+        <div className="flex-1 relative">
+          <div
+            className={classNames(
+              'md:absolute md:inset-0 overflow-y-auto box-content md:border-black md:border-dashed',
+              !topIntersecting && 'md:border-t-2',
+              !bottomIntersecting && 'md:border-b-2',
+            )}
+          >
+            <div ref={topRef} id="topIntersection" />
+            <RequirementGroupComponent
+              depth={0}
+              requirements={selectedReqGroup}
+              validationResults={validationResults}
+              highlightRequirement={highlightRequirement}
+              highlightedRequirement={highlightedRequirement}
+            />
+            <div ref={bottomRef} id="bottomIntersection" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 function SuggestionForm() {
   const uid = Auth.useAuthProperty('uid');
@@ -216,168 +386,3 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
     </div>
   );
 }
-
-const RequirementsSection: React.FC<RequirementsSectionProps> = function ({
-  selectedRequirements: selectedReqGroup,
-  setSelectedRequirements,
-  validationResults,
-  highlightedRequirement,
-  highlightRequirement,
-  notification,
-  setNotification,
-}) {
-  const dispatch = useAppDispatch();
-  const topRef = useRef<HTMLDivElement>(null!);
-  const bottomRef = useRef<HTMLDivElement>(null!);
-  const [topIntersecting, setTopIntersecting] = useState(false);
-  const [bottomIntersecting, setBottomIntersecting] = useState(false);
-
-  useEffect(() => {
-    const topObserver = new IntersectionObserver(([{ isIntersecting }]) => {
-      setTopIntersecting(isIntersecting);
-    });
-    topObserver.observe(topRef.current);
-    const bottomObserver = new IntersectionObserver(([{ isIntersecting }]) => {
-      setBottomIntersecting(isIntersecting);
-    });
-    bottomObserver.observe(bottomRef.current);
-    return () => {
-      topObserver.disconnect();
-      bottomObserver.disconnect();
-    };
-  }, []);
-
-  return (
-    <div className="relative mb-12 md:mb-0 border-gray-300 space-y-4 md:border-2 md:rounded-lg md:shadow-lg md:max-w-xs lg:max-w-sm xl:max-w-md w-screen sm:overflow-auto sm:resize-x">
-      <div className="md:absolute md:inset-4 flex flex-col space-y-4">
-        <Listbox
-          value={selectedReqGroup.groupId}
-          onChange={(groupId) => setSelectedRequirements(
-            allRequirements.find(
-              (requirements) => requirements.groupId === groupId,
-            )!,
-          )}
-          as="div"
-          className="relative"
-        >
-          <div className="flex space-x-4 items-center">
-            <Listbox.Button className="flex justify-between items-center w-full shadow py-2 px-3 border-2 rounded text-left font-medium">
-              {selectedReqGroup.groupId}
-              <FaChevronDown />
-            </Listbox.Button>
-            <button
-              type="button"
-              className="interactive"
-              onClick={() => dispatch(Planner.setShowReqs(false))}
-              title="Hide requirements panel"
-            >
-              <FaAngleDoubleRight />
-            </button>
-          </div>
-          <FadeTransition>
-            <Listbox.Options className="absolute w-full bg-gray-800 rounded-b-lg overflow-hidden shadow border z-20">
-              {allRequirements.map(({ groupId }) => (
-                <Listbox.Option
-                  key={groupId}
-                  value={groupId}
-                  className="odd:bg-gray-300 even:bg-white interactive py-2 px-4 cursor-pointer"
-                >
-                  {groupId}
-                </Listbox.Option>
-              ))}
-            </Listbox.Options>
-          </FadeTransition>
-        </Listbox>
-
-        <Disclosure>
-          <Disclosure.Button className="leading-none text-sm underline text-gray-600 py-2 interactive w-max mx-auto px-4">
-            Suggest new programs and concentrations
-          </Disclosure.Button>
-          <FadeTransition>
-            <Disclosure.Panel className="px-4">
-              <SuggestionForm />
-            </Disclosure.Panel>
-          </FadeTransition>
-        </Disclosure>
-
-        {selectedReqGroup.sampleSchedules && (
-          <Disclosure>
-            <Disclosure.Button className="leading-none text-sm underline text-gray-600 pl-2 interactive">
-              Sample schedules
-            </Disclosure.Button>
-            <FadeTransition>
-              <Disclosure.Panel className="px-4 text-sm">
-                <ul>
-                  {selectedReqGroup.sampleSchedules.map((schedule) => (
-                    <li key={schedule.name}>
-                      <SampleScheduleEntry schedule={schedule} />
-                    </li>
-                  ))}
-                </ul>
-              </Disclosure.Panel>
-            </FadeTransition>
-          </Disclosure>
-        )}
-
-        <FadeTransition show={notification}>
-          <div className="relative rounded-lg bg-blue-300 py-2 lg:py-4 px-6 mx-4 md:mx-0 text-sm text-left italic">
-            <div className="flex flex-col space-y-2">
-              <span>
-                Remember that this is an unofficial tool
-                {' '}
-                <strong>only</strong>
-                ,
-                is still under development, and is not affiliated with Harvard.
-              </span>
-              <span>
-                For up-to-date requirements, consult the
-                {' '}
-                <ExternalLink href="https://handbook.college.harvard.edu/">
-                  Harvard College Student Handbook
-                </ExternalLink>
-                {' '}
-                or your Advising Report, which can be found by going to
-                {' '}
-                <ExternalLink href="https://my.harvard.edu/">
-                  my.harvard
-                </ExternalLink>
-                {' '}
-                and clicking on &ldquo;My Program&rdquo;.
-              </span>
-              <span>More concentrations and programs coming soon!</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setNotification(false)}
-              className="absolute top-2 right-2 not-italic text-xl interactive"
-            >
-              <FaTimes />
-            </button>
-          </div>
-        </FadeTransition>
-
-        <div className="flex-1 relative">
-          <div
-            className={classNames(
-              'md:absolute md:inset-0 overflow-y-auto box-content md:border-black md:border-dashed',
-              !topIntersecting && 'md:border-t-2',
-              !bottomIntersecting && 'md:border-b-2',
-            )}
-          >
-            <div ref={topRef} id="topIntersection" />
-            <RequirementGroupComponent
-              depth={0}
-              requirements={selectedReqGroup}
-              validationResults={validationResults}
-              highlightRequirement={highlightRequirement}
-              highlightedRequirement={highlightedRequirement}
-            />
-            <div ref={bottomRef} id="bottomIntersection" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default RequirementsSection;

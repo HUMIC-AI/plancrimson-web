@@ -81,7 +81,7 @@ const SmallComponents = {
     );
   },
   Paths() {
-    const { pathname, query } = useRouter();
+    const { pathname } = useRouter();
 
     return (
       <Disclosure.Panel className="sm:hidden">
@@ -91,13 +91,13 @@ const SmallComponents = {
               key={item.name}
               aria-current={item.href === pathname ? 'page' : undefined}
             >
-              <Link href={{ pathname: item.href, query }}>
+              <Link href={item.href}>
                 <a
                   className={classNames(
                     item.href === pathname
-                      ? 'bg-gray-800 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white',
-                    'block px-3 py-2 rounded-md text-base font-medium',
+                      ? 'bg-gray-800 text-white font-bold'
+                      : 'text-gray-300 font-medium hover:bg-gray-800 hover:text-white',
+                    'block px-3 py-2 rounded-md text-base',
                   )}
                 >
                   {item.name}
@@ -114,23 +114,20 @@ const SmallComponents = {
 
 const LargeOnly = {
   Paths() {
-    const { pathname, query } = useRouter();
+    const { pathname } = useRouter();
 
     return (
       <div className="hidden sm:block sm:ml-6">
         <div className="flex space-x-4 items-center">
           {paths.map((item) => (
             // pass the query between pages to preserve the selected schedule
-            <Link
-              key={item.name}
-              href={{ pathname: item.href, query }}
-            >
+            <Link key={item.name} href={item.href}>
               <a
                 className={classNames(
                   item.href === pathname
-                    ? 'bg-gray-800 text-white'
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white',
-                  'px-3 py-2 rounded-md text-sm font-medium text-center',
+                    ? 'bg-gray-800 text-white font-bold'
+                    : 'text-gray-300 hover:bg-gray-800 font-medium hover:text-white',
+                  'px-3 py-2 rounded-md text-sm text-center',
                 )}
                 aria-current={
               item.href === pathname ? 'page' : undefined
@@ -160,7 +157,7 @@ function UserMenu() {
   );
 
   return (
-    <Menu as="div" className="ml-3 relative">
+    <Menu as="div" className="ml-3 relative z-10">
       <Menu.Button
         name="Open user menu"
         className="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
