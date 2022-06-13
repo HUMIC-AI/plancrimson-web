@@ -22,21 +22,17 @@ function getHeaders(meiliRequired: boolean): AxiosRequestHeaders {
   };
 }
 
-async function uploadData(data: ExtendedClass[]) {
-  const { meiliUrl } = await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'meiliUrl',
-      message: 'URL of the MeiliSearch database:',
-      default: defaultMeiliUrl,
-    },
-  ]);
-
-  await axios({
-    url: `${meiliUrl}/indexes/courses/documents`,
-    headers: getHeaders(meiliUrl),
-    data,
-  });
+async function uploadData(url: string, data: ExtendedClass[]) {
+  try {
+    await axios({
+      method: 'POST',
+      url: `${url}/indexes/courses/documents`,
+      headers: getHeaders(!!url),
+      data,
+    });
+  } catch (err) {
+    console.error(`error uploading ${data.length} courses:`, err);
+  }
 }
 
 export default {
@@ -52,10 +48,21 @@ export default {
     if (!existsSync(filepath)) {
       throw new Error('file does not exist');
     }
-    const allCourses: ExtendedClass[] = JSON.parse(readFileSync(filepath).toString('utf8'));
+    const data = readFileSync(filepath).toString('utf8');
+    const allCourses: ExtendedClass[] = JSON.parse(data);
+
+    const { meiliUrl } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'meiliUrl',
+        message: 'URL of the MeiliSearch database:',
+        default: defaultMeiliUrl,
+      },
+    ]);
+
     for (let i = 0; i < allCourses.length; i += 500) {
-      // eslint-disable-next-line no-await-in-loop
-      await uploadData(allCourses.slice(i, i + 500));
+      console.log(`uploading from index ${i}`);
+      await uploadData(meiliUrl, allCourses.slice(i, i + 500));
     }
   },
 };

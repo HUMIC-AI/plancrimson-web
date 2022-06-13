@@ -54,8 +54,8 @@ const commands = [
   newLabel('Accounts'),
   {
     label: 'Migrate users',
-    run: migration20220610
-  }
+    run: migration20220610,
+  },
 ];
 
 async function main() {

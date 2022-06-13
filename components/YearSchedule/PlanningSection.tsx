@@ -274,8 +274,6 @@ export function SemestersList({
     dispatch(Schedules.createDefaultSchedule({ season, year }, userId)).catch(handleError);
   }
 
-  console.log(hiddenIds, hiddenTerms, semesterFormat);
-
   return (
     <div className="relative overflow-x-auto flex-1 mt-4">
       {/* on small screens, this extends as far as necessary */}

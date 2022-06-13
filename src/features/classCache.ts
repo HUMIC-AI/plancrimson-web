@@ -45,14 +45,20 @@ export function loadCourses(
   return async (dispatch: AppDispatch, getState: () => RootState) => {
     const state = getState();
     const cache = selectClassCache(state);
-    const classes = await Promise.all(classIds.map((classId) => {
+    const classes = await Promise.allSettled(classIds.map((classId) => {
       if (classId in cache) {
         return Promise.resolve(cache[classId]);
       }
       return index.getDocument(classId);
     }));
-    const fetchedClasses = allTruthy(classes);
+    const fetchedClasses = allTruthy(classes.map((result) => {
+      if (result.status === 'fulfilled') {
+        return result.value;
+      }
+      console.error(result.reason);
+      return null;
+    }));
     dispatch(classCacheSlice.actions.loadClasses(fetchedClasses));
-    return classes;
+    return fetchedClasses;
   };
 }

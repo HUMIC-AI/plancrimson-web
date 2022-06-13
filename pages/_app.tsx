@@ -3,10 +3,10 @@ import '../src/index.css';
 import type { AppProps } from 'next/app';
 import { getApps, initializeApp } from 'firebase/app';
 import {
-  connectFirestoreEmulator, getFirestore, onSnapshot, updateDoc,
+  connectFirestoreEmulator, getDoc, getFirestore, onSnapshot, updateDoc,
 } from 'firebase/firestore';
 import { Provider } from 'react-redux';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { connectAuthEmulator, getAuth, onAuthStateChanged } from 'firebase/auth';
 import { SearchStateProvider } from '../src/context/searchState';
 import store from '../src/store';
@@ -47,28 +47,36 @@ if (getApps().length === 0) {
 
 /**
  * Ask the user for their graduation year.
+ * Create default schedules
  */
 function GraduationYearDialog({ defaultYear, uid } : { defaultYear: number; uid: string; }) {
   const dispatch = useAppDispatch();
   const { setOpen } = useModal();
   const [classYear, setYear] = useState(defaultYear);
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    const promises = getUniqueSemesters(classYear).map(async ({ year, season }) => {
+      const { payload: schedule } = await dispatch(Schedules.createDefaultSchedule({ year, season }, uid));
+      await dispatch(Settings.chooseSchedule({ term: `${schedule.year}${schedule.season}`, scheduleId: schedule.id }));
+    });
+    const settled = await Promise.allSettled(promises);
+    console.log(settled);
+    settled.forEach((result) => {
+      if (result.status === 'rejected') {
+        console.error('error creating default schedules', result.reason);
+      }
+    });
+
+    await updateDoc(Schema.profile(uid), 'classYear', classYear).catch((err) => console.error(`error updating class year for ${uid}`, err));
+
+    setOpen(false);
+  }
+
   return (
     <form
-      onSubmit={async (e) => {
-        e.preventDefault();
-
-        const promises = getUniqueSemesters(classYear).map(async ({ year, season }) => {
-          const { payload: schedule } = await dispatch(Schedules.createDefaultSchedule({ year, season }, uid));
-          await dispatch(Settings.chooseSchedule({ term: `${schedule.year}${schedule.season}`, scheduleId: schedule.id }));
-        });
-        const settled = await Promise.allSettled(promises);
-        settled.forEach((result) => result.status === 'rejected' && console.error('error creating default schedules', result.reason));
-
-        await updateDoc(Schema.profile(uid), 'classYear', classYear).catch((err) => console.error(`error updating class year for ${uid}`, err));
-
-        setOpen(false);
-      }}
+      onSubmit={handleSubmit}
       className="bg-white p-4"
     >
       <div className="max-w-xs mx-auto flex flex-col items-center space-y-4">
@@ -92,8 +100,6 @@ function GraduationYearDialog({ defaultYear, uid } : { defaultYear: number; uid:
 function MyApp({ Component, pageProps }: AppProps) {
   const auth = getAuth();
   const dispatch = useAppDispatch();
-  const uid = Auth.useAuthProperty('uid');
-  const { showContents } = useModal();
 
   // When the user logs in/out, dispatch to redux
   useEffect(() => {
@@ -122,55 +128,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     return unsub;
   }, []);
 
-  useEffect(() => {
-    if (!uid) return;
-
-    const profileRef = Schema.profile(uid);
-    const unsubProfile = onSnapshot(
-      profileRef,
-      (snap) => {
-        if (!snap.exists()) return;
-
-        const { username, classYear } = snap.data();
-
-        // update last sign in, know this will always exist
-        if (username) dispatch(Profile.setUsername(username));
-
-        // need class year before other missing fields
-        if (!classYear) {
-          const now = new Date();
-          showContents({
-            title: 'Set graduation year',
-            content: <GraduationYearDialog defaultYear={now.getFullYear() + (now.getMonth() > 5 ? 4 : 3)} uid={uid} />,
-            noExit: true,
-          });
-        } else {
-          dispatch(Profile.setClassYear(classYear));
-        }
-      },
-      (err) => {
-        console.error(`error listening to ${profileRef.path}:`, err);
-      },
-    );
-
-    const userDataRef = Schema.user(uid);
-    const unsubUserData = onSnapshot(userDataRef, (snap) => {
-      if (!snap.exists() || snap.metadata.fromCache) return;
-      const data = snap.data()!;
-      dispatch(Settings.overwriteSettings({
-        customTimes: data.customTimes || {},
-        chosenSchedules: data.chosenSchedules || {},
-        waivedRequirements: data.waivedRequirements || {},
-      }));
-    }, (err) => {
-      console.error(`error listening to ${userDataRef.path}:`, err);
-    });
-
-    return () => {
-      unsubProfile();
-      unsubUserData();
-    };
-  }, [uid]);
+  useProfile();
 
   return (
     <SearchStateProvider>
@@ -190,4 +148,50 @@ export default function Wrapper(props: AppProps) {
       </ModalProvider>
     </Provider>
   );
+}
+
+function useProfile() {
+  const dispatch = useAppDispatch();
+  const uid = Auth.useAuthProperty('uid');
+  const { showContents } = useModal();
+
+  useEffect(() => {
+    if (!uid) return;
+
+    // check if the profile exists
+    (async () => {
+      const profile = await getDoc(Schema.profile(uid));
+
+      if (!profile.exists()) return;
+      const data = profile.data()!;
+      if (data.username) dispatch(Profile.setUsername(data.username));
+
+      if (!data.classYear) {
+        const now = new Date();
+        showContents({
+          title: 'Set graduation year',
+          content: <GraduationYearDialog defaultYear={now.getFullYear() + (now.getMonth() > 5 ? 4 : 3)} uid={uid} />,
+          noExit: true,
+        });
+      } else {
+        dispatch(Profile.setClassYear(data.classYear));
+      }
+    })();
+
+    const userDataRef = Schema.user(uid);
+    const unsubUserData = onSnapshot(userDataRef, (snap) => {
+      if (!snap.exists()) return;
+
+      const data = snap.data()!;
+      dispatch(Settings.overwriteSettings({
+        customTimes: data.customTimes || {},
+        chosenSchedules: data.chosenSchedules || {},
+        waivedRequirements: data.waivedRequirements || {},
+      }));
+    }, (err) => {
+      console.error(`error listening to ${userDataRef.path}:`, err);
+    });
+
+    return unsubUserData;
+  }, [uid]);
 }
