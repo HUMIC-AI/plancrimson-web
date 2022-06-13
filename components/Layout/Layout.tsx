@@ -17,10 +17,11 @@ import { useMeiliClient } from '../../src/meili';
 interface LayoutProps {
   title?: string;
   className?: string;
-  scheduleQueryConstraints?: Firestore.QueryConstraint[]
+  scheduleQueryConstraints?: Firestore.QueryConstraint[];
+  custom?: boolean;
 }
 
-function Footer() {
+export function Footer() {
   const { query } = useRouter();
 
   return (
@@ -96,6 +97,7 @@ export default function Layout({
   title,
   className = 'mx-auto flex-1 container sm:p-8',
   scheduleQueryConstraints: constraints = [],
+  custom = false,
 }: PropsWithChildren<LayoutProps>) {
   const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
 
@@ -118,17 +120,21 @@ export default function Layout({
         <meta property="og:url" content="https://plancrimson.xyz/" />
       </Head>
 
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
+      {custom ? children : (
+        <>
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
 
-        {alerts.map((alert) => <div key={alert}>{alert}</div>)}
+            {alerts.map((alert) => <div key={alert}>{alert}</div>)}
 
-        <main className={className}>
-          {children}
-        </main>
-      </div>
+            <main className={className}>
+              {children}
+            </main>
+          </div>
 
-      <Footer />
+          <Footer />
+        </>
+      )}
 
       <CustomModal />
     </>

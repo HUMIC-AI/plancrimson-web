@@ -6,12 +6,14 @@ import type { SearchBoxProvided } from 'react-instantsearch-core';
 import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
 import Attribute from './Attribute';
 import ScheduleChooser from '../ScheduleSelector';
-import { ATTRIBUTE_DESCRIPTIONS, classNames, sortSchedules } from '../../shared/util';
+import {
+  ATTRIBUTE_DESCRIPTIONS, breakpoints, classNames, sortSchedules,
+} from '../../shared/util';
 import Stats, { StatsComponent } from './Stats';
 import StateResults, { StateResultsComponent } from './StateResults';
 import { alertSignIn } from './searchUtils';
 import useChosenScheduleContext from '../../src/context/selectedSchedule';
-import { useAppDispatch, useAppSelector, useLgBreakpoint } from '../../src/hooks';
+import { useAppDispatch, useAppSelector, useBreakpoint } from '../../src/hooks';
 import { Auth, Planner, Schedules } from '../../src/features';
 import type { Class } from '../../shared/apiTypes';
 
@@ -69,7 +71,7 @@ function SearchBar({
   const schedules = useAppSelector(Schedules.selectSchedules);
   const uid = Auth.useAuthProperty('uid');
   const showAttributes = useAppSelector(Planner.selectShowAttributes);
-  const isLg = useLgBreakpoint();
+  const isLg = useBreakpoint(breakpoints.lg);
   const { chooseSchedule, chosenScheduleId } = useChosenScheduleContext();
 
   return (

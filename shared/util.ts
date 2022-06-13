@@ -22,6 +22,11 @@ import { DAYS_OF_WEEK, SEASON_ORDER } from './constants';
 
 export * from './constants';
 
+export const breakpoints = {
+  md: 768,
+  lg: 1024,
+};
+
 export function getInitialSettings(): UserSettings {
   return {
     chosenSchedules: {},

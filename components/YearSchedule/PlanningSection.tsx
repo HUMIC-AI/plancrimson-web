@@ -18,83 +18,29 @@ import {
   sortSchedules,
 } from '../../shared/util';
 import {
-  Auth, Planner, Profile, Schedules, Settings,
+  Auth,
+  Planner, Profile, Schedules, Settings,
 } from '../../src/features';
 import {
-  downloadJson, handleError, signInUser, useAppDispatch, useAppSelector,
+  downloadJson, handleError, useAppDispatch, useAppSelector,
 } from '../../src/hooks';
-import type { Requirement } from '../../src/requirements/util';
+import { Requirement } from '../../src/requirements/util';
 import type { DragStatus } from '../Course/CourseCard';
 import UploadPlan from '../UploadPlan';
 import SemesterComponent, { SemesterDisplayProps } from './SemesterDisplay';
 
+interface WithResizeRef {
+  resizeRef: React.MutableRefObject<HTMLDivElement>;
+}
 
-// render all of the user's semesters
-export default function PlanningSection({ highlightedRequirement } : { highlightedRequirement?: Requirement; }) {
-  const dispatch = useAppDispatch();
-  const userId = Auth.useAuthProperty('uid');
-  const {
-    classYear, semesterFormat, sampleSchedule, schedules: userSchedules,
-  } = useAppSelector((state) => ({
-    classYear: Profile.selectClassYear(state),
-    semesterFormat: Planner.selectSemesterFormat(state),
-    sampleSchedule: Planner.selectSampleSchedule(state),
-    schedules: Schedules.selectSchedules(state),
-  }));
+// gets a list of columns to be displayed in the table.
+function useColumns() {
+  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
+  const userSchedules = useAppSelector(Schedules.selectSchedules);
+  const classYear = useAppSelector(Profile.selectClassYear);
+  const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
   const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
-  const showReqs = useAppSelector(Planner.selectShowReqs);
 
-  const [dragStatus, setDragStatus] = useState<DragStatus>({
-    dragging: false,
-  });
-  // default w-56 = 224px
-  // the resize bar starts at w-24 = 96px
-  const [colWidth, setWidth] = useState(224);
-  const [leftIntersecting, setLeftIntersecting] = useState(false);
-  const [rightIntersecting, setRightIntersecting] = useState(false);
-
-  const resizeRef = useRef<HTMLDivElement>(null!);
-  const semestersContainerRef = useRef<HTMLDivElement>(null!);
-  const leftScrollRef = useRef<HTMLDivElement>(null!);
-  const rightScrollRef = useRef<HTMLDivElement>(null!);
-
-  // conditionally show the left and right scroll bars
-  // based on the user's current scroll position
-  useEffect(() => {
-    const resizeObserver = new ResizeObserver((entries) => {
-      const newWidth = entries?.[0]?.borderBoxSize?.[0]?.inlineSize;
-      if (newWidth) {
-        setWidth(Math.max(Math.min(newWidth + 224 - 96, 2048), 224));
-      }
-    });
-    resizeObserver.observe(resizeRef.current);
-    const leftScrollObserver = new IntersectionObserver((entries) => {
-      const isIntersecting = entries?.[0]?.isIntersecting;
-      if (typeof isIntersecting === 'boolean') {
-        setLeftIntersecting(isIntersecting);
-      }
-    });
-    leftScrollObserver.observe(leftScrollRef.current);
-    const rightScrollObserver = new IntersectionObserver((entries) => {
-      const isIntersecting = entries?.[0]?.isIntersecting;
-      if (typeof isIntersecting === 'boolean') {
-        setRightIntersecting(isIntersecting);
-      }
-    });
-    rightScrollObserver.observe(rightScrollRef.current);
-    return () => {
-      resizeObserver.disconnect();
-      leftScrollObserver.disconnect();
-      rightScrollObserver.disconnect();
-    };
-  }, []);
-
-  const chooseSchedule = (year: number, season: Season, scheduleId: string | null) => dispatch(Settings.chooseSchedule({
-    term: `${year}${season}`,
-    scheduleId,
-  }));
-
-  // the set of columns in our table, each representing a semester
   const columns: SemesterDisplayProps[] = useMemo(() => {
     switch (semesterFormat) {
       case 'sample':
@@ -104,6 +50,7 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
           chosenScheduleId: id,
           key: id,
         }));
+
       case 'selected':
         if (!classYear) return [];
         return getUniqueSemesters(
@@ -114,6 +61,7 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
           semester: { year, season },
           chosenScheduleId: chosenSchedules[`${year}${season}`] || null,
         }));
+
       case 'all':
         return Object.values(userSchedules)
           .sort(compareSemesters)
@@ -123,19 +71,24 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
             chosenScheduleId: id,
             highlight: chosenSchedules[`${year}${season}`] || undefined,
           }));
+
       default:
         return [];
     }
   }, [classYear, sampleSchedule?.schedules, userSchedules, chosenSchedules, semesterFormat]);
 
-  const totalCourses = useMemo(
-    () => Object.values(chosenSchedules).reduce(
-      (acc, scheduleId) => acc
-          + ((scheduleId && userSchedules[scheduleId]?.classes.length) || 0),
-      0,
-    ),
-    [userSchedules, chosenSchedules],
-  );
+  return columns;
+}
+
+export function HeaderSection({ resizeRef }: WithResizeRef) {
+  const dispatch = useAppDispatch();
+  const userSchedules = useAppSelector(Schedules.selectSchedules);
+  const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
+  const showReqs = useAppSelector(Planner.selectShowReqs);
+  const isExpanded = useAppSelector(Planner.selectExpandCards);
+  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
+  const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
+  const columns = useColumns();
 
   const downloadData: DownloadPlan = {
     id: semesterFormat === 'sample'
@@ -146,138 +99,13 @@ export default function PlanningSection({ highlightedRequirement } : { highlight
     ),
   };
 
-  // add a schedule whose semester is before the current earliest semester
-  function addPrevSemester() {
-    if (!userId) return;
-    const earliest = sortSchedules(userSchedules)[0];
-    const [season, year] = earliest.season === 'Spring'
-      ? ['Fall' as Season, earliest.year - 1]
-      : ['Spring' as Season, earliest.year];
-    dispatch(Schedules.createDefaultSchedule({ season, year }, userId)).catch(handleError);
-  }
-
-  return (
-    <div className={classNames(
-      showReqs && 'md:rounded-lg md:shadow-lg ',
-      'relative bg-gray-800 md:p-4 row-start-1 md:row-auto overflow-auto max-w-full md:h-full',
-    )}
-    >
-      <div className="flex flex-col md:h-full">
-        <div className={userId ? 'mb-4' : 'hidden mb-4'}>
-          <HeaderSection
-            totalCourses={totalCourses}
-            resizeRef={resizeRef}
-            downloadData={downloadData}
-          />
-        </div>
-
-        {/* begin semesters display */}
-        <div className="relative overflow-x-auto flex-1">
-          {/* on small screens, this extends as far as necessary */}
-          {/* on medium screens and larger, put this into its own box */}
-          <div
-            className="md:absolute md:inset-0 grid grid-flow-col rounded-t-lg rounded-b-lg overflow-auto"
-            ref={semestersContainerRef}
-          >
-            {/* when dragging a card, drag over this area to scroll left */}
-            <div ref={leftScrollRef} />
-
-            {/* If the user is signed in, show the semesters. Otherwise show "Sign in to get started" */}
-            {userId ? (
-              <>
-                {/* add previous semester button */}
-                {semesterFormat === 'selected' && classYear && (
-                  <button
-                    type="button"
-                    className="bg-blue-300 interactive h-full px-4 flex-grow-0"
-                    onClick={addPrevSemester}
-                    name="Add previous semester"
-                    title="Add previous semester"
-                  >
-                    <FaPlus />
-                  </button>
-                )}
-
-                {columns.map((column) => (
-                  <SemesterComponent
-                    {...{
-                      ...column,
-                      colWidth,
-                      dragStatus,
-                      setDragStatus,
-                      highlightedRequirement,
-                      handleChooseSchedule(id) {
-                        chooseSchedule(column.semester.year, column.semester.season, id);
-                      },
-                    }}
-                  />
-                ))}
-              </>
-            ) : (
-              <div className="h-full flex items-center justify-center">
-                <button
-                  type="button"
-                  className="text-white font-black text-6xl interactive"
-                  onClick={() => signInUser().catch(handleError)}
-                >
-                  Sign in to get started!
-                </button>
-              </div>
-            )}
-
-            {/* when dragging, drag over this area to scroll right */}
-            <div ref={rightScrollRef} />
-          </div>
-
-          {dragStatus.dragging && (
-            <>
-              {leftIntersecting || (
-              <div
-                className="absolute inset-y-0 left-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
-                onDragOver={() => {
-                  semestersContainerRef.current.scrollBy(-2, 0);
-                }}
-              >
-                <FaChevronLeft />
-              </div>
-              )}
-
-              {rightIntersecting || (
-              <div
-                className="absolute inset-y-0 right-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
-                onDragOver={() => {
-                  semestersContainerRef.current.scrollBy(2, 0);
-                }}
-              >
-                <FaChevronRight />
-              </div>
-              )}
-            </>
-          )}
-        </div>
-        {/* end semesters display */}
-
-        <HiddenSchedules allSemesters={columns} />
-      </div>
-    </div>
+  const totalCourses = useMemo(
+    () => Object.values(chosenSchedules).reduce(
+      (acc, scheduleId) => acc + ((scheduleId && userSchedules[scheduleId]?.classes.length) || 0),
+      0,
+    ),
+    [userSchedules, chosenSchedules],
   );
-}
-
-
-interface HeaderSectionProps {
-  totalCourses: number;
-  resizeRef: React.MutableRefObject<HTMLDivElement>;
-  downloadData: any;
-}
-
-function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionProps) {
-  const dispatch = useAppDispatch();
-  const userSchedules = useAppSelector(Schedules.selectSchedules);
-  const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
-  const showReqs = useAppSelector(Planner.selectShowReqs);
-  const isExpanded = useAppSelector(Planner.selectExpandCards);
-  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
-  const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
 
   return (
     <div className="text-white relative">
@@ -378,10 +206,154 @@ function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionP
 }
 
 
-function HiddenSchedules({ allSemesters } : { allSemesters: SemesterDisplayProps[] }) {
+export function SemestersList({
+  resizeRef, highlightedRequirement,
+}: WithResizeRef & { highlightedRequirement: Requirement | undefined }) {
+  const dispatch = useAppDispatch();
+  const userSchedules = useAppSelector(Schedules.selectSchedules);
+  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
+  const userId = Auth.useAuthProperty('uid')!;
+  const classYear = useAppSelector(Profile.selectClassYear);
+
+  // default w-56 = 224px
+  // the resize bar starts at w-24 = 96px
+  const [colWidth, setWidth] = useState(224);
+  const [leftIntersecting, setLeftIntersecting] = useState(false);
+  const [rightIntersecting, setRightIntersecting] = useState(false);
+
+  const semestersContainerRef = useRef<HTMLDivElement>(null!);
+  const leftScrollRef = useRef<HTMLDivElement>(null!);
+  const rightScrollRef = useRef<HTMLDivElement>(null!);
+
+  const [dragStatus, setDragStatus] = useState<DragStatus>({
+    dragging: false,
+  });
+
+  const columns = useColumns();
+
+  // conditionally show the left and right scroll bars
+  // based on the user's current scroll position
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver((entries) => {
+      const newWidth = entries?.[0]?.borderBoxSize?.[0]?.inlineSize;
+      if (newWidth) {
+        setWidth(Math.max(Math.min(newWidth + 224 - 96, 2048), 224));
+      }
+    });
+    resizeObserver.observe(resizeRef.current);
+    const leftScrollObserver = new IntersectionObserver((entries) => {
+      const isIntersecting = entries?.[0]?.isIntersecting;
+      if (typeof isIntersecting === 'boolean') {
+        setLeftIntersecting(isIntersecting);
+      }
+    });
+    leftScrollObserver.observe(leftScrollRef.current);
+    const rightScrollObserver = new IntersectionObserver((entries) => {
+      const isIntersecting = entries?.[0]?.isIntersecting;
+      if (typeof isIntersecting === 'boolean') {
+        setRightIntersecting(isIntersecting);
+      }
+    });
+    rightScrollObserver.observe(rightScrollRef.current);
+    return () => {
+      resizeObserver.disconnect();
+      leftScrollObserver.disconnect();
+      rightScrollObserver.disconnect();
+    };
+  }, []);
+
+  // add a schedule whose semester is before the current earliest semester
+  function addPrevSemester() {
+    const earliest = sortSchedules(userSchedules)[0];
+    const [season, year] = earliest.season === 'Spring'
+      ? ['Fall' as Season, earliest.year - 1]
+      : ['Spring' as Season, earliest.year];
+    dispatch(Schedules.createDefaultSchedule({ season, year }, userId)).catch(handleError);
+  }
+
+  const chooseSchedule = (year: number, season: Season, scheduleId: string | null) => dispatch(Settings.chooseSchedule({
+    term: `${year}${season}`,
+    scheduleId,
+  }));
+
+  return (
+    <div className="relative overflow-x-auto flex-1 mt-4">
+      {/* on small screens, this extends as far as necessary */}
+      {/* on medium screens and larger, put this into its own box */}
+      <div
+        className="absolute inset-0 grid grid-flow-col rounded-t-lg rounded-b-lg overflow-auto"
+        ref={semestersContainerRef}
+      >
+        {/* when dragging a card, drag over this area to scroll left */}
+        <div ref={leftScrollRef} />
+
+        {/* add previous semester button */}
+        {semesterFormat === 'selected' && classYear && (
+        <button
+          type="button"
+          className="bg-blue-300 interactive h-full px-4 flex-grow-0"
+          onClick={addPrevSemester}
+          name="Add previous semester"
+          title="Add previous semester"
+        >
+          <FaPlus />
+        </button>
+        )}
+
+        {columns.map((column) => (
+          <SemesterComponent
+            {...{
+              ...column,
+              colWidth,
+              dragStatus,
+              setDragStatus,
+              highlightedRequirement,
+              handleChooseSchedule(id) {
+                chooseSchedule(column.semester.year, column.semester.season, id);
+              },
+            }}
+          />
+        ))}
+
+        {/* when dragging, drag over this area to scroll right */}
+        <div ref={rightScrollRef} />
+      </div>
+
+      {dragStatus.dragging && (
+      <>
+        {leftIntersecting || (
+        <div
+          className="absolute inset-y-0 left-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
+          onDragOver={() => {
+            semestersContainerRef.current.scrollBy(-2, 0);
+          }}
+        >
+          <FaChevronLeft />
+        </div>
+        )}
+
+        {rightIntersecting || (
+        <div
+          className="absolute inset-y-0 right-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
+          onDragOver={() => {
+            semestersContainerRef.current.scrollBy(2, 0);
+          }}
+        >
+          <FaChevronRight />
+        </div>
+        )}
+      </>
+      )}
+    </div>
+  );
+}
+
+
+export function HiddenSchedules() {
   const dispatch = useAppDispatch();
   const hiddenScheduleIds = useAppSelector(Planner.selectHiddenIds);
-  const hiddenSchedules = allSemesters.filter(({ chosenScheduleId }) => chosenScheduleId && hiddenScheduleIds[chosenScheduleId]);
+  const columns = useColumns();
+  const hiddenSchedules = useMemo(() => columns.filter(({ chosenScheduleId }) => chosenScheduleId && hiddenScheduleIds[chosenScheduleId]), [columns]);
 
   if (hiddenSchedules.length === 0) return null;
 
