@@ -7,6 +7,7 @@ import { useModal } from '../src/context/modal';
 import { ClassCache } from '../src/features';
 import { useAppSelector, useProfiles } from '../src/hooks';
 import CourseCard from './Course/CourseCard';
+import { classNames } from '../shared/util';
 
 
 export function UserLink({ uid }: { uid: string }) {
@@ -14,19 +15,25 @@ export function UserLink({ uid }: { uid: string }) {
 }
 
 
-export function ImageWrapper({ url }: { url: string | null | undefined }) {
+export function ImageWrapper({ url, size = 'sm' }: { url: string | null | undefined, size?: 'sm' | 'md' }) {
   if (url) {
     return (
       <Image
         className="h-8 w-8 rounded-full"
         src={url}
-        width={32}
-        height={32}
+        width={size === 'sm' ? 32 : 64}
+        height={size === 'md' ? 32 : 64}
       />
     );
   }
 
-  return <FaUser className="h-8 w-8 text-white" />;
+  return (
+    <FaUser className={classNames(
+      size === 'sm' ? 'h-8 w-8 p-1' : 'h-16 w-16 p-2',
+      'text-white bg-blue-900 rounded-full',
+    )}
+    />
+  );
 }
 
 

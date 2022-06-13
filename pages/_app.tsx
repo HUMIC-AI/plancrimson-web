@@ -3,8 +3,9 @@ import '../src/index.css';
 import type { AppProps } from 'next/app';
 import { getApps, initializeApp } from 'firebase/app';
 import {
-  connectFirestoreEmulator, getFirestore, onSnapshot, setDoc, updateDoc,
+  connectFirestoreEmulator, getFirestore, onSnapshot, updateDoc,
 } from 'firebase/firestore';
+import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
 // import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { Provider } from 'react-redux';
 import { useEffect, useState } from 'react';
@@ -40,8 +41,10 @@ if (getApps().length === 0) {
   if (process.env.NODE_ENV === 'development') {
     const auth = getAuth();
     const db = getFirestore();
+    const functions = getFunctions();
     connectAuthEmulator(auth, 'http://127.0.0.1:9099');
     connectFirestoreEmulator(db, '127.0.0.1', 8080);
+    connectFunctionsEmulator(functions, 'localhost', 5001);
   }
 }
 

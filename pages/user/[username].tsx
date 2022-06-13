@@ -4,12 +4,11 @@ import {
   getDocs,
   onSnapshot, query, where,
 } from 'firebase/firestore';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import Layout, { errorMessages, ErrorPage, LoadingPage } from '../../components/Layout/Layout';
-import { ScheduleSection } from '../../components/UserLink';
+import { ImageWrapper, ScheduleSection } from '../../components/UserLink';
 import { FriendRequest, Schema } from '../../shared/firestoreTypes';
 import { Auth, Schedules } from '../../src/features';
 import {
@@ -130,12 +129,10 @@ export default function UserPage() {
   const schedules = Object.values(scheduleMap);
 
   return (
-    <Layout scheduleQueryConstraints={queryConstraints} className="flex-1 mx-auto mt-8 w-full max-w-screen-md">
+    <Layout scheduleQueryConstraints={queryConstraints} className="flex-1 mx-auto p-8 w-full max-w-screen-md">
       <div className="flex flex-col space-y-8 border-2 border-blue-900 rounded-xl shadow p-8">
         <div className="flex items-center">
-          {pageProfile.photoUrl
-            ? <Image className="h-16 w-16 rounded-full" src={pageProfile.photoUrl} />
-            : <div className="h-16 w-16 rounded-full bg-blue-300" />}
+          <ImageWrapper url={pageProfile.photoUrl} size="md" />
 
           <div className="ml-8">
             <h1 className="text-3xl">{pageProfile.username}</h1>

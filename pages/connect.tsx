@@ -4,13 +4,14 @@ import {
   getDoc,
   onSnapshot, query, updateDoc, where,
 } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
   useEffect, useMemo, useState,
 } from 'react';
 import Layout, { errorMessages, ErrorPage, LoadingPage } from '../components/Layout/Layout';
-import { ScheduleSection } from '../components/UserLink';
+import { ImageWrapper, ScheduleSection } from '../components/UserLink';
 import { FriendRequest, Schema, UserProfileWithId } from '../shared/firestoreTypes';
 import { allTruthy } from '../shared/util';
 import { Auth, Schedules } from '../src/features';
@@ -124,39 +125,41 @@ function Friends() {
 
   const profiles = useProfiles(userIds);
 
-  const tabClass = ({ selected }: { selected: boolean }) => `${selected ? 'bg-blue-500' : 'bg-blue-300'} px-4 py-2 outline-none`;
+  const tabClass = ({ selected }: { selected: boolean }) => `${selected ? 'bg-blue-500 font-bold' : 'bg-blue-300'} px-4 py-2 outline-none interactive`;
   const friends = allTruthy([...incoming.map((req) => (req.accepted ? profiles[req.from] : null)), ...outgoing.map((req) => (req.accepted ? profiles[req.to] : null))]);
   const incomingPending = allTruthy(incoming.map((req) => (req.accepted ? null : profiles[req.from])));
 
   return (
-    <Tab.Group>
-      <Tab.List className="grid grid-cols-2 rounded-t-xl overflow-hidden">
-        <Tab className={tabClass}>My friends</Tab>
-        <Tab className={tabClass}>Incoming requests</Tab>
-      </Tab.List>
-      <Tab.Panels className="p-4 bg-gray-200 rounded-b-xl overflow-hidden">
-        <Tab.Panel>
-          {friends.length > 0
-            ? (
-              <ProfileList
-                profiles={friends}
-                Button={UnfriendButton}
-              />
-            )
-            : <p>You haven&rsquo;t added any friends yet.</p>}
-        </Tab.Panel>
-        <Tab.Panel>
-          {incomingPending.length > 0
-            ? (
-              <ProfileList
-                profiles={incomingPending}
-                Button={IncomingRequestButtons}
-              />
-            )
-            : <p>No pending friend requests</p>}
-        </Tab.Panel>
-      </Tab.Panels>
-    </Tab.Group>
+    <section>
+      <Tab.Group>
+        <Tab.List className="grid grid-cols-2 rounded-t-xl overflow-hidden">
+          <Tab className={tabClass}>My friends</Tab>
+          <Tab className={tabClass}>Incoming requests</Tab>
+        </Tab.List>
+        <Tab.Panels className="p-4 bg-gray-200 rounded-b-xl overflow-hidden">
+          <Tab.Panel>
+            {friends.length > 0
+              ? (
+                <ProfileList
+                  profiles={friends}
+                  Button={UnfriendButton}
+                />
+              )
+              : <p>You haven&rsquo;t added any friends yet.</p>}
+          </Tab.Panel>
+          <Tab.Panel>
+            {incomingPending.length > 0
+              ? (
+                <ProfileList
+                  profiles={incomingPending}
+                  Button={IncomingRequestButtons}
+                />
+              )
+              : <p>No pending friend requests</p>}
+          </Tab.Panel>
+        </Tab.Panels>
+      </Tab.Group>
+    </section>
   );
 }
 
@@ -176,25 +179,103 @@ export default function ConnectPage() {
   }
 
   return (
-    <Layout title="Connect" scheduleQueryConstraints={constraints} className="mx-auto flex-1 w-full max-w-screen-md space-y-8 my-8">
+    <Layout title="Connect" scheduleQueryConstraints={constraints} className="mx-auto flex-1 w-full max-w-screen-md space-y-8 p-8">
       <h1>Connect with students with similar interests!</h1>
-      <section>
-        <Friends />
-      </section>
-      <section>
-        <h2 className="text-3xl mb-2">Classmates</h2>
-        <p>Find and connect with classmates!</p>
-      </section>
-      <section>
+      <Friends />
+      <SuggestedProfilesSection />
+      <section className="space-y-4">
         <h2 className="text-3xl">Public schedules</h2>
-        <ul className="mt-6">
-          {Object.values(schedules).map((schedule) => (
-            <li key={schedule.id}>
-              <ScheduleSection schedule={schedule} />
-            </li>
-          ))}
-        </ul>
+        {Object.values(schedules).length > 0
+          ? (
+            <ul className="mt-6">
+              {Object.values(schedules).map((schedule) => (
+                <li key={schedule.id}>
+                  <ScheduleSection schedule={schedule} />
+                </li>
+              ))}
+            </ul>
+          )
+          : <p>Nobody has made a public schedule yet. Keep an eye out!</p>}
       </section>
     </Layout>
+  );
+}
+
+function useSuggestedProfiles() {
+  // a list of user ids and the number of courses in common
+  const [profiles, setProfiles] = useState<[string, number][]>([]);
+
+  useEffect(() => {
+    const lastUpdated = parseInt(sessionStorage.getItem('suggestProfiles/lastUpdated')!, 10);
+    const profilesData = sessionStorage.getItem('suggestProfiles/profiles');
+
+    let stale = isNaN(lastUpdated) || Date.now() - lastUpdated > 1000; // every hour
+
+    if (!stale) {
+      try {
+        const data = JSON.parse(profilesData!);
+        if (Object.entries(data).every(([a, b]) => typeof a === 'string' && (b as string[]).every((t) => typeof t === 'string'))) {
+          setProfiles(data);
+        } else {
+          stale = true;
+        }
+      } catch (err) {
+        stale = true;
+      }
+    }
+
+    if (stale) {
+      const functions = getFunctions();
+      const suggestProfiles = httpsCallable<undefined, [string, number][]>(functions, 'suggestProfiles');
+      suggestProfiles()
+        .then(({ data }) => {
+          sessionStorage.setItem('suggestProfiles/lastUpdated', Date.now().toString());
+          sessionStorage.setItem('suggestProfiles/profiles', JSON.stringify(data));
+          setProfiles(data);
+        })
+        .catch((err) => {
+          console.error('error getting suggested profiles:', err);
+        });
+    }
+  }, []);
+
+  return profiles;
+}
+
+function SuggestedProfilesSection() {
+  const suggestedProfiles = useSuggestedProfiles();
+  const ids = useMemo(() => suggestedProfiles.map(([id]) => id), [suggestedProfiles]);
+  const profiles = useProfiles(ids);
+
+  return (
+    <section className="space-y-4">
+      <h2 className="text-3xl">Classmates</h2>
+      <p>Find and connect with classmates!</p>
+      <ul className="flex flex-wrap">
+        {suggestedProfiles
+          .map(([profileId, numSharedCourses]) => {
+            const profile = profiles[profileId];
+            return (
+              <li key={profileId}>
+                <Link href={profile ? `/user/${profile.username}` : '#'}>
+                  <a className="block bg-gray-300 rounded-xl shadow px-4 py-2 interactive m-2">
+                    <div className="flex items-center space-x-4">
+                      <ImageWrapper url={profile?.photoUrl} />
+                      <div>
+                        <span className="font-bold">{profile?.username || 'Loading...'}</span>
+                        <p>
+                          {numSharedCourses}
+                          {' '}
+                          courses in common
+                        </p>
+                      </div>
+                    </div>
+                  </a>
+                </Link>
+              </li>
+            );
+          })}
+      </ul>
+    </section>
   );
 }

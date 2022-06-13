@@ -114,14 +114,24 @@ export async function signInUser() {
 
 
 export async function getProfile(id: string): Promise<UserProfile & { id: string }> {
-  const cached = localStorage.getItem(`profile/${id}`);
-  if (cached) return JSON.parse(cached);
+  const cached = sessionStorage.getItem(`profile/${id}`);
+  if (cached) {
+    try {
+      const data = JSON.parse(cached);
+      if (data === null) throw new Error('invalid json');
+      return data;
+    } catch (err) {
+      console.error('invalid cached value:', cached);
+    }
+  }
+
   const snap = await getDoc(Schema.profile(id));
   if (!snap.exists()) {
     throw new Error(`user ${id} not found`);
   }
+
   const profile = { ...snap.data()!, id };
-  localStorage.setItem(`profile/${id}`, JSON.stringify(profile));
+  sessionStorage.setItem(`profile/${id}`, JSON.stringify(profile));
   return profile;
 }
 
@@ -131,7 +141,11 @@ export function useProfiles(ids: string[]) {
   useEffect(() => {
     (async () => {
       const settled = await Promise.allSettled(ids.map(getProfile));
-      const users = allTruthy(settled.map((result) => (result.status === 'fulfilled' ? result.value : null)));
+      const users = allTruthy(settled.map((result) => {
+        if (result.status === 'fulfilled') return result.value;
+        console.error('failed getting profiles:', result.reason);
+        return null;
+      }));
       setProfiles(Object.fromEntries(users.map((user) => [user.id, user])));
     })();
   }, [ids]);
