@@ -25,7 +25,7 @@ export function ImageWrapper({ url, size = 'sm' }: { url: string | null | undefi
         )}
         src={url}
         width={size === 'sm' ? 32 : 64}
-        height={size === 'md' ? 32 : 64}
+        height={size === 'sm' ? 32 : 64}
       />
     );
   }
