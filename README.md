@@ -1,6 +1,6 @@
 # Harvard concentration planner
 
-## goals
+## Goals
 
 - allow consideration of multiple possible schedules
 - see which concentrations each course fits into
@@ -26,6 +26,10 @@ The way it was reverse engineered:
 - this calls IS.S2.SES.Search(el, searchObj (which is undefined), IS.SCL)
 - which is a really big function defined in `https://portal.my.harvard.edu/cs/hrvihprd/cache_85811/IS_S2_SES_BASE_JS_MIN_10.js`, but using IS.SCL gets the values for IS.SCL.Config.AdvancedFields
 
+## Tech stack
+
+See the [About](pages/about.tsx) page.
+
 ## Code overview
 
 Below is a brief overview of the codebase. Check it out if you're interested in contributing or learning more about these technologies!
@@ -47,3 +51,29 @@ Below is a walkthrough of the project and some notable files.
 The search UI is built with [Instant MeiliSearch](https://github.com/meilisearch/instant-meilisearch) and the [InstantSearch API from Algolia](https://www.algolia.com/doc/api-reference/widgets/react/). The [MeiliSearch React GitHub repository](https://github.com/meilisearch/meilisearch-react/) describes how these technologies work together.
 
 - `SearchComponents/` contains a number of widgets built using the
+
+## User logic
+
+On the `Find Classmates` page, users can find other users and view their basic description and any schedules they have made public.
+
+User A can send a friend request to User B.
+
+If B accepts the request, then A and B are now friends. This means their schedules are automatically visible to each other.
+
+A user can make some of their schedules public. This means that anyone can see those schedules regardless of whether or not they are friends.
+
+## Tutorial
+
+A schedule is made of semesters. A user can edit each semester they are enrolled in.
+
+You can add the same semester to multiple schedules.
+
+## TODO
+
+- [ ] write tests, see [Firestore Security Rules docs](https://firebase.google.com/docs/firestore/security/test-rules-emulator)
+
+## local Meilisearch
+
+http://localhost:7700/
+
+when running Meilisearch as a Homebrew service, logs are stored under /usr/local/var/log/meilisearch.log

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Class } from '../../shared/apiTypes';
-import {
-  Schedule, Semester, UserDocument,
-} from '../../shared/firestoreTypes';
+import type {
+  Schedule, Semester, UserProfile,
+} from '../../shared/types';
 
 /**
  * Only works for users on a typical four-year schedule.
@@ -33,7 +33,7 @@ export type Requirement<Accumulator = number> = {
     prev: Accumulator,
     cls: Class,
     schedule: Schedule,
-    userData: UserDocument<string>
+    userData: UserProfile,
   ) => Accumulator | null;
 };
 

@@ -1,10 +1,12 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { FaTimes } from 'react-icons/fa';
-import { useModal } from '../src/features/modal';
+import { useModal } from '../src/context/modal';
 
 /**
  * Based on https://headlessui.dev/react/dialog
+ * Only one instance exists in the root Layout component.
+ * It gets controlled by the ModalContext in /src/features/modal.tsx
  */
 export default function CustomModal() {
   const { open, setOpen, data } = useModal();

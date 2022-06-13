@@ -5,51 +5,39 @@ import {
   FaClone,
   FaPlus,
   FaTrash,
-  FaDownload,
+  FaLink,
+  FaUnlink,
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
-import { Schedule, Season } from '../../shared/firestoreTypes';
-import { useAppDispatch } from '../../src/app/hooks';
-import { createSchedule, deleteSchedule } from '../../src/features/schedules';
-import { downloadJson } from '../../src/hooks';
+import { v4 as uuidv4 } from 'uuid';
+import { Season } from '../../shared/types';
+import { Auth, Schedules, Settings } from '../../src/features';
+import { useAppDispatch, useAppSelector } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 
-interface ButtonMenuProps {
-  selectedSchedule: Schedule | null;
-  selectSchedule: React.Dispatch<string | null>;
-  year: number;
-  season: Season;
-  prevScheduleId: string | null;
-}
 
 const buttonStyles = 'inline-block p-1 rounded bg-black bg-opacity-0 hover:text-black hover:bg-opacity-50 transition-colors';
 
-type BaseButtonProps = {
+type BaseProps = {
   name: string;
   Icon: IconType;
 };
 
-type ButtonProps = BaseButtonProps & {
+type ButtonProps = BaseProps & {
   onClick: React.MouseEventHandler<HTMLButtonElement>;
 };
 
-type LinkProps = BaseButtonProps & {
+type LinkProps = BaseProps & {
   isLink: true;
-  scheduleId: string;
   pathname: string;
 };
 
+// the rest props serve for both buttons and links
 function CustomButton({ name, Icon, ...rest }: ButtonProps | LinkProps) {
   if ('isLink' in rest) {
     return (
       <Tooltip text={name} direction="bottom">
-        <Link
-          href={{
-            pathname: rest.pathname,
-            query: { selected: rest.scheduleId },
-          }}
-        >
-          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+        <Link href={rest.pathname}>
           <a className={buttonStyles}>
             <Icon />
           </a>
@@ -72,63 +60,64 @@ function CustomButton({ name, Icon, ...rest }: ButtonProps | LinkProps) {
   );
 }
 
-const ButtonMenu: React.FC<ButtonMenuProps> = function ({
-  selectedSchedule,
-  selectSchedule,
+
+interface ButtonMenuProps {
+  chosenScheduleId: string | null;
+  handleChooseSchedule: React.Dispatch<string | null>;
+  year: number;
+  season: Season;
+  prevScheduleId: string | null;
+}
+
+function ButtonMenu({
+  chosenScheduleId,
+  handleChooseSchedule,
   year,
   season,
   prevScheduleId,
-}) {
+}: ButtonMenuProps) {
   const dispatch = useAppDispatch();
+  const userId = Auth.useAuthProperty('uid');
+  const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
 
   const handleDuplicate = useCallback(async () => {
-    if (!selectedSchedule) return;
+    if (!chosenSchedule) return;
     try {
-      const schedule = await dispatch(createSchedule({
-        ...selectedSchedule,
-        force: true,
-      }));
-      if ('errors' in schedule.payload) {
-        throw new Error(schedule.payload.errors.join(', '));
-      }
-      selectSchedule(schedule.payload.id);
+      const schedule = await dispatch(Schedules.createSchedule({ ...chosenSchedule, id: uuidv4(), title: `${chosenSchedule.title} copy` }));
+      handleChooseSchedule(schedule.payload.id);
     } catch (err) {
-      console.error(err);
+      console.error('error duplicating schedule:', err);
       alert("Couldn't duplicate your schedule. Please try again later.");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSchedule]);
+  }, [chosenSchedule]);
 
   const handleDelete = useCallback(async () => {
-    if (!selectedSchedule) return;
-    // eslint-disable-next-line no-restricted-globals
+    if (!chosenSchedule) return;
     const confirmDelete = confirm(
-      `Are you sure you want to delete your schedule ${selectedSchedule.id}?`,
+      `Are you sure you want to delete your schedule ${chosenSchedule.title}?`,
     );
     if (!confirmDelete) return;
     try {
-      await dispatch(deleteSchedule(selectedSchedule.id));
-      selectSchedule(prevScheduleId);
+      await dispatch(Schedules.deleteSchedule(chosenSchedule.id));
+      handleChooseSchedule(prevScheduleId);
     } catch (err) {
       console.error(err);
       alert(
         'There was a problem deleting your schedule. Please try again later.',
       );
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prevScheduleId, selectedSchedule]);
+  }, [prevScheduleId, chosenSchedule]);
 
   return (
     <div className="flex flex-col space-y-2 w-full">
       <div className="self-center flex justify-center items-center flex-wrap gap-2 mt-2 text-gray-600 text-xs">
-        {selectedSchedule && (
+        {chosenSchedule && (
           <>
             <CustomButton
               name="Calendar view"
               isLink
-              scheduleId={selectedSchedule.id}
               Icon={FaCalendarWeek}
-              pathname="/schedule"
+              pathname={`/schedule/${chosenSchedule.id}`}
             />
 
             <CustomButton
@@ -136,29 +125,22 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
               onClick={handleDuplicate}
               Icon={FaClone}
             />
-
-            {/* <CustomButton
-              name="Clear"
-              onClick={() => dispatch(clearSchedule(selectedSchedule.id))}
-              Icon={FaEraser}
-            /> */}
           </>
         )}
 
         <CustomButton
           name="New schedule"
           onClick={async () => {
-            const schedule = await dispatch(createSchedule({
-              id: `${season} ${year}`,
-              year,
-              season,
-              classes: [],
-              force: true,
-            }));
+            if (!userId) {
+              alert('You must be logged in!');
+              return;
+            }
+            const schedule = await dispatch(Schedules.createDefaultSchedule({ season, year }, userId));
             try {
-              if ('errors' in schedule.payload) {
-                throw new Error(schedule.payload.errors.join(', '));
-              }
+              await dispatch(Settings.chooseSchedule({
+                term: `${schedule.payload.year}${schedule.payload.season}`,
+                scheduleId: schedule.payload.id,
+              }));
             } catch (err) {
               console.error(err);
               alert("Couldn't create a new schedule! Please try again later.");
@@ -167,22 +149,19 @@ const ButtonMenu: React.FC<ButtonMenuProps> = function ({
           Icon={FaPlus}
         />
 
-        {selectedSchedule && (
+        {chosenSchedule && (
           <>
             <CustomButton name="Delete" onClick={handleDelete} Icon={FaTrash} />
             <CustomButton
-              name="Download schedule"
-              onClick={() => downloadJson(
-                `${selectedSchedule.id} (Plan Crimson)`,
-                { schedules: [selectedSchedule] },
-              )}
-              Icon={FaDownload}
+              name={chosenSchedule.public ? 'Make private' : 'Make public'}
+              onClick={() => dispatch(Schedules.setPublic({ scheduleId: chosenSchedule.id, public: !chosenSchedule.public }))}
+              Icon={chosenSchedule.public ? FaUnlink : FaLink}
             />
           </>
         )}
       </div>
     </div>
   );
-};
+}
 
 export default ButtonMenu;

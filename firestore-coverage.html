@@ -1,0 +1,2922 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Firestore Rule Coverage Report</title>
+<style>
+.coverage-expr {
+  padding-bottom: 4px;
+  display: inline-block;
+  border-bottom: 3px solid black;
+  vertical-align: top;
+}
+.coverage-expr:hover {
+  background-color: rgba(255, 100, 100, 0.2);
+  cursor: default;
+  border-bottom: 3px solid red;
+}
+</style>
+
+<script>
+// Populated by the emulator at runtime
+const data = {
+  "rules": {
+    "files": [{
+      "content": "rules_version \u003d \u00272\u0027\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    function isWhitelisted() {\n      let metadata \u003d get(/databases/$(database)/documents/metadata/metadata);\n      return metadata !\u003d null \u0026\u0026 request.auth.token.email in metadata.data.whitelist;\n    }\n\n    function loggedInStudent() {\n      // anything that ends in @harvard.edu or .harvard.edu or is whitelisted\n      return request.auth !\u003d null \u0026\u0026 \u0027email\u0027 in request.auth.token \u0026\u0026 (request.auth.token.email.matches(\".+[@.]harvard[.]edu$\") || isWhitelisted());\n    }\n\n    function friendRequestPath(from, to) {\n      return /databases/$(database)/documents/allFriends/$(from)/friends/$(to);\n    }\n\n    match /alerts/{uid} {\n      allow read: if request.auth !\u003d null;\n    }\n\n    match /profiles/{uid} {\n      allow read: if loggedInStudent();\n      allow write: if loggedInStudent() \u0026\u0026 request.auth.uid \u003d\u003d uid;\n    }\n\n    match /users/{uid} {\n      allow read, write: if loggedInStudent() \u0026\u0026 request.auth.uid \u003d\u003d uid;\n    }\n\n    // this path exists to support collection group queries\n    match /{fullPath\u003d**}/friends/{friendRequest} {\n      allow read, delete: if loggedInStudent() \u0026\u0026 (resource \u003d\u003d null || resource.data.from \u003d\u003d request.auth.uid || resource.data.to \u003d\u003d request.auth.uid);\n    }\n\n    // this document represents a friend request from {from} to {to}\n    match /allFriends/{from}/friends/{to} {\n      // only receiver can update (accept request)\n      allow update: if loggedInStudent() \u0026\u0026 request.auth.uid \u003d\u003d to;\n\n      // only sender can create requests, and there can\u0027t be an existing doc\n      // the created doc must have the correct from and to fields\n      allow create: if loggedInStudent()\n        \u0026\u0026 from \u003d\u003d request.auth.uid\n        \u0026\u0026 !exists(friendRequestPath(to, from))\n        \u0026\u0026 request.resource.data.from \u003d\u003d from\n        \u0026\u0026 request.resource.data.to \u003d\u003d to;\n    }\n\n    match /schedules/{scheduleUid} {\n      // returns true iff we\u0027re friends with the owner of the schedule we\u0027re asking for\n      function isFriend() {\n        let ownerUid \u003d resource.data.ownerUid;\n        let clientUid \u003d request.auth.uid;\n        return get(friendRequestPath(ownerUid, clientUid)).data.accepted \u003d\u003d true\n          || get(friendRequestPath(clientUid, ownerUid)).data.accepted \u003d\u003d true;\n      }\n\n      // allow logged in user to see a schedule\n      // if it\u0027s public or if they\u0027re friends of the schedule\u0027s creator\n      allow read: if loggedInStudent() \u0026\u0026 (\n        resource.data.public \u003d\u003d true\n        || request.auth.uid \u003d\u003d resource.data.ownerUid\n        || isFriend()\n      );\n      // only allow logged in user to modify their own schedules\n      allow create: if loggedInStudent() \u0026\u0026 request.resource.data.ownerUid \u003d\u003d request.auth.uid;\n      allow update, delete: if loggedInStudent() \u0026\u0026 resource.data.ownerUid \u003d\u003d request.auth.uid;\n    }\n\n    match /evaluations/{uid} {\n      allow read: if loggedInStudent();\n    }\n\n    match /suggestions/{uid} {\n      allow read, write: if loggedInStudent() \u0026\u0026 request.auth.uid \u003d\u003d uid;\n    }\n  }\n}\n",
+      "name": "/Users/alexandercai/Developer/web/harvard-concentration-planner/firestore.rules"
+    }]
+  },
+  "report": [{
+    "sourcePosition": {
+      "line": 5,
+      "column": 7,
+      "currentOffset": 125,
+      "endOffset": 280
+    },
+    "children": [{
+      "sourcePosition": {
+        "line": 5,
+        "column": 22,
+        "currentOffset": 140,
+        "endOffset": 193
+      },
+      "children": [{
+        "sourcePosition": {
+          "line": 5,
+          "column": 26,
+          "currentOffset": 144,
+          "endOffset": 193
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 5,
+            "column": 39,
+            "currentOffset": 157,
+            "endOffset": 164
+          }
+        }]
+      }]
+    }, {
+      "sourcePosition": {
+        "line": 6,
+        "column": 14,
+        "currentOffset": 210,
+        "endOffset": 280
+      },
+      "children": [{
+        "sourcePosition": {
+          "line": 6,
+          "column": 14,
+          "currentOffset": 210,
+          "endOffset": 225
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 6,
+            "column": 14,
+            "currentOffset": 210,
+            "endOffset": 217
+          }
+        }]
+      }, {
+        "sourcePosition": {
+          "line": 6,
+          "column": 34,
+          "currentOffset": 230,
+          "endOffset": 280
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 6,
+            "column": 62,
+            "currentOffset": 258,
+            "endOffset": 280
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 6,
+              "column": 62,
+              "currentOffset": 258,
+              "endOffset": 270
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 6,
+                "column": 62,
+                "currentOffset": 258,
+                "endOffset": 265
+              }
+            }]
+          }]
+        }, {
+          "sourcePosition": {
+            "line": 6,
+            "column": 34,
+            "currentOffset": 230,
+            "endOffset": 253
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 6,
+              "column": 34,
+              "currentOffset": 230,
+              "endOffset": 247
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 6,
+                "column": 34,
+                "currentOffset": 230,
+                "endOffset": 241
+              },
+              "children": [{
+                "sourcePosition": {
+                  "line": 6,
+                  "column": 34,
+                  "currentOffset": 230,
+                  "endOffset": 236
+                }
+              }]
+            }]
+          }]
+        }]
+      }]
+    }]
+  }, {
+    "sourcePosition": {
+      "line": 11,
+      "column": 14,
+      "currentOffset": 414,
+      "endOffset": 544
+    },
+    "values": [{
+      "value": {
+        "boolValue": true
+      },
+      "count": 2
+    }, {
+      "value": {
+        "boolValue": false
+      },
+      "count": 1
+    }],
+    "children": [{
+      "sourcePosition": {
+        "line": 11,
+        "column": 14,
+        "currentOffset": 414,
+        "endOffset": 466
+      },
+      "values": [{
+        "value": {
+          "boolValue": true
+        },
+        "count": 2
+      }, {
+        "value": {
+          "boolValue": false
+        },
+        "count": 1
+      }],
+      "children": [{
+        "sourcePosition": {
+          "line": 11,
+          "column": 14,
+          "currentOffset": 414,
+          "endOffset": 433
+        },
+        "values": [{
+          "value": {
+            "boolValue": true
+          },
+          "count": 2
+        }, {
+          "value": {
+            "boolValue": false
+          },
+          "count": 1
+        }],
+        "children": [{
+          "sourcePosition": {
+            "line": 11,
+            "column": 14,
+            "currentOffset": 414,
+            "endOffset": 425
+          },
+          "values": [{
+            "value": {
+              "mapValue": {
+                "fields": {
+                  "uid": {
+                    "stringValue": "alice"
+                  },
+                  "token": {
+                    "mapValue": {
+                      "fields": {
+                        "iss": {
+                          "stringValue": "https://securetoken.google.com/demo-test"
+                        },
+                        "aud": {
+                          "stringValue": "demo-test"
+                        },
+                        "iat": {
+                          "intValue": "0"
+                        },
+                        "exp": {
+                          "intValue": "3600"
+                        },
+                        "auth_time": {
+                          "intValue": "0"
+                        },
+                        "sub": {
+                          "stringValue": "alice"
+                        },
+                        "user_id": {
+                          "stringValue": "alice"
+                        },
+                        "firebase": {
+                          "mapValue": {
+                            "fields": {
+                              "sign_in_provider": {
+                                "stringValue": "custom"
+                              },
+                              "identities": {
+                                "mapValue": {
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "email": {
+                          "stringValue": "alice@college.harvard.edu"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "count": 2
+          }, {
+            "value": {
+              "nullValue": null
+            },
+            "count": 1
+          }],
+          "children": [{
+            "sourcePosition": {
+              "line": 11,
+              "column": 14,
+              "currentOffset": 414,
+              "endOffset": 420
+            },
+            "values": [{
+              "value": {
+                "mapValue": {
+                  "fields": {
+                    "time": {
+                      "timestampValue": "2022-06-11T06:54:09.805Z"
+                    },
+                    "auth": {
+                      "mapValue": {
+                        "fields": {
+                          "uid": {
+                            "stringValue": "alice"
+                          },
+                          "token": {
+                            "mapValue": {
+                              "fields": {
+                                "iss": {
+                                  "stringValue": "https://securetoken.google.com/demo-test"
+                                },
+                                "aud": {
+                                  "stringValue": "demo-test"
+                                },
+                                "iat": {
+                                  "intValue": "0"
+                                },
+                                "exp": {
+                                  "intValue": "3600"
+                                },
+                                "auth_time": {
+                                  "intValue": "0"
+                                },
+                                "sub": {
+                                  "stringValue": "alice"
+                                },
+                                "user_id": {
+                                  "stringValue": "alice"
+                                },
+                                "firebase": {
+                                  "mapValue": {
+                                    "fields": {
+                                      "sign_in_provider": {
+                                        "stringValue": "custom"
+                                      },
+                                      "identities": {
+                                        "mapValue": {
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "email": {
+                                  "stringValue": "alice@college.harvard.edu"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "headers": {
+                      "mapValue": {
+                      }
+                    },
+                    "inTransaction": {
+                      "boolValue": true
+                    },
+                    "path": {
+                      "pathValue": {
+                        "segments": [{
+                          "simple": "databases"
+                        }, {
+                          "simple": "(default)"
+                        }, {
+                          "simple": "documents"
+                        }, {
+                          "simple": "users"
+                        }, {
+                          "simple": "alice"
+                        }]
+                      }
+                    },
+                    "transforms": {
+                      "nullValue": null
+                    },
+                    "writeFields": {
+                      "nullValue": null
+                    },
+                    "readFields": {
+                      "nullValue": null
+                    },
+                    "resource": {
+                      "mapValue": {
+                        "fields": {
+                          "data": {
+                            "mapValue": {
+                              "fields": {
+                                "data": {
+                                  "stringValue": "hello world"
+                                }
+                              }
+                            }
+                          },
+                          "__name__": {
+                            "pathValue": {
+                              "segments": [{
+                                "simple": "databases"
+                              }, {
+                                "simple": "(default)"
+                              }, {
+                                "simple": "documents"
+                              }, {
+                                "simple": "users"
+                              }, {
+                                "simple": "alice"
+                              }]
+                            }
+                          },
+                          "id": {
+                            "stringValue": "alice"
+                          }
+                        }
+                      }
+                    },
+                    "method": {
+                      "stringValue": "create"
+                    }
+                  }
+                }
+              },
+              "count": 1
+            }, {
+              "value": {
+                "mapValue": {
+                  "fields": {
+                    "time": {
+                      "timestampValue": "2022-06-11T06:54:10.144Z"
+                    },
+                    "auth": {
+                      "mapValue": {
+                        "fields": {
+                          "uid": {
+                            "stringValue": "alice"
+                          },
+                          "token": {
+                            "mapValue": {
+                              "fields": {
+                                "iss": {
+                                  "stringValue": "https://securetoken.google.com/demo-test"
+                                },
+                                "aud": {
+                                  "stringValue": "demo-test"
+                                },
+                                "iat": {
+                                  "intValue": "0"
+                                },
+                                "exp": {
+                                  "intValue": "3600"
+                                },
+                                "auth_time": {
+                                  "intValue": "0"
+                                },
+                                "sub": {
+                                  "stringValue": "alice"
+                                },
+                                "user_id": {
+                                  "stringValue": "alice"
+                                },
+                                "firebase": {
+                                  "mapValue": {
+                                    "fields": {
+                                      "sign_in_provider": {
+                                        "stringValue": "custom"
+                                      },
+                                      "identities": {
+                                        "mapValue": {
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "email": {
+                                  "stringValue": "alice@college.harvard.edu"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "headers": {
+                      "mapValue": {
+                      }
+                    },
+                    "inTransaction": {
+                      "boolValue": false
+                    },
+                    "path": {
+                      "pathValue": {
+                        "segments": [{
+                          "simple": "databases"
+                        }, {
+                          "simple": "(default)"
+                        }, {
+                          "simple": "documents"
+                        }, {
+                          "simple": "users"
+                        }, {
+                          "simple": "alice"
+                        }]
+                      }
+                    },
+                    "fields": {
+                      "nullValue": null
+                    },
+                    "method": {
+                      "stringValue": "get"
+                    }
+                  }
+                }
+              },
+              "count": 1
+            }, {
+              "value": {
+                "mapValue": {
+                  "fields": {
+                    "time": {
+                      "timestampValue": "2022-06-11T06:54:10.222Z"
+                    },
+                    "auth": {
+                      "nullValue": null
+                    },
+                    "headers": {
+                      "mapValue": {
+                      }
+                    },
+                    "inTransaction": {
+                      "boolValue": false
+                    },
+                    "path": {
+                      "pathValue": {
+                        "segments": [{
+                          "simple": "databases"
+                        }, {
+                          "simple": "(default)"
+                        }, {
+                          "simple": "documents"
+                        }, {
+                          "simple": "users"
+                        }, {
+                          "simple": "alice"
+                        }]
+                      }
+                    },
+                    "fields": {
+                      "nullValue": null
+                    },
+                    "method": {
+                      "stringValue": "get"
+                    }
+                  }
+                }
+              },
+              "count": 1
+            }]
+          }]
+        }]
+      }, {
+        "sourcePosition": {
+          "line": 11,
+          "column": 38,
+          "currentOffset": 438,
+          "endOffset": 466
+        },
+        "values": [{
+          "value": {
+            "boolValue": true
+          },
+          "count": 2
+        }, {
+          "value": {
+          },
+          "count": 1
+        }],
+        "children": [{
+          "sourcePosition": {
+            "line": 11,
+            "column": 49,
+            "currentOffset": 449,
+            "endOffset": 466
+          },
+          "values": [{
+            "value": {
+              "mapValue": {
+                "fields": {
+                  "iss": {
+                    "stringValue": "https://securetoken.google.com/demo-test"
+                  },
+                  "aud": {
+                    "stringValue": "demo-test"
+                  },
+                  "iat": {
+                    "intValue": "0"
+                  },
+                  "exp": {
+                    "intValue": "3600"
+                  },
+                  "auth_time": {
+                    "intValue": "0"
+                  },
+                  "sub": {
+                    "stringValue": "alice"
+                  },
+                  "user_id": {
+                    "stringValue": "alice"
+                  },
+                  "firebase": {
+                    "mapValue": {
+                      "fields": {
+                        "sign_in_provider": {
+                          "stringValue": "custom"
+                        },
+                        "identities": {
+                          "mapValue": {
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "email": {
+                    "stringValue": "alice@college.harvard.edu"
+                  }
+                }
+              }
+            },
+            "count": 2
+          }, {
+            "value": {
+            },
+            "count": 1
+          }],
+          "children": [{
+            "sourcePosition": {
+              "line": 11,
+              "column": 49,
+              "currentOffset": 449,
+              "endOffset": 460
+            },
+            "values": [{
+              "value": {
+                "mapValue": {
+                  "fields": {
+                    "uid": {
+                      "stringValue": "alice"
+                    },
+                    "token": {
+                      "mapValue": {
+                        "fields": {
+                          "iss": {
+                            "stringValue": "https://securetoken.google.com/demo-test"
+                          },
+                          "aud": {
+                            "stringValue": "demo-test"
+                          },
+                          "iat": {
+                            "intValue": "0"
+                          },
+                          "exp": {
+                            "intValue": "3600"
+                          },
+                          "auth_time": {
+                            "intValue": "0"
+                          },
+                          "sub": {
+                            "stringValue": "alice"
+                          },
+                          "user_id": {
+                            "stringValue": "alice"
+                          },
+                          "firebase": {
+                            "mapValue": {
+                              "fields": {
+                                "sign_in_provider": {
+                                  "stringValue": "custom"
+                                },
+                                "identities": {
+                                  "mapValue": {
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "email": {
+                            "stringValue": "alice@college.harvard.edu"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "count": 2
+            }, {
+              "value": {
+              },
+              "count": 1
+            }],
+            "children": [{
+              "sourcePosition": {
+                "line": 11,
+                "column": 49,
+                "currentOffset": 449,
+                "endOffset": 455
+              },
+              "values": [{
+                "value": {
+                  "mapValue": {
+                    "fields": {
+                      "time": {
+                        "timestampValue": "2022-06-11T06:54:09.805Z"
+                      },
+                      "auth": {
+                        "mapValue": {
+                          "fields": {
+                            "uid": {
+                              "stringValue": "alice"
+                            },
+                            "token": {
+                              "mapValue": {
+                                "fields": {
+                                  "iss": {
+                                    "stringValue": "https://securetoken.google.com/demo-test"
+                                  },
+                                  "aud": {
+                                    "stringValue": "demo-test"
+                                  },
+                                  "iat": {
+                                    "intValue": "0"
+                                  },
+                                  "exp": {
+                                    "intValue": "3600"
+                                  },
+                                  "auth_time": {
+                                    "intValue": "0"
+                                  },
+                                  "sub": {
+                                    "stringValue": "alice"
+                                  },
+                                  "user_id": {
+                                    "stringValue": "alice"
+                                  },
+                                  "firebase": {
+                                    "mapValue": {
+                                      "fields": {
+                                        "sign_in_provider": {
+                                          "stringValue": "custom"
+                                        },
+                                        "identities": {
+                                          "mapValue": {
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "email": {
+                                    "stringValue": "alice@college.harvard.edu"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "headers": {
+                        "mapValue": {
+                        }
+                      },
+                      "inTransaction": {
+                        "boolValue": true
+                      },
+                      "path": {
+                        "pathValue": {
+                          "segments": [{
+                            "simple": "databases"
+                          }, {
+                            "simple": "(default)"
+                          }, {
+                            "simple": "documents"
+                          }, {
+                            "simple": "users"
+                          }, {
+                            "simple": "alice"
+                          }]
+                        }
+                      },
+                      "transforms": {
+                        "nullValue": null
+                      },
+                      "writeFields": {
+                        "nullValue": null
+                      },
+                      "readFields": {
+                        "nullValue": null
+                      },
+                      "resource": {
+                        "mapValue": {
+                          "fields": {
+                            "data": {
+                              "mapValue": {
+                                "fields": {
+                                  "data": {
+                                    "stringValue": "hello world"
+                                  }
+                                }
+                              }
+                            },
+                            "__name__": {
+                              "pathValue": {
+                                "segments": [{
+                                  "simple": "databases"
+                                }, {
+                                  "simple": "(default)"
+                                }, {
+                                  "simple": "documents"
+                                }, {
+                                  "simple": "users"
+                                }, {
+                                  "simple": "alice"
+                                }]
+                              }
+                            },
+                            "id": {
+                              "stringValue": "alice"
+                            }
+                          }
+                        }
+                      },
+                      "method": {
+                        "stringValue": "create"
+                      }
+                    }
+                  }
+                },
+                "count": 1
+              }, {
+                "value": {
+                  "mapValue": {
+                    "fields": {
+                      "time": {
+                        "timestampValue": "2022-06-11T06:54:10.144Z"
+                      },
+                      "auth": {
+                        "mapValue": {
+                          "fields": {
+                            "uid": {
+                              "stringValue": "alice"
+                            },
+                            "token": {
+                              "mapValue": {
+                                "fields": {
+                                  "iss": {
+                                    "stringValue": "https://securetoken.google.com/demo-test"
+                                  },
+                                  "aud": {
+                                    "stringValue": "demo-test"
+                                  },
+                                  "iat": {
+                                    "intValue": "0"
+                                  },
+                                  "exp": {
+                                    "intValue": "3600"
+                                  },
+                                  "auth_time": {
+                                    "intValue": "0"
+                                  },
+                                  "sub": {
+                                    "stringValue": "alice"
+                                  },
+                                  "user_id": {
+                                    "stringValue": "alice"
+                                  },
+                                  "firebase": {
+                                    "mapValue": {
+                                      "fields": {
+                                        "sign_in_provider": {
+                                          "stringValue": "custom"
+                                        },
+                                        "identities": {
+                                          "mapValue": {
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "email": {
+                                    "stringValue": "alice@college.harvard.edu"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "headers": {
+                        "mapValue": {
+                        }
+                      },
+                      "inTransaction": {
+                        "boolValue": false
+                      },
+                      "path": {
+                        "pathValue": {
+                          "segments": [{
+                            "simple": "databases"
+                          }, {
+                            "simple": "(default)"
+                          }, {
+                            "simple": "documents"
+                          }, {
+                            "simple": "users"
+                          }, {
+                            "simple": "alice"
+                          }]
+                        }
+                      },
+                      "fields": {
+                        "nullValue": null
+                      },
+                      "method": {
+                        "stringValue": "get"
+                      }
+                    }
+                  }
+                },
+                "count": 1
+              }, {
+                "value": {
+                },
+                "count": 1
+              }]
+            }]
+          }]
+        }]
+      }]
+    }, {
+      "sourcePosition": {
+        "line": 11,
+        "column": 71,
+        "currentOffset": 471,
+        "endOffset": 544
+      },
+      "values": [{
+        "value": {
+          "boolValue": true
+        },
+        "count": 2
+      }, {
+        "value": {
+        },
+        "count": 1
+      }],
+      "children": [{
+        "sourcePosition": {
+          "line": 11,
+          "column": 72,
+          "currentOffset": 472,
+          "endOffset": 526
+        },
+        "values": [{
+          "value": {
+            "boolValue": true
+          },
+          "count": 2
+        }, {
+          "value": {
+          },
+          "count": 1
+        }],
+        "children": [{
+          "sourcePosition": {
+            "line": 11,
+            "column": 72,
+            "currentOffset": 472,
+            "endOffset": 495
+          },
+          "values": [{
+            "value": {
+              "stringValue": "alice@college.harvard.edu"
+            },
+            "count": 2
+          }, {
+            "value": {
+            },
+            "count": 1
+          }],
+          "children": [{
+            "sourcePosition": {
+              "line": 11,
+              "column": 72,
+              "currentOffset": 472,
+              "endOffset": 489
+            },
+            "values": [{
+              "value": {
+                "mapValue": {
+                  "fields": {
+                    "iss": {
+                      "stringValue": "https://securetoken.google.com/demo-test"
+                    },
+                    "aud": {
+                      "stringValue": "demo-test"
+                    },
+                    "iat": {
+                      "intValue": "0"
+                    },
+                    "exp": {
+                      "intValue": "3600"
+                    },
+                    "auth_time": {
+                      "intValue": "0"
+                    },
+                    "sub": {
+                      "stringValue": "alice"
+                    },
+                    "user_id": {
+                      "stringValue": "alice"
+                    },
+                    "firebase": {
+                      "mapValue": {
+                        "fields": {
+                          "sign_in_provider": {
+                            "stringValue": "custom"
+                          },
+                          "identities": {
+                            "mapValue": {
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "email": {
+                      "stringValue": "alice@college.harvard.edu"
+                    }
+                  }
+                }
+              },
+              "count": 2
+            }, {
+              "value": {
+              },
+              "count": 1
+            }],
+            "children": [{
+              "sourcePosition": {
+                "line": 11,
+                "column": 72,
+                "currentOffset": 472,
+                "endOffset": 483
+              },
+              "values": [{
+                "value": {
+                  "mapValue": {
+                    "fields": {
+                      "uid": {
+                        "stringValue": "alice"
+                      },
+                      "token": {
+                        "mapValue": {
+                          "fields": {
+                            "iss": {
+                              "stringValue": "https://securetoken.google.com/demo-test"
+                            },
+                            "aud": {
+                              "stringValue": "demo-test"
+                            },
+                            "iat": {
+                              "intValue": "0"
+                            },
+                            "exp": {
+                              "intValue": "3600"
+                            },
+                            "auth_time": {
+                              "intValue": "0"
+                            },
+                            "sub": {
+                              "stringValue": "alice"
+                            },
+                            "user_id": {
+                              "stringValue": "alice"
+                            },
+                            "firebase": {
+                              "mapValue": {
+                                "fields": {
+                                  "sign_in_provider": {
+                                    "stringValue": "custom"
+                                  },
+                                  "identities": {
+                                    "mapValue": {
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "email": {
+                              "stringValue": "alice@college.harvard.edu"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "count": 2
+              }, {
+                "value": {
+                },
+                "count": 1
+              }],
+              "children": [{
+                "sourcePosition": {
+                  "line": 11,
+                  "column": 72,
+                  "currentOffset": 472,
+                  "endOffset": 478
+                },
+                "values": [{
+                  "value": {
+                    "mapValue": {
+                      "fields": {
+                        "time": {
+                          "timestampValue": "2022-06-11T06:54:09.805Z"
+                        },
+                        "auth": {
+                          "mapValue": {
+                            "fields": {
+                              "uid": {
+                                "stringValue": "alice"
+                              },
+                              "token": {
+                                "mapValue": {
+                                  "fields": {
+                                    "iss": {
+                                      "stringValue": "https://securetoken.google.com/demo-test"
+                                    },
+                                    "aud": {
+                                      "stringValue": "demo-test"
+                                    },
+                                    "iat": {
+                                      "intValue": "0"
+                                    },
+                                    "exp": {
+                                      "intValue": "3600"
+                                    },
+                                    "auth_time": {
+                                      "intValue": "0"
+                                    },
+                                    "sub": {
+                                      "stringValue": "alice"
+                                    },
+                                    "user_id": {
+                                      "stringValue": "alice"
+                                    },
+                                    "firebase": {
+                                      "mapValue": {
+                                        "fields": {
+                                          "sign_in_provider": {
+                                            "stringValue": "custom"
+                                          },
+                                          "identities": {
+                                            "mapValue": {
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "email": {
+                                      "stringValue": "alice@college.harvard.edu"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "headers": {
+                          "mapValue": {
+                          }
+                        },
+                        "inTransaction": {
+                          "boolValue": true
+                        },
+                        "path": {
+                          "pathValue": {
+                            "segments": [{
+                              "simple": "databases"
+                            }, {
+                              "simple": "(default)"
+                            }, {
+                              "simple": "documents"
+                            }, {
+                              "simple": "users"
+                            }, {
+                              "simple": "alice"
+                            }]
+                          }
+                        },
+                        "transforms": {
+                          "nullValue": null
+                        },
+                        "writeFields": {
+                          "nullValue": null
+                        },
+                        "readFields": {
+                          "nullValue": null
+                        },
+                        "resource": {
+                          "mapValue": {
+                            "fields": {
+                              "data": {
+                                "mapValue": {
+                                  "fields": {
+                                    "data": {
+                                      "stringValue": "hello world"
+                                    }
+                                  }
+                                }
+                              },
+                              "__name__": {
+                                "pathValue": {
+                                  "segments": [{
+                                    "simple": "databases"
+                                  }, {
+                                    "simple": "(default)"
+                                  }, {
+                                    "simple": "documents"
+                                  }, {
+                                    "simple": "users"
+                                  }, {
+                                    "simple": "alice"
+                                  }]
+                                }
+                              },
+                              "id": {
+                                "stringValue": "alice"
+                              }
+                            }
+                          }
+                        },
+                        "method": {
+                          "stringValue": "create"
+                        }
+                      }
+                    }
+                  },
+                  "count": 1
+                }, {
+                  "value": {
+                    "mapValue": {
+                      "fields": {
+                        "time": {
+                          "timestampValue": "2022-06-11T06:54:10.144Z"
+                        },
+                        "auth": {
+                          "mapValue": {
+                            "fields": {
+                              "uid": {
+                                "stringValue": "alice"
+                              },
+                              "token": {
+                                "mapValue": {
+                                  "fields": {
+                                    "iss": {
+                                      "stringValue": "https://securetoken.google.com/demo-test"
+                                    },
+                                    "aud": {
+                                      "stringValue": "demo-test"
+                                    },
+                                    "iat": {
+                                      "intValue": "0"
+                                    },
+                                    "exp": {
+                                      "intValue": "3600"
+                                    },
+                                    "auth_time": {
+                                      "intValue": "0"
+                                    },
+                                    "sub": {
+                                      "stringValue": "alice"
+                                    },
+                                    "user_id": {
+                                      "stringValue": "alice"
+                                    },
+                                    "firebase": {
+                                      "mapValue": {
+                                        "fields": {
+                                          "sign_in_provider": {
+                                            "stringValue": "custom"
+                                          },
+                                          "identities": {
+                                            "mapValue": {
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "email": {
+                                      "stringValue": "alice@college.harvard.edu"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "headers": {
+                          "mapValue": {
+                          }
+                        },
+                        "inTransaction": {
+                          "boolValue": false
+                        },
+                        "path": {
+                          "pathValue": {
+                            "segments": [{
+                              "simple": "databases"
+                            }, {
+                              "simple": "(default)"
+                            }, {
+                              "simple": "documents"
+                            }, {
+                              "simple": "users"
+                            }, {
+                              "simple": "alice"
+                            }]
+                          }
+                        },
+                        "fields": {
+                          "nullValue": null
+                        },
+                        "method": {
+                          "stringValue": "get"
+                        }
+                      }
+                    }
+                  },
+                  "count": 1
+                }, {
+                  "value": {
+                  },
+                  "count": 1
+                }]
+              }]
+            }]
+          }]
+        }]
+      }, {
+        "sourcePosition": {
+          "line": 11,
+          "column": 132,
+          "currentOffset": 532,
+          "endOffset": 544
+        },
+        "values": [{
+          "value": {
+          },
+          "count": 3
+        }]
+      }]
+    }]
+  }, {
+    "sourcePosition": {
+      "line": 15,
+      "column": 14,
+      "currentOffset": 613,
+      "endOffset": 676
+    },
+    "children": [{
+      "sourcePosition": {
+        "line": 15,
+        "column": 27,
+        "currentOffset": 626,
+        "endOffset": 633
+      }
+    }, {
+      "sourcePosition": {
+        "line": 15,
+        "column": 60,
+        "currentOffset": 659,
+        "endOffset": 662
+      }
+    }, {
+      "sourcePosition": {
+        "line": 15,
+        "column": 76,
+        "currentOffset": 675,
+        "endOffset": 676
+      }
+    }]
+  }, {
+    "sourcePosition": {
+      "line": 19,
+      "column": 22,
+      "currentOffset": 734,
+      "endOffset": 753
+    },
+    "children": [{
+      "sourcePosition": {
+        "line": 19,
+        "column": 22,
+        "currentOffset": 734,
+        "endOffset": 745
+      },
+      "children": [{
+        "sourcePosition": {
+          "line": 19,
+          "column": 22,
+          "currentOffset": 734,
+          "endOffset": 740
+        }
+      }]
+    }]
+  }, {
+    "sourcePosition": {
+      "line": 23,
+      "column": 22,
+      "currentOffset": 812,
+      "endOffset": 826
+    }
+  }, {
+    "sourcePosition": {
+      "line": 24,
+      "column": 23,
+      "currentOffset": 853,
+      "endOffset": 896
+    },
+    "children": [{
+      "sourcePosition": {
+        "line": 24,
+        "column": 23,
+        "currentOffset": 853,
+        "endOffset": 867
+      }
+    }, {
+      "sourcePosition": {
+        "line": 24,
+        "column": 44,
+        "currentOffset": 874,
+        "endOffset": 896
+      },
+      "children": [{
+        "sourcePosition": {
+          "line": 24,
+          "column": 44,
+          "currentOffset": 874,
+          "endOffset": 889
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 24,
+            "column": 44,
+            "currentOffset": 874,
+            "endOffset": 885
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 24,
+              "column": 44,
+              "currentOffset": 874,
+              "endOffset": 880
+            }
+          }]
+        }]
+      }, {
+        "sourcePosition": {
+          "line": 24,
+          "column": 64,
+          "currentOffset": 894,
+          "endOffset": 896
+        }
+      }]
+    }]
+  }, {
+    "sourcePosition": {
+      "line": 28,
+      "column": 29,
+      "currentOffset": 959,
+      "endOffset": 1002
+    },
+    "values": [{
+      "value": {
+        "boolValue": true
+      },
+      "count": 2
+    }, {
+      "value": {
+        "boolValue": false
+      },
+      "count": 1
+    }],
+    "children": [{
+      "sourcePosition": {
+        "line": 28,
+        "column": 29,
+        "currentOffset": 959,
+        "endOffset": 973
+      },
+      "values": [{
+        "value": {
+          "boolValue": true
+        },
+        "count": 2
+      }, {
+        "value": {
+          "boolValue": false
+        },
+        "count": 1
+      }]
+    }, {
+      "sourcePosition": {
+        "line": 28,
+        "column": 50,
+        "currentOffset": 980,
+        "endOffset": 1002
+      },
+      "values": [{
+        "value": {
+          "boolValue": true
+        },
+        "count": 2
+      }, {
+        "value": {
+        },
+        "count": 1
+      }],
+      "children": [{
+        "sourcePosition": {
+          "line": 28,
+          "column": 50,
+          "currentOffset": 980,
+          "endOffset": 995
+        },
+        "values": [{
+          "value": {
+            "stringValue": "alice"
+          },
+          "count": 2
+        }, {
+          "value": {
+          },
+          "count": 1
+        }],
+        "children": [{
+          "sourcePosition": {
+            "line": 28,
+            "column": 50,
+            "currentOffset": 980,
+            "endOffset": 991
+          },
+          "values": [{
+            "value": {
+              "mapValue": {
+                "fields": {
+                  "uid": {
+                    "stringValue": "alice"
+                  },
+                  "token": {
+                    "mapValue": {
+                      "fields": {
+                        "iss": {
+                          "stringValue": "https://securetoken.google.com/demo-test"
+                        },
+                        "aud": {
+                          "stringValue": "demo-test"
+                        },
+                        "iat": {
+                          "intValue": "0"
+                        },
+                        "exp": {
+                          "intValue": "3600"
+                        },
+                        "auth_time": {
+                          "intValue": "0"
+                        },
+                        "sub": {
+                          "stringValue": "alice"
+                        },
+                        "user_id": {
+                          "stringValue": "alice"
+                        },
+                        "firebase": {
+                          "mapValue": {
+                            "fields": {
+                              "sign_in_provider": {
+                                "stringValue": "custom"
+                              },
+                              "identities": {
+                                "mapValue": {
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "email": {
+                          "stringValue": "alice@college.harvard.edu"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "count": 2
+          }, {
+            "value": {
+            },
+            "count": 1
+          }],
+          "children": [{
+            "sourcePosition": {
+              "line": 28,
+              "column": 50,
+              "currentOffset": 980,
+              "endOffset": 986
+            },
+            "values": [{
+              "value": {
+                "mapValue": {
+                  "fields": {
+                    "time": {
+                      "timestampValue": "2022-06-11T06:54:09.805Z"
+                    },
+                    "auth": {
+                      "mapValue": {
+                        "fields": {
+                          "uid": {
+                            "stringValue": "alice"
+                          },
+                          "token": {
+                            "mapValue": {
+                              "fields": {
+                                "iss": {
+                                  "stringValue": "https://securetoken.google.com/demo-test"
+                                },
+                                "aud": {
+                                  "stringValue": "demo-test"
+                                },
+                                "iat": {
+                                  "intValue": "0"
+                                },
+                                "exp": {
+                                  "intValue": "3600"
+                                },
+                                "auth_time": {
+                                  "intValue": "0"
+                                },
+                                "sub": {
+                                  "stringValue": "alice"
+                                },
+                                "user_id": {
+                                  "stringValue": "alice"
+                                },
+                                "firebase": {
+                                  "mapValue": {
+                                    "fields": {
+                                      "sign_in_provider": {
+                                        "stringValue": "custom"
+                                      },
+                                      "identities": {
+                                        "mapValue": {
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "email": {
+                                  "stringValue": "alice@college.harvard.edu"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "headers": {
+                      "mapValue": {
+                      }
+                    },
+                    "inTransaction": {
+                      "boolValue": true
+                    },
+                    "path": {
+                      "pathValue": {
+                        "segments": [{
+                          "simple": "databases"
+                        }, {
+                          "simple": "(default)"
+                        }, {
+                          "simple": "documents"
+                        }, {
+                          "simple": "users"
+                        }, {
+                          "simple": "alice"
+                        }]
+                      }
+                    },
+                    "transforms": {
+                      "nullValue": null
+                    },
+                    "writeFields": {
+                      "nullValue": null
+                    },
+                    "readFields": {
+                      "nullValue": null
+                    },
+                    "resource": {
+                      "mapValue": {
+                        "fields": {
+                          "data": {
+                            "mapValue": {
+                              "fields": {
+                                "data": {
+                                  "stringValue": "hello world"
+                                }
+                              }
+                            }
+                          },
+                          "__name__": {
+                            "pathValue": {
+                              "segments": [{
+                                "simple": "databases"
+                              }, {
+                                "simple": "(default)"
+                              }, {
+                                "simple": "documents"
+                              }, {
+                                "simple": "users"
+                              }, {
+                                "simple": "alice"
+                              }]
+                            }
+                          },
+                          "id": {
+                            "stringValue": "alice"
+                          }
+                        }
+                      }
+                    },
+                    "method": {
+                      "stringValue": "create"
+                    }
+                  }
+                }
+              },
+              "count": 1
+            }, {
+              "value": {
+                "mapValue": {
+                  "fields": {
+                    "time": {
+                      "timestampValue": "2022-06-11T06:54:10.144Z"
+                    },
+                    "auth": {
+                      "mapValue": {
+                        "fields": {
+                          "uid": {
+                            "stringValue": "alice"
+                          },
+                          "token": {
+                            "mapValue": {
+                              "fields": {
+                                "iss": {
+                                  "stringValue": "https://securetoken.google.com/demo-test"
+                                },
+                                "aud": {
+                                  "stringValue": "demo-test"
+                                },
+                                "iat": {
+                                  "intValue": "0"
+                                },
+                                "exp": {
+                                  "intValue": "3600"
+                                },
+                                "auth_time": {
+                                  "intValue": "0"
+                                },
+                                "sub": {
+                                  "stringValue": "alice"
+                                },
+                                "user_id": {
+                                  "stringValue": "alice"
+                                },
+                                "firebase": {
+                                  "mapValue": {
+                                    "fields": {
+                                      "sign_in_provider": {
+                                        "stringValue": "custom"
+                                      },
+                                      "identities": {
+                                        "mapValue": {
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "email": {
+                                  "stringValue": "alice@college.harvard.edu"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "headers": {
+                      "mapValue": {
+                      }
+                    },
+                    "inTransaction": {
+                      "boolValue": false
+                    },
+                    "path": {
+                      "pathValue": {
+                        "segments": [{
+                          "simple": "databases"
+                        }, {
+                          "simple": "(default)"
+                        }, {
+                          "simple": "documents"
+                        }, {
+                          "simple": "users"
+                        }, {
+                          "simple": "alice"
+                        }]
+                      }
+                    },
+                    "fields": {
+                      "nullValue": null
+                    },
+                    "method": {
+                      "stringValue": "get"
+                    }
+                  }
+                }
+              },
+              "count": 1
+            }, {
+              "value": {
+              },
+              "count": 1
+            }]
+          }]
+        }]
+      }, {
+        "sourcePosition": {
+          "line": 28,
+          "column": 70,
+          "currentOffset": 1000,
+          "endOffset": 1002
+        },
+        "values": [{
+          "value": {
+            "stringValue": "alice"
+          },
+          "count": 2
+        }, {
+          "value": {
+          },
+          "count": 1
+        }]
+      }]
+    }]
+  }, {
+    "sourcePosition": {
+      "line": 33,
+      "column": 30,
+      "currentOffset": 1152,
+      "endOffset": 1271
+    },
+    "children": [{
+      "sourcePosition": {
+        "line": 33,
+        "column": 30,
+        "currentOffset": 1152,
+        "endOffset": 1166
+      }
+    }, {
+      "sourcePosition": {
+        "line": 33,
+        "column": 51,
+        "currentOffset": 1173,
+        "endOffset": 1271
+      },
+      "children": [{
+        "sourcePosition": {
+          "line": 33,
+          "column": 52,
+          "currentOffset": 1174,
+          "endOffset": 1231
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 33,
+            "column": 52,
+            "currentOffset": 1174,
+            "endOffset": 1189
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 33,
+              "column": 52,
+              "currentOffset": 1174,
+              "endOffset": 1181
+            }
+          }]
+        }, {
+          "sourcePosition": {
+            "line": 33,
+            "column": 72,
+            "currentOffset": 1194,
+            "endOffset": 1231
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 33,
+              "column": 72,
+              "currentOffset": 1194,
+              "endOffset": 1211
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 33,
+                "column": 72,
+                "currentOffset": 1194,
+                "endOffset": 1206
+              },
+              "children": [{
+                "sourcePosition": {
+                  "line": 33,
+                  "column": 72,
+                  "currentOffset": 1194,
+                  "endOffset": 1201
+                }
+              }]
+            }]
+          }, {
+            "sourcePosition": {
+              "line": 33,
+              "column": 94,
+              "currentOffset": 1216,
+              "endOffset": 1231
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 33,
+                "column": 94,
+                "currentOffset": 1216,
+                "endOffset": 1227
+              },
+              "children": [{
+                "sourcePosition": {
+                  "line": 33,
+                  "column": 94,
+                  "currentOffset": 1216,
+                  "endOffset": 1222
+                }
+              }]
+            }]
+          }]
+        }]
+      }, {
+        "sourcePosition": {
+          "line": 33,
+          "column": 114,
+          "currentOffset": 1236,
+          "endOffset": 1271
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 33,
+            "column": 114,
+            "currentOffset": 1236,
+            "endOffset": 1251
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 33,
+              "column": 114,
+              "currentOffset": 1236,
+              "endOffset": 1248
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 33,
+                "column": 114,
+                "currentOffset": 1236,
+                "endOffset": 1243
+              }
+            }]
+          }]
+        }, {
+          "sourcePosition": {
+            "line": 33,
+            "column": 134,
+            "currentOffset": 1256,
+            "endOffset": 1271
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 33,
+              "column": 134,
+              "currentOffset": 1256,
+              "endOffset": 1267
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 33,
+                "column": 134,
+                "currentOffset": 1256,
+                "endOffset": 1262
+              }
+            }]
+          }]
+        }]
+      }]
+    }]
+  }, {
+    "sourcePosition": {
+      "line": 39,
+      "column": 24,
+      "currentOffset": 1469,
+      "endOffset": 1511
+    },
+    "children": [{
+      "sourcePosition": {
+        "line": 39,
+        "column": 24,
+        "currentOffset": 1469,
+        "endOffset": 1483
+      }
+    }, {
+      "sourcePosition": {
+        "line": 39,
+        "column": 45,
+        "currentOffset": 1490,
+        "endOffset": 1511
+      },
+      "children": [{
+        "sourcePosition": {
+          "line": 39,
+          "column": 45,
+          "currentOffset": 1490,
+          "endOffset": 1505
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 39,
+            "column": 45,
+            "currentOffset": 1490,
+            "endOffset": 1501
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 39,
+              "column": 45,
+              "currentOffset": 1490,
+              "endOffset": 1496
+            }
+          }]
+        }]
+      }, {
+        "sourcePosition": {
+          "line": 39,
+          "column": 65,
+          "currentOffset": 1510,
+          "endOffset": 1511
+        }
+      }]
+    }]
+  }, {
+    "sourcePosition": {
+      "line": 43,
+      "column": 24,
+      "currentOffset": 1681,
+      "endOffset": 1869
+    },
+    "children": [{
+      "sourcePosition": {
+        "line": 43,
+        "column": 24,
+        "currentOffset": 1681,
+        "endOffset": 1827
+      },
+      "children": [{
+        "sourcePosition": {
+          "line": 43,
+          "column": 24,
+          "currentOffset": 1681,
+          "endOffset": 1779
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 43,
+            "column": 24,
+            "currentOffset": 1681,
+            "endOffset": 1733
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 43,
+              "column": 24,
+              "currentOffset": 1681,
+              "endOffset": 1695
+            }
+          }, {
+            "sourcePosition": {
+              "line": 44,
+              "column": 12,
+              "currentOffset": 1710,
+              "endOffset": 1733
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 44,
+                "column": 12,
+                "currentOffset": 1710,
+                "endOffset": 1713
+              }
+            }, {
+              "sourcePosition": {
+                "line": 44,
+                "column": 20,
+                "currentOffset": 1718,
+                "endOffset": 1733
+              },
+              "children": [{
+                "sourcePosition": {
+                  "line": 44,
+                  "column": 20,
+                  "currentOffset": 1718,
+                  "endOffset": 1729
+                },
+                "children": [{
+                  "sourcePosition": {
+                    "line": 44,
+                    "column": 20,
+                    "currentOffset": 1718,
+                    "endOffset": 1724
+                  }
+                }]
+              }]
+            }]
+          }]
+        }, {
+          "sourcePosition": {
+            "line": 45,
+            "column": 12,
+            "currentOffset": 1746,
+            "endOffset": 1779
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 45,
+              "column": 13,
+              "currentOffset": 1747,
+              "endOffset": 1779
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 45,
+                "column": 20,
+                "currentOffset": 1754,
+                "endOffset": 1779
+              },
+              "children": [{
+                "sourcePosition": {
+                  "line": 45,
+                  "column": 38,
+                  "currentOffset": 1772,
+                  "endOffset": 1773
+                }
+              }, {
+                "sourcePosition": {
+                  "line": 45,
+                  "column": 42,
+                  "currentOffset": 1776,
+                  "endOffset": 1779
+                }
+              }]
+            }]
+          }]
+        }]
+      }, {
+        "sourcePosition": {
+          "line": 46,
+          "column": 12,
+          "currentOffset": 1794,
+          "endOffset": 1827
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 46,
+            "column": 12,
+            "currentOffset": 1794,
+            "endOffset": 1819
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 46,
+              "column": 12,
+              "currentOffset": 1794,
+              "endOffset": 1814
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 46,
+                "column": 12,
+                "currentOffset": 1794,
+                "endOffset": 1809
+              },
+              "children": [{
+                "sourcePosition": {
+                  "line": 46,
+                  "column": 12,
+                  "currentOffset": 1794,
+                  "endOffset": 1800
+                }
+              }]
+            }]
+          }]
+        }, {
+          "sourcePosition": {
+            "line": 46,
+            "column": 42,
+            "currentOffset": 1824,
+            "endOffset": 1827
+          }
+        }]
+      }]
+    }, {
+      "sourcePosition": {
+        "line": 47,
+        "column": 12,
+        "currentOffset": 1840,
+        "endOffset": 1869
+      },
+      "children": [{
+        "sourcePosition": {
+          "line": 47,
+          "column": 12,
+          "currentOffset": 1840,
+          "endOffset": 1863
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 47,
+            "column": 12,
+            "currentOffset": 1840,
+            "endOffset": 1860
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 47,
+              "column": 12,
+              "currentOffset": 1840,
+              "endOffset": 1855
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 47,
+                "column": 12,
+                "currentOffset": 1840,
+                "endOffset": 1846
+              }
+            }]
+          }]
+        }]
+      }, {
+        "sourcePosition": {
+          "line": 47,
+          "column": 40,
+          "currentOffset": 1868,
+          "endOffset": 1869
+        }
+      }]
+    }]
+  }, {
+    "sourcePosition": {
+      "line": 53,
+      "column": 9,
+      "currentOffset": 2040,
+      "endOffset": 2279
+    },
+    "children": [{
+      "sourcePosition": {
+        "line": 53,
+        "column": 24,
+        "currentOffset": 2055,
+        "endOffset": 2076
+      },
+      "children": [{
+        "sourcePosition": {
+          "line": 53,
+          "column": 24,
+          "currentOffset": 2055,
+          "endOffset": 2067
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 53,
+            "column": 24,
+            "currentOffset": 2055,
+            "endOffset": 2062
+          }
+        }]
+      }]
+    }, {
+      "sourcePosition": {
+        "line": 54,
+        "column": 9,
+        "currentOffset": 2087,
+        "endOffset": 2279
+      },
+      "children": [{
+        "sourcePosition": {
+          "line": 54,
+          "column": 25,
+          "currentOffset": 2103,
+          "endOffset": 2118
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 54,
+            "column": 25,
+            "currentOffset": 2103,
+            "endOffset": 2114
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 54,
+              "column": 25,
+              "currentOffset": 2103,
+              "endOffset": 2109
+            }
+          }]
+        }]
+      }, {
+        "sourcePosition": {
+          "line": 55,
+          "column": 16,
+          "currentOffset": 2136,
+          "endOffset": 2279
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 55,
+            "column": 16,
+            "currentOffset": 2136,
+            "endOffset": 2200
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 55,
+              "column": 16,
+              "currentOffset": 2136,
+              "endOffset": 2192
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 55,
+                "column": 16,
+                "currentOffset": 2136,
+                "endOffset": 2183
+              },
+              "children": [{
+                "sourcePosition": {
+                  "line": 55,
+                  "column": 16,
+                  "currentOffset": 2136,
+                  "endOffset": 2176
+                },
+                "children": [{
+                  "sourcePosition": {
+                    "line": 55,
+                    "column": 20,
+                    "currentOffset": 2140,
+                    "endOffset": 2176
+                  },
+                  "children": [{
+                    "sourcePosition": {
+                      "line": 55,
+                      "column": 38,
+                      "currentOffset": 2158,
+                      "endOffset": 2165
+                    }
+                  }, {
+                    "sourcePosition": {
+                      "line": 55,
+                      "column": 48,
+                      "currentOffset": 2168,
+                      "endOffset": 2176
+                    }
+                  }]
+                }]
+              }]
+            }]
+          }]
+        }, {
+          "sourcePosition": {
+            "line": 56,
+            "column": 14,
+            "currentOffset": 2215,
+            "endOffset": 2279
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 56,
+              "column": 14,
+              "currentOffset": 2215,
+              "endOffset": 2271
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 56,
+                "column": 14,
+                "currentOffset": 2215,
+                "endOffset": 2262
+              },
+              "children": [{
+                "sourcePosition": {
+                  "line": 56,
+                  "column": 14,
+                  "currentOffset": 2215,
+                  "endOffset": 2255
+                },
+                "children": [{
+                  "sourcePosition": {
+                    "line": 56,
+                    "column": 18,
+                    "currentOffset": 2219,
+                    "endOffset": 2255
+                  },
+                  "children": [{
+                    "sourcePosition": {
+                      "line": 56,
+                      "column": 36,
+                      "currentOffset": 2237,
+                      "endOffset": 2245
+                    }
+                  }, {
+                    "sourcePosition": {
+                      "line": 56,
+                      "column": 47,
+                      "currentOffset": 2248,
+                      "endOffset": 2255
+                    }
+                  }]
+                }]
+              }]
+            }]
+          }]
+        }]
+      }]
+    }]
+  }, {
+    "sourcePosition": {
+      "line": 61,
+      "column": 22,
+      "currentOffset": 2432,
+      "endOffset": 2564
+    },
+    "children": [{
+      "sourcePosition": {
+        "line": 61,
+        "column": 22,
+        "currentOffset": 2432,
+        "endOffset": 2446
+      }
+    }, {
+      "sourcePosition": {
+        "line": 61,
+        "column": 43,
+        "currentOffset": 2453,
+        "endOffset": 2564
+      },
+      "children": [{
+        "sourcePosition": {
+          "line": 62,
+          "column": 9,
+          "currentOffset": 2463,
+          "endOffset": 2544
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 62,
+            "column": 9,
+            "currentOffset": 2463,
+            "endOffset": 2490
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 62,
+              "column": 9,
+              "currentOffset": 2463,
+              "endOffset": 2482
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 62,
+                "column": 9,
+                "currentOffset": 2463,
+                "endOffset": 2475
+              },
+              "children": [{
+                "sourcePosition": {
+                  "line": 62,
+                  "column": 9,
+                  "currentOffset": 2463,
+                  "endOffset": 2470
+                }
+              }]
+            }]
+          }]
+        }, {
+          "sourcePosition": {
+            "line": 63,
+            "column": 12,
+            "currentOffset": 2503,
+            "endOffset": 2544
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 63,
+              "column": 12,
+              "currentOffset": 2503,
+              "endOffset": 2518
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 63,
+                "column": 12,
+                "currentOffset": 2503,
+                "endOffset": 2514
+              },
+              "children": [{
+                "sourcePosition": {
+                  "line": 63,
+                  "column": 12,
+                  "currentOffset": 2503,
+                  "endOffset": 2509
+                }
+              }]
+            }]
+          }, {
+            "sourcePosition": {
+              "line": 63,
+              "column": 32,
+              "currentOffset": 2523,
+              "endOffset": 2544
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 63,
+                "column": 32,
+                "currentOffset": 2523,
+                "endOffset": 2535
+              },
+              "children": [{
+                "sourcePosition": {
+                  "line": 63,
+                  "column": 32,
+                  "currentOffset": 2523,
+                  "endOffset": 2530
+                }
+              }]
+            }]
+          }]
+        }]
+      }, {
+        "sourcePosition": {
+          "line": 64,
+          "column": 12,
+          "currentOffset": 2557,
+          "endOffset": 2564
+        }
+      }]
+    }]
+  }, {
+    "sourcePosition": {
+      "line": 67,
+      "column": 24,
+      "currentOffset": 2665,
+      "endOffset": 2735
+    },
+    "children": [{
+      "sourcePosition": {
+        "line": 67,
+        "column": 24,
+        "currentOffset": 2665,
+        "endOffset": 2679
+      }
+    }, {
+      "sourcePosition": {
+        "line": 67,
+        "column": 45,
+        "currentOffset": 2686,
+        "endOffset": 2735
+      },
+      "children": [{
+        "sourcePosition": {
+          "line": 67,
+          "column": 45,
+          "currentOffset": 2686,
+          "endOffset": 2715
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 67,
+            "column": 45,
+            "currentOffset": 2686,
+            "endOffset": 2706
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 67,
+              "column": 45,
+              "currentOffset": 2686,
+              "endOffset": 2701
+            },
+            "children": [{
+              "sourcePosition": {
+                "line": 67,
+                "column": 45,
+                "currentOffset": 2686,
+                "endOffset": 2692
+              }
+            }]
+          }]
+        }]
+      }, {
+        "sourcePosition": {
+          "line": 67,
+          "column": 79,
+          "currentOffset": 2720,
+          "endOffset": 2735
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 67,
+            "column": 79,
+            "currentOffset": 2720,
+            "endOffset": 2731
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 67,
+              "column": 79,
+              "currentOffset": 2720,
+              "endOffset": 2726
+            }
+          }]
+        }]
+      }]
+    }]
+  }, {
+    "sourcePosition": {
+      "line": 68,
+      "column": 32,
+      "currentOffset": 2769,
+      "endOffset": 2831
+    },
+    "children": [{
+      "sourcePosition": {
+        "line": 68,
+        "column": 32,
+        "currentOffset": 2769,
+        "endOffset": 2783
+      }
+    }, {
+      "sourcePosition": {
+        "line": 68,
+        "column": 53,
+        "currentOffset": 2790,
+        "endOffset": 2831
+      },
+      "children": [{
+        "sourcePosition": {
+          "line": 68,
+          "column": 53,
+          "currentOffset": 2790,
+          "endOffset": 2811
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 68,
+            "column": 53,
+            "currentOffset": 2790,
+            "endOffset": 2802
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 68,
+              "column": 53,
+              "currentOffset": 2790,
+              "endOffset": 2797
+            }
+          }]
+        }]
+      }, {
+        "sourcePosition": {
+          "line": 68,
+          "column": 79,
+          "currentOffset": 2816,
+          "endOffset": 2831
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 68,
+            "column": 79,
+            "currentOffset": 2816,
+            "endOffset": 2827
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 68,
+              "column": 79,
+              "currentOffset": 2816,
+              "endOffset": 2822
+            }
+          }]
+        }]
+      }]
+    }]
+  }, {
+    "sourcePosition": {
+      "line": 72,
+      "column": 22,
+      "currentOffset": 2893,
+      "endOffset": 2907
+    }
+  }, {
+    "sourcePosition": {
+      "line": 76,
+      "column": 29,
+      "currentOffset": 2978,
+      "endOffset": 3021
+    },
+    "children": [{
+      "sourcePosition": {
+        "line": 76,
+        "column": 29,
+        "currentOffset": 2978,
+        "endOffset": 2992
+      }
+    }, {
+      "sourcePosition": {
+        "line": 76,
+        "column": 50,
+        "currentOffset": 2999,
+        "endOffset": 3021
+      },
+      "children": [{
+        "sourcePosition": {
+          "line": 76,
+          "column": 50,
+          "currentOffset": 2999,
+          "endOffset": 3014
+        },
+        "children": [{
+          "sourcePosition": {
+            "line": 76,
+            "column": 50,
+            "currentOffset": 2999,
+            "endOffset": 3010
+          },
+          "children": [{
+            "sourcePosition": {
+              "line": 76,
+              "column": 50,
+              "currentOffset": 2999,
+              "endOffset": 3005
+            }
+          }]
+        }]
+      }, {
+        "sourcePosition": {
+          "line": 76,
+          "column": 70,
+          "currentOffset": 3019,
+          "endOffset": 3021
+        }
+      }]
+    }]
+  }]
+};
+
+const REPORT_LIMIT_SIZE = 15
+
+window.onload = function() {
+  if (data.rules.files.length == 1) {
+    document.body.appendChild(buildFormattedReport(data.report || [], data.rules.files[0].content))
+  } else {
+    document.body.appendChild(document.createTextNode('Only single-file rules supported. ' +
+    'If you encounter this please visit https://github.com/firebase/firebase-tools/issues'))
+  }
+};
+
+/**
+ * Builds the html block with span elements for rule visualization.
+ *
+ * @param expressionList The list of expression blocks.
+ * @param ruleString The full text of the rules with newlines and special characters escaped.
+ * @return A <pre> html element with <span></span> around expressions and subexpressions within
+ *     .write, .read, and .validate tokens so that they can be selected.
+ */
+function buildFormattedReport(expressionList, ruleString) {
+  const elements = Object.keys(expressionList).map((key) => {
+    return mapExpressionBlock(expressionList[key], ruleString)
+  })
+  const withText = interpolateTextNodes(
+    elements,
+    ruleString,
+    0,
+    ruleString.length
+  )
+  var preElement = document.createElement('pre')
+  withText.forEach((element) => preElement.appendChild(element.element))
+  return preElement
+}
+
+/**
+ * Traverses an expression block.
+ *
+ * Each expression needs to be wrapped in a span and so it's children need to be immediately
+ * resolved so they can be added to the element.
+ *
+ * @param expressionBlock The current recursive chunk of expression data.
+ * @param ruleString The full text of the rules with newlines and special characters escaped.
+ * @return A single object with at least the keys start, end, and element. Element is the span
+ *    element for that [sub]expression. The span element should have all it's children
+ *    already added.
+ */
+function mapExpressionBlock(expressionBlock, ruleString) {
+  const start = expressionBlock.sourcePosition.currentOffset
+  const end = expressionBlock.sourcePosition.endOffset + 1
+  const onlyChildSpans = (expressionBlock.children || []).map(
+    (child) => mapExpressionBlock(child, ruleString)
+  )
+  const allChildren = interpolateTextNodes(
+    onlyChildSpans,
+    ruleString,
+    start,
+    end,
+    true
+  )
+  var span = document.createElement('span')
+  allChildren.forEach((child) => {
+    span.appendChild(child.element)
+  })
+  span.classList.add('coverage-expr')
+  span.title = buildValueString(expressionBlock.values);
+  return {
+    element: span,
+    start: start,
+    end: end
+  }
+}
+
+/**
+ * The formatted report data has information about where subexpression are located. It does not,
+ * however, have information about text around these expressions. This function takes a formatted
+ * list of spans (representing expressions) and puts surrounding text into text elements and
+ * returns the list of all elements in that given text-area.
+ *
+ * @param objs the list of spans to have their bounds interpolated. Each element in the list should
+ *    formatted with the keys start, end, and element.
+ * @param ruleString The full text of the rules with newlines and special characters escaped.
+ * @param optStart An optional start index to start gathering text-elements from.
+ * @param optEnd An optional end index to finish gathering text-elements at.
+ * @param whether to remove newlines from the text values.
+ * @return An interpolated list with all indices from start to end of the ruleString being
+ *    included in either a span or a text element.
+ */
+function interpolateTextNodes(objs, ruleString, start = null, end = null, removeNewLines = false) {
+  // Arrays so null objects aren't appended (options)
+  const expressionStart = start !== null ? [{'end': start}] : []
+  const expressionEnd = end !== null ? [{'start': end}] : []
+  const sortedInnerBlocks = (objs || []).sort((a, b) => (a['start'] - b['start']))
+  const blocksWithBounds = [].concat(expressionStart, sortedInnerBlocks, expressionEnd)
+  const interpolatedBlocks = blocksWithBounds.reduce((allChildren, child, idx) => {
+    if (allChildren && allChildren.length) {
+      const lastEnd = allChildren[allChildren.length - 1]['end']
+      const thisStart = child['start']
+      // This is an array so that we don't append null objects
+      if (lastEnd < thisStart) {
+        const text = ruleString.substring(lastEnd, thisStart)
+        const textElement = [{
+          element: document.createTextNode(removeNewLines ? text.replace(/\n\s*/g,' ') : text),
+          'start': allChildren[allChildren.length - 1]['end'],
+          'end': child['start']
+        }]
+        return allChildren.concat(textElement, child)
+      }
+    }
+    return allChildren.concat(child)
+  }, [])
+  return interpolatedBlocks.filter(
+    (child) => child['start'] !== undefined && child['end'] !== undefined
+  )
+}
+
+/**
+ * Creates the mouse-over text for each span.
+ *
+ * @param values The array of value objects formatted as {value: **, count: **}.
+ * @return A single string for the mouse-over text.
+ */
+function buildValueString(values) {
+  if (!values || !values.length) {
+    return 'Expression never evaluated'
+  } else if (values.length >= REPORT_LIMIT_SIZE) {
+    const allCounts = values.reduce((acc, obj) => acc + obj.count, 0)
+    return `${values.length} distinct items returned over ${allCounts} times`
+  } else {
+    return values.map(({value, count}) => {
+      const allowedTypes = ['nullValue', 'boolValue', 'intValue', 'floatValue', 'stringValue',
+        'bytesValue', 'durationValue', 'timestampValue', 'latlngValue', 'pathValue']
+      const compressedTypes = ['mapValue', 'listValue', 'constraintValue']
+      const typeAllowed = allowedTypes.filter(type => value[type] !== undefined).length == 1
+      const typeCompressed = compressedTypes.filter(type => value[type] !== undefined).length >= 1
+      // Format is value = {returnType: returnValue}
+      // A returnType of undefined is an error. Unfortunately the field is called undefined.
+      if (value['undefined']) {
+        // Expression evaluated to error
+        return `Error '${value.undefined.causeMessage}' occurred ${count} time(s)`
+      } else if (typeCompressed) {
+        // These types are recursive and are hard to read
+        return `[object Object] returned ${count} time(s)`
+      } else if (typeAllowed) {
+        // The response is a simple literal
+        // Object.values is not ES2015
+        const realValue = Object.keys(value).map((key) => value[key])[0]
+        return `Value ${JSON.stringify(realValue)} returned ${count} time(s)`
+      } else if (Object.keys(value).length === 0) {
+        // Clause not evaluated because of short-circuit.
+        return `Expression short-circuited ${count} time(s)`
+      } else {
+        // For a properly formatted response each value should have one type.
+        console.error('Found invalid expression-return type.')
+      }
+    }).join('\n')
+  }
+}
+</script>

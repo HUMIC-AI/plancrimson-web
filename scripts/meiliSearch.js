@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 const { MeiliSearch } = require('meilisearch');
 const inquirer = require('inquirer');
+const { readFileSync } = require('fs');
 const attributes = require('../shared/meiliAttributes.json');
 
 const host = process.env.NEXT_PUBLIC_MEILI_IP || 'http://127.0.0.1:7700';
@@ -34,7 +35,7 @@ const loadDocuments = async () => {
 
   try {
     // eslint-disable-next-line import/no-dynamic-require, global-require
-    const docs = require(docPath);
+    const docs = JSON.parse(readFileSync(docPath).toString('utf8'));
     if (!Array.isArray(docs)) {
       throw new Error('this file does not contain an array');
     }

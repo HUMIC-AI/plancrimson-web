@@ -2,18 +2,23 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React from 'react';
-import { classNames, unsplashParams } from '../../shared/util';
+import React, { PropsWithChildren, useEffect, useState } from 'react';
+import * as Firestore from 'firebase/firestore';
+import { getDocs, QueryConstraint } from 'firebase/firestore';
+import { unsplashParams } from '../../shared/util';
 import ExternalLink from '../ExternalLink';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
+import { useAppDispatch } from '../../src/hooks';
+import { Auth, ClassCache, Schedules } from '../../src/features';
+import Schema from '../../shared/schema';
+import { useMeiliClient } from '../../src/meili';
 
-type LayoutProps = {
+interface LayoutProps {
   title?: string;
-  size?: string;
-};
-
-const description = 'Wait no longer to plan out your concentration. For Harvard College students. Q Reports, Course Evaluations, my.harvard, and more, all in one place.';
+  className?: string;
+  scheduleQueryConstraints?: Firestore.QueryConstraint[]
+}
 
 function Footer() {
   const { query } = useRouter();
@@ -86,14 +91,22 @@ function Footer() {
   );
 }
 
-const Layout: React.FC<LayoutProps> = function ({
+export default function Layout({
   children,
   title,
-  size = 'container sm:p-8',
-}) {
+  className = 'mx-auto flex-1 container sm:p-8',
+  scheduleQueryConstraints: constraints = [],
+}: PropsWithChildren<LayoutProps>) {
   const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
+
+  const alerts = useAlerts();
+
+  useSchedules(constraints);
+
+  const description = 'Wait no longer to plan out your concentration. For Harvard College students. Q Reports, Course Evaluations, my.harvard, and more, all in one place.';
+
   return (
-    <div className="flex flex-col min-h-screen overflow-auto">
+    <>
       <Head>
         <title>{pageTitle}</title>
         <link rel="icon" href="favicon.svg" type="image/x-icon" />
@@ -105,17 +118,93 @@ const Layout: React.FC<LayoutProps> = function ({
         <meta property="og:url" content="https://plancrimson.xyz/" />
       </Head>
 
-      <Navbar />
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
 
-      <main className={classNames('mx-auto flex-1', size)}>
-        {children}
-      </main>
+        {alerts.map((alert) => <div key={alert}>{alert}</div>)}
+
+        <main className={className}>
+          {children}
+        </main>
+      </div>
 
       <Footer />
 
       <CustomModal />
-    </div>
+    </>
   );
-};
+}
 
-export default Layout;
+function useSchedules(constraints: QueryConstraint[]) {
+  const dispatch = useAppDispatch();
+  const userId = Auth.useAuthProperty('uid');
+  const { client } = useMeiliClient(userId);
+
+  useEffect(() => {
+    if (constraints.length === 0) {
+      return;
+    }
+    const q = Firestore.query(Schema.Collection.schedules(), ...constraints);
+    const unsubSchedules = Firestore.onSnapshot(q, (snap) => {
+      const scheduleEntries = snap.docs.map((doc) => doc.data());
+      const classIds = scheduleEntries.flatMap((schedule) => schedule.classes.map(({ classId }) => classId));
+
+      // load all of the classes into the class cache
+      if (client) dispatch(ClassCache.loadCourses(client.MeiliSearchClient.index('courses'), classIds));
+
+      dispatch(Schedules.overwriteSchedules(scheduleEntries));
+    }, (err) => {
+      console.error('error listening for schedules (in the layout):', err);
+    });
+
+    return unsubSchedules;
+  }, [constraints, client]);
+}
+
+function useAlerts() {
+  const [alerts, setAlerts] = useState<string[]>([]);
+
+  useEffect(() => {
+    getDocs(Schema.Collection.alerts())
+      .then((snap) => setAlerts(snap.docs.map((doc) => doc.data().alert)))
+      .catch((err) => {
+        console.error('an error occurred when fetching alerts', err);
+      });
+  }, []);
+
+  return alerts;
+}
+
+export function LoadingPage() {
+  return (
+    <Layout>
+      <ul className="space-y-4">
+        {new Array(5).fill(null).map((_, i) => (
+          <li
+            // eslint-disable-next-line react/no-array-index-key
+            key={i}
+            className="bg-blue-300 animate-pulse rounded"
+            style={{ animationDelay: `${i * 250}ms` }}
+          >
+            &nbsp;
+          </li>
+        ))}
+      </ul>
+    </Layout>
+  );
+}
+
+export function ErrorPage({ children }: PropsWithChildren<{}>) {
+  return (
+    <Layout className="flex-1 flex flex-col items-center">
+      <p className="mt-8 bg-red-300 shadow p-8 rounded-xl">
+        {children}
+      </p>
+    </Layout>
+  );
+}
+
+export const errorMessages = {
+  unauthorized: 'You are not authorized to access this content!',
+  meiliClient: 'There was an error getting the search client. Please try again later',
+};

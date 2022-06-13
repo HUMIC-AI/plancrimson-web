@@ -1,4 +1,8 @@
-import { DayOfWeek, Season } from './firestoreTypes';
+/**
+ * API types for reverse engineering my.harvard and the Q Guide.
+ */
+
+import type { DayOfWeek, Season } from './types';
 
 export type SearchParams = Partial<{
   search: string;
@@ -9,12 +13,7 @@ export type SearchParams = Partial<{
   updateDb: boolean;
 }>;
 
-export type FailedClasses = Record<
-string,
-{
-  error: string;
-}
->;
+export type FailedClasses = Record<string, { error: string }>;
 
 export type SearchResults =
   | {
@@ -234,7 +233,7 @@ export interface Class<PatternType = string | string[], TimeType = string | stri
   HU_COURSE_PREQ: string; // other details, eg "This course will be offered in both an undergraduate and graduate versions. The graduate version will involve an additional project."
 
   HU_RECPREP_FLAG: string; // for existence of below, eg "Y" | "N"
-  HU_REC_PREP: string; // recommended preparation, eg "Can only be taken after successful completion of CS 109a..."
+  HU_REC_PREP?: string; // recommended preparation, eg "Can only be taken after successful completion of CS 109a..."
 
   HU_UNITS_MIN: string; // minimum number of units, eg "4"
   HU_UNITS_MAX: string; // maximum number of units, eg "4"
@@ -251,7 +250,7 @@ export interface Class<PatternType = string | string[], TimeType = string | stri
   Description: string; // has strange characters, eg "?p?Practicum emphasizing an active but reflective approach to teaching applied sciences and engineering; designed for graduate students in any <b>SEAS</b> area, not specifically Engineering Sciences.&nbsp; Topics: presentation and communication; in-class teaching and interaction; developing, grading",
 
   SESSION_CODE: string; // usually "1"
-  PROFILEBUTTON: string; // dunno, eg "X|*|Jelani Nelson|*||*||*||*|X"
+  PROFILEBUTTON?: string | string[]; // dunno, eg "X|*|Jelani Nelson|*||*||*||*|X"
   RQRMNT_GROUP: string; // usually empty string but sometimes a number, eg "003173"
   COOP_LINK: string; // weird xml stuff, eg "<?xml version=\"1.0\" encoding=\"UTF-8\"?><textbookorder><courses><course dept=\"ENSC\" num=\" 301\" sect=\"01\" term=\"W22\" /></courses></textbookorder>"
 
@@ -279,24 +278,14 @@ export interface Class<PatternType = string | string[], TimeType = string | stri
   HU_LATITUDE: string; // usually "0"
   HU_LONGITUDE: string; // usually "0"
 
-  IS_SCL_DESCR_HU_SCL_SEC_COMP: string; // dunno, eg "DIS|***|DIS|***|Discussion|***|DIS|*||*||*||*||*||*||*||*||*||*||*||*|0"
-  IS_SCL_DESCR100_HU_SCL_ATTR_AREC: string; // dunno, eg "MDE approved SEAS 100 level course"
-  CRSE_ATTR_VALUE_HU_AREC_ATTR: string; // eg "E-MDE-SEAS"
+  IS_SCL_DESCR_HU_SCL_SEC_COMP?: string | string[]; // dunno, eg "DIS|***|DIS|***|Discussion|***|DIS|*||*||*||*||*||*||*||*||*||*||*||*|0"
+  IS_SCL_DESCR100_HU_SCL_ATTR_AREC?: string; // dunno, eg "MDE approved SEAS 100 level course"
+  CRSE_ATTR_VALUE_HU_AREC_ATTR?: string; // eg "E-MDE-SEAS"
 }
 
 type AttributeDescriptions = Partial<{
   [attr in keyof Class]: string;
 }>;
-
-export const ATTRIBUTE_DESCRIPTIONS: AttributeDescriptions = {
-  STRM: 'Term',
-  SUBJECT: 'Subject',
-  DAY_OF_WEEK: 'Day of week',
-  ACAD_ORG: 'Department',
-  LOCATION_DESCR_LOCATION: 'Location',
-  SSR_COMPONENTDESCR: 'Class type',
-  IS_SCL_DESCR100_HU_SCL_ATTR_LEVL: 'Level',
-};
 
 // const searchableAttributes = [
 //   'Title', // eg "Abstraction and Design in Computation"

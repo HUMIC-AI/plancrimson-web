@@ -2,22 +2,11 @@
 import { Listbox } from '@headlessui/react';
 import React, { useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
-import { Schedule, Semester } from '../shared/firestoreTypes';
-import { classNames, compareSemesters } from '../shared/util';
-import { useAppDispatch } from '../src/app/hooks';
-import { renameSchedule, selectSchedule } from '../src/features/schedules';
+import { Semester } from '../shared/types';
+import { classNames } from '../shared/util';
+import { Schedules, Settings } from '../src/features';
+import { useAppDispatch, useAppSelector } from '../src/hooks';
 import FadeTransition from './FadeTransition';
-
-export interface ScheduleSelectorProps {
-  selectedSchedule: Schedule | null;
-  selectSchedule: React.Dispatch<Schedule | null>;
-  schedules: Schedule[];
-  direction: 'left' | 'center' | 'right';
-  showTerm?: boolean;
-  parentWidth?: string;
-  highlight?: boolean;
-  showDropdown?: boolean;
-}
 
 function titleContainsTerm(title: string, term: Semester) {
   const titleLower = title.toLowerCase();
@@ -27,31 +16,48 @@ function titleContainsTerm(title: string, term: Semester) {
   );
 }
 
+interface ButtonTitleProps {
+  showTerm: 'on' | 'off' | 'auto';
+  highlight: boolean;
+  chosenScheduleId: string;
+  showDropdown: boolean;
+}
+
 /**
  * The component inside the Listbox in the ScheduleSelector
+ *
+ * @param showTerm whether or not to show the term (season, year) of the selected schedule
+ * @param highlight whether to highlight this schedule
+ * @param chosenScheduleId the ID of this schedule
+ * @param showDropdown whether to show the dropdown
  */
 function ButtonTitle({
   showTerm,
-  selectedSchedule,
   highlight,
+  chosenScheduleId,
   showDropdown,
-}: {
-  showTerm: boolean | undefined;
-  highlight: boolean;
-  selectedSchedule: Schedule;
-  showDropdown: boolean;
-}) {
+}: ButtonTitleProps) {
   const dispatch = useAppDispatch();
-  const [value, setValue] = useState(selectedSchedule.id);
-  useEffect(() => setValue(selectedSchedule.id), [selectedSchedule.id]);
+  const schedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
+  const [newTitle, setNewTitle] = useState(schedule?.title || null);
+  useEffect(() => {
+    setNewTitle(schedule?.title || null);
+  }, [schedule]);
 
   function saveTitle(e: any) {
     e.preventDefault();
-    if (!selectedSchedule.id || value === selectedSchedule.id) return;
-    dispatch(renameSchedule({ oldId: selectedSchedule.id, newId: value }));
+    if (!chosenScheduleId || !newTitle || newTitle === chosenScheduleId) return;
+    dispatch(Schedules.renameSchedule({ scheduleId: chosenScheduleId, title: newTitle }));
   }
 
-  const doShowTerm = showTerm !== false && (showTerm || !titleContainsTerm(selectedSchedule.id, selectedSchedule));
+  if (!schedule || !newTitle) return null;
+
+  const doShowTerm = (() => {
+    if (showTerm === 'off') return false;
+    if (showTerm === 'on') return true;
+    if (showTerm === 'auto') return !titleContainsTerm(schedule.title, { season: schedule.season, year: schedule.year });
+    throw new Error('Invalid value passed to showTerm');
+  })();
 
   return (
     <div className="flex flex-col items-center space-y-1 w-full">
@@ -63,17 +69,17 @@ function ButtonTitle({
             'border-gray-400 hover:border-black transition-colors duration-300 border border-b-4 cursor-text',
             highlight && 'bg-gray-800 text-white px-1',
           )}
-          value={value}
-          onChange={(e) => setValue(e.currentTarget.value)}
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.currentTarget.value)}
           onBlur={saveTitle}
         />
         {!showDropdown && (
         <button
           type="button"
           className="w-4 ml-2"
-          onClick={() => dispatch(selectSchedule({
-            term: `${selectedSchedule.year}${selectedSchedule.season}`,
-            scheduleId: selectedSchedule?.id || null,
+          onClick={() => dispatch(Settings.chooseSchedule({
+            term: `${schedule.year}${schedule.season}`,
+            scheduleId: schedule?.title || null,
           }))}
         >
           {highlight ? <FaCheckSquare /> : <FaSquare />}
@@ -83,34 +89,81 @@ function ButtonTitle({
 
       {doShowTerm && (
       <span className="text-xs text-gray-400">
-        {selectedSchedule.season}
-        {' '}
-        {selectedSchedule.year}
+        {`${schedule.season} ${schedule.year}`}
       </span>
       )}
     </div>
   );
 }
 
-const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
-  schedules,
-  selectedSchedule,
-  selectSchedule: select,
-  direction,
-  showTerm,
-  parentWidth,
-  showDropdown,
-  highlight = false,
-}) {
-  const optionStyles = 'flex space-x-2 w-min max-w-full';
+function ChooserOption({ scheduleId }: { scheduleId: string }) {
+  const schedule = useAppSelector(Schedules.selectSchedule(scheduleId));
+  if (!schedule) return null;
+  return (
+    <Listbox.Option
+      key={scheduleId}
+      value={scheduleId}
+      className="odd:bg-gray-200 even:bg-white cursor-default py-1.5 px-3"
+    >
+      <span className="flex space-x-2 w-min max-w-full">
+        <span className="flex-grow whitespace-nowrap overflow-auto">
+          {schedule.title}
+        </span>
+        <span>
+          (
+          {schedule.classes.length}
+          )
+        </span>
+      </span>
+    </Listbox.Option>
+  );
+}
 
+export interface ScheduleChooserProps {
+  chosenScheduleId: string | null;
+  handleChooseSchedule: React.Dispatch<string | null>;
+  scheduleIds: string[];
+
+  // the direction to expand the selector
+  direction: 'left' | 'center' | 'right';
+
+  // whether to show the term of the current schedule. default 'auto'.
+  // 'auto' will show the term iff the title does not include the term.
+  showTerm?: 'on' | 'off' | 'auto';
+
+  // the width of the parent container
+  parentWidth?: string;
+
+  // whether to highlight this schedule chooser. default false.
+  highlight?: boolean;
+
+  // whether to show an actual dropdown menu.
+  // ie if showing all schedules, we don't show the dropdown.
+  showDropdown?: boolean;
+}
+/**
+ * A dropdown for choosing a schedule from a list of possible schedules.
+ * @param scheduleIds the list of schedules to choose from
+ * @param chosenScheduleId the currently chosen schedule
+ * @param handleChooseSchedule the callback when a schedule is chosen
+ */
+function ScheduleChooser({
+  scheduleIds,
+  chosenScheduleId,
+  handleChooseSchedule,
+  direction,
+  showTerm = 'auto',
+  parentWidth,
+  showDropdown = false,
+  highlight = false,
+}: ScheduleChooserProps) {
   // if we're showing all schedules, don't render a dropdown menu
   // instead just have the title be clickable to select
   if (!showDropdown) {
-    if (!selectedSchedule) return <span className="text-center">No schedule selected</span>;
+    if (!chosenScheduleId) return <span className="text-center">No schedule selected</span>;
     return (
       <ButtonTitle
-        selectedSchedule={selectedSchedule}
+        chosenScheduleId={chosenScheduleId}
         showTerm={showTerm}
         highlight={highlight}
         showDropdown={false}
@@ -120,19 +173,19 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
 
   return (
     <Listbox
-      value={selectedSchedule}
-      onChange={select}
+      value={chosenScheduleId}
+      onChange={handleChooseSchedule}
       as="div"
       className="relative"
     >
       {({ open }) => (
         <>
-          {selectedSchedule
+          {chosenScheduleId
             ? (
               <div className="flex w-full">
                 <ButtonTitle
                   showTerm={showTerm}
-                  selectedSchedule={selectedSchedule}
+                  chosenScheduleId={chosenScheduleId}
                   highlight={highlight}
                   showDropdown
                 />
@@ -149,7 +202,7 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
             : (
               <Listbox.Button
                 name="Select schedule"
-                className="text-center w-full border rounded-xl py-2 interactive"
+                className="text-center w-full border rounded-xl py-1 px-2 interactive"
               >
                 Select a schedule
               </Listbox.Button>
@@ -169,25 +222,8 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
                   : '16rem',
               }}
             >
-              {schedules.length > 0 ? (
-                schedules.sort(compareSemesters).map((schedule) => (
-                  <Listbox.Option
-                    key={schedule.id}
-                    value={schedule}
-                    className="odd:bg-gray-200 even:bg-white cursor-default py-1.5 px-3"
-                  >
-                    <span className={optionStyles}>
-                      <span className="flex-grow whitespace-nowrap overflow-auto">
-                        {schedule.id}
-                      </span>
-                      <span>
-                        (
-                        {schedule.classes.length}
-                        )
-                      </span>
-                    </span>
-                  </Listbox.Option>
-                ))
+              {scheduleIds.length > 0 ? (
+                scheduleIds.map((scheduleId) => <ChooserOption key={scheduleId} scheduleId={scheduleId} />)
               ) : (
                 <Listbox.Option
                   value={null}
@@ -202,6 +238,6 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = function ({
       )}
     </Listbox>
   );
-};
+}
 
-export default ScheduleSelector;
+export default ScheduleChooser;

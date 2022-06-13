@@ -24,6 +24,7 @@ const siteInfoLinks = [
   ['Firebase', 'https://firebase.google.com/'],
   ['DigitalOcean', 'https://www.digitalocean.com/'],
   ['Vercel', 'https://vercel.com/'],
+  ['NameCheap', 'https://www.namecheap.com/'],
 ];
 
 const AboutPage: React.FC = function () {

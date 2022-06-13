@@ -1,17 +1,21 @@
-import { useEffect, useState } from 'react';
+import { DependencyList, useEffect, useState } from 'react';
 import {
-  getFirestore, DocumentReference, doc, Timestamp,
+  setDoc, deleteDoc, getDoc, onSnapshot, query, where,
 } from 'firebase/firestore';
-import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import type { UserDocument } from '../shared/firestoreTypes';
-import { getMeiliHost, getMeiliApiKey } from '../shared/util';
+import {
+  getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, User,
+} from 'firebase/auth';
+import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+import type {
+  FriendRequest, UserProfile, UserProfileWithId,
+} from '../shared/types';
+import Schema from '../shared/schema';
+import type { AppDispatch, RootState } from './store';
+import { allTruthy, getInitialSettings } from '../shared/util';
+
 
 const LG_BREAKPOINT = 1024;
 
-export function getUserRef(uid: string) {
-  return doc(getFirestore(), 'users', uid) as DocumentReference<Partial<UserDocument<Timestamp>>>;
-}
 
 export function downloadJson(filename: string, data: object | string, extension = 'json') {
   if (typeof window === 'undefined') return;
@@ -25,6 +29,27 @@ export function downloadJson(filename: string, data: object | string, extension 
   a.click();
   a.remove();
 }
+
+
+/**
+ * @param to the uid of the user to send a friend request to
+ */
+export function sendFriendRequest(from: string, to: string) {
+  return setDoc(Schema.friendRequest(from, to), {
+    from,
+    to,
+    accepted: false,
+  });
+}
+
+
+export function unfriend(from: string, to: string) {
+  return Promise.allSettled([
+    deleteDoc(Schema.friendRequest(from, to)),
+    deleteDoc(Schema.friendRequest(to, from)),
+  ]);
+}
+
 
 export function useLgBreakpoint() {
   const [isPast, setIsPast] = useState(false);
@@ -47,18 +72,124 @@ export function useLgBreakpoint() {
   return isPast;
 }
 
-export const meiliSearchClient = instantMeiliSearch(getMeiliHost(), getMeiliApiKey());
+
+export function useElapsed(ms: number, deps: DependencyList) {
+  // timer
+  const [elapsed, setElapsed] = useState(false);
+
+  useEffect(() => {
+    setElapsed(false);
+    const timeout = setTimeout(() => setElapsed(true), ms);
+    return () => clearTimeout(timeout);
+  }, deps);
+
+  return elapsed;
+}
+
 
 export async function signInUser() {
-  // we don't need any additional scopes
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({
-    hd: 'college.harvard.edu',
-  });
-  await signInWithPopup(getAuth(), provider);
+  const auth = getAuth();
+  let user: User;
+  if (process.env.NODE_ENV === 'development') {
+    const email = prompt('Enter email:')!;
+    if (!email) return;
+    const sub = Buffer.from(email).toString('base64');
+    const newUser = await signInWithCredential(auth, GoogleAuthProvider.credential(JSON.stringify({ sub, email })));
+    user = newUser.user;
+  } else {
+    // we don't need any additional scopes
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      hd: 'college.harvard.edu',
+    });
+    const newUser = await signInWithPopup(auth, provider).catch((err) => console.error('error signing in with popup:', err));
+    if (!newUser) return;
+    user = newUser.user;
+  }
+
+  await setDoc(Schema.profile(user.uid), {
+    // we assume people don't use strange characters in their academic emails
+    username: user.email!.slice(0, user.email!.lastIndexOf('@')),
+    displayName: user.displayName,
+    photoUrl: user.photoURL,
+  }, { merge: true });
+
+  await setDoc(Schema.user(user.uid), getInitialSettings(), { merge: true });
+  return user;
 }
+
+
+export async function getProfile(id: string): Promise<UserProfile & { id: string }> {
+  const cached = sessionStorage.getItem(`profile/${id}`);
+  if (cached) {
+    try {
+      const data = JSON.parse(cached);
+      if (data === null) throw new Error('invalid json');
+      return data;
+    } catch (err) {
+      console.error('invalid cached value:', cached);
+    }
+  }
+
+  const snap = await getDoc(Schema.profile(id));
+  if (!snap.exists()) {
+    throw new Error(`user ${id} not found`);
+  }
+
+  const profile = { ...snap.data()!, id };
+  sessionStorage.setItem(`profile/${id}`, JSON.stringify(profile));
+  return profile;
+}
+
+export function useProfiles(ids: string[] | undefined) {
+  const [profiles, setProfiles] = useState<Record<string, UserProfileWithId>>();
+
+  useEffect(() => {
+    if (!ids) return;
+
+    (async () => {
+      const settled = await Promise.allSettled(ids.map(getProfile));
+      const users = allTruthy(settled.map((result) => {
+        if (result.status === 'fulfilled') return result.value;
+        console.error('failed getting profiles:', result.reason);
+        return null;
+      }));
+      setProfiles(Object.fromEntries(users.map((user) => [user.id, user])));
+    })();
+  }, [ids]);
+
+  return profiles;
+}
+
+
+export function useFriendRequests(uid: string | null | undefined) {
+  const [incoming, setIncoming] = useState<(FriendRequest & { id: string })[]>([]);
+  const [outgoing, setOutgoing] = useState<(FriendRequest & { id: string })[]>([]);
+
+  useEffect(() => {
+    if (!uid) return;
+
+    const incomingQ = query(Schema.Collection.allFriends(), where('to', '==', uid));
+    const outgoingQ = query(Schema.Collection.allFriends(), where('from', '==', uid));
+
+    const unsubIn = onSnapshot(incomingQ, (snap) => setIncoming(snap.docs.map((d) => ({ ...d.data(), id: d.id }))));
+    const unsubOut = onSnapshot(outgoingQ, (snap) => setOutgoing(snap.docs.map((d) => ({ ...d.data(), id: d.id }))));
+
+    return () => {
+      unsubIn();
+      unsubOut();
+    };
+  }, [uid]);
+
+  return { incoming, outgoing };
+}
+
 
 export function handleError(err: unknown) {
   alert('An unexpected error occurred! Please try again later.');
   console.error(err);
 }
+
+
+export function useAppDispatch() { return useDispatch<AppDispatch>(); }
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

@@ -2,17 +2,19 @@ import { Disclosure } from '@headlessui/react';
 import React, { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { classNames, compareItems, compareWeekdays } from '../../shared/util';
-import { useAppSelector } from '../../src/app/hooks';
-import { selectUid } from '../../src/features/userData';
+import { Auth } from '../../src/features';
 import RefinementList, { RefinementListDemo } from './RefinementList';
 
 interface AttributeProps {
   attribute: string;
   label: string
+  showSubjectColor: boolean;
 }
 
-const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = function ({ open, attribute, label }) {
-  const user = useAppSelector(selectUid);
+const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = function ({
+  open, attribute, label, showSubjectColor,
+}) {
+  const user = Auth.useAuthProperty('uid');
 
   const [operator, setOperator] = useState<'and' | 'or'>('or');
 
@@ -52,6 +54,7 @@ const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = functio
               transformItems={(items) => items.sort(
                 attribute === 'DAY_OF_WEEK' ? compareWeekdays : compareItems,
               )}
+              showSubjectColor={showSubjectColor}
             />
           ) : (
             <RefinementListDemo />
@@ -62,14 +65,17 @@ const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = functio
   );
 };
 
-const Attribute: React.FC<AttributeProps> = function ({ attribute, label }) {
+/**
+ * Renders an expandable menu to filter a given attribute
+ * @param attribute the Meilisearch attribute to filter by
+ * @param label the text to show
+ */
+export default function Attribute({ attribute, label, showSubjectColor }: AttributeProps) {
   return (
     <Disclosure as="div">
       {({ open }) => (
-        <DisclosureChildren open={open} attribute={attribute} label={label} />
+        <DisclosureChildren open={open} attribute={attribute} label={label} showSubjectColor={showSubjectColor} />
       )}
     </Disclosure>
   );
-};
-
-export default Attribute;
+}

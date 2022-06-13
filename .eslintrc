@@ -4,8 +4,9 @@
     "es2021": true,
     "node": true
   },
+  "root": true,
   "extends": [
-    "next/core-web-vitals",
+    "plugin:@next/next/recommended",
     "plugin:react/recommended",
     "airbnb",
     "airbnb-typescript"
@@ -24,13 +25,20 @@
   },
   "plugins": ["react", "@typescript-eslint"],
   "rules": {
+    "consistent-return": "off",
     "func-names": "off",
+    "jsx-a11y/anchor-is-valid": "off",
     "max-len": "off",
     "no-alert": "off",
+    "no-await-in-loop": "off",
     "no-console": "off",
+    "no-multiple-empty-lines": ["error", { "max": 2 }],
     "no-nested-ternary": "off",
+    "no-param-reassign": "off",
+    "no-restricted-globals": "off",
     "no-restricted-syntax": "off",
     "react/jsx-props-no-spreading": "off",
-    "react/require-default-props": "off"
+    "react/require-default-props": "off",
+    "@typescript-eslint/no-use-before-define": "off"
   }
 }

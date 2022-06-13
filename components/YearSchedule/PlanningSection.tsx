@@ -1,4 +1,3 @@
-import { updateDoc } from 'firebase/firestore';
 import React, {
   useEffect, useMemo, useRef, useState,
 } from 'react';
@@ -10,7 +9,7 @@ import {
   FaChevronRight,
   FaPlus,
 } from 'react-icons/fa';
-import { DownloadPlan, Season } from '../../shared/firestoreTypes';
+import { DownloadPlan, Season } from '../../shared/types';
 import {
   allTruthy,
   classNames,
@@ -18,154 +17,32 @@ import {
   getUniqueSemesters,
   sortSchedules,
 } from '../../shared/util';
-import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
 import {
-  selectSchedule, selectSelectedSchedules, selectSchedules, clearSchedule, createSchedule,
-} from '../../src/features/schedules';
+  Auth, Planner, Profile, Schedules, Settings,
+} from '../../src/features';
 import {
-  selectExpandCards, selectSampleSchedule, selectSemesterFormat, selectShowReqs, setShowReqs, showAll, showSelected, toggleExpand,
-} from '../../src/features/semesterFormat';
-import { selectClassYear, selectUid } from '../../src/features/userData';
-import {
-  downloadJson, getUserRef, handleError, signInUser,
+  downloadJson, handleError, signInUser, useAppDispatch, useAppSelector,
 } from '../../src/hooks';
 import type { Requirement } from '../../src/requirements/util';
 import type { DragStatus } from '../Course/CourseCard';
 import UploadPlan from '../UploadPlan';
-import SemesterComponent from './SemesterDisplay';
+import SemesterComponent, { SemesterDisplayProps } from './SemesterDisplay';
 
-const HeaderSection: React.FC<{
-  totalCourses: number;
-  resizeRef: React.MutableRefObject<HTMLDivElement>;
-  downloadData: any;
-}> = function ({ totalCourses, resizeRef, downloadData }) {
+
+// render all of the user's semesters
+export default function PlanningSection({ highlightedRequirement } : { highlightedRequirement?: Requirement; }) {
   const dispatch = useAppDispatch();
-  const selectedSchedules = useAppSelector(selectSelectedSchedules);
-  const showReqs = useAppSelector(selectShowReqs);
-  const isExpanded = useAppSelector(selectExpandCards);
-  const semesterFormat = useAppSelector(selectSemesterFormat);
-  const sampleSchedule = useAppSelector(selectSampleSchedule);
-  const schedules = useAppSelector(selectSchedules);
-
-  return (
-    <div className="text-white space-y-4">
-      <div className="flex flex-col items-center justify-center lg:flex-row xl:justify-start gap-4">
-        {!showReqs && (
-        <button
-          title="Show requirements panel"
-          type="button"
-          onClick={() => dispatch(setShowReqs(true))}
-          className="interactive"
-        >
-          <FaAngleDoubleLeft />
-        </button>
-        )}
-        <span className="whitespace-nowrap">
-          Total courses:
-          {' '}
-          {totalCourses}
-          {' '}
-          / 32
-        </span>
-        <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
-          <button
-            type="button"
-            onClick={() => dispatch(toggleExpand())}
-            className={classNames(
-              isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
-              'rounded-full hover:opacity-50 p-1 border',
-            )}
-          >
-            <FaArrowsAltV />
-          </button>
-          {semesterFormat !== 'sample' && (
-            <button
-              type="button"
-              onClick={() => {
-                if (semesterFormat === 'all') {
-                  dispatch(showSelected());
-                } else {
-                  dispatch(showAll());
-                }
-              }}
-              className="py-1 px-2 bg-gray-600 interactive rounded"
-            >
-              {semesterFormat === 'all'
-                ? 'Showing all schedules'
-                : 'Showing only selected schedules'}
-            </button>
-          )}
-          <button
-            type="button"
-            className="interactive underline"
-            onClick={() => downloadJson(
-              semesterFormat === 'sample'
-                ? `Sample ${sampleSchedule?.id} - Plan Crimson`
-                : 'Selected schedules - Plan Crimson',
-              downloadData,
-            )}
-          >
-            Download all
-          </button>
-          <UploadPlan />
-          {semesterFormat !== 'sample' && (
-            <button
-              type="button"
-              className="interactive underline"
-              onClick={() => {
-                // eslint-disable-next-line no-restricted-globals
-                const yn = confirm(
-                  'Are you sure? This will remove all courses from all selected schedules!',
-                );
-                if (yn) {
-                  allTruthy(
-                    Object.values(selectedSchedules).map((id) => (id ? schedules[id] : null)),
-                  ).forEach((schedule) => dispatch(clearSchedule(schedule.id)));
-                }
-              }}
-            >
-              Reset all
-            </button>
-          )}
-        </div>
-      </div>
-      <div className="flex justify-center xl:justify-start">
-        <div
-          ref={resizeRef}
-          className="flex justify-center rounded py-1 w-24 min-w-[96px] max-w-full resize-x bg-gray-600 overflow-auto"
-        >
-          <FaArrowsAltH />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-interface SemesterDisplayInfo {
-  year: number;
-  season: Season;
-  selectedScheduleId: string | null;
-  key: string;
-  selectSchedule: React.Dispatch<string | null>;
-  highlight?: string;
-}
-
-type Props = {
-  highlightedRequirement: Requirement | undefined;
-};
-
-function PlanningSection({ highlightedRequirement } : Props) {
-  const dispatch = useAppDispatch();
+  const userId = Auth.useAuthProperty('uid');
   const {
-    userUid, classYear, semesterFormat, sampleSchedule, schedules, selectedSchedules,
+    classYear, semesterFormat, sampleSchedule, schedules: userSchedules,
   } = useAppSelector((state) => ({
-    userUid: selectUid(state),
-    classYear: selectClassYear(state),
-    semesterFormat: selectSemesterFormat(state),
-    sampleSchedule: selectSampleSchedule(state),
-    schedules: selectSchedules(state),
-    selectedSchedules: selectSelectedSchedules(state),
+    classYear: Profile.selectClassYear(state),
+    semesterFormat: Planner.selectSemesterFormat(state),
+    sampleSchedule: Planner.selectSampleSchedule(state),
+    schedules: Schedules.selectSchedules(state),
   }));
+  const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
+  const showReqs = useAppSelector(Planner.selectShowReqs);
 
   const [dragStatus, setDragStatus] = useState<DragStatus>({
     dragging: false,
@@ -212,60 +89,52 @@ function PlanningSection({ highlightedRequirement } : Props) {
     };
   }, []);
 
-  const selectNewSchedule = (year: number, season: Season, scheduleId: string | null) => dispatch(selectSchedule({
+  const chooseSchedule = (year: number, season: Season, scheduleId: string | null) => dispatch(Settings.chooseSchedule({
     term: `${year}${season}`,
     scheduleId,
   }));
 
-  const allSemesters: SemesterDisplayInfo[] = useMemo(() => {
+  // the set of columns in our table, each representing a semester
+  const columns: SemesterDisplayProps[] = useMemo(() => {
     switch (semesterFormat) {
       case 'sample':
-        return (
-          sampleSchedule?.schedules.map(({ year, season, id }) => ({
-            year,
-            season,
-            selectSchedule: (newId) => selectNewSchedule(year, season, newId),
-            key: id,
-            selectedScheduleId: id,
-            highlight: false,
-          })) || []
-        );
+        if (!sampleSchedule) return [];
+        return sampleSchedule.schedules.map(({ year, season, id }) => ({
+          semester: { year, season },
+          chosenScheduleId: id,
+          key: id,
+        }));
       case 'selected':
         if (!classYear) return [];
         return getUniqueSemesters(
           classYear,
-          Object.values(schedules),
+          ...Object.values(userSchedules),
         ).map(({ year, season }) => ({
-          year,
-          season,
-          selectedScheduleId: selectedSchedules[`${year}${season}`] || null,
-          key: year + season,
-          selectSchedule: (id) => selectNewSchedule(year, season, id),
+          key: `${year}${season}`,
+          semester: { year, season },
+          chosenScheduleId: chosenSchedules[`${year}${season}`] || null,
         }));
       case 'all':
-        return Object.values(schedules)
+        return Object.values(userSchedules)
           .sort(compareSemesters)
           .map(({ year, season, id }) => ({
-            year,
-            season,
-            selectedScheduleId: id,
             key: id,
-            selectSchedule: (newId) => selectNewSchedule(year, season, newId),
-            highlight: selectedSchedules[`${year}${season}`] || undefined,
+            semester: { year, season },
+            chosenScheduleId: id,
+            highlight: chosenSchedules[`${year}${season}`] || undefined,
           }));
       default:
         return [];
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classYear, sampleSchedule?.schedules, schedules, selectedSchedules, semesterFormat]);
+  }, [classYear, sampleSchedule?.schedules, userSchedules, chosenSchedules, semesterFormat]);
 
   const totalCourses = useMemo(
-    () => Object.values(selectedSchedules).reduce(
+    () => Object.values(chosenSchedules).reduce(
       (acc, scheduleId) => acc
-          + ((scheduleId && schedules[scheduleId]?.classes.length) || 0),
+          + ((scheduleId && userSchedules[scheduleId]?.classes.length) || 0),
       0,
     ),
-    [schedules, selectedSchedules],
+    [userSchedules, chosenSchedules],
   );
 
   const downloadData: DownloadPlan = {
@@ -273,52 +142,48 @@ function PlanningSection({ highlightedRequirement } : Props) {
       ? sampleSchedule!.id
       : Math.random().toString(16).slice(2, 18),
     schedules: allTruthy(
-      allSemesters.map(({ selectedScheduleId }) => (selectedScheduleId ? schedules[selectedScheduleId] : null)),
+      columns.map(({ chosenScheduleId }) => (chosenScheduleId ? userSchedules[chosenScheduleId] : null)),
     ),
   };
 
-  const hiddenSchedules = allTruthy(allSemesters.map(({ selectedScheduleId }) => {
-    if (!selectedScheduleId) return null;
-    const schedule = schedules[selectedScheduleId];
-    if (!schedule?.hidden) return null;
-    return schedule.id;
-  }));
-
+  // add a schedule whose semester is before the current earliest semester
   function addPrevSemester() {
-    const earliest = sortSchedules(schedules)[0];
+    if (!userId) return;
+    const earliest = sortSchedules(userSchedules)[0];
     const [season, year] = earliest.season === 'Spring'
       ? ['Fall' as Season, earliest.year - 1]
       : ['Spring' as Season, earliest.year];
-    dispatch(createSchedule({
-      id: `My ${season} ${year}`,
-      season,
-      year,
-      classes: [],
-    })).catch(handleError);
+    dispatch(Schedules.createDefaultSchedule({ season, year }, userId)).catch(handleError);
   }
 
-  console.log({ userUid });
-
   return (
-    <div className="relative bg-gray-800 md:p-4 md:rounded-lg md:shadow-lg row-start-1 md:row-auto overflow-auto max-w-full md:h-full">
-      <div className="flex flex-col space-y-4 md:h-full">
-        <HeaderSection
-          totalCourses={totalCourses}
-          resizeRef={resizeRef}
-          downloadData={downloadData}
-        />
+    <div className={classNames(
+      showReqs && 'md:rounded-lg md:shadow-lg ',
+      'relative bg-gray-800 md:p-4 row-start-1 md:row-auto overflow-auto max-w-full md:h-full',
+    )}
+    >
+      <div className="flex flex-col md:h-full">
+        <div className={userId ? 'mb-4' : 'hidden mb-4'}>
+          <HeaderSection
+            totalCourses={totalCourses}
+            resizeRef={resizeRef}
+            downloadData={downloadData}
+          />
+        </div>
 
         {/* begin semesters display */}
         <div className="relative overflow-x-auto flex-1">
           {/* on small screens, this extends as far as necessary */}
           {/* on medium screens and larger, put this into its own box */}
           <div
-            className="md:absolute md:inset-0 grid grid-flow-col rounded-t-lg md:rounded-b-lg overflow-auto"
+            className="md:absolute md:inset-0 grid grid-flow-col rounded-t-lg rounded-b-lg overflow-auto"
             ref={semestersContainerRef}
           >
+            {/* when dragging a card, drag over this area to scroll left */}
             <div ref={leftScrollRef} />
 
-            {userUid ? (
+            {/* If the user is signed in, show the semesters. Otherwise show "Sign in to get started" */}
+            {userId ? (
               <>
                 {/* add previous semester button */}
                 {semesterFormat === 'selected' && classYear && (
@@ -333,14 +198,17 @@ function PlanningSection({ highlightedRequirement } : Props) {
                   </button>
                 )}
 
-                {allSemesters.map((props) => (
+                {columns.map((column) => (
                   <SemesterComponent
                     {...{
-                      ...props,
+                      ...column,
                       colWidth,
                       dragStatus,
                       setDragStatus,
                       highlightedRequirement,
+                      handleChooseSchedule(id) {
+                        chooseSchedule(column.semester.year, column.semester.season, id);
+                      },
                     }}
                   />
                 ))}
@@ -357,6 +225,7 @@ function PlanningSection({ highlightedRequirement } : Props) {
               </div>
             )}
 
+            {/* when dragging, drag over this area to scroll right */}
             <div ref={rightScrollRef} />
           </div>
 
@@ -372,6 +241,7 @@ function PlanningSection({ highlightedRequirement } : Props) {
                 <FaChevronLeft />
               </div>
               )}
+
               {rightIntersecting || (
               <div
                 className="absolute inset-y-0 right-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
@@ -387,32 +257,152 @@ function PlanningSection({ highlightedRequirement } : Props) {
         </div>
         {/* end semesters display */}
 
-        {hiddenSchedules.length > 0 && (
-          <div className="flex text-white items-center">
-            <h3>Hidden schedules:</h3>
-            <ul className="flex items-center">
-              {hiddenSchedules.map((id) => (
-                <li key={id} className="ml-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!userUid) return;
-                      updateDoc(getUserRef(userUid), `schedules.${id}.hidden`, false).catch(handleError);
-                    }}
-                    className="interactive"
-                  >
-                    {id}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <HiddenSchedules allSemesters={columns} />
       </div>
     </div>
   );
 }
 
-// PlanningSection.whyDidYouRender = true;
 
-export default PlanningSection;
+interface HeaderSectionProps {
+  totalCourses: number;
+  resizeRef: React.MutableRefObject<HTMLDivElement>;
+  downloadData: any;
+}
+
+function HeaderSection({ totalCourses, resizeRef, downloadData }: HeaderSectionProps) {
+  const dispatch = useAppDispatch();
+  const userSchedules = useAppSelector(Schedules.selectSchedules);
+  const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
+  const showReqs = useAppSelector(Planner.selectShowReqs);
+  const isExpanded = useAppSelector(Planner.selectExpandCards);
+  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
+  const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
+
+  return (
+    <div className="text-white relative">
+      {!showReqs && (
+      <button
+        title="Show requirements panel"
+        type="button"
+        onClick={() => dispatch(Planner.setShowReqs(true))}
+        className="interactive absolute top-1 left-2"
+      >
+        <FaAngleDoubleLeft />
+      </button>
+      )}
+
+      <div className="flex flex-col items-center justify-center gap-4">
+
+        <span className="whitespace-nowrap">
+          Total courses:
+          {' '}
+          {totalCourses}
+          {' '}
+          / 32
+        </span>
+
+        <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
+          <button
+            type="button"
+            onClick={() => dispatch(Planner.toggleExpand())}
+            className={classNames(
+              isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
+              'rounded-full hover:opacity-50 p-1 border',
+            )}
+          >
+            <FaArrowsAltV />
+          </button>
+          {semesterFormat !== 'sample' && (
+            <button
+              type="button"
+              onClick={() => {
+                if (semesterFormat === 'all') {
+                  dispatch(Planner.showSelected());
+                } else {
+                  dispatch(Planner.showAll());
+                }
+              }}
+              className="py-1 px-2 bg-gray-600 interactive rounded"
+            >
+              {semesterFormat === 'all'
+                ? 'Showing all schedules'
+                : 'Showing only selected schedules'}
+            </button>
+          )}
+          <button
+            type="button"
+            className="interactive underline"
+            onClick={() => downloadJson(
+              semesterFormat === 'sample'
+                ? `Sample ${sampleSchedule?.id} - Plan Crimson`
+                : 'Selected schedules - Plan Crimson',
+              downloadData,
+            )}
+          >
+            Download all
+          </button>
+
+          <UploadPlan />
+
+          {semesterFormat !== 'sample' && (
+            <button
+              type="button"
+              className="interactive underline"
+              onClick={() => {
+                // eslint-disable-next-line no-restricted-globals
+                const yn = confirm(
+                  'Are you sure? This will remove all courses from all selected schedules!',
+                );
+                if (yn) {
+                  allTruthy(
+                    Object.values(chosenSchedules).map((id) => (id ? userSchedules[id] : null)),
+                  ).forEach((schedule) => dispatch(Schedules.clearSchedule(schedule.id)));
+                }
+              }}
+            >
+              Reset all
+            </button>
+          )}
+        </div>
+
+        <div
+          ref={resizeRef}
+          className="flex justify-center rounded py-1 w-24 min-w-[96px] max-w-full resize-x bg-gray-600 overflow-auto"
+        >
+          <FaArrowsAltH />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function HiddenSchedules({ allSemesters } : { allSemesters: SemesterDisplayProps[] }) {
+  const dispatch = useAppDispatch();
+  const hiddenScheduleIds = useAppSelector(Planner.selectHiddenIds);
+  const hiddenSchedules = allSemesters.filter(({ chosenScheduleId }) => chosenScheduleId && hiddenScheduleIds[chosenScheduleId]);
+
+  if (hiddenSchedules.length === 0) return null;
+
+  return (
+    <div className="flex text-white items-center mt-4">
+      <h3>Hidden schedules:</h3>
+      <ul className="flex items-center">
+        {hiddenSchedules.map((data) => (
+          <li key={data.chosenScheduleId! + data.semester.year + data.semester.season} className="ml-2">
+            <button
+              type="button"
+              onClick={() => {
+                dispatch(Planner.setHidden({ scheduleId: data.chosenScheduleId!, hidden: true }));
+              }}
+              className="interactive"
+            >
+              {data.chosenScheduleId}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}

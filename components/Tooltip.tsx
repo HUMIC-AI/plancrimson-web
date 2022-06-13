@@ -3,7 +3,7 @@ import { classNames } from '../shared/util';
 
 type Props = {
   text: string;
-  direction: 'bottom' | 'left';
+  direction: 'bottom' | 'left' | 'right';
 };
 
 export default function Tooltip({
@@ -21,7 +21,9 @@ export default function Tooltip({
             && 'right-full mr-2 top-1/2 transform -translate-y-1/2 w-max',
           direction === 'bottom'
             && 'top-full mt-2 left-1/2 transform -translate-x-1/2 text-center',
-          'hidden group-hover:block bg-white bg-opacity-80 border-2 shadow text-black',
+          direction === 'right'
+            && 'left-full ml-2 top-1/2 transform -translate-y-1/2 w-max',
+          'hidden group-hover:block bg-white bg-opacity-80 border-2 shadow text-black text-sm',
           'max-w-[8rem] h-min p-2 rounded-md transition-opacity',
         )}
       >

@@ -5,28 +5,53 @@ import {
   query,
   where,
 } from 'firebase/firestore';
-import {
+import type {
   Semester,
-  SEASON_ORDER,
-  Season,
-  ClassId,
   Schedule,
   DayOfWeek,
-  DAYS_OF_WEEK,
   Viability,
-  Schedules,
-  UserDocument,
-} from './firestoreTypes';
-import seasPlan from './seasPlan.json';
+  ScheduleMap,
+  UserSettings,
+} from './types';
+import subjects from './assets/subjects.json';
+import seasPlan from './assets/seasPlan.json';
 import { getSchoolYear } from '../src/requirements/util';
-import { Class, ATTRIBUTE_DESCRIPTIONS, Evaluation } from './apiTypes';
+import type { AttributeDescriptions, Class, Evaluation } from './apiTypes';
 import type { ClassCache } from '../src/features/classCache';
+import { DAYS_OF_WEEK, SEASON_ORDER } from './constants';
+
+export * from './constants';
+
+export function getInitialSettings(): UserSettings {
+  return {
+    chosenSchedules: {},
+    customTimes: {},
+    waivedRequirements: {},
+  };
+}
+
+export const ATTRIBUTE_DESCRIPTIONS: AttributeDescriptions = {
+  STRM: 'Term',
+  SUBJECT: 'Subject',
+  DAY_OF_WEEK: 'Day of week',
+  ACAD_ORG: 'Department',
+  LOCATION_DESCR_LOCATION: 'Location',
+  SSR_COMPONENTDESCR: 'Class type',
+  IS_SCL_DESCR100_HU_SCL_ATTR_LEVL: 'Level',
+};
 
 export const unsplashParams = '?utm_source=Plan+Crimson&utm_medium=referral';
 
 type HasLabel = {
   label: string;
 };
+
+export const subjectNames = Object.keys(subjects).sort();
+export const subjectIndices = Object.fromEntries(subjectNames.map((name, i) => [name, i]));
+
+export function getSubjectColor(subject: string) {
+  return `hsl(${Math.floor((subjectIndices[subject] / subjectNames.length) * 360)}, 100%, 50%)`;
+}
 
 export function compareItems(a: HasLabel, b: HasLabel) {
   if (a.label < b.label) return -1;
@@ -41,12 +66,12 @@ export function compareWeekdays(a: HasLabel, b: HasLabel) {
   );
 }
 
+/**
+ * @returns the calendar year and season that this course takes place
+ */
 export function getSemester(course: Class) {
-  const season = course.STRM === '2222'
-    ? 'Spring'
-    : ((course.STRM === '2218'
-      ? 'Fall'
-      : course.IS_SCL_DESCR_IS_SCL_DESCRH) as Season);
+  if (course.STRM in termToSeasonMap) return termToSeasonMap[course.STRM];
+  const season = course.IS_SCL_DESCR_IS_SCL_DESCRH.split(' ')[1];
   const academicYear = parseInt(course.ACAD_YEAR, 10);
   const year = season === 'Fall' ? academicYear - 1 : academicYear;
   return { year, season };
@@ -62,11 +87,12 @@ export function classNames(...classes: (string | boolean)[]) {
     );
 }
 
+// Returns all the truthy items in a list.
 export function allTruthy<T>(list: T[]) {
-  return list.filter(Boolean).map((val) => val!);
+  return list.filter(Boolean) as NonNullable<T>[];
 }
 
-export function getClassId(course: Class): ClassId {
+export function getClassId(course: Class): string {
   return course.Key.replace(/[^a-zA-Z0-9-_]/g, '-');
 }
 
@@ -78,6 +104,7 @@ export function getNumCredits(course: Class) {
   return parseInt(course.HU_UNITS_MIN, 10);
 }
 
+// compare semesters a and b chronologically, breaking ties with id.
 export function compareSemesters(a: Semester, b: Semester) {
   if (a.year !== b.year) return a.year - b.year;
   const seasonDiff = SEASON_ORDER[a.season] - SEASON_ORDER[b.season];
@@ -108,10 +135,11 @@ export function getDefaultSemesters(classYear: number) {
 
 /**
  * @param classYear the user's graduation year
- * @param semesters the list of the user's semesters
- * @returns a set of the user's semesters
+ * @param semesters the list of additional semesters to add
+ * @returns the union of the default semesters for the given class year
+ * and the given semesters, sorted in chronological order
  */
-export function getUniqueSemesters(classYear: number, semesters: Semester[]) {
+export function getUniqueSemesters(classYear: number, ...semesters: Semester[]) {
   const defaultSemesters = getDefaultSemesters(classYear);
   semesters.forEach(({ year, season }) => {
     // if this semester has not yet been added
@@ -126,21 +154,20 @@ export function getUniqueSemesters(classYear: number, semesters: Semester[]) {
   return defaultSemesters.sort(compareSemesters);
 }
 
-export function sortSchedules(schedules: Schedules) {
+export function sortSchedules(schedules: ScheduleMap) {
   return Object.values(schedules).sort(compareSemesters);
 }
 
 export function getSchedulesBySemester(
-  schedules: Schedules,
-  targetYear: number,
-  targetSeason: Season,
+  schedules: ScheduleMap,
+  semester: Semester,
 ) {
   return sortSchedules(schedules).filter(
-    ({ year, season }) => year === targetYear && season === targetSeason,
+    ({ year, season }) => year === semester.year && season === semester.season,
   );
 }
 
-export function getAllClassIds(schedules: Schedule[]) {
+export function getAllClassIds(schedules: Schedule[]): string[] {
   return schedules.flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
 }
 
@@ -154,6 +181,10 @@ function mapSome(val: string | string[], fn: (arg: string) => boolean) {
   return typeof val === 'string' ? fn(val) : val.some(fn);
 }
 
+/**
+ * Check if two classes conflict, i.e. cannot be taken at the same time.
+ * @returns true if the two classes overlap
+ */
 function doesConflict(class1: Class, class2: Class) {
   return DAYS_OF_WEEK.some((day) => {
     if (
@@ -172,8 +203,13 @@ function doesConflict(class1: Class, class2: Class) {
   });
 }
 
-export function findConflicts(classes: Class[]): Record<ClassId, ClassId[]> {
-  const conflicts: Record<ClassId, ClassId[]> = {};
+/**
+ * Check for time conflicts between classes in a list.
+ * @param classes the list of classes to search for conflicts between.
+ * @returns A map from class uids to the list of uids that the class conflicts with.
+ */
+export function findConflicts(classes: Class[]): Record<string, string[]> {
+  const conflicts: Record<string, string[]> = {};
   classes.forEach((cls) => {
     conflicts[getClassId(cls)] = [];
   });
@@ -192,23 +228,32 @@ export function findConflicts(classes: Class[]): Record<ClassId, ClassId[]> {
 }
 
 export interface ErrorData {
-  sender?: string;
-  errors: string[];
+  sender?: string; // the id of the object raising this error
+  errors: string[]; // the errors returned
 }
 
-export function checkViable(
+/**
+ * Check if it is viable for a given user to take a given class during a given semester.
+ * @param cls The class to be added.
+ * @param schedule the schedule to add it to.
+ * @param classYear the user's graduation year
+ * @param classCache A map from class uids to objects.
+ * @returns a tuple containing the viability and the reason.
+ */
+export function checkViable({
+  cls, schedule, classYear, classCache,
+}: {
   cls: Class,
-  querySemester: Semester,
-  data: UserDocument<string>,
+  schedule: Schedule,
+  classYear: number,
   classCache: ClassCache,
-): ViabilityResponse {
+}): ViabilityResponse {
   const { year, season } = getSemester(cls);
 
-  const selectedSchedule = data.selectedSchedules[`${querySemester.year}${querySemester.season}`];
-  if (selectedSchedule && data.schedules[selectedSchedule]) {
+  if (schedule) {
     const conflicts = findConflicts(allTruthy([
       cls,
-      ...data.schedules[selectedSchedule].classes.map(
+      ...schedule.classes.map(
         ({ classId }) => classCache[classId],
       ),
     ]));
@@ -224,17 +269,17 @@ export function checkViable(
     }
   }
 
-  if (year === querySemester.year && season === querySemester.season) {
+  if (year === schedule.year && season === schedule.season) {
     return {
       viability: 'Yes',
-      reason: `This course is offered in ${querySemester.season} ${querySemester.year} in my.harvard.`,
+      reason: `This course is offered in ${schedule.season} ${schedule.year} in my.harvard.`,
     };
   }
 
   if (
     cls.SUBJECT === 'FRSEMR'
-    && data.classYear
-    && getSchoolYear(querySemester, data.classYear) > 1
+    && classYear
+    && getSchoolYear({ year: schedule.year, season: schedule.season }, classYear) > 1
   ) {
     return {
       viability: 'No',
@@ -257,57 +302,67 @@ export function checkViable(
   if (foundInSeasPlan) {
     const matchesSemester = foundInSeasPlan.semesters.find(
       (plannedSemester) => (plannedSemester.term === 'Spring'
-          && querySemester.season === 'Spring'
-          && plannedSemester.academicYear + 1 === querySemester.year)
+          && schedule.season === 'Spring'
+          && plannedSemester.academicYear + 1 === schedule.year)
         || (plannedSemester.term === 'Fall'
-          && querySemester.season === 'Fall'
-          && plannedSemester.academicYear === querySemester.year),
+          && schedule.season === 'Fall'
+          && plannedSemester.academicYear === schedule.year),
     );
 
     if (matchesSemester?.offeredStatus === 'No') {
       return {
         viability: 'No',
-        reason: `This course will not be offered in ${querySemester.season} ${querySemester.year} according to the SEAS Four Year Plan.`,
+        reason: `This course will not be offered in ${schedule.season} ${schedule.year} according to the SEAS Four Year Plan.`,
       };
     }
 
     if (matchesSemester?.offeredStatus === 'Yes') {
       return {
         viability: 'Yes',
-        reason: `This course will be offered in ${querySemester.season} ${querySemester.year} according to the SEAS Four Year Plan.`,
+        reason: `This course will be offered in ${schedule.season} ${schedule.year} according to the SEAS Four Year Plan.`,
         instructors: matchesSemester.instructors,
       };
     }
 
     return {
       viability: 'Unlikely',
-      reason: `${querySemester.season} ${querySemester.year} is not listed in this course's offerings in the SEAS Four Year Plan.`,
+      reason: `${schedule.season} ${schedule.year} is not listed in this course's offerings in the SEAS Four Year Plan.`,
     };
   }
 
-  if (season === querySemester.season) {
+  if (season === schedule.season) {
     return {
       viability: 'Likely',
-      reason: `This course is usually offered in the ${querySemester.season.toLowerCase()}.`,
+      reason: `This course is usually offered in the ${schedule.season.toLowerCase()}.`,
     };
   }
 
   return {
     viability: 'Unlikely',
-    reason: `This course is not usually offered in the ${querySemester.season.toLowerCase()}.`,
+    reason: `This course is not usually offered in the ${schedule.season.toLowerCase()}.`,
   };
 }
 
-export function termNumberToSeason(label: string) {
-  if (label === '2222') return 'Spring';
-  if (label === '2218') return 'Fall';
-  return label;
-}
+// ENSURE that this does NOT contain any school terms that are NOT stored in the database.
+// on the planning page, clicking on the "add course" plus button will filter for the matching term,
+// and so will return nothing for any terms that are included here but which are not yet stored
+// in the database.
+export const termToSeasonMap: Record<string, Semester> = {
+  2218: { year: 2021, season: 'Fall' },
+  2222: { year: 2022, season: 'Spring' },
+  2228: { year: 2022, season: 'Fall' },
+  2232: { year: 2023, season: 'Spring' },
+};
 
 export function adjustAttr(attr: string) {
   return ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr;
 }
 
+/**
+ * Fetches from Firestore all the evaluations for a given course.
+ * @param courseName The name of the course to get evaluations for.
+ * @returns The evaluations for a given course.
+ */
 export async function getEvaluations(courseName: string) {
   const evaluations = await getDocs(
     query(
@@ -334,30 +389,6 @@ export function getEvaluationId(evaluation: Evaluation) {
     .map((val) => val || 'UNKNOWN')
     .join('-')
     .replace(/[^a-zA-Z0-9]/g, '-');
-}
-
-export function getMeiliHost() {
-  const host = process.env.NODE_ENV === 'production'
-    ? process.env.NEXT_PUBLIC_MEILI_IP
-    : (process.env.NEXT_PUBLIC_DEV_MEILI_IP || 'http://127.0.0.1:7700');
-
-  if (!host) {
-    throw new Error('must configure the MEILI_IP environment variable');
-  }
-
-  return host;
-}
-
-export function getMeiliApiKey() {
-  const key = process.env.NEXT_PUBLIC_MEILI_API_KEY;
-
-  if (process.env.NODE_ENV === 'production' && !key) {
-    throw new Error(
-      'must configure the MeiliSearch API key through the NEXT_PUBLIC_MEILI_API_KEY environment variable',
-    );
-  }
-
-  return key;
 }
 
 export function throwMissingContext<T>(): T {

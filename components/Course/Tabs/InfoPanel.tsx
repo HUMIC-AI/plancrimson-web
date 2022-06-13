@@ -20,12 +20,20 @@ import {
   ClassTime,
   Location,
 } from '../CourseComponents';
-import departments from '../../../src/departments.json';
+import departments from '../../../shared/assets/departments.json';
 import Tooltip from '../../Tooltip';
 
+/**
+ * The "More Info" panel in a course modal.
+ * @param course The course that's being displayed in the modal
+ */
 const InfoPanel: React.FC<{ course: ExtendedClass }> = function ({ course }) {
   return (
     <Tab.Panel>
+      <p className="max-w-lg mb-4">
+        {course.textDescription || 'No description'}
+      </p>
+
       {/* Class information */}
       <div className="grid grid-cols-[auto_1fr] items-center gap-y-2 gap-x-4">
         <Instructors course={course} />

@@ -2,7 +2,7 @@ import { Tab } from '@headlessui/react';
 import React, { useMemo } from 'react';
 import useSWR from 'swr';
 import { ExtendedClass, Evaluation } from '../../../shared/apiTypes';
-import { Season } from '../../../shared/firestoreTypes';
+import { Season } from '../../../shared/types';
 import {
   getEvaluations,
   compareSemesters,
@@ -10,16 +10,14 @@ import {
 } from '../../../shared/util';
 import EvaluationComponent from './EvaluationComponent';
 
-const EvaluationsPanel: React.FC<{ course: ExtendedClass }> = function ({
-  course,
-}) {
+export default function EvaluationsPanel({ course }: { course: ExtendedClass }) {
   const { data: evaluations, error } = useSWR(
     course ? course.SUBJECT + course.CATALOG_NBR : null,
     getEvaluations,
   );
 
-  if (error && error.code !== 'permission-denied') {
-    console.error(error);
+  if (error) {
+    console.error('Error fetching evaluations', error);
   }
 
   const allEvals = useMemo(() => {
@@ -95,6 +93,4 @@ const EvaluationsPanel: React.FC<{ course: ExtendedClass }> = function ({
         ))}
     </Tab.Panel>
   );
-};
-
-export default EvaluationsPanel;
+}

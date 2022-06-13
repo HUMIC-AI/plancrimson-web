@@ -1,9 +1,9 @@
 import { Dialog } from '@headlessui/react';
-import { DownloadPlan, SEASON_ORDER } from '../shared/firestoreTypes';
-import { allTruthy } from '../shared/util';
-import { useAppDispatch } from '../src/app/hooks';
-import { useModal } from '../src/features/modal';
-import { createSchedule } from '../src/features/schedules';
+import type { DownloadPlan } from '../shared/types';
+import { allTruthy, SEASON_ORDER } from '../shared/util';
+import { useModal } from '../src/context/modal';
+import { Schedules } from '../src/features';
+import { useAppDispatch } from '../src/hooks';
 
 function UploadForm() {
   const dispatch = useAppDispatch();
@@ -24,21 +24,15 @@ function UploadForm() {
       const results = await Promise.allSettled(
         schedules.map(async (schedule) => {
           if (
-            typeof schedule.id !== 'string'
+            typeof schedule.title !== 'string'
             || !Array.isArray(schedule.classes)
             || typeof schedule.year !== 'number'
             || !(schedule.season in SEASON_ORDER)
           ) {
-            throw new Error(`${schedule.id} invalid or missing fields`);
+            throw new Error(`${schedule.title} invalid or missing fields`);
           }
-          return dispatch(createSchedule({
-            season: schedule.season,
-            year: schedule.year,
-            classes: schedule.classes,
-            id: `${schedule.id}`,
-            force: true,
-          })).catch((err) => {
-            throw new Error(`${schedule.id} threw error ${err.message}`);
+          return dispatch(Schedules.createSchedule(schedule)).catch((err) => {
+            throw new Error(`${schedule.title} threw error ${err.message}`);
           });
         }),
       );

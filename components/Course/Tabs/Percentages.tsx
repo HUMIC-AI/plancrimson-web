@@ -11,7 +11,11 @@ const colors = [
 
 type Props = { categories: number[] | null };
 
-const Percentages: React.FC<Props> = function ({ categories: allCategories }) {
+/**
+ * A sequence of colored bars with widths proportional to their values
+ * @param categories a list of numbers
+ */
+export default function Percentages({ categories: allCategories }: Props) {
   if (!allCategories) return <p>Unknown</p>;
 
   const total = allCategories.reduce((acc, val) => acc + val, 0);
@@ -37,18 +41,11 @@ const Percentages: React.FC<Props> = function ({ categories: allCategories }) {
             {rec}
           </span>
           <span className="hidden group-hover:block w-28 absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white rounded-md py-1 px-2">
-            {rec}
-            {' '}
-            students voted
-            {allCategories.length - i}
-            /
-            {allCategories.length}
+            {`${rec} students voted ${allCategories.length - i}/${allCategories.length}`}
           </span>
         </div>
         ),
       )}
     </div>
   );
-};
-
-export default Percentages;
+}

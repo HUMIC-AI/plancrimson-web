@@ -3,30 +3,29 @@ import React from 'react'; // useEffect, useRef, useState,
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
-import { classNames, getClassId } from '../../shared/util';
+import { classNames, DAY_SHORT, getClassId } from '../../shared/util';
 import CourseCard from '../Course/CourseCard';
-import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
-import { selectExpandCards, toggleExpand } from '../../src/features/semesterFormat';
-import { useModal } from '../../src/features/modal';
-import sampleCourses from './sampleCourses.json';
+import { useModal } from '../../src/context/modal';
+import sampleCourses from '../../shared/assets/sampleCourses.json';
 import { alertSignIn } from './searchUtils';
-import { DAY_SHORT } from '../../shared/firestoreTypes';
-import useSelectedScheduleContext from '../../src/context/selectedSchedule';
+import useChosenScheduleContext from '../../src/context/selectedSchedule';
 import useSearchState from '../../src/context/searchState';
+import { useAppDispatch, useAppSelector } from '../../src/hooks';
+import { Planner } from '../../src/features';
 
-type ButtonProps = {
+interface ButtonProps {
   onClick: () => void;
   enabled: boolean;
   direction: 'up' | 'down';
-};
+}
 
-const CustomButton: React.FC<ButtonProps> = function ({
+function CustomButton({
   onClick,
   enabled,
   direction,
-}) {
+}: ButtonProps) {
   const dispatch = useAppDispatch();
-  const isExpanded = useAppSelector(selectExpandCards);
+  const isExpanded = useAppSelector(Planner.selectExpandCards);
 
   return (
     <div className="relative">
@@ -47,7 +46,7 @@ const CustomButton: React.FC<ButtonProps> = function ({
       </button>
       <button
         type="button"
-        onClick={() => dispatch(toggleExpand())}
+        onClick={() => dispatch(Planner.toggleExpand())}
         className={classNames(
           'bg-gray-800 text-white',
           'rounded-full interactive py-1 px-3 absolute inset-y-0 left-full ml-4',
@@ -58,7 +57,7 @@ const CustomButton: React.FC<ButtonProps> = function ({
       </button>
     </div>
   );
-};
+}
 
 export const HitsComponent: React.FC<
 InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
@@ -72,7 +71,7 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
 }) {
   const { showCourse } = useModal();
   const { oneCol } = useSearchState();
-  const { selectedSchedule } = useSelectedScheduleContext();
+  const { chosenScheduleId } = useChosenScheduleContext();
 
   return (
     <div className="space-y-6 flex flex-col items-center">
@@ -93,7 +92,7 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
             <CourseCard
               key={getClassId(hit)}
               course={hit}
-              selectedSchedule={selectedSchedule}
+              chosenScheduleId={chosenScheduleId}
               handleExpand={() => showCourse(hit)}
               inSearchContext={inSearch}
             />

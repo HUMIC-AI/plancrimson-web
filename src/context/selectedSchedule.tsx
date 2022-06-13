@@ -2,48 +2,46 @@ import { useRouter } from 'next/router';
 import React, {
   createContext, Dispatch, PropsWithChildren, useContext, useMemo,
 } from 'react';
-import { Schedule } from '../../shared/firestoreTypes';
-import { useAppSelector } from '../app/hooks';
-import { selectSchedules } from '../features/schedules';
 
-interface SelectedScheduleContextType {
-  selectedSchedule: Schedule | null;
-  selectSchedule: Dispatch<Schedule | null>;
+interface ChosenScheduleContextType {
+  chosenScheduleId: string | null;
+  chooseSchedule: Dispatch<string | null>;
 }
 
-export const SelectedScheduleContext = createContext<SelectedScheduleContextType>({
-  selectSchedule: () => null,
-  selectedSchedule: null,
+/**
+ * Passes down a global chosen schedule for use with deeply nested Instantsearch components.
+ */
+export const ChosenScheduleContext = createContext<ChosenScheduleContextType>({
+  chooseSchedule: () => null,
+  chosenScheduleId: null,
 });
 
 export function SelectedScheduleProvider({ children }: PropsWithChildren<{}>) {
-  const schedules = useAppSelector(selectSchedules);
   const { query, pathname, replace } = useRouter();
-  const { selected } = query;
+  const { selected: chosenScheduleId } = query;
 
-  const context = useMemo<SelectedScheduleContextType>(
+  const context = useMemo<ChosenScheduleContextType>(
     () => ({
-      selectedSchedule:
-        (typeof selected === 'string' && schedules[selected]) || null,
+      chosenScheduleId: typeof chosenScheduleId === 'string' ? chosenScheduleId : null,
       // see https://nextjs.org/docs/api-reference/next/link#with-url-object
-      selectSchedule(schedule) {
-        if (schedule) {
-          replace({ pathname, query: { selected: schedule.id } });
+      chooseSchedule(scheduleId) {
+        if (scheduleId) {
+          replace({ pathname, query: { selected: scheduleId } });
         } else {
           replace(pathname);
         }
       },
     }),
-    [selected, schedules, pathname],
+    [chosenScheduleId, replace, pathname],
   );
 
   return (
-    <SelectedScheduleContext.Provider value={context}>
+    <ChosenScheduleContext.Provider value={context}>
       {children}
-    </SelectedScheduleContext.Provider>
+    </ChosenScheduleContext.Provider>
   );
 }
 
-const useSelectedScheduleContext = () => useContext(SelectedScheduleContext);
+const useChosenScheduleContext = () => useContext(ChosenScheduleContext);
 
-export default useSelectedScheduleContext;
+export default useChosenScheduleContext;

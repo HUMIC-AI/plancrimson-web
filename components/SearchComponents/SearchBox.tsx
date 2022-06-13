@@ -5,20 +5,20 @@ import React, { Fragment } from 'react';
 import type { SearchBoxProvided } from 'react-instantsearch-core';
 import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
 import Attribute from './Attribute';
-import ScheduleSelector from '../ScheduleSelector';
-import { classNames, sortSchedules } from '../../shared/util';
-import { ATTRIBUTE_DESCRIPTIONS, Class } from '../../shared/apiTypes';
+import ScheduleChooser from '../ScheduleSelector';
+import { ATTRIBUTE_DESCRIPTIONS, classNames, sortSchedules } from '../../shared/util';
 import Stats, { StatsComponent } from './Stats';
 import StateResults, { StateResultsComponent } from './StateResults';
-import { useAppDispatch, useAppSelector } from '../../src/app/hooks';
-import { selectUid } from '../../src/features/userData';
 import { alertSignIn } from './searchUtils';
-import { selectShowAttributes, setShowAttributes } from '../../src/features/semesterFormat';
-import { selectSchedules } from '../../src/features/schedules';
-import useSelectedScheduleContext from '../../src/context/selectedSchedule';
-import { useLgBreakpoint } from '../../src/hooks';
+import useChosenScheduleContext from '../../src/context/selectedSchedule';
+import { useAppDispatch, useAppSelector, useLgBreakpoint } from '../../src/hooks';
+import { Auth, Planner, Schedules } from '../../src/features';
+import type { Class } from '../../shared/apiTypes';
 
-const AttributeMenuDropdown = function () {
+
+type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean };
+
+function AttributeMenuDropdown() {
   return (
     <div className="relative">
       <Disclosure as={Fragment}>
@@ -43,6 +43,7 @@ const AttributeMenuDropdown = function () {
                   attribute={attr}
                   key={attr}
                   label={ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr}
+                  showSubjectColor={false}
                 />
               ))}
               <span className="text-white text-xs p-1">
@@ -55,19 +56,21 @@ const AttributeMenuDropdown = function () {
       </Disclosure>
     </div>
   );
-};
+}
 
-const SearchBar: React.FC<SearchBoxProvided> = function ({
+
+function SearchBar({
   currentRefinement,
   refine,
   isSearchStalled,
-}) {
+  scheduleChooser = true,
+}: SearchBoxProps) {
   const dispatch = useAppDispatch();
-  const schedules = useAppSelector(selectSchedules);
-  const user = useAppSelector(selectUid);
-  const showAttributes = useAppSelector(selectShowAttributes);
+  const schedules = useAppSelector(Schedules.selectSchedules);
+  const uid = Auth.useAuthProperty('uid');
+  const showAttributes = useAppSelector(Planner.selectShowAttributes);
   const isLg = useLgBreakpoint();
-  const { selectSchedule, selectedSchedule } = useSelectedScheduleContext();
+  const { chooseSchedule, chosenScheduleId } = useChosenScheduleContext();
 
   return (
     <div className="flex flex-col space-y-1 w-full">
@@ -76,12 +79,13 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
         {isLg && !showAttributes && (
         <button
           type="button"
-          onClick={() => dispatch(setShowAttributes(true))}
+          onClick={() => dispatch(Planner.setShowAttributes(true))}
           className="interactive"
         >
           <FaAngleDoubleRight />
         </button>
         )}
+
         <input
           type="search"
           placeholder="Search classes"
@@ -98,22 +102,26 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
             'focus:outline-none focus:shadow-lg shadow transition-shadow',
           )}
         />
+
+        {scheduleChooser && (
         <div className="hidden sm:block">
-          <ScheduleSelector
-            schedules={sortSchedules(schedules)}
-            selectSchedule={selectSchedule}
-            selectedSchedule={selectedSchedule}
+          <ScheduleChooser
+            scheduleIds={sortSchedules(schedules).map((schedule) => schedule.id)}
+            handleChooseSchedule={chooseSchedule}
+            chosenScheduleId={chosenScheduleId}
             direction="left"
             showDropdown
           />
         </div>
+        )}
+
         {!isLg && <AttributeMenuDropdown />}
       </div>
       {/* end box containing search bar and attribute menu */}
 
       {/* caption text */}
       <div className="flex flex-wrap text-xs space-x-2 text-gray-400">
-        {user ? (
+        {uid ? (
           <>
             {isSearchStalled && <span>Loading...</span>}
             <Stats />
@@ -129,32 +137,34 @@ const SearchBar: React.FC<SearchBoxProvided> = function ({
       {/* end caption text */}
     </div>
   );
-};
+}
 
-export const SearchBoxComponent: React.FC<SearchBoxProvided> = function (
-  props,
-) {
-  const schedules = useAppSelector(selectSchedules);
-  const { selectSchedule, selectedSchedule } = useSelectedScheduleContext();
+
+export function SearchBoxComponent({ scheduleChooser = true, ...props }: SearchBoxProps) {
+  const schedules = useAppSelector(Schedules.selectSchedules);
+  const { chooseSchedule: selectSchedule, chosenScheduleId: selectedSchedule } = useChosenScheduleContext();
 
   return (
     <div className="flex flex-col space-y-4 items-start">
       <div className="flex space-x-4 w-full">
-        <SearchBar {...props} />
+        <SearchBar {...props} scheduleChooser={scheduleChooser} />
       </div>
 
+      {scheduleChooser && (
       <div className="sm:hidden relative">
-        <ScheduleSelector
-          schedules={sortSchedules(schedules)}
-          selectSchedule={selectSchedule}
-          selectedSchedule={selectedSchedule}
+        <ScheduleChooser
+          scheduleIds={sortSchedules(schedules).map((schedule) => schedule.id)}
+          handleChooseSchedule={selectSchedule}
+          chosenScheduleId={selectedSchedule}
           direction="right"
           showDropdown
         />
       </div>
+      )}
     </div>
   );
-};
+}
+
 
 export function SearchBoxDemo() {
   return (
@@ -166,4 +176,5 @@ export function SearchBoxDemo() {
   );
 }
 
-export default connectSearchBox(SearchBoxComponent);
+
+export default connectSearchBox<SearchBoxProps>(SearchBoxComponent);

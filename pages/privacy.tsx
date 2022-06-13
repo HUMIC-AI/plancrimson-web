@@ -1,6 +1,6 @@
 import ExternalLink from '../components/ExternalLink';
 import Layout from '../components/Layout/Layout';
-import departmentImages from '../components/Course/departmentImages.json';
+import departmentImages from '../shared/assets/departmentImages.json';
 import { unsplashParams } from '../shared/util';
 
 const PrivacyPage = function () {

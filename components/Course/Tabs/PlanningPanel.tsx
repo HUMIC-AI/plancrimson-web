@@ -8,64 +8,107 @@ import {
   FaSmile,
 } from 'react-icons/fa';
 import { ExtendedClass } from '../../../shared/apiTypes';
-import { Schedule } from '../../../shared/firestoreTypes';
+import { Schedule } from '../../../shared/types';
 import {
   sortSchedules,
   getClassId,
   classNames,
   checkViable,
 } from '../../../shared/util';
-import { useAppDispatch, useAppSelector } from '../../../src/app/hooks';
-import { selectClassCache } from '../../../src/features/classCache';
-import {
-  addCourse, removeCourses, selectScheduleData, selectSchedules,
-} from '../../../src/features/schedules';
-import { selectClassYear, selectLastLoggedIn } from '../../../src/features/userData';
+import { ClassCache, Profile, Schedules } from '../../../src/features';
+import { useAppSelector, useAppDispatch } from '../../../src/hooks';
 import Tooltip from '../../Tooltip';
 
-const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass }> = function ({ schedule, course }) {
+/**
+ * The planning panel in the course modal. Returns a Tab.Panel.
+ * @param course The course that's currently displayed in the modal
+ */
+export default function PlanningPanel({ course }: { course: ExtendedClass }) {
+  const schedules = useAppSelector(Schedules.selectSchedules);
+
+  if (Object.keys(schedules).length === 0) {
+    return (
+      <Tab.Panel>
+        <p>
+          Get started by
+          {' '}
+          <Link href="/">
+            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+            <a className="font-bold interactive">
+              creating a schedule
+            </a>
+          </Link>
+          !
+        </p>
+      </Tab.Panel>
+    );
+  }
+
+  return (
+    <Tab.Panel>
+      <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
+        {sortSchedules(schedules).map((schedule) => (
+          <ScheduleRow
+            key={schedule.title}
+            course={course}
+            schedule={schedule}
+          />
+        ))}
+      </div>
+    </Tab.Panel>
+  );
+}
+
+/**
+ * For a given user schedule, shows the schedule title, semester,
+ * and a switch to add this course to that schedule
+ * @param schedule The schedule
+ * @param course The course currently open in a modal
+ */
+function ScheduleRow({ schedule, course }: { schedule: Schedule; course: ExtendedClass }) {
   const dispatch = useAppDispatch();
-  const scheduleData = useAppSelector(selectScheduleData);
-  const classCache = useAppSelector(selectClassCache);
-  const classYear = useAppSelector(selectClassYear);
-  const lastLoggedIn = useAppSelector(selectLastLoggedIn);
+  const classCache = useAppSelector(ClassCache.selectClassCache);
+  const classYear = useAppSelector(Profile.selectClassYear);
 
   const enabled = !!schedule.classes.find(
     ({ classId }) => classId === getClassId(course),
   );
-  const viabilityStatus = useMemo(() => {
-    const semester = { year: schedule.year, season: schedule.season };
-    return checkViable(course, semester, { ...scheduleData, classYear, lastLoggedIn }, classCache);
-  }, [schedule.year, schedule.season, course, scheduleData, classYear, lastLoggedIn, classCache]);
 
-  const handleSwitch = (checked: boolean) => {
+  const viabilityStatus = useMemo(() => (classYear ? checkViable({
+    cls: course, schedule, classYear, classCache,
+  }) : null), [course, schedule, classYear, classCache]);
+
+  if (viabilityStatus === null) return null;
+
+  function handleSwitch(checked: boolean) {
     if (checked) {
-      if (viabilityStatus.viability === 'No') {
+      if (viabilityStatus !== null && viabilityStatus.viability === 'No') {
         alert('This course is not being offered in this semester!');
       } else {
-        dispatch(addCourse([{
-          classId: getClassId(course),
+        dispatch(Schedules.addCourses({
+          courses: [{ classId: getClassId(course) }],
           scheduleId: schedule.id,
-        }]));
+        }));
       }
     } else {
-      dispatch(removeCourses([{
-        classId: getClassId(course),
+      dispatch(Schedules.removeCourses({
+        courseIds: [getClassId(course)],
         scheduleId: schedule.id,
-      }]));
+      }));
     }
-  };
+  }
 
   return (
-    <Fragment key={schedule.id}>
+    <>
       <span className="font-semibold max-w-[12rem] sm:max-w-[24rem] overflow-hidden text-ellipsis">
-        {schedule.id}
+        {schedule.title}
       </span>
       <span className="text-gray-600">{`${schedule.season} ${schedule.year}`}</span>
       <div className="flex flex-row-reverse relative">
         {/* Code from https://headlessui.dev/react/switch */}
         <Switch
           checked={enabled}
+          // eslint-disable-next-line react/jsx-no-bind
           onChange={handleSwitch}
           className={classNames(
             enabled ? 'bg-teal-600' : 'bg-teal-900',
@@ -102,41 +145,6 @@ const ScheduleRow: React.FC<{ schedule: Schedule; course: ExtendedClass }> = fun
           </Tooltip>
         </div>
       </div>
-    </Fragment>
+    </>
   );
-};
-
-const PlanningPanel: React.FC<{ course: ExtendedClass }> = function ({
-  course,
-}) {
-  const schedules = useAppSelector(selectSchedules);
-  return (
-    <Tab.Panel>
-      {Object.keys(schedules).length > 0 ? (
-        <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
-          {sortSchedules(schedules).map((schedule) => (
-            <ScheduleRow
-              key={schedule.id}
-              course={course}
-              schedule={schedule}
-            />
-          ))}
-        </div>
-      ) : (
-        <p>
-          Get started by
-          {' '}
-          <Link href="/schedule">
-            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-            <a className="font-bold interactive">
-              creating a schedule
-            </a>
-          </Link>
-          !
-        </p>
-      )}
-    </Tab.Panel>
-  );
-};
-
-export default PlanningPanel;
+}

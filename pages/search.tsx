@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { Configure, InstantSearch } from 'react-instantsearch-dom';
 import qs from 'qs';
-import { meiliSearchClient } from '../src/hooks';
+import { useAppSelector, useElapsed } from '../src/hooks';
 
 // components
-import Layout from '../components/Layout/Layout';
+import Layout, { errorMessages, ErrorPage, LoadingPage } from '../components/Layout/Layout';
 import SearchBox, {
   SearchBoxDemo,
 } from '../components/SearchComponents/SearchBox';
@@ -14,56 +14,87 @@ import CurrentRefinements, {
 } from '../components/SearchComponents/CurrentRefinements';
 import SortBy, { SortByDemo } from '../components/SearchComponents/SortBy';
 import useSearchState from '../src/context/searchState';
-import { useAppSelector } from '../src/app/hooks';
-import { selectUid } from '../src/features/userData';
-import { selectShowAttributes } from '../src/features/semesterFormat';
 import AttributeMenu from '../components/SearchComponents/AttributeMenu';
+import { Planner, Auth } from '../src/features';
+import { useMeiliClient } from '../src/meili';
 
 // we show a demo if the user is not logged in,
 // but do not allow them to send requests to the database
-const SearchPage = function () {
-  const user = useAppSelector(selectUid);
-  const showAttributes = useAppSelector(selectShowAttributes);
+export default function SearchPage() {
+  const userId = Auth.useAuthProperty('uid');
+  const { client, error } = useMeiliClient(userId);
+  const showAttributes = useAppSelector(Planner.selectShowAttributes);
   const { searchState, setSearchState } = useSearchState();
+  const elapsed = useElapsed(5000, []);
 
   useEffect(() => {
-    if (!user || typeof window === 'undefined') return;
+    if (!userId || typeof window === 'undefined') return;
     const stateFromQuery = qs.parse(window.location.search.slice(1));
     process.nextTick(() => setSearchState((prev: any) => ({ ...prev, ...stateFromQuery })));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [userId]);
+
+  if (typeof userId === 'undefined') {
+    if (elapsed) return <LoadingPage />;
+    return <Layout />;
+  }
+
+  if (userId === null) {
+    return (
+      <Layout>
+        <div className="flex space-x-4">
+          <div className={showAttributes ? '' : 'hidden'}>
+            <AttributeMenu withWrapper lgOnly />
+          </div>
+
+          <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
+            <SearchBoxDemo />
+            <div className="grid grid-cols-[auto_1fr] gap-4">
+              <SortByDemo />
+              <CurrentRefinementsDemo />
+            </div>
+            <HitsDemo />
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return <ErrorPage>{errorMessages.meiliClient}</ErrorPage>;
+  }
+
+  if (!client) {
+    if (elapsed) return <LoadingPage />;
+    return <Layout />;
+  }
 
   return (
     <Layout>
-      <div className="container p-8 mx-auto">
-        <InstantSearch
-          indexName="courses"
-          searchClient={meiliSearchClient}
-          searchState={searchState}
-          onSearchStateChange={(newState) => {
-            setSearchState({ ...searchState, ...newState });
-          }}
-          stalledSearchDelay={500}
-        >
-          {user && <Configure hitsPerPage={12} />}
-          <div className="flex space-x-4">
-            <div className={showAttributes ? '' : 'hidden'}>
-              <AttributeMenu />
-            </div>
-
-            <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
-              {user ? <SearchBox /> : <SearchBoxDemo />}
-              <div className="grid grid-cols-[auto_1fr] gap-4">
-                {user ? <SortBy /> : <SortByDemo />}
-                {user ? <CurrentRefinements /> : <CurrentRefinementsDemo />}
-              </div>
-              {user ? <Hits /> : <HitsDemo />}
-            </div>
+      <InstantSearch
+        indexName="courses"
+        searchClient={client}
+        searchState={searchState}
+        onSearchStateChange={(newState) => {
+          setSearchState({ ...searchState, ...newState });
+        }}
+        stalledSearchDelay={500}
+      >
+        <Configure hitsPerPage={12} />
+        <div className="flex space-x-4">
+          <div className={showAttributes ? '' : 'hidden'}>
+            <AttributeMenu withWrapper lgOnly />
           </div>
-        </InstantSearch>
-      </div>
+
+          <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
+            <SearchBox />
+            <div className="grid grid-cols-[auto_1fr] gap-4">
+              <SortBy />
+              <CurrentRefinements />
+            </div>
+            <Hits />
+          </div>
+        </div>
+      </InstantSearch>
     </Layout>
   );
-};
-
-export default SearchPage;
+}

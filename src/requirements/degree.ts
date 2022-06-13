@@ -1,5 +1,6 @@
-import { getClassId, getNumCredits } from '../../shared/util';
-import { FAILING_GRADES, PASSING_GRADES } from '../../shared/firestoreTypes';
+import {
+  FAILING_GRADES, getClassId, getNumCredits, PASSING_GRADES,
+} from '../../shared/util';
 import { getSchoolYear, Requirement, RequirementGroup } from './util';
 
 const totalCredits: Requirement = {
@@ -8,9 +9,9 @@ const totalCredits: Requirement = {
     'All candidates for the A.B. or the S.B. degree must pass 128 credits (the equivalent of 32 4-credit courses).',
   sourcePage: 9,
   validate: (count) => count >= 128,
-  reducer: (prev, cls, schedule, userData) => {
+  reducer: (prev, cls, schedule) => {
     // TODO handle advanced standing, etc
-    const takenClass = userData.schedules[schedule.id].classes.find(
+    const takenClass = schedule.classes.find(
       (classTaken) => classTaken.classId === getClassId(cls),
     );
     if (
