@@ -26,16 +26,16 @@ export const RefinementListComponent = React.memo(
           value={miniSearch}
           onChange={({ currentTarget }) => setMiniSearch(currentTarget.value)}
           placeholder="Filter"
-          className="block w-full pl-2 py-1 sm:text-sm border-gray-300 rounded-md shadow-sm"
+          className="block w-full rounded-md border-gray-300 py-1 pl-2 shadow-sm sm:text-sm"
         />
         <button
           type="button"
           onClick={() => refine([])}
-          className="text-gray-600 underline ml-1 hover:opacity-50 transition-colors text-xs leading-none mb-2"
+          className="ml-1 mb-2 text-xs leading-none text-gray-600 underline transition-colors hover:opacity-50"
         >
           Clear all
         </button>
-        <ul className="overflow-auto max-h-64">
+        <ul className="max-h-64 overflow-auto">
           {items
             .filter(({ label }) => re.test(label))
             .map(({

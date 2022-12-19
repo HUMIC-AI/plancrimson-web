@@ -25,11 +25,11 @@ export default function AttributeMenu({ lgOnly, withWrapper, showSubjectColor = 
       withWrapper ? 'flex-shrink-0 self-start' : false,
     )}
     >
-      <h1 className="font-semibold text-white text-xl text-center relative">
+      <h1 className="relative text-center text-xl font-semibold text-white">
         Filters
         <button
           type="button"
-          className="absolute inset-y-0 right-0 interactive"
+          className="interactive absolute inset-y-0 right-0"
           onClick={() => dispatch(Planner.setShowAttributes(false))}
         >
           <FaAngleDoubleLeft />
@@ -38,7 +38,7 @@ export default function AttributeMenu({ lgOnly, withWrapper, showSubjectColor = 
       {(!lgOnly || isLg) && MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
         <Attribute attribute={attr} key={attr} label={adjustAttr(attr)} showSubjectColor={showSubjectColor} />
       ))}
-      <span className="text-white text-xs p-1">
+      <span className="p-1 text-xs text-white">
         If filters are not showing up, clear your search and try again.
       </span>
     </div>

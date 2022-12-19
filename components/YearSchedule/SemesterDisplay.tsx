@@ -222,10 +222,10 @@ function HeaderSection({
   }));
 
   return (
-    <div className="flex flex-col items-stretch space-y-2 p-4 border-black border-b-2">
+    <div className="flex flex-col items-stretch space-y-2 border-b-2 border-black p-4">
       {/* only show */}
       {semesterFormat !== 'all' && (
-      <h1 className="text-lg text-center min-w-max font-semibold">
+      <h1 className="min-w-max text-center text-lg font-semibold">
         {semester.season}
         {' '}
         {semester.year}
@@ -250,7 +250,7 @@ function HeaderSection({
                 .replace(/[^a-zA-Z0-9-_ ]/g, '')
                 .slice(0, 30),
             )}
-            className="w-full py-1 pl-2 pr-7 rounded focus:shadow shadow-inner border-2"
+            className="w-full rounded border-2 py-1 pl-2 pr-7 shadow-inner focus:shadow"
             ref={editRef}
           />
           <button
@@ -310,8 +310,8 @@ function CoursesSection({ schedule, highlightedRequirement, setDragStatus }: {
   const warnings = (id: string) => ((conflicts[id]?.length || 0) > 0 ? `This class conflicts with: ${conflicts![id].map((i) => classCache[i].SUBJECT + classCache[i].CATALOG_NBR).join(', ')}` : undefined);
 
   return (
-    <div className="flex-1 p-4 md:overflow-auto h-max">
-      <div className="flex flex-col items-stretch min-h-[12rem] space-y-4">
+    <div className="h-max flex-1 p-4 md:overflow-auto">
+      <div className="flex min-h-[12rem] flex-col items-stretch space-y-4">
         <AddCoursesButton schedule={schedule} />
 
         {schedule.classes.map(({ classId: id }) => (id && classCache[id] ? (

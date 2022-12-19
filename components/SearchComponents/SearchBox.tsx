@@ -28,9 +28,9 @@ function AttributeMenuDropdown() {
           <>
             <Disclosure.Button className="inset-y-0 right-0 flex items-center">
               {open ? (
-                <FaTimes className="w-5 h-5 text-gray-700" />
+                <FaTimes className="h-5 w-5 text-gray-700" />
               ) : (
-                <FaBars className="w-5 h-5 text-gray-700" />
+                <FaBars className="h-5 w-5 text-gray-700" />
               )}
             </Disclosure.Button>
             <Disclosure.Panel
@@ -48,7 +48,7 @@ function AttributeMenuDropdown() {
                   showSubjectColor={false}
                 />
               ))}
-              <span className="text-white text-xs p-1">
+              <span className="p-1 text-xs text-white">
                 If filters are not showing up, clear your search and try
                 again.
               </span>
@@ -75,7 +75,7 @@ function SearchBar({
   const { chooseSchedule, chosenScheduleId } = useChosenScheduleContext();
 
   return (
-    <div className="flex flex-col space-y-1 w-full">
+    <div className="flex w-full flex-col space-y-1">
       {/* box containing search bar and attribute menu */}
       <div className="flex items-center space-x-4">
         {isLg && !showAttributes && (
@@ -122,7 +122,7 @@ function SearchBar({
       {/* end box containing search bar and attribute menu */}
 
       {/* caption text */}
-      <div className="flex flex-wrap text-xs space-x-2 text-gray-400">
+      <div className="flex flex-wrap space-x-2 text-xs text-gray-400">
         {uid ? (
           <>
             {isSearchStalled && <span>Loading...</span>}
@@ -147,13 +147,13 @@ export function SearchBoxComponent({ scheduleChooser = true, ...props }: SearchB
   const { chooseSchedule: selectSchedule, chosenScheduleId: selectedSchedule } = useChosenScheduleContext();
 
   return (
-    <div className="flex flex-col space-y-4 items-start">
-      <div className="flex space-x-4 w-full">
+    <div className="flex flex-col items-start space-y-4">
+      <div className="flex w-full space-x-4">
         <SearchBar {...props} scheduleChooser={scheduleChooser} />
       </div>
 
       {scheduleChooser && (
-      <div className="sm:hidden relative">
+      <div className="relative sm:hidden">
         <ScheduleChooser
           scheduleIds={sortSchedules(schedules).map((schedule) => schedule.id)}
           handleChooseSchedule={selectSchedule}

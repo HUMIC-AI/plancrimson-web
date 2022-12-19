@@ -130,8 +130,8 @@ export default function UserPage() {
   const schedules = Object.values(scheduleMap);
 
   return (
-    <Layout scheduleQueryConstraints={queryConstraints} className="flex-1 mx-auto p-8 w-full max-w-screen-md">
-      <div className="flex flex-col space-y-8 border-2 border-blue-900 rounded-xl shadow p-8">
+    <Layout scheduleQueryConstraints={queryConstraints} className="mx-auto w-full max-w-screen-md flex-1 p-8">
+      <div className="flex flex-col space-y-8 rounded-xl border-2 border-blue-900 p-8 shadow">
         <div className="flex items-center">
           <ImageWrapper url={pageProfile.photoUrl} size="md" />
 
@@ -150,7 +150,7 @@ export default function UserPage() {
                   setRefresh(!refresh);
                 }
               }}
-              className="px-2 py-1 mt-2 rounded interactive bg-blue-900 text-white"
+              className="interactive mt-2 rounded bg-blue-900 px-2 py-1 text-white"
             >
               {statusMessage[friendStatus]}
             </button>

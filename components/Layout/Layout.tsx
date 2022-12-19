@@ -26,7 +26,7 @@ export function Footer() {
 
   return (
     <footer className="bg-gray-800">
-      <div className="p-4 container mx-auto text-white text-sm text-center flex flex-col space-y-1">
+      <div className="container mx-auto flex flex-col space-y-1 p-4 text-center text-sm text-white">
         <span>Course data last updated 2022-01-15</span>
         <span>
           &#169; 2022 Alexander Cai | alexcai [at] college |
@@ -56,7 +56,7 @@ export function Footer() {
               query,
             }}
           >
-            <a className="font-bold interactive">
+            <a className="interactive font-bold">
               Attributions
             </a>
           </Link>
@@ -82,7 +82,7 @@ export function Footer() {
               query,
             }}
           >
-            <a className="font-bold interactive">
+            <a className="interactive font-bold">
               Privacy
             </a>
           </Link>
@@ -122,7 +122,7 @@ export default function Layout({
 
       {custom ? children : (
         <>
-          <div className="flex flex-col min-h-screen">
+          <div className="flex min-h-screen flex-col">
             <Navbar />
 
             {alerts.map((alert) => <div key={alert}>{alert}</div>)}
@@ -189,7 +189,7 @@ export function LoadingPage() {
           <li
             // eslint-disable-next-line react/no-array-index-key
             key={i}
-            className="bg-blue-300 animate-pulse rounded"
+            className="animate-pulse rounded bg-blue-300"
             style={{ animationDelay: `${i * 250}ms` }}
           >
             &nbsp;
@@ -202,8 +202,8 @@ export function LoadingPage() {
 
 export function ErrorPage({ children }: PropsWithChildren<{}>) {
   return (
-    <Layout className="flex-1 flex flex-col items-center">
-      <p className="mt-8 bg-red-300 shadow p-8 rounded-xl">
+    <Layout className="flex flex-1 flex-col items-center">
+      <p className="mt-8 rounded-xl bg-red-300 p-8 shadow">
         {children}
       </p>
     </Layout>

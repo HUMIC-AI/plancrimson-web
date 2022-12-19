@@ -46,7 +46,7 @@ export default function SearchPage() {
             <AttributeMenu withWrapper lgOnly />
           </div>
 
-          <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
+          <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-300 bg-white p-6 shadow-lg">
             <SearchBoxDemo />
             <div className="grid grid-cols-[auto_1fr] gap-4">
               <SortByDemo />
@@ -85,7 +85,7 @@ export default function SearchPage() {
             <AttributeMenu withWrapper lgOnly />
           </div>
 
-          <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
+          <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-300 bg-white p-6 shadow-lg">
             <SearchBox />
             <div className="grid grid-cols-[auto_1fr] gap-4">
               <SortBy />

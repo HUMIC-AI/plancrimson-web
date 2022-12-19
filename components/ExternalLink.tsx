@@ -4,7 +4,7 @@ type Props = {
   href: string;
 };
 
-const ExternalLink: React.FC<Props> = function ({ href, children }) {
+const ExternalLink: React.FC<React.PropsWithChildren<Props>> = function ({ href, children }) {
   const isMail = href.startsWith('mailto');
   return (
     // eslint-disable-next-line react/jsx-no-target-blank
@@ -12,7 +12,7 @@ const ExternalLink: React.FC<Props> = function ({ href, children }) {
       href={href}
       target={isMail ? undefined : '_blank'}
       rel={isMail ? undefined : 'noreferrer'}
-      className="font-bold interactive"
+      className="interactive font-bold"
       onClick={(ev) => ev.stopPropagation()}
     >
       {children}

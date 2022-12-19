@@ -52,15 +52,15 @@ export default function ConnectPage() {
   }
 
   return (
-    <Layout title="Connect" scheduleQueryConstraints={constraints} className="mx-auto flex-1 w-full max-w-screen-md p-8">
+    <Layout title="Connect" scheduleQueryConstraints={constraints} className="mx-auto w-full max-w-screen-md flex-1 p-8">
       <Tab.Group>
-        <Tab.List className="flex rounded-t-xl overflow-hidden">
+        <Tab.List className="flex overflow-hidden rounded-t-xl">
           <Tab className={tabClass}>Public schedules</Tab>
           <Tab className={tabClass}>Friends</Tab>
           <Tab className={tabClass}>Incoming requests</Tab>
           <Tab className={tabClass}>Find classmates</Tab>
         </Tab.List>
-        <Tab.Panels className="p-4 bg-gray-200 rounded-b-xl overflow-hidden">
+        <Tab.Panels className="overflow-hidden rounded-b-xl bg-gray-200 p-4">
           <Tab.Panel><Panels.PublicSchedules /></Tab.Panel>
           <Tab.Panel><Panels.Friends friends={friends} /></Tab.Panel>
           <Tab.Panel><Panels.IncomingRequests pending={incomingPending} /></Tab.Panel>
@@ -149,7 +149,7 @@ const Panels = {
           return (
             <li key={profileId}>
               <Link href={profile ? `/user/${profile.username}` : '#'}>
-                <a className="block bg-gray-300 rounded-xl shadow px-4 py-2 interactive m-2">
+                <a className="interactive m-2 block rounded-xl bg-gray-300 px-4 py-2 shadow">
                   <div className="flex items-center space-x-4">
                     <ImageWrapper url={profile?.photoUrl} />
                     <div>
@@ -223,11 +223,11 @@ function ProfileList({ profiles, Button }: { profiles: Array<UserProfileWithId>,
         <li key={profile.id} className="contents">
           <div className="flex items-center">
             {profile.photoUrl
-              ? <Image src={profile.photoUrl} className="w-8 h-8 rounded-full" />
-              : <div className="w-8 h-8 bg-blue-300 rounded-full" />}
+              ? <Image src={profile.photoUrl} className="h-8 w-8 rounded-full" />
+              : <div className="h-8 w-8 rounded-full bg-blue-300" />}
 
             <Link href={`/user/${profile.username}`}>
-              <a className="font-bold ml-2">
+              <a className="ml-2 font-bold">
                 {profile.username}
               </a>
             </Link>
@@ -256,7 +256,7 @@ function UnfriendButton({ profile }: { profile: UserProfileWithId }) {
           await deleteDoc(Schema.friendRequest(profile.id, userId!));
         }
       }}
-      className="interactive px-2 py-1 bg-blue-900 text-white rounded"
+      className="interactive rounded bg-blue-900 px-2 py-1 text-white"
     >
       Unfriend
     </button>
@@ -274,7 +274,7 @@ function IncomingRequestButtons({ profile }: { profile: UserProfileWithId }) {
         onClick={() => {
           updateDoc(ref, { accepted: true }).catch((err) => console.error('error accepting request', err));
         }}
-        className="interactive px-2 py-1 bg-blue-900 text-white rounded"
+        className="interactive rounded bg-blue-900 px-2 py-1 text-white"
       >
         Accept
       </button>
@@ -283,7 +283,7 @@ function IncomingRequestButtons({ profile }: { profile: UserProfileWithId }) {
         onClick={() => {
           deleteDoc(ref).catch((err) => console.error('error rejecting request', err));
         }}
-        className="interactive px-2 py-1 bg-blue-900 text-white rounded ml-2"
+        className="interactive ml-2 rounded bg-blue-900 px-2 py-1 text-white"
       >
         Reject
       </button>

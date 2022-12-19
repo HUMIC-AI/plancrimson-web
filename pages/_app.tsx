@@ -79,7 +79,7 @@ function GraduationYearDialog({ defaultYear, uid } : { defaultYear: number; uid:
       onSubmit={handleSubmit}
       className="bg-white p-4"
     >
-      <div className="max-w-xs mx-auto flex flex-col items-center space-y-4">
+      <div className="mx-auto flex max-w-xs flex-col items-center space-y-4">
         <h2 className="text-xl font-semibold">What year are you graduating?</h2>
         <input
           type="number"
@@ -87,9 +87,9 @@ function GraduationYearDialog({ defaultYear, uid } : { defaultYear: number; uid:
           id="graduationYear"
           value={classYear}
           onChange={(e) => setYear(parseInt(e.currentTarget.value, 10))}
-          className="border-4 hover:border-black transition-colors w-32 text-center rounded-xl text-3xl p-2"
+          className="w-32 rounded-xl border-4 p-2 text-center text-3xl transition-colors hover:border-black"
         />
-        <button type="submit" className="interactive px-4 py-2 text-white bg-gray-900 rounded-xl">
+        <button type="submit" className="interactive rounded-xl bg-gray-900 px-4 py-2 text-white">
           Get started
         </button>
       </div>

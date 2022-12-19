@@ -59,10 +59,10 @@ export default function PlanPage() {
 
   if (!userId) {
     return (
-      <Layout className="flex-1 bg-gray-800 flex items-center justify-center p-8" title="Plan">
+      <Layout className="flex flex-1 items-center justify-center bg-gray-800 p-8" title="Plan">
         <button
           type="button"
-          className="text-white font-black text-6xl interactive"
+          className="interactive text-6xl font-black text-white"
           onClick={() => signInUser().catch(handleError)}
         >
           Sign in to get started!
@@ -80,7 +80,7 @@ export default function PlanPage() {
   if (!md) {
     return (
       <Layout title="plan" scheduleQueryConstraints={q} custom>
-        <div className="flex flex-col min-h-screen">
+        <div className="flex min-h-screen flex-col">
           <Navbar />
 
           <div className={classNames(
@@ -112,7 +112,7 @@ export default function PlanPage() {
   }
 
   return (
-    <Layout title="Plan" scheduleQueryConstraints={q} className="flex-1 flex flex-row-reverse">
+    <Layout title="Plan" scheduleQueryConstraints={q} className="flex flex-1 flex-row-reverse">
       <div className={classNames(
         'flex-1 flex flex-col relative bg-gray-800 md:p-4',
         showReqs && 'md:rounded-lg md:shadow-lg',

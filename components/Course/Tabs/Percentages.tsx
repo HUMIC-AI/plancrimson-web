@@ -21,13 +21,13 @@ export default function Percentages({ categories: allCategories }: Props) {
   const total = allCategories.reduce((acc, val) => acc + val, 0);
 
   return (
-    <div className="rounded h-6 flex shadow-md">
+    <div className="flex h-6 rounded shadow-md">
       {allCategories.map(
         (rec, i) => rec > 0 && (
         <div
               // eslint-disable-next-line react/no-array-index-key
           key={i}
-          className="group flex-initial h-full text-center min-w-max relative first:rounded-l-lg last:rounded-r-lg"
+          className="group relative h-full min-w-max flex-initial text-center first:rounded-l-lg last:rounded-r-lg"
           style={{ flexBasis: `${(rec / total) * 100}%` }}
         >
           <span
@@ -40,7 +40,7 @@ export default function Percentages({ categories: allCategories }: Props) {
           >
             {rec}
           </span>
-          <span className="hidden group-hover:block w-28 absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white rounded-md py-1 px-2">
+          <span className="absolute bottom-full left-1/2 mb-2 hidden w-28 -translate-x-1/2 rounded-md bg-gray-800 py-1 px-2 text-white group-hover:block">
             {`${rec} students voted ${allCategories.length - i}/${allCategories.length}`}
           </span>
         </div>

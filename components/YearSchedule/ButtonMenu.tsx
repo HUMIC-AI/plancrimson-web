@@ -109,8 +109,8 @@ export default function ButtonMenu({
   }, [prevScheduleId, chosenSchedule]);
 
   return (
-    <div className="flex flex-col space-y-2 w-full">
-      <div className="self-center flex justify-center items-center flex-wrap gap-2 mt-2 text-gray-600 text-xs">
+    <div className="flex w-full flex-col space-y-2">
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-2 self-center text-xs text-gray-600">
         {chosenSchedule && (
           <>
             <CustomButton

@@ -1,5 +1,5 @@
 /**
- * API types for reverse engineering my.harvard and the Q Guide.
+ * API types obtained by reverse engineering my.harvard and the Q Guide.
  */
 
 import type { DayOfWeek, Season } from './types';

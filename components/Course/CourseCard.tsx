@@ -197,7 +197,7 @@ export default function CourseCard({
             />
           )}
           <div className="relative">
-            <p className="flex justify-between items-start">
+            <p className="flex items-start justify-between">
               <span className="font-bold text-blue-300">
                 <HighlightComponent
                   attribute="SUBJECT"
@@ -212,7 +212,7 @@ export default function CourseCard({
               </span>
 
               {/* the info and course selection buttons */}
-              <span className="flex items-center space-x-2 ml-2">
+              <span className="ml-2 flex items-center space-x-2">
                 {warnings && (
                 <Tooltip text={warnings} direction="bottom">
                   <FaExclamationTriangle color="yellow" className="text-xl" />
@@ -248,8 +248,8 @@ export default function CourseCard({
         {/* end header component */}
 
         {isExpanded && (
-          <div className="p-2 bg-white h-full">
-            <div className="inline-grid grid-cols-[auto_1fr] max-w-full items-center gap-y-2 gap-x-4">
+          <div className="h-full bg-white p-2">
+            <div className="inline-grid max-w-full grid-cols-[auto_1fr] items-center gap-y-2 gap-x-4">
               <Instructors course={course} inSearch={inSearchContext} />
               <Location course={course} inSearch={inSearchContext} />
               <DaysOfWeek course={course} inSearch={inSearchContext} />
@@ -257,7 +257,7 @@ export default function CourseCard({
             </div>
             {course.textDescription.length > 0 && (
               <>
-                <hr className="border-black my-2" />
+                <hr className="my-2 border-black" />
                 <p className="text-sm line-clamp-3">
                   <HighlightComponent
                     attribute="textDescription"

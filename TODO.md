@@ -10,6 +10,7 @@
     - Run some operations and check that the Firestore document matches what is expected
       - Creating a new schedule via the schedule page
       - Creating a new schedule via the planning page
+- write tests, see [Firestore Security Rules docs](https://firebase.google.com/docs/firestore/security/test-rules-emulator)
 
 ## store things in `localStorage` (Web Storage API)
 
@@ -43,6 +44,8 @@ what should stay the same between user logins?
 - handle gened edge case
 - search by requirement
 - selected schedules should be saved in firestore
+- see which concentrations each course fits into
+- eventual flexibility for adding "custom courses" to simulate study abroad
 
 ## schedule page
 

@@ -6,7 +6,7 @@ type StatsProps = Pick<StatsProvided, 'nbHits' | 'processingTimeMS'>;
 
 export const StatsComponent: React.FC<StatsProps> = function ({ nbHits, processingTimeMS }) {
   return (
-    <div className="flex items-center space-x-2 flex-wrap">
+    <div className="flex flex-wrap items-center space-x-2">
       <p className="whitespace-nowrap">
         Time:
         {' '}

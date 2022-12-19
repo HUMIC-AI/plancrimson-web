@@ -48,8 +48,8 @@ export function ScheduleSection({ schedule }: { schedule: Schedule }) {
   const profile = profiles?.[schedule.ownerUid];
 
   return (
-    <div className="rounded-xl shadow-xl bg-blue-300 p-4">
-      <div className="flex space-x-4 items-center">
+    <div className="rounded-xl bg-blue-300 p-4 shadow-xl">
+      <div className="flex items-center space-x-4">
         <ImageWrapper url={profile?.photoUrl} />
         <div>
           <h3 className="flex items-center">
@@ -77,7 +77,7 @@ export function ScheduleSection({ schedule }: { schedule: Schedule }) {
         </div>
       </div>
 
-      <ul className="flex flex-wrap mt-2">
+      <ul className="mt-2 flex flex-wrap">
         {schedule.classes.map((classData) => classData.classId in classCache && (
         <li key={classData.classId} className="mr-2">
           <CourseCard

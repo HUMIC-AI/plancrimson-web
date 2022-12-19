@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
 import cheerio, { AnyNode, BasicAcceptedElems, CheerioAPI } from 'cheerio';
 import './initFirebase';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -130,10 +129,23 @@ export async function getEvaluation(
     .split('-')
     .map((str) => str.trim());
   const toc = $('.TOC h2').text().trim().split(' ');
+
   const tmpYear = parseInt(toc[4], 10);
-  const [year, season] = tmpYear
-    ? [tmpYear, toc[5] as Season]
-    : [parseInt(toc[6], 10), toc[7] as Season];
+  let year: number;
+  let season: Season;
+
+  if (tmpYear) ([year, season] = [tmpYear, toc[5] as Season]);
+  else {
+    const y = parseInt(toc[6], 10);
+    if (isNaN(y)) {
+      const yy = parseInt(toc[5], 10); // lol they keep changing the format
+      ([year, season] = [yy, toc[4] as Season]);
+    } else {
+      ([year, season] = [y, toc[7] as Season]);
+    }
+  }
+
+
   const initial: ApiTypes.Evaluation = {
     url,
     year,
@@ -180,7 +192,7 @@ export async function getEvaluation(
           data = getReasons($, el);
         } else if (
           title
-          === 'What would you like to tell future students about this class?'
+          === 'What would you like to tell future students about this class?' || title === 'What would you like to tell future students about this class? (Your response to this question may be published anonymously.)'
         ) {
           data = getComments($, el);
         } else {

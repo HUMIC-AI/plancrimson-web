@@ -69,7 +69,7 @@ export const Location: React.FC<CourseProps> = function ({ course, inSearch }) {
           {course.IS_SCL_DESCR_IS_SCL_DESCRG && (
             <>
               {' '}
-              <span className="text-gray-400 font-light">
+              <span className="font-light text-gray-400">
                 (
                 {course.IS_SCL_DESCR_IS_SCL_DESCRG}
                 )
@@ -95,7 +95,7 @@ const WeekDisplay: React.FC<{ pattern: string; index?: number }> = function ({
       {pattern === 'TBA' ? (
         <span>TBA</span>
       ) : (
-        <div className="inline-grid grid-cols-5 w-max border-2 border-gray-800 rounded overflow-hidden">
+        <div className="inline-grid w-max grid-cols-5 overflow-hidden rounded border-2 border-gray-800">
           {DAYS_OF_WEEK.slice(0, 5)
             .map((val) => val.slice(0, 2))
             .map((abbrev, j) => (

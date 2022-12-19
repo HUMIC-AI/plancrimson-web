@@ -34,7 +34,7 @@ export default function PlanningPanel({ course }: { course: ExtendedClass }) {
           {' '}
           <Link href="/">
             {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-            <a className="font-bold interactive">
+            <a className="interactive font-bold">
               creating a schedule
             </a>
           </Link>
@@ -46,7 +46,7 @@ export default function PlanningPanel({ course }: { course: ExtendedClass }) {
 
   return (
     <Tab.Panel>
-      <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
+      <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
         {sortSchedules(schedules).map((schedule) => (
           <ScheduleRow
             key={schedule.title}
@@ -100,11 +100,11 @@ function ScheduleRow({ schedule, course }: { schedule: Schedule; course: Extende
 
   return (
     <>
-      <span className="font-semibold max-w-[12rem] sm:max-w-[24rem] overflow-hidden text-ellipsis">
+      <span className="max-w-[12rem] overflow-hidden text-ellipsis font-semibold sm:max-w-[24rem]">
         {schedule.title}
       </span>
       <span className="text-gray-600">{`${schedule.season} ${schedule.year}`}</span>
-      <div className="flex flex-row-reverse relative">
+      <div className="relative flex flex-row-reverse">
         {/* Code from https://headlessui.dev/react/switch */}
         <Switch
           checked={enabled}

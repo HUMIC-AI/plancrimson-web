@@ -52,8 +52,8 @@ export default function ExplorePage() {
 
   if (userId === null) {
     return (
-      <Layout className="md:flex-1 md:relative">
-        <div className="md:absolute md:inset-2 flex flex-col md:flex-row space-x-2">
+      <Layout className="md:relative md:flex-1">
+        <div className="flex flex-col space-x-2 md:absolute md:inset-2 md:flex-row">
           <AttributeMenu />
           <ChartComponent hits={sampleCourses as ExtendedClass[]} demo client={null} />
         </div>
@@ -71,7 +71,7 @@ export default function ExplorePage() {
   }
 
   return (
-    <Layout className="md:flex-1 md:relative">
+    <Layout className="md:relative md:flex-1">
       <InstantSearch
         indexName="courses"
         searchClient={client}
@@ -82,7 +82,7 @@ export default function ExplorePage() {
         stalledSearchDelay={500}
       >
         <Configure hitsPerPage={50} />
-        <div className="md:absolute md:inset-2 flex flex-col md:flex-row space-x-2">
+        <div className="flex flex-col space-x-2 md:absolute md:inset-2 md:flex-row">
           <AttributeMenu showSubjectColor />
           <Chart demo={false} client={client} />
         </div>
@@ -108,6 +108,9 @@ type Embedding = {
   metric: number;
 };
 
+/**
+ * Renders the actual chart and canvas containing the course visualization.
+ */
 function ChartComponent({
   hits: foundHits = [], client, hasPrevious, hasMore, refinePrevious, refineNext, demo,
 }: ChartProps) {
@@ -266,9 +269,9 @@ function ChartComponent({
   );
 
   return (
-    <div className="md:flex-1 relative min-h-[28rem]">
-      <div ref={chart} className="w-full h-full" />
-      <div className="absolute top-0 left-0 flex space-x-2 items-center">
+    <div className="relative min-h-[28rem] md:flex-1">
+      <div ref={chart} className="h-full w-full" />
+      <div className="absolute top-0 left-0 flex items-center space-x-2">
         <button
           type="button"
           onClick={focusRandom}
@@ -287,13 +290,13 @@ function ChartComponent({
         )}
         <Listbox as="div" className="relative inline-block" value={radiusMetric} onChange={setRadiusMetric}>
           <div>
-            <Listbox.Button className="flex items-center justify-center bg-blue-900 text-white text-sm px-2 py-1 rounded-md interactive shadow">
+            <Listbox.Button className="interactive flex items-center justify-center rounded-md bg-blue-900 px-2 py-1 text-sm text-white shadow">
               {metrics[radiusMetric]}
               <FaChevronDown className="ml-2 text-xs" />
             </Listbox.Button>
           </div>
           <FadeTransition>
-            <Listbox.Options as="div" className="absolute top-full mt-2 rounded shadow-xl border-2 border-gray-400 overflow-hidden list-none">
+            <Listbox.Options as="div" className="absolute top-full mt-2 list-none overflow-hidden rounded border-2 border-gray-400 shadow-xl">
               {metricNames.map((metric) => (
                 <Listbox.Option key={metric} value={metric}>
                   {({ selected }) => (

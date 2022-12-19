@@ -41,7 +41,7 @@ const genedRequirements: RequirementGroup = {
         Education courses, one from each of the following four General Education
         categories:
       </p>
-      <ul className="list-disc list-inside">
+      <ul className="list-inside list-disc">
         <li>Aesthetics & Culture</li>
         <li>Ethics & Civics</li>
         <li>Histories, Societies, Individuals</li>
@@ -289,7 +289,7 @@ const languageRequirement: Requirement = {
         all forms of a language that are customary in the practice of that
         language. The requirement can be satisfied in one of the following ways:
       </p>
-      <ul className="list-disc list-inside">
+      <ul className="list-inside list-disc">
         <li>
           Earning a minimum score of 700 on a College Entrance Examination Board
           SAT II Test in a language other than English, a score of 5 on a

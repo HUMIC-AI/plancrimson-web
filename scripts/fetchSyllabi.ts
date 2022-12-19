@@ -64,6 +64,8 @@ function getAuthToken() {
 async function fetchAllCourses(): Promise<SearchHit[]> {
   const courses = [];
   let count = 0;
+  // loop until we have all the courses
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const { data } = await axios.post<SearchResponse>(BASE_URL, {
       filters: {

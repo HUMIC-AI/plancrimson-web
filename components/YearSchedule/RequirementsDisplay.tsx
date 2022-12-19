@@ -118,17 +118,17 @@ const RequirementGroupComponent: React.FC<Props> = function ({
     switch (depth) {
       case 0:
         return function ({ children }) {
-          return <h1 className="font-semibold text-2xl">{children}</h1>;
+          return <h1 className="text-2xl font-semibold">{children}</h1>;
         };
         break;
       case 1:
         return function ({ children }) {
-          return <h2 className="font-medium text-xl">{children}</h2>;
+          return <h2 className="text-xl font-medium">{children}</h2>;
         };
         break;
       default:
         return function ({ children }) {
-          return <h3 className="font-medium text-lg">{children}</h3>;
+          return <h3 className="text-lg font-medium">{children}</h3>;
         };
     }
   }, [depth]);
@@ -174,10 +174,10 @@ const RequirementGroupComponent: React.FC<Props> = function ({
           color,
         )}
       >
-        <div className="flex justify-between items-center gap-4">
+        <div className="flex items-center justify-between gap-4">
           <Heading>{reqGroup.groupId}</Heading>
           {total > 0 && (
-            <span className="font-medium whitespace-nowrap">
+            <span className="whitespace-nowrap font-medium">
               {`${numSatisfied} / ${total}`}
             </span>
           )}
@@ -186,7 +186,7 @@ const RequirementGroupComponent: React.FC<Props> = function ({
         {reqGroup.subheading && (
           <p
             className={
-              depth === 0 ? 'text-gray-800 text-sm' : 'text-gray-300 text-sm'
+              depth === 0 ? 'text-sm text-gray-800' : 'text-sm text-gray-300'
             }
           >
             {reqGroup.subheading}
@@ -194,7 +194,7 @@ const RequirementGroupComponent: React.FC<Props> = function ({
         )}
       </Disclosure.Button>
       <FadeTransition>
-        <Disclosure.Panel className={depth > 0 ? 'p-2 space-y-4' : 'space-y-4'}>
+        <Disclosure.Panel className={depth > 0 ? 'space-y-4 p-2' : 'space-y-4'}>
           {reqGroup.description && (
             <Description description={reqGroup.description} />
           )}

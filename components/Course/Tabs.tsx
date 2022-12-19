@@ -14,7 +14,7 @@ import SocialPanel from './Tabs/SocialPanel';
 export default function Tabs({ course }: { course: ExtendedClass }) {
   return (
     <Tab.Group defaultIndex={0}>
-      <Tab.List className="bg-gray-800 flex overflow-auto">
+      <Tab.List className="flex overflow-auto bg-gray-800">
         {allTruthy(['Description', 'Evaluations', 'Plan', 'Social']).map(
           (tab) => (
             <Tab
@@ -31,7 +31,7 @@ export default function Tabs({ course }: { course: ExtendedClass }) {
           ),
         )}
       </Tab.List>
-      <Tab.Panels className="p-6 border-t-4 border-blue-500 bg-white">
+      <Tab.Panels className="border-t-4 border-blue-500 bg-white p-6">
         <InfoPanel course={course} />
         <EvaluationsPanel course={course} />
         <PlanningPanel course={course} />

@@ -29,7 +29,7 @@ export const CurrentRefinementsComponent: React.FC<Props> = function ({
           <Fragment key={item.label}>
             {item.items ? (
               <>
-                <h4 className="font-medium w-min md:min-w-max">
+                <h4 className="w-min font-medium md:min-w-max">
                   <button
                     type="button"
                     className="hover:line-through"
@@ -39,7 +39,7 @@ export const CurrentRefinementsComponent: React.FC<Props> = function ({
                     :
                   </button>
                 </h4>
-                <ul className="flex flex-wrap items-center gap-2 h-min">
+                <ul className="flex h-min flex-wrap items-center gap-2">
                   {item.items
                     .sort(
                       item.attribute === 'DAY_OF_WEEK'

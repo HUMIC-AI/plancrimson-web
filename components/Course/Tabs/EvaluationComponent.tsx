@@ -60,14 +60,14 @@ function DisclosureComponent({
   children,
 }: React.PropsWithChildren<DisclosureComponentProps>) {
   return (
-    <Disclosure as="div" className="border-gray-600 border-2 rounded-lg">
+    <Disclosure as="div" className="rounded-lg border-2 border-gray-600">
       {({ open }) => (
         <>
           <Disclosure.Button
             name={heading}
-            className="w-full text-left flex items-center space-x-2 bg-gray-600 py-1 px-4 text-white"
+            className="flex w-full items-center space-x-2 bg-gray-600 py-1 px-4 text-left text-white"
           >
-            <h4 className="flex-1 text-md font-bold">{heading}</h4>
+            <h4 className="text-md flex-1 font-bold">{heading}</h4>
             {visibleStats && (
               <span className="flex items-center space-x-4">
                 <span className="whitespace-nowrap">
@@ -109,7 +109,7 @@ const OverallEvaluation: React.FC<OverallEvaluationProps> = function ({
 }) {
   return (
     <DisclosureComponent heading={heading} visibleStats={visibleStats}>
-      <div className="grid grid-cols-[auto_1fr] gap-4 items-center">
+      <div className="grid grid-cols-[auto_1fr] items-center gap-4">
         {Object.entries(components).map(([title, data]) => (
           <GridHeading key={title} {...{ title, data }} />
         ))}
@@ -194,7 +194,7 @@ export default function EvaluationComponent({ report }: { report: Evaluation | E
     <Disclosure
       defaultOpen
       as="div"
-      className="border-gray-800 border-2 rounded-lg"
+      className="rounded-lg border-2 border-gray-800"
     >
       {({ open }) => (
         <>
@@ -284,9 +284,9 @@ export default function EvaluationComponent({ report }: { report: Evaluation | E
               {courseEvaluation.comments
                 && courseEvaluation.comments.length > 0 ? (
                   <DisclosureComponent heading="Comments">
-                    <ul className="max-h-72 -m-2 overflow-auto">
+                    <ul className="-m-2 max-h-72 overflow-auto">
                       {courseEvaluation.comments.map((comment) => (
-                        <li key={comment} className="even:bg-gray-300 p-2">
+                        <li key={comment} className="p-2 even:bg-gray-300">
                           {comment}
                         </li>
                       ))}

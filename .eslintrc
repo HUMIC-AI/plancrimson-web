@@ -9,7 +9,8 @@
     "plugin:@next/next/recommended",
     "plugin:react/recommended",
     "airbnb",
-    "airbnb-typescript"
+    "airbnb-typescript",
+    "plugin:tailwindcss/recommended"
   ],
   "globals": {
     "React": "readonly"

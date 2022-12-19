@@ -9,7 +9,7 @@ type Props = {
   afterLeave?: () => void;
 };
 
-const FadeTransition: React.FC<Props> = function ({
+const FadeTransition: React.FC<React.PropsWithChildren<Props>> = function ({
   children,
   unmount,
   show,
