@@ -39,7 +39,7 @@ export function useMeiliClient(uid: string | null | undefined) {
     getMeiliApiKey()
       .then((key) => {
         setClient(instantMeiliSearch(getMeiliHost(), key, {
-          paginationTotalHits: 500,
+          finitePagination: true,
         }));
       })
       .catch((err) => {

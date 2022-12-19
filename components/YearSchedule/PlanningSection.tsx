@@ -331,7 +331,7 @@ export function SemestersList({
       <>
         {leftIntersecting || (
         <div
-          className="absolute inset-y-0 left-0 z-10 flex w-1/6 justify-center bg-gray-800 bg-opacity-30 pt-4 text-4xl text-white"
+          className="absolute inset-y-0 left-0 z-10 flex w-1/6 justify-center bg-gray-800/30 pt-4 text-4xl text-white"
           onDragOver={() => {
             semestersContainerRef.current.scrollBy(-2, 0);
           }}
@@ -342,7 +342,7 @@ export function SemestersList({
 
         {rightIntersecting || (
         <div
-          className="absolute inset-y-0 right-0 z-10 flex w-1/6 justify-center bg-gray-800 bg-opacity-30 pt-4 text-4xl text-white"
+          className="absolute inset-y-0 right-0 z-10 flex w-1/6 justify-center bg-gray-800/30 pt-4 text-4xl text-white"
           onDragOver={() => {
             semestersContainerRef.current.scrollBy(2, 0);
           }}

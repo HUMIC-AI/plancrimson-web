@@ -1,11 +1,11 @@
-import axios, { AxiosRequestHeaders } from 'axios';
+import axios from 'axios';
 import { existsSync, readFileSync } from 'fs';
 import inquirer from 'inquirer';
 import { ExtendedClass } from '../shared/apiTypes';
 
 const defaultMeiliUrl = 'http://127.0.0.1:7700';
 
-function getHeaders(meiliRequired: boolean): AxiosRequestHeaders {
+function getHeaders(meiliRequired: boolean) {
   if (!meiliRequired) {
     return {
       'Content-Type': 'application/json',
@@ -22,6 +22,11 @@ function getHeaders(meiliRequired: boolean): AxiosRequestHeaders {
   };
 }
 
+/**
+ * Uploads data to MeiliSearch
+ * @param url the url of the MeiliSearch instance
+ * @param data the data to upload
+ */
 async function uploadData(url: string, data: ExtendedClass[]) {
   try {
     await axios({

@@ -13,6 +13,12 @@ import { getFilePath } from './util';
 const BATCH_SIZE = 15;
 const searchUrl = 'https://portal.my.harvard.edu/psc/hrvihprd/EMPLOYEE/EMPL/s/WEBLIB_IS_SCL.ISCRIPT1.FieldFormula.IScript_Search';
 
+/**
+ * Gets a page of classes from my.harvard.
+ * @param pageNumber the page number to get
+ * @param searchText the search text to use
+ * @param cookie the cookie to use
+ */
 function getPage({
   pageNumber,
   searchText,

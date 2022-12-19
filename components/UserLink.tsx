@@ -15,7 +15,7 @@ export function UserLink({ uid }: { uid: string }) {
 }
 
 
-export function ImageWrapper({ url, size = 'sm' }: { url: string | null | undefined, size?: 'sm' | 'md' }) {
+export function ImageWrapper({ url, alt, size = 'sm' }: { url: string | null | undefined, alt: string, size?: 'sm' | 'md' }) {
   if (url) {
     return (
       <Image
@@ -24,6 +24,7 @@ export function ImageWrapper({ url, size = 'sm' }: { url: string | null | undefi
           'rounded-full',
         )}
         src={url}
+        alt={alt}
         width={size === 'sm' ? 32 : 64}
         height={size === 'sm' ? 32 : 64}
       />
@@ -50,7 +51,7 @@ export function ScheduleSection({ schedule }: { schedule: Schedule }) {
   return (
     <div className="rounded-xl bg-blue-300 p-4 shadow-xl">
       <div className="flex items-center space-x-4">
-        <ImageWrapper url={profile?.photoUrl} />
+        <ImageWrapper url={profile?.photoUrl} alt="User profile" />
         <div>
           <h3 className="flex items-center">
             <span className="text-xl font-bold">

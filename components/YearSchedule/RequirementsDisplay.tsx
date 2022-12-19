@@ -114,7 +114,7 @@ const RequirementGroupComponent: React.FC<Props> = function ({
   highlightRequirement,
   highlightedRequirement,
 }) {
-  const Heading: React.FC = useMemo(() => {
+  const Heading: React.FC<React.PropsWithChildren<{}>> = useMemo(() => {
     switch (depth) {
       case 0:
         return function ({ children }) {

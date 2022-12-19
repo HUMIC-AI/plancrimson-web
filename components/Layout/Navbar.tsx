@@ -163,7 +163,7 @@ function UserMenu() {
         className="flex items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
       >
         <span className="sr-only">Open user menu</span>
-        <ImageWrapper url={photoUrl} />
+        <ImageWrapper url={photoUrl} alt="User profile" />
       </Menu.Button>
 
       <Transition

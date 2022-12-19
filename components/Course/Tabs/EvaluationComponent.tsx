@@ -11,7 +11,7 @@ import Percentages from './Percentages';
 function Section({ title, children }: React.PropsWithChildren<{ title: string }>) {
   return (
     <div className="space-y-2">
-      <h4 className="text-md font-bold">{title}</h4>
+      <h4 className="text-base font-bold">{title}</h4>
       {children}
     </div>
   );
@@ -67,7 +67,7 @@ function DisclosureComponent({
             name={heading}
             className="flex w-full items-center space-x-2 bg-gray-600 py-1 px-4 text-left text-white"
           >
-            <h4 className="text-md flex-1 font-bold">{heading}</h4>
+            <h4 className="flex-1 text-base font-bold">{heading}</h4>
             {visibleStats && (
               <span className="flex items-center space-x-4">
                 <span className="whitespace-nowrap">

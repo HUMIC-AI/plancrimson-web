@@ -133,7 +133,7 @@ export default function UserPage() {
     <Layout scheduleQueryConstraints={queryConstraints} className="mx-auto w-full max-w-screen-md flex-1 p-8">
       <div className="flex flex-col space-y-8 rounded-xl border-2 border-blue-900 p-8 shadow">
         <div className="flex items-center">
-          <ImageWrapper url={pageProfile.photoUrl} size="md" />
+          <ImageWrapper url={pageProfile.photoUrl} size="md" alt="User profile" />
 
           <div className="ml-8">
             <h1 className="text-3xl">{pageProfile.username}</h1>

@@ -53,7 +53,7 @@ export function loadCourses(
     }));
     const fetchedClasses = allTruthy(classes.map((result) => {
       if (result.status === 'fulfilled') {
-        return result.value;
+        return result.value as ExtendedClass;
       }
       console.error(result.reason);
       return null;

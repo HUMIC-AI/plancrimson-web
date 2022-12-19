@@ -190,9 +190,9 @@ export default function CourseCard({
           {departmentImages[department] && (
             <Image
               src={departmentImages[department].urls.thumb}
-              alt={departmentImages[department].alt_description || undefined}
-              layout="fill"
-              objectFit="cover"
+              alt={departmentImages[department].alt_description || ''}
+              fill
+              style={{ objectFit: 'cover' }}
               className={highlight ? 'opacity-10' : 'opacity-30'}
             />
           )}
