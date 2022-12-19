@@ -1,10 +1,3 @@
-import {
-  collection,
-  getDocs,
-  getFirestore,
-  query,
-  where,
-} from 'firebase/firestore';
 import type {
   Semester,
   Schedule,
@@ -371,21 +364,6 @@ export const termToSeasonMap: Record<string, Semester> = {
 
 export function adjustAttr(attr: string) {
   return ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr;
-}
-
-/**
- * Fetches from Firestore all the evaluations for a given course.
- * @param courseName The name of the course to get evaluations for.
- * @returns The evaluations for a given course.
- */
-export async function getEvaluations(courseName: string) {
-  const evaluations = await getDocs(
-    query(
-      collection(getFirestore(), 'evaluations'),
-      where('courseName', '==', courseName),
-    ),
-  );
-  return evaluations.docs.map((doc) => doc.data() as Evaluation);
 }
 
 /**

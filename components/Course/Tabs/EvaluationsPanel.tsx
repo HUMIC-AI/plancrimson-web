@@ -1,24 +1,47 @@
+import {
+  getFirestore, onSnapshot, query, collection, where, FirestoreError,
+} from 'firebase/firestore';
 import { Tab } from '@headlessui/react';
-import React, { useMemo } from 'react';
-import useSWR from 'swr';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ExtendedClass, Evaluation } from '../../../shared/apiTypes';
 import { Season } from '../../../shared/types';
 import {
-  getEvaluations,
   compareSemesters,
   getEvaluationId,
 } from '../../../shared/util';
 import EvaluationComponent from './EvaluationComponent';
 
-export default function EvaluationsPanel({ course }: { course: ExtendedClass }) {
-  const { data: evaluations, error } = useSWR(
-    course ? course.SUBJECT + course.CATALOG_NBR : null,
-    getEvaluations,
-  );
+/**
+ * Fetches from Firestore all the evaluations for a given course.
+ * @param courseName The name of the course to get evaluations for.
+ * @returns The evaluations for a given course.
+ */
+function useEvaluations(courseName: string) {
+  const [evaluations, setEvaluations] = useState<Evaluation[]>();
+  const [error, setError] = useState<FirestoreError | null>(null);
 
-  if (error) {
-    console.error('Error fetching evaluations', error);
-  }
+  useEffect(() => {
+    if (!courseName) return;
+    const unsubscribe = onSnapshot(
+      query(
+        collection(getFirestore(), 'evaluations'),
+        where('courseName', '==', courseName),
+      ),
+      (snapshot) => {
+        setEvaluations(snapshot.docs.map((doc) => doc.data() as Evaluation));
+      },
+      (err) => {
+        setError(err);
+      },
+    );
+    return () => unsubscribe();
+  }, [courseName]);
+
+  return [evaluations, error] as const;
+}
+
+export default function EvaluationsPanel({ course }: { course: ExtendedClass }) {
+  const [evaluations, error] = useEvaluations(course.SUBJECT + course.CATALOG_NBR);
 
   const allEvals = useMemo(() => {
     if (!evaluations) return null;

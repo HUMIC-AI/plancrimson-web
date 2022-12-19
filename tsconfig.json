@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -14,7 +18,9 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "types": ["@types/jest"],
+    "types": [
+      "@types/jest"
+    ],
     "baseUrl": "."
   },
   "include": [
@@ -24,5 +30,9 @@
     "*.config.js",
     "scripts/**/*.js"
   ],
-  "exclude": ["node_modules", "data", "build"]
+  "exclude": [
+    "node_modules",
+    "data",
+    "build"
+  ]
 }
