@@ -42,3 +42,11 @@ export async function getFilePath(message: string, prefix: string, readonly = fa
 
   return filePath.replace(/\/$/, ''); // remove trailing
 }
+
+export function assertEnvVar(varName: string) {
+  const varValue = process.env[varName];
+  if (!varValue) {
+    throw new Error(`must set "${varName}" env variable`);
+  }
+  return varValue;
+}
