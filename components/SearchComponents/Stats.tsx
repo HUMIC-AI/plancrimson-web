@@ -15,6 +15,7 @@ export const StatsComponent: React.FC<StatsProps> = function ({ nbHits, processi
       </p>
       <p className="whitespace-nowrap">
         Results:
+        {' '}
         {nbHits}
       </p>
     </div>

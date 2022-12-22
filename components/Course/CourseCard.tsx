@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import React, { useMemo } from 'react';
 import {
-  FaInfo, FaTimes, FaPlus, FaExclamationTriangle,
+  FaTimes, FaPlus, FaExclamationTriangle, FaStar, FaStarHalfAlt,
 } from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
 import {
@@ -196,9 +196,9 @@ export default function CourseCard({
               className={highlight ? 'opacity-10' : 'opacity-30'}
             />
           )}
-          <div className="relative">
+          <div className="relative space-y-1">
             <p className="flex items-start justify-between">
-              <span className="font-bold text-blue-300">
+              <button type="button" className="interactive border-b font-bold text-blue-300" onClick={() => handleExpand(course)}>
                 <HighlightComponent
                   attribute="SUBJECT"
                   course={course}
@@ -209,7 +209,7 @@ export default function CourseCard({
                   course={course}
                   inSearch={inSearchContext}
                 />
-              </span>
+              </button>
 
               {/* the info and course selection buttons */}
               <span className="ml-2 flex items-center space-x-2">
@@ -218,15 +218,6 @@ export default function CourseCard({
                   <FaExclamationTriangle color="yellow" className="text-xl" />
                 </Tooltip>
                 )}
-
-                <button
-                  type="button"
-                  name="More info"
-                  className={buttonStyles}
-                  onClick={() => handleExpand(course)}
-                >
-                  <FaInfo />
-                </button>
 
                 {interactive && <ToggleButton chosenScheduleId={chosenScheduleId!} course={course} />}
               </span>
@@ -243,6 +234,7 @@ export default function CourseCard({
               {' '}
               {semester.year}
             </p>
+            {typeof course.meanRating !== 'undefined' && <StarRating rating={course.meanRating} />}
           </div>
         </div>
         {/* end header component */}
@@ -270,6 +262,37 @@ export default function CourseCard({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function StarRating({ rating }: { rating: number }) {
+  const stars = useMemo(() => {
+    const fullStars = Math.floor(rating);
+    const halfStars = rating - fullStars >= 0.5 ? 1 : 0;
+    const emptyStars = 5 - fullStars - halfStars;
+    return [...Array(fullStars).fill('full'), ...Array(halfStars).fill('half'), ...Array(emptyStars).fill('empty')];
+  }, [rating]);
+
+  return (
+    <div className="flex items-center space-x-1">
+      {stars.map((star, i) => (star === 'half'
+        ? (
+          <FaStarHalfAlt
+          // eslint-disable-next-line react/no-array-index-key
+            key={i}
+            color="orange"
+            className="text-sm"
+          />
+        )
+        : (
+          <FaStar
+            // eslint-disable-next-line react/no-array-index-key
+            key={i}
+            color={star === 'full' ? 'yellow' : 'gray'}
+            className="text-sm"
+          />
+        )))}
     </div>
   );
 }
