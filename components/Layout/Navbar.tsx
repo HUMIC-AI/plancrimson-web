@@ -34,15 +34,13 @@ export default function Navbar() {
               <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex shrink-0 items-center text-white">
                   <Link href="/home">
-                    <a>
-                      {/* this on <lg */}
-                      <FaCalendarCheck className="block h-8 w-auto lg:hidden" />
-                      {/* this on >=lg */}
-                      <div className="hidden items-center gap-4 lg:flex">
-                        <FaCalendarCheck className="h-8 w-auto" />
-                        <h1 className="text-lg">Plan Crimson</h1>
-                      </div>
-                    </a>
+                    {/* this on <lg */}
+                    <FaCalendarCheck className="block h-8 w-auto lg:hidden" />
+                    {/* this on >=lg */}
+                    <div className="hidden items-center gap-4 lg:flex">
+                      <FaCalendarCheck className="h-8 w-auto" />
+                      <h1 className="text-lg">Plan Crimson</h1>
+                    </div>
                   </Link>
                 </div>
 
@@ -91,17 +89,16 @@ const SmallComponents = {
               key={item.name}
               aria-current={item.href === pathname ? 'page' : undefined}
             >
-              <Link href={item.href}>
-                <a
-                  className={classNames(
-                    item.href === pathname
-                      ? 'bg-gray-800 text-white font-bold'
-                      : 'text-gray-300 font-medium hover:bg-gray-800 hover:text-white',
-                    'block px-3 py-2 rounded-md text-base',
-                  )}
-                >
-                  {item.name}
-                </a>
+              <Link
+                href={item.href}
+                className={classNames(
+                  item.href === pathname
+                    ? 'bg-gray-800 text-white font-bold'
+                    : 'text-gray-300 font-medium hover:bg-gray-800 hover:text-white',
+                  'block px-3 py-2 rounded-md text-base',
+                )}
+              >
+                {item.name}
               </Link>
             </Disclosure.Button>
           ))}
@@ -121,20 +118,18 @@ const LargeOnly = {
         <div className="flex items-center space-x-4">
           {paths.map((item) => (
             // pass the query between pages to preserve the selected schedule
-            <Link key={item.name} href={item.href}>
-              <a
-                className={classNames(
-                  item.href === pathname
-                    ? 'bg-gray-800 text-white font-bold'
-                    : 'text-gray-300 hover:bg-gray-800 font-medium hover:text-white',
-                  'px-3 py-2 rounded-md text-sm text-center',
-                )}
-                aria-current={
-              item.href === pathname ? 'page' : undefined
-            }
-              >
-                {item.name}
-              </a>
+            <Link
+              key={item.name}
+              href={item.href}
+              className={classNames(
+                item.href === pathname
+                  ? 'bg-gray-800 text-white font-bold'
+                  : 'text-gray-300 hover:bg-gray-800 font-medium hover:text-white',
+                'px-3 py-2 rounded-md text-sm text-center',
+              )}
+              aria-current={item.href === pathname ? 'page' : 'false'}
+            >
+              {item.name}
             </Link>
           ))}
         </div>
@@ -188,8 +183,8 @@ function UserMenu() {
           {uid && (
           <Menu.Item>
             {({ active }) => (
-              <Link href={`/user/${username}`}>
-                <a className={buttonStyles(active)}>Profile</a>
+              <Link href={`/user/${username}`} className={buttonStyles(active)}>
+                Profile
               </Link>
             )}
           </Menu.Item>

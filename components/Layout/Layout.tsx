@@ -55,10 +55,9 @@ export function Footer() {
               pathname: '/privacy',
               query,
             }}
+            className="interactive font-bold"
           >
-            <a className="interactive font-bold">
-              Attributions
-            </a>
+            Attributions
           </Link>
         </span>
         <span>
@@ -81,10 +80,9 @@ export function Footer() {
               pathname: '/privacy',
               query,
             }}
+            className="interactive font-bold"
           >
-            <a className="interactive font-bold">
-              Privacy
-            </a>
+            Privacy
           </Link>
         </span>
       </div>

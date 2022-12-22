@@ -148,20 +148,18 @@ const Panels = {
           const profile = profiles[profileId];
           return (
             <li key={profileId}>
-              <Link href={profile ? `/user/${profile.username}` : '#'}>
-                <a className="interactive m-2 block rounded-xl bg-gray-300 px-4 py-2 shadow">
-                  <div className="flex items-center space-x-4">
-                    <ImageWrapper url={profile?.photoUrl} alt="User profile" />
-                    <div>
-                      <span className="font-bold">{profile?.username || 'Loading...'}</span>
-                      <p>
-                        {numSharedCourses}
-                        {' '}
-                        courses in common
-                      </p>
-                    </div>
+              <Link href={profile ? `/user/${profile.username}` : '#'} className="interactive m-2 block rounded-xl bg-gray-300 px-4 py-2 shadow">
+                <div className="flex items-center space-x-4">
+                  <ImageWrapper url={profile?.photoUrl} alt="User profile" />
+                  <div>
+                    <span className="font-bold">{profile?.username || 'Loading...'}</span>
+                    <p>
+                      {numSharedCourses}
+                      {' '}
+                      courses in common
+                    </p>
                   </div>
-                </a>
+                </div>
               </Link>
             </li>
           );
@@ -226,10 +224,8 @@ function ProfileList({ profiles, Button }: { profiles: Array<UserProfileWithId>,
               ? <Image src={profile.photoUrl} alt="User profile" className="h-8 w-8 rounded-full" />
               : <div className="h-8 w-8 rounded-full bg-blue-300" />}
 
-            <Link href={`/user/${profile.username}`}>
-              <a className="ml-2 font-bold">
-                {profile.username}
-              </a>
+            <Link href={`/user/${profile.username}`} className="ml-2 font-bold">
+              {profile.username}
             </Link>
           </div>
 

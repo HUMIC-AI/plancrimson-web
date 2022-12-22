@@ -32,11 +32,8 @@ export default function PlanningPanel({ course }: { course: ExtendedClass }) {
         <p>
           Get started by
           {' '}
-          <Link href="/">
-            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-            <a className="interactive font-bold">
-              creating a schedule
-            </a>
+          <Link href="/" className="interactive font-bold">
+            creating a schedule
           </Link>
           !
         </p>

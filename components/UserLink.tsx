@@ -11,7 +11,7 @@ import { classNames } from '../shared/util';
 
 
 export function UserLink({ uid }: { uid: string }) {
-  return <Link href={`/user/${uid}`}><a>{uid}</a></Link>;
+  return <Link href={`/user/${uid}`}>{uid}</Link>;
 }
 
 
@@ -68,9 +68,7 @@ export function ScheduleSection({ schedule }: { schedule: Schedule }) {
             {profile
               ? (
                 <Link href={`/user/${profile.username}`}>
-                  <a>
-                    {profile.username}
-                  </a>
+                  {profile.username}
                 </Link>
               )
               : 'Anonymous User'}

@@ -11,11 +11,8 @@ export default function LandingPage() {
       {/* <div className="absolute inset-0 bg-blue-900">Hi</div> */}
       <h1 className="text-center text-5xl font-black uppercase tracking-wider sm:text-6xl">Plan Crimson</h1>
       <p className="mt-8 text-center text-xl italic">Make the most of your Harvard education</p>
-      <Link href="/search">
-        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-        <a className="mt-8 inline-block rounded-md bg-white py-4 px-8 text-center text-2xl font-bold text-blue-900 shadow-md transition-all hover:opacity-50 hover:shadow-xl">
-          Get started now
-        </a>
+      <Link href="/search" className="mt-8 inline-block rounded-md bg-white py-4 px-8 text-center text-2xl font-bold text-blue-900 shadow-md transition-all hover:opacity-50 hover:shadow-xl">
+        Get started now
       </Link>
 
       <div className="mt-24 flex flex-col items-center text-center sm:flex-row sm:space-x-12 sm:text-right">
@@ -48,11 +45,8 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <Link href="/search">
-        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-        <a className="mt-24 inline-block rounded-md bg-white py-4 px-8 text-2xl font-bold text-blue-900 shadow-md transition-all hover:opacity-50 hover:shadow-xl">
-          Get started now
-        </a>
+      <Link href="/search" className="mt-24 inline-block rounded-md bg-white py-4 px-8 text-2xl font-bold text-blue-900 shadow-md transition-all hover:opacity-50 hover:shadow-xl">
+        Get started now
       </Link>
     </Layout>
   );
