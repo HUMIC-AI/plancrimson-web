@@ -7,7 +7,7 @@ import {
 } from 'firebase/auth';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import type {
-  FriendRequest, UserProfile, UserProfileWithId,
+  FriendRequest, UserProfileWithId,
 } from '../shared/types';
 import Schema from '../shared/schema';
 import type { AppDispatch, RootState } from './store';
@@ -116,7 +116,14 @@ export async function signInUser() {
 }
 
 
-export async function getProfile(id: string): Promise<UserProfile & { id: string }> {
+/**
+ * Checks for cached user data in the session storage. If not found,
+ * get it from Firestore and save it to session storage.
+ * @param id the user id to query for
+ * @throws Error if invalid cached value or user not found
+ * @returns their profile data
+ */
+export async function getProfile(id: string): Promise<UserProfileWithId> {
   const cached = sessionStorage.getItem(`profile/${id}`);
   if (cached) {
     try {

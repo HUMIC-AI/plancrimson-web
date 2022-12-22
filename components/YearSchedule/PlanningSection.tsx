@@ -274,7 +274,8 @@ export function SemestersList({
     const [season, year] = earliest.season === 'Spring'
       ? ['Fall' as Season, earliest.year - 1]
       : ['Spring' as Season, earliest.year];
-    dispatch(Schedules.createDefaultSchedule({ season, year }, userId)).catch(handleError);
+    dispatch(Schedules.createDefaultSchedule({ season, year }, userId))
+      .catch(handleError);
   }
 
   return (
