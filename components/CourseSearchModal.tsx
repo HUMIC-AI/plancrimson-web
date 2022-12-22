@@ -89,6 +89,7 @@ function ModalWrapper({ selected, term }: { selected: string, term: string | und
   }
 
   if (!client || error) {
+    console.error(error);
     return <p>{errorMessages.meiliClient}</p>;
   }
 

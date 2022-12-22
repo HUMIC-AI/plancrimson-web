@@ -4,7 +4,7 @@ import {
   createSlice, PayloadAction,
 } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { getMeiliHost } from 'src/meili';
+import { getMeiliApiKey, getMeiliHost } from 'src/meili';
 import type { ExtendedClass } from '../../shared/apiTypes';
 import { allTruthy } from '../../shared/util';
 import type { AppDispatch, RootState } from '../store';
@@ -54,13 +54,22 @@ export function loadCourses(
   return async (dispatch: AppDispatch, getState: () => RootState) => {
     const state = getState();
     const cache = selectClassCache(state);
-    const classes = await Promise.allSettled(classIds.map((classId) => {
+
+    const classes = await Promise.allSettled(classIds.map(async (classId) => {
       if (classId in cache) {
-        return Promise.resolve(cache[classId]);
+        return cache[classId];
       }
+      const apiKey = await getMeiliApiKey();
+
       // get the specified document from the Meilisearch index
-      return axios.get<ExtendedClass>(`${getMeiliHost()}/indexes/courses/documents/${classId}`);
+      const response = await axios.get<ExtendedClass>(`${getMeiliHost()}/indexes/courses/documents/${classId}`, {
+        headers: {
+          authorization: `Bearer ${apiKey}`,
+        },
+      });
+      return response.data;
     }));
+
     const fetchedClasses = allTruthy(classes.map((result) => {
       if (result.status === 'fulfilled') {
         return result.value as ExtendedClass;

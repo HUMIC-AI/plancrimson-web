@@ -47,7 +47,6 @@ if (getApps().length === 0) {
 
 /**
  * Ask the user for their graduation year.
- * Create default schedules
  */
 function GraduationYearDialog({ defaultYear, uid } : { defaultYear: number; uid: string; }) {
   const dispatch = useAppDispatch();
@@ -62,14 +61,18 @@ function GraduationYearDialog({ defaultYear, uid } : { defaultYear: number; uid:
       await dispatch(Settings.chooseSchedule({ term: `${schedule.year}${schedule.season}`, scheduleId: schedule.id }));
     });
     const settled = await Promise.allSettled(promises);
-    console.log(settled);
+
     settled.forEach((result) => {
       if (result.status === 'rejected') {
         console.error('error creating default schedules', result.reason);
       }
     });
 
-    await updateDoc(Schema.profile(uid), 'classYear', classYear).catch((err) => console.error(`error updating class year for ${uid}`, err));
+    try {
+      await updateDoc(Schema.profile(uid), 'classYear', classYear);
+    } catch (err) {
+      console.error(`error updating class year for ${uid}`, err);
+    }
 
     setOpen(false);
   }

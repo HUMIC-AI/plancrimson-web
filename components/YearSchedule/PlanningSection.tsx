@@ -137,10 +137,13 @@ export function HeaderSection({ resizeRef }: WithResizeRef) {
             onClick={() => dispatch(Planner.toggleExpand())}
             className={classNames(
               isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
-              'rounded-full hover:opacity-50 p-1 border',
+              'rounded-full hover:opacity-50 px-2 border flex items-center',
             )}
           >
             <FaArrowsAltV />
+            <span className="ml-2">
+              {isExpanded ? 'Collapse' : 'Expand'}
+            </span>
           </button>
           {semesterFormat !== 'sample' && (
             <button
@@ -155,8 +158,8 @@ export function HeaderSection({ resizeRef }: WithResizeRef) {
               className="interactive rounded bg-gray-600 py-1 px-2"
             >
               {semesterFormat === 'all'
-                ? 'Showing all schedules'
-                : 'Showing only selected schedules'}
+                ? 'All schedules'
+                : 'Only selected schedules'}
             </button>
           )}
           <button

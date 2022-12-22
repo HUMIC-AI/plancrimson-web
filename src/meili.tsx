@@ -20,7 +20,7 @@ export function getMeiliHost() {
   return host;
 }
 
-async function getMeiliApiKey() {
+export async function getMeiliApiKey() {
   const metadata = await getDoc(Schema.metadata());
   const key = metadata.data()?.meiliApiKey;
   if (!key && process.env.NODE_ENV !== 'development') throw new Error('metadata not found');

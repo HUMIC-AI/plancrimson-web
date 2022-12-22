@@ -87,7 +87,10 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
         // </div>
         <span>No results found</span>
       ) : (
-        <div className={oneCol ? 'flex flex-col space-y-2' : 'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4'}>
+        <div className={oneCol
+          ? 'flex w-full flex-col items-stretch space-y-2'
+          : 'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4'}
+        >
           {hits.map((hit) => (
             <CourseCard
               key={getClassId(hit)}

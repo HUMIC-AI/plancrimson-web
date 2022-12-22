@@ -56,7 +56,6 @@ export function useBreakpoint(breakpoint: number) {
 
     function handleResize(this: Window) {
       setIsPast(this.innerWidth >= breakpoint);
-      console.log(this.innerWidth >= breakpoint);
     }
 
     setIsPast(window.innerWidth >= breakpoint);

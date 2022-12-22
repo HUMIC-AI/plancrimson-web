@@ -99,8 +99,6 @@ export default function Layout({
 }: PropsWithChildren<LayoutProps>) {
   const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
 
-  useSchedules(constraints);
-
   const description = 'Wait no longer to plan out your concentration. For Harvard College students. Q Reports, Course Evaluations, my.harvard, and more, all in one place.';
 
   return (
@@ -117,18 +115,22 @@ export default function Layout({
       </Head>
 
       <MeiliProvider>
-        <Wrapper custom={custom} className={className}>
+        <Wrapper scheduleQueryConstraints={constraints} custom={custom} className={className}>
           {children}
         </Wrapper>
-      </MeiliProvider>
 
-      <CustomModal />
+        <CustomModal />
+      </MeiliProvider>
     </>
   );
 }
 
-function Wrapper({ children, custom, className }: PropsWithChildren<Pick<LayoutProps, 'custom' | 'className'>>) {
+function Wrapper({
+  children, scheduleQueryConstraints: constraints, custom, className,
+}: PropsWithChildren<Pick<LayoutProps, 'scheduleQueryConstraints' | 'custom' | 'className'>>) {
   const alerts = useAlerts();
+
+  useSchedules(constraints!);
 
   // eslint-disable-next-line react/jsx-no-useless-fragment
   if (custom) return <>{children}</>;
@@ -166,7 +168,9 @@ function useSchedules(constraints: QueryConstraint[]) {
       const classIds = scheduleEntries.flatMap((schedule) => schedule.classes.map(({ classId }) => classId));
 
       // load all of the classes into the class cache
-      if (client) dispatch(ClassCache.loadCourses(client, classIds));
+      if (client) {
+        dispatch(ClassCache.loadCourses(client, classIds));
+      }
 
       dispatch(Schedules.overwriteSchedules(scheduleEntries));
     }, (err) => {
