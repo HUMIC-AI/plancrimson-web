@@ -50,10 +50,10 @@ export function MeiliProvider({ children }: PropsWithChildren<{}>) {
 
     getMeiliApiKey()
       .then((key) => {
-        setClient(instantMeiliSearch(getMeiliHost(), key, {
+        const newClient = instantMeiliSearch(getMeiliHost(), key, {
           keepZeroFacets: true,
-          placeholderSearch: false,
-        }));
+        });
+        setClient(newClient);
       })
       .catch((err) => {
         console.error('error fetching api key:', err);
