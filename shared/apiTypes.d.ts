@@ -287,36 +287,6 @@ type AttributeDescriptions = Partial<{
   [attr in keyof Class]: string;
 }>;
 
-// const searchableAttributes = [
-//   'Title', // eg "Abstraction and Design in Computation"
-//   'SUBJECT', // eg "COMPSCI"
-//   'CATALOG_NBR', // eg " 51"
-//   'HU_SBJCT_CATNBR_NL', // eg "COMPSCI51"
-//   'HU_ALIAS_CATNBR_NS', // eg "CS51"
-//   'textDescription', // eg "Fundamental concepts in the design of computer programs..."
-
-//   'DAY_OF_WEEK', // eg ["Tuesday", "Thursday"]
-//   'ACAD_CAREER', // eg "FAS"
-//   'ACAD_ORG', // eg "CS"
-
-//   'LOCATION_DESCR_LOCATION', // eg "Allston Campus"
-//   'SSR_COMPONENTDESCR', // eg "Lecture"
-//   'HU_REC_PREP', // eg "Strongly recommended: CS 124 (or equivalent)..."
-//   'HU_COURSE_PREQ', // eg "Enrollment limited to 30 students..."
-
-//   'CRSE_ID', // eg "112960"
-//   'CLASS_NBR', // eg "24111"
-
-//   'IS_SCL_DESCR_IS_SCL_DESCRB', // eg "Faculty of Arts & Sciences"
-//   'IS_SCL_DESCR_IS_SCL_DESCRD', // eg "Computer Science"
-//   'IS_SCL_DESCR_IS_SCL_DESCRH', // eg "2022 Spring"
-//   'IS_SCL_DESCR_IS_SCL_DESCRL', // eg ["Stephen Chong", "Brian Yu"]
-//   'IS_SCL_DESCR_IS_SCL_DESCRJ', // eg "Computer Science"
-//   'IS_SCL_DESCR_IS_SCL_DESCRG', // eg "SEC 1.402 Classroom"
-//   'IS_SCL_DESCR100_HU_SCL_GRADE_BASIS', // eg "FAS Letter Graded"
-//   'IS_SCL_DESCR100_HU_SCL_ATTR_LEVL', // eg "Primarily for Undergraduate Students"
-// ];
-
 export interface Facet {
   Key: string;
 

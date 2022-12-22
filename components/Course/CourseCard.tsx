@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import React, { useMemo } from 'react';
 import {
-  FaTimes, FaPlus, FaExclamationTriangle, FaStar, FaStarHalfAlt,
+  FaTimes, FaPlus, FaExclamationTriangle, FaStar, FaStarHalfAlt, FaUserFriends,
 } from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
 import {
@@ -235,6 +235,7 @@ export default function CourseCard({
               {semester.year}
             </p>
             {typeof course.meanRating !== 'undefined' && <StarRating rating={course.meanRating} />}
+            {typeof course.meanClassSize !== 'undefined' && <ClassSizeRating population={course.meanClassSize} />}
           </div>
         </div>
         {/* end header component */}
@@ -266,13 +267,22 @@ export default function CourseCard({
   );
 }
 
+/**
+ * @param value from 0 to 5.
+ * @returns a flat array filled with "full", "half", or "empty".
+ */
+function getStars(value: number): ('full' | 'half' | 'empty')[] {
+  const halfStars = value - Math.floor(value) >= 0.5 ? 1 : 0;
+  const fullStars = Math.min(Math.max(Math.floor(value), 0), 5 - halfStars);
+  const emptyStars = 5 - fullStars - halfStars;
+  return [...Array(fullStars).fill('full'), ...Array(halfStars).fill('half'), ...Array(emptyStars).fill('empty')];
+}
+
+/**
+ * Scale of one to five stars.
+ */
 function StarRating({ rating }: { rating: number }) {
-  const stars = useMemo(() => {
-    const fullStars = Math.floor(rating);
-    const halfStars = rating - fullStars >= 0.5 ? 1 : 0;
-    const emptyStars = 5 - fullStars - halfStars;
-    return [...Array(fullStars).fill('full'), ...Array(halfStars).fill('half'), ...Array(emptyStars).fill('empty')];
-  }, [rating]);
+  const stars = useMemo(() => getStars(rating), [rating]);
 
   return (
     <div className="flex items-center space-x-1">
@@ -293,6 +303,38 @@ function StarRating({ rating }: { rating: number }) {
             className="text-sm"
           />
         )))}
+      <span className="text-sm">
+        {rating.toFixed(2)}
+      </span>
+    </div>
+  );
+}
+
+function ClassSizeRating({ population }: { population: number }) {
+  const stars = useMemo(() => getStars(Math.log(population)), [population]);
+
+  return (
+    <div className="flex items-center space-x-1">
+      {stars.map((star, i) => (star === 'half'
+        ? (
+          <FaUserFriends
+          // eslint-disable-next-line react/no-array-index-key
+            key={i}
+            color="orange"
+            className="text-sm"
+          />
+        )
+        : (
+          <FaUserFriends
+            // eslint-disable-next-line react/no-array-index-key
+            key={i}
+            color={star === 'full' ? 'yellow' : 'gray'}
+            className="text-sm"
+          />
+        )))}
+      <span className="text-sm">
+        {Math.floor(population)}
+      </span>
     </div>
   );
 }

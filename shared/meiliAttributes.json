@@ -2,8 +2,8 @@
   "filterableAttributes": [
     "STRM",
     "SUBJECT",
-    "DAY_OF_WEEK",
     "ACAD_ORG",
+    "DAY_OF_WEEK",
     "LOCATION_DESCR_LOCATION",
     "SSR_COMPONENTDESCR",
     "IS_SCL_DESCR100_HU_SCL_ATTR_LEVL",
