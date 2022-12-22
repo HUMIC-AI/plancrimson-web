@@ -116,6 +116,8 @@ type CourseCardProps = {
   setDragStatus?: React.Dispatch<React.SetStateAction<DragStatus>>;
   warnings?: string;
   interactive?: boolean;
+  hideTerm?: boolean;
+  hideRatings?: boolean;
 };
 
 /**
@@ -136,6 +138,8 @@ export default function CourseCard({
   inSearchContext = true,
   warnings,
   interactive = true,
+  hideTerm = false,
+  hideRatings = false,
 }: CourseCardProps) {
   const isExpanded = useAppSelector(Planner.selectExpandCards);
   const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
@@ -198,7 +202,7 @@ export default function CourseCard({
           )}
           <div className="relative space-y-1">
             <p className="flex items-start justify-between">
-              <button type="button" className="interactive border-b font-bold text-blue-300" onClick={() => handleExpand(course)}>
+              <button type="button" className="interactive border-b text-left font-bold text-blue-300" onClick={() => handleExpand(course)}>
                 <HighlightComponent
                   attribute="SUBJECT"
                   course={course}
@@ -229,13 +233,15 @@ export default function CourseCard({
                 inSearch={inSearchContext}
               />
             </h3>
+            {hideTerm || (
             <p className="text-sm text-gray-300">
               {semester.season}
               {' '}
               {semester.year}
             </p>
-            {typeof course.meanRating !== 'undefined' && <StarRating rating={course.meanRating} />}
-            {typeof course.meanClassSize !== 'undefined' && <ClassSizeRating population={course.meanClassSize} />}
+            )}
+            {!hideRatings && typeof course.meanRating !== 'undefined' && <StarRating rating={course.meanRating} />}
+            {!hideRatings && typeof course.meanClassSize !== 'undefined' && <ClassSizeRating population={course.meanClassSize} />}
           </div>
         </div>
         {/* end header component */}

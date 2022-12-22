@@ -62,6 +62,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           }));
           dispatch(Profile.setPhotoUrl(u.photoURL));
         } else { // just signed out
+          console.log('signed out');
           dispatch(Auth.setAuthInfo(null));
           dispatch(Settings.overwriteSettings(getInitialSettings()));
           dispatch(Profile.signOut());

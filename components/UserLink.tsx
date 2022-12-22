@@ -6,7 +6,6 @@ import { Schedule } from '../shared/types';
 import { useModal } from '../src/context/modal';
 import { ClassCache } from '../src/features';
 import { useAppSelector, useProfiles } from '../src/hooks';
-import CourseCard from './Course/CourseCard';
 import { classNames } from '../shared/util';
 
 
@@ -76,16 +75,16 @@ export function ScheduleSection({ schedule }: { schedule: Schedule }) {
         </div>
       </div>
 
-      <ul className="mt-2 flex flex-wrap">
+      <ul className="mt-2 list-inside list-disc">
         {schedule.classes.map((classData) => classData.classId in classCache && (
-        <li key={classData.classId} className="mr-2">
-          <CourseCard
-            chosenScheduleId={schedule.id}
-            course={classCache[classData.classId]}
-            inSearchContext={false}
-            handleExpand={showCourse}
-            interactive={false}
-          />
+        <li key={classData.classId}>
+          <button type="button" className="font-bold underline transition-opacity hover:opacity-50" onClick={() => showCourse(classCache[classData.classId])}>
+            {classCache[classData.classId].SUBJECT}
+            {classCache[classData.classId].CATALOG_NBR}
+            :
+          </button>
+          {' '}
+          {classCache[classData.classId].Title}
         </li>
         ))}
       </ul>

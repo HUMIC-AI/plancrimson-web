@@ -2,7 +2,7 @@ import { Tab } from '@headlessui/react';
 import axios from 'axios';
 import { getAuth } from 'firebase/auth';
 import {
-  deleteDoc, getDoc, updateDoc, where,
+  deleteDoc, getDoc, limit, updateDoc, where,
 } from 'firebase/firestore';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -22,7 +22,7 @@ import {
 
 export default function ConnectPage() {
   const userId = Auth.useAuthProperty('uid');
-  const constraints = useMemo(() => [where('public', '==', true)], []);
+  const constraints = useMemo(() => [where('public', '==', true), limit(20)], []);
   const elapsed = useElapsed(2000, []);
 
   const { incoming, outgoing } = useFriendRequests(userId);
@@ -54,13 +54,13 @@ export default function ConnectPage() {
   return (
     <Layout title="Connect" scheduleQueryConstraints={constraints} className="mx-auto w-full max-w-screen-md flex-1 p-8">
       <Tab.Group>
-        <Tab.List className="flex overflow-hidden rounded-t-xl">
+        <Tab.List className="mb-4 flex">
           <Tab className={tabClass}>Public schedules</Tab>
           <Tab className={tabClass}>Friends</Tab>
           <Tab className={tabClass}>Incoming requests</Tab>
           <Tab className={tabClass}>Find classmates</Tab>
         </Tab.List>
-        <Tab.Panels className="overflow-hidden rounded-b-xl bg-gray-200 p-4">
+        <Tab.Panels>
           <Tab.Panel><Panels.PublicSchedules /></Tab.Panel>
           <Tab.Panel><Panels.Friends friends={friends} /></Tab.Panel>
           <Tab.Panel><Panels.IncomingRequests pending={incomingPending} /></Tab.Panel>
@@ -73,6 +73,7 @@ export default function ConnectPage() {
 
 const Panels = {
   PublicSchedules() {
+    // the proper schedules are already selected by the constraints argument to Layout
     const schedules = useAppSelector(Schedules.selectSchedules);
 
     if (Object.values(schedules).length === 0) {

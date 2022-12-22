@@ -37,7 +37,7 @@ export const classCacheSlice = createSlice({
 
 // ========================= SELECTORS =========================
 
-export const selectClassCache = (state: RootState) => state.classCache.cache;
+export const selectClassCache: (state: RootState) => ClassCache = (state: RootState) => state.classCache.cache;
 
 /**
  * Load the given classes from the index into Redux.
