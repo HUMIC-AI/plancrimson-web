@@ -1,20 +1,12 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { Listbox } from '@headlessui/react';
+import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
-import { Semester } from '../shared/types';
-import { classNames } from '../shared/util';
+import { classNames, titleContainsTerm } from '../shared/util';
 import { Schedules, Settings } from '../src/features';
 import { useAppDispatch, useAppSelector } from '../src/hooks';
 import FadeTransition from './FadeTransition';
-
-function titleContainsTerm(title: string, term: Semester) {
-  const titleLower = title.toLowerCase();
-  return (
-    titleLower.includes(term.season.toLowerCase())
-    && titleLower.includes(term.year.toString())
-  );
-}
 
 interface ButtonTitleProps {
   showTerm: 'on' | 'off' | 'auto';
@@ -229,7 +221,9 @@ function ScheduleChooser({
                   value={null}
                   className="w-full whitespace-nowrap bg-white py-1.5 px-2"
                 >
-                  No schedules
+                  <Link href="/" className="interactive">
+                    No schedules. Add one now!
+                  </Link>
                 </Listbox.Option>
               )}
             </Listbox.Options>

@@ -20,45 +20,47 @@ import type { Class } from '../../shared/apiTypes';
 
 type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean };
 
-function AttributeMenuDropdown() {
+/**
+ * The main search bar that goes at the top of the search page. See {@link SearchBar} below.
+ */
+export function SearchBoxComponent({ scheduleChooser = true, ...props }: SearchBoxProps) {
+  const schedules = useAppSelector(Schedules.selectSchedules);
+  const { chooseSchedule: selectSchedule, chosenScheduleId: selectedSchedule } = useChosenScheduleContext();
+
   return (
-    <div className="relative">
-      <Disclosure as={Fragment}>
-        {({ open }) => (
-          <>
-            <Disclosure.Button className="inset-y-0 right-0 flex items-center">
-              {open ? (
-                <FaTimes className="h-5 w-5 text-gray-700" />
-              ) : (
-                <FaBars className="h-5 w-5 text-gray-700" />
-              )}
-            </Disclosure.Button>
-            <Disclosure.Panel
-              unmount={false}
-              className={classNames(
-                'absolute z-20 mt-2 right-0 w-48 p-2 from-gray-800 to-blue-900 bg-gradient-to-br rounded-md',
-                'flex flex-col space-y-2',
-              )}
-            >
-              {MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
-                <Attribute
-                  attribute={attr}
-                  key={attr}
-                  label={ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr}
-                  showSubjectColor={false}
-                />
-              ))}
-              <span className="p-1 text-xs text-white">
-                If filters are not showing up, clear your search and try
-                again.
-              </span>
-            </Disclosure.Panel>
-          </>
-        )}
-      </Disclosure>
+    <div className="flex flex-col items-start space-y-4">
+      <div className="flex w-full space-x-4">
+        <SearchBar {...props} scheduleChooser={scheduleChooser} />
+      </div>
+
+      {scheduleChooser && (
+      <div className="relative sm:hidden">
+        <ScheduleChooser
+          scheduleIds={sortSchedules(schedules).map((schedule) => schedule.id)}
+          handleChooseSchedule={selectSchedule}
+          chosenScheduleId={selectedSchedule}
+          direction="right"
+          showDropdown
+        />
+      </div>
+      )}
     </div>
   );
 }
+
+
+export function SearchBoxDemo() {
+  return (
+    <SearchBoxComponent
+      isSearchStalled={false}
+      refine={alertSignIn}
+      currentRefinement="Search now"
+    />
+  );
+}
+
+
+export default connectSearchBox<SearchBoxProps>(SearchBoxComponent);
 
 
 function SearchBar({
@@ -78,11 +80,11 @@ function SearchBar({
     <div className="flex w-full flex-col space-y-1">
       {/* box containing search bar and attribute menu */}
       <div className="flex items-center space-x-4">
-        {isLg && !showAttributes && (
+        {!showAttributes && (
         <button
           type="button"
           onClick={() => dispatch(Planner.setShowAttributes(true))}
-          className="interactive"
+          className="interactive hidden lg:block"
         >
           <FaAngleDoubleRight />
         </button>
@@ -142,41 +144,42 @@ function SearchBar({
 }
 
 
-export function SearchBoxComponent({ scheduleChooser = true, ...props }: SearchBoxProps) {
-  const schedules = useAppSelector(Schedules.selectSchedules);
-  const { chooseSchedule: selectSchedule, chosenScheduleId: selectedSchedule } = useChosenScheduleContext();
-
+function AttributeMenuDropdown() {
   return (
-    <div className="flex flex-col items-start space-y-4">
-      <div className="flex w-full space-x-4">
-        <SearchBar {...props} scheduleChooser={scheduleChooser} />
-      </div>
-
-      {scheduleChooser && (
-      <div className="relative sm:hidden">
-        <ScheduleChooser
-          scheduleIds={sortSchedules(schedules).map((schedule) => schedule.id)}
-          handleChooseSchedule={selectSchedule}
-          chosenScheduleId={selectedSchedule}
-          direction="right"
-          showDropdown
-        />
-      </div>
-      )}
+    <div className="relative">
+      <Disclosure as={Fragment}>
+        {({ open }) => (
+          <>
+            <Disclosure.Button className="inset-y-0 right-0 flex items-center">
+              {open ? (
+                <FaTimes className="h-5 w-5 text-gray-700" />
+              ) : (
+                <FaBars className="h-5 w-5 text-gray-700" />
+              )}
+            </Disclosure.Button>
+            <Disclosure.Panel
+              unmount={false}
+              className={classNames(
+                'absolute z-20 mt-2 right-0 w-48 p-2 from-gray-800 to-blue-900 bg-gradient-to-br rounded-md',
+                'flex flex-col space-y-2',
+              )}
+            >
+              {MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
+                <Attribute
+                  attribute={attr}
+                  key={attr}
+                  label={ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr}
+                  showSubjectColor={false}
+                />
+              ))}
+              <span className="p-1 text-xs text-white">
+                If filters are not showing up, clear your search and try
+                again.
+              </span>
+            </Disclosure.Panel>
+          </>
+        )}
+      </Disclosure>
     </div>
   );
 }
-
-
-export function SearchBoxDemo() {
-  return (
-    <SearchBoxComponent
-      isSearchStalled={false}
-      refine={alertSignIn}
-      currentRefinement="Search now"
-    />
-  );
-}
-
-
-export default connectSearchBox<SearchBoxProps>(SearchBoxComponent);

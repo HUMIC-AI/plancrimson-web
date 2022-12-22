@@ -37,10 +37,8 @@ function CustomButton({ name, Icon, ...rest }: ButtonProps | LinkProps) {
   if ('isLink' in rest) {
     return (
       <Tooltip text={name} direction="bottom">
-        <Link href={rest.pathname}>
-          <a className={buttonStyles}>
-            <Icon />
-          </a>
+        <Link href={rest.pathname} className={buttonStyles}>
+          <Icon />
         </Link>
       </Tooltip>
     );

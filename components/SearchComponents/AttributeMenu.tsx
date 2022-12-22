@@ -38,9 +38,9 @@ export default function AttributeMenu({ lgOnly, withWrapper, showSubjectColor = 
       {(!lgOnly || isLg) && MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
         <Attribute attribute={attr} key={attr} label={adjustAttr(attr)} showSubjectColor={showSubjectColor} />
       ))}
-      <span className="p-1 text-xs text-white">
+      <p className="p-1 text-xs text-white">
         If filters are not showing up, clear your search and try again.
-      </span>
+      </p>
     </div>
   );
 }

@@ -139,6 +139,10 @@ export default function Layout({
   );
 }
 
+/**
+ * Listen to the user's schedules on Firestore meeting the given constraints.
+ * Load all courses from the schedule into the Redux "class cache".
+ */
 function useSchedules(constraints: QueryConstraint[]) {
   const dispatch = useAppDispatch();
   const userId = Auth.useAuthProperty('uid');
@@ -154,7 +158,7 @@ function useSchedules(constraints: QueryConstraint[]) {
       const classIds = scheduleEntries.flatMap((schedule) => schedule.classes.map(({ classId }) => classId));
 
       // load all of the classes into the class cache
-      if (client) dispatch(ClassCache.loadCourses(client.MeiliSearchClient.index('courses'), classIds));
+      if (client) dispatch(ClassCache.loadCourses(client, classIds));
 
       dispatch(Schedules.overwriteSchedules(scheduleEntries));
     }, (err) => {

@@ -24,6 +24,11 @@ async function getMeiliApiKey() {
   return key;
 }
 
+/**
+ * Initialize and load the Instant Meilisearch client.
+ * @param uid The uid of the signed-in user.
+ * @returns The meili client and a possible error.
+ */
 export function useMeiliClient(uid: string | null | undefined) {
   const [client, setClient] = useState<InstantMeiliSearchInstance | null>(null);
   const [error, setError] = useState<string | null>(null);

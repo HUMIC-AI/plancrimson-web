@@ -30,6 +30,14 @@ export function termToSemester(term: Term): Semester {
   return { year, season };
 }
 
+export function titleContainsTerm(title: string, term: Semester) {
+  const titleLower = title.toLowerCase();
+  return (
+    titleLower.includes(term.season.toLowerCase())
+    && titleLower.includes(term.year.toString())
+  );
+}
+
 export function getInitialSettings(): UserSettings {
   return {
     chosenSchedules: {},
@@ -46,6 +54,7 @@ export const ATTRIBUTE_DESCRIPTIONS: AttributeDescriptions = {
   LOCATION_DESCR_LOCATION: 'Location',
   SSR_COMPONENTDESCR: 'Class type',
   IS_SCL_DESCR100_HU_SCL_ATTR_LEVL: 'Level',
+  IS_SCL_DESCR100_HU_SCL_GRADE_BASIS: 'Grading basis',
 };
 
 export const unsplashParams = '?utm_source=Plan+Crimson&utm_medium=referral';
