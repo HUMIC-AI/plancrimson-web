@@ -105,7 +105,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   useEffect(() => {
     const unsub = onAuthStateChanged(
       auth,
-      async (u) => {
+      (u) => {
         if (u) {
           dispatch(Auth.setAuthInfo({
             uid: u.uid,
