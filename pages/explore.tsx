@@ -42,7 +42,7 @@ const metricNames = Object.keys(metrics).sort() as (keyof typeof metrics)[];
 export default function ExplorePage() {
   const { searchState, setSearchState } = useSearchState();
   const userId = Auth.useAuthProperty('uid');
-  const { client, error } = useMeiliClient(userId);
+  const { client, error } = useMeiliClient();
   const elapsed = useElapsed(1000, []);
 
   if (typeof userId === 'undefined') {

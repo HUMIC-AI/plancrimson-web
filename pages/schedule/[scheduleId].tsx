@@ -44,7 +44,7 @@ function useSchedule(userId: string | null | undefined, scheduleId: string) {
   const dispatch = useAppDispatch();
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { client } = useMeiliClient(userId);
+  const { client } = useMeiliClient();
 
   useEffect(() => {
     const unsub = onSnapshot(Schema.schedule(scheduleId), (snap) => {

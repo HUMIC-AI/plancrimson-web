@@ -1,7 +1,10 @@
 import { instantMeiliSearch, InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
 import { getDoc } from 'firebase/firestore';
-import { useState, useEffect } from 'react';
+import {
+  useState, useEffect, PropsWithChildren, createContext, useContext, useMemo,
+} from 'react';
 import Schema from '../shared/schema';
+import { Auth } from './features';
 
 export type { InstantMeiliSearchInstance };
 
@@ -24,12 +27,16 @@ async function getMeiliApiKey() {
   return key;
 }
 
-/**
- * Initialize and load the Instant Meilisearch client.
- * @param uid The uid of the signed-in user.
- * @returns The meili client and a possible error.
- */
-export function useMeiliClient(uid: string | null | undefined) {
+const MeiliContext = createContext<{
+  client: InstantMeiliSearchInstance | null;
+  error: string | null;
+}>({
+  client: null,
+  error: null,
+});
+
+export function MeiliProvider({ children }: PropsWithChildren<{}>) {
+  const uid = Auth.useAuthProperty('uid');
   const [client, setClient] = useState<InstantMeiliSearchInstance | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,7 +51,8 @@ export function useMeiliClient(uid: string | null | undefined) {
     getMeiliApiKey()
       .then((key) => {
         setClient(instantMeiliSearch(getMeiliHost(), key, {
-          finitePagination: true,
+          keepZeroFacets: true,
+          placeholderSearch: false,
         }));
       })
       .catch((err) => {
@@ -53,5 +61,15 @@ export function useMeiliClient(uid: string | null | undefined) {
       });
   }, [uid]);
 
-  return { client, error };
+  const context = useMemo(() => ({
+    client, error,
+  }), [client, error]);
+
+  return (
+    <MeiliContext.Provider value={context}>
+      {children}
+    </MeiliContext.Provider>
+  );
 }
+
+export const useMeiliClient = () => useContext(MeiliContext);

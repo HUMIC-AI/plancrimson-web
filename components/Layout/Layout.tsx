@@ -10,9 +10,9 @@ import ExternalLink from '../ExternalLink';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
 import { useAppDispatch } from '../../src/hooks';
-import { Auth, ClassCache, Schedules } from '../../src/features';
+import { ClassCache, Schedules } from '../../src/features';
 import Schema from '../../shared/schema';
-import { useMeiliClient } from '../../src/meili';
+import { MeiliProvider, useMeiliClient } from '../../src/meili';
 
 interface LayoutProps {
   title?: string;
@@ -99,8 +99,6 @@ export default function Layout({
 }: PropsWithChildren<LayoutProps>) {
   const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
 
-  const alerts = useAlerts();
-
   useSchedules(constraints);
 
   const description = 'Wait no longer to plan out your concentration. For Harvard College students. Q Reports, Course Evaluations, my.harvard, and more, all in one place.';
@@ -118,23 +116,34 @@ export default function Layout({
         <meta property="og:url" content="https://plancrimson.xyz/" />
       </Head>
 
-      {custom ? children : (
-        <>
-          <div className="flex min-h-screen flex-col">
-            <Navbar />
-
-            {alerts.map((alert) => <div key={alert}>{alert}</div>)}
-
-            <main className={className}>
-              {children}
-            </main>
-          </div>
-
-          <Footer />
-        </>
-      )}
+      <MeiliProvider>
+        <Wrapper custom={custom} className={className}>
+          {children}
+        </Wrapper>
+      </MeiliProvider>
 
       <CustomModal />
+    </>
+  );
+}
+
+function Wrapper({ children, custom, className }: PropsWithChildren<Pick<LayoutProps, 'custom' | 'className'>>) {
+  const alerts = useAlerts();
+
+  // eslint-disable-next-line react/jsx-no-useless-fragment
+  if (custom) return <>{children}</>;
+
+  return (
+    <>
+      <div className="flex min-h-screen flex-col">
+        <Navbar />
+        {alerts.map((alert) => <div key={alert}>{alert}</div>)}
+        <main className={className}>
+          {children}
+        </main>
+      </div>
+
+      <Footer />
     </>
   );
 }
@@ -145,8 +154,7 @@ export default function Layout({
  */
 function useSchedules(constraints: QueryConstraint[]) {
   const dispatch = useAppDispatch();
-  const userId = Auth.useAuthProperty('uid');
-  const { client } = useMeiliClient(userId);
+  const { client } = useMeiliClient();
 
   useEffect(() => {
     if (constraints.length === 0) {

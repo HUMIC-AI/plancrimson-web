@@ -69,7 +69,7 @@ function SearchModal({ client, term }: ModalProps) {
 
 function ModalWrapper({ selected, term }: { selected: string, term: string | undefined }) {
   const userId = Auth.useAuthProperty('uid');
-  const { client, error } = useMeiliClient(userId);
+  const { client, error } = useMeiliClient();
 
   const context = useMemo(() => ({ chosenScheduleId: selected, chooseSchedule() { } }), [selected]);
 
