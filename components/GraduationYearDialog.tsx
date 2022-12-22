@@ -7,6 +7,7 @@ import Schema from '../shared/schema';
 import { getUniqueSemesters } from '../shared/util';
 
 /**
+ * Rendered in _app.tsx once user first logs in.
  * Ask the user for their graduation year.
  * On submission, create default schedules for the default years.
  */

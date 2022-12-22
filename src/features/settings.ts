@@ -43,7 +43,7 @@ export const chooseSchedule = ({ scheduleId, term }: ChooseSchedulePayload) => a
   if (!uid) throw new Error('not signed in');
   // @ts-ignore
   await updateDoc(Schema.user(uid), { [`chosenSchedules.${term}`]: scheduleId });
-  dispatch(settingsSlice.actions.chooseSchedule({ scheduleId, term }));
+  return dispatch(settingsSlice.actions.chooseSchedule({ scheduleId, term }));
 };
 
 export const selectChosenSchedules = (state: RootState) => state.settings.chosenSchedules;

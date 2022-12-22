@@ -3,7 +3,7 @@ import '../src/index.css';
 import type { AppProps } from 'next/app';
 import { getApps, initializeApp } from 'firebase/app';
 import {
-  connectFirestoreEmulator, getDoc, getFirestore, onSnapshot,
+  connectFirestoreEmulator, getDocFromServer, getFirestore, onSnapshot,
 } from 'firebase/firestore';
 import { Provider } from 'react-redux';
 import React, { useEffect } from 'react';
@@ -108,9 +108,9 @@ function useProfile() {
     if (!uid) return;
 
     // check if the Firebase document for the user's profile exists.
-    // if so, sync it to Redux
+    // if so, sync it to Redux. Force using latest version
     (async () => {
-      const profile = await getDoc(Schema.profile(uid));
+      const profile = await getDocFromServer(Schema.profile(uid));
 
       if (!profile.exists()) return;
       const data = profile.data()!;
