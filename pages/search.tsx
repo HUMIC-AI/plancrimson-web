@@ -41,7 +41,9 @@ export default function SearchPage() {
   }
 
   return (
-    <Layout><InnerPage elapsed={elapsed} /></Layout>
+    <Layout>
+      <InnerPage elapsed={elapsed} />
+    </Layout>
   );
 }
 
@@ -56,7 +58,7 @@ function InnerPage({ elapsed }: { elapsed: boolean }) {
 
   if (!client) {
     if (elapsed) return <LoadingPage />;
-    return <Layout />;
+    return null;
   }
 
   return (
