@@ -8,6 +8,9 @@ import { Auth } from './features';
 
 export type { InstantMeiliSearchInstance };
 
+/**
+ * @returns The hostname of the Meilisearch instance, without a trailing slash.
+ */
 export function getMeiliHost() {
   const host = process.env.NODE_ENV === 'production'
     ? process.env.NEXT_PUBLIC_MEILI_IP
@@ -16,6 +19,8 @@ export function getMeiliHost() {
   if (!host) {
     throw new Error('must configure the MEILI_IP environment variable');
   }
+
+  if (host.charAt(host.length - 1) === '/') return host.slice(0, -1);
 
   return host;
 }
