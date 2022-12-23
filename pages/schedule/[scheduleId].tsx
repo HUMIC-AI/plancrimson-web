@@ -52,7 +52,7 @@ function useSchedule(userId: string | null | undefined, scheduleId: string) {
         const scheduleData = snap.data()!;
         setSchedule(scheduleData);
         const classIds = scheduleData.classes.map(({ classId }) => classId);
-        if (client) dispatch(ClassCache.loadCourses(client.MeiliSearchClient.index('courses'), classIds));
+        if (client) dispatch(ClassCache.loadCourses(client, classIds));
       }
     }, (err) => setError(err.message));
     return unsub;

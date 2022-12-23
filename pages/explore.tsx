@@ -191,7 +191,7 @@ function ChartComponent({
 
     if (!demo && client) {
       newDots.on('click', (_, d) => {
-        dispatch(ClassCache.loadCourses(client.MeiliSearchClient.index('courses'), [d.id]))
+        dispatch(ClassCache.loadCourses(client, [d.id]))
           .then((courses) => showCourse(courses[0]));
       });
     }
@@ -243,7 +243,7 @@ function ChartComponent({
     const { docs } = await getDocs(q);
     const courseIds = getAllClassIds(docs.map((doc) => doc.data()));
 
-    const loaded = await dispatch(ClassCache.loadCourses(meiliClient.MeiliSearchClient.index('courses'), courseIds));
+    const loaded = await dispatch(ClassCache.loadCourses(meiliClient, courseIds));
 
     const dots = getDots();
     const data = dots.data();
