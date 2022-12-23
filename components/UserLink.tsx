@@ -1,11 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { FaUser } from 'react-icons/fa';
-import { useMemo } from 'react';
-import { Schedule } from '../shared/types';
-import { useModal } from '../src/context/modal';
-import { ClassCache } from '../src/features';
-import { useAppSelector, useProfiles } from '../src/hooks';
 import { classNames } from '../shared/util';
 
 
@@ -39,55 +34,3 @@ export function ImageWrapper({ url, alt, size = 'sm' }: { url: string | null | u
   );
 }
 
-
-export function ScheduleSection({ schedule }: { schedule: Schedule }) {
-  const classCache = useAppSelector(ClassCache.selectClassCache);
-  const { showCourse } = useModal();
-  const ownerUid = useMemo(() => [schedule.ownerUid], [schedule.ownerUid]);
-  const profiles = useProfiles(ownerUid);
-  const profile = profiles?.[schedule.ownerUid];
-
-  return (
-    <div className="rounded-xl bg-blue-300 p-4 shadow-xl">
-      <div className="flex items-center space-x-4">
-        <ImageWrapper url={profile?.photoUrl} alt="User profile" />
-        <div>
-          <h3 className="flex items-center">
-            <span className="text-xl font-bold">
-              {schedule.title}
-            </span>
-            <span className="ml-2">
-              {`(${schedule.season} ${schedule.year})`}
-            </span>
-          </h3>
-
-          <p>
-            by
-            {' '}
-            {profile
-              ? (
-                <Link href={`/user/${profile.username}`}>
-                  {profile.username}
-                </Link>
-              )
-              : 'Anonymous User'}
-          </p>
-        </div>
-      </div>
-
-      <ul className="mt-2 list-inside list-disc">
-        {schedule.classes.map((classData) => classData.classId in classCache && (
-        <li key={classData.classId}>
-          <button type="button" className="font-bold underline transition-opacity hover:opacity-50" onClick={() => showCourse(classCache[classData.classId])}>
-            {classCache[classData.classId].SUBJECT}
-            {classCache[classData.classId].CATALOG_NBR}
-            :
-          </button>
-          {' '}
-          {classCache[classData.classId].Title}
-        </li>
-        ))}
-      </ul>
-    </div>
-  );
-}

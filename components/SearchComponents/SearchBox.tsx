@@ -160,7 +160,7 @@ function AttributeMenuDropdown() {
             <Disclosure.Panel
               unmount={false}
               className={classNames(
-                'absolute z-20 mt-2 right-0 w-48 p-2 from-gray-800 to-blue-900 bg-gradient-to-br rounded-md',
+                'absolute z-20 mt-2 right-0 w-48 p-2 dark-gradient rounded-md',
                 'flex flex-col space-y-2',
               )}
             >

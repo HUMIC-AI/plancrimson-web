@@ -5,8 +5,9 @@ import {
 } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
+import ScheduleSection from 'components/SemesterSchedule/ScheduleList';
 import Layout, { errorMessages, ErrorPage, LoadingPage } from '../../components/Layout/Layout';
-import { ImageWrapper, ScheduleSection } from '../../components/UserLink';
+import { ImageWrapper } from '../../components/UserLink';
 import { FriendRequest, UserProfileWithId } from '../../shared/types';
 import Schema from '../../shared/schema';
 import { Auth, Schedules } from '../../src/features';
@@ -20,7 +21,7 @@ const statusMessage: Record<FriendStatus, string> = {
   loading: 'Loading...',
   self: '',
   none: 'Add friend',
-  friends: 'Friends',
+  friends: 'Unfriend',
   pending: 'Cancel request',
 };
 

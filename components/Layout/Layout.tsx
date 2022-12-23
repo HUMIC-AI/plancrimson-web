@@ -14,7 +14,7 @@ import { ClassCache, Schedules } from '../../src/features';
 import Schema from '../../shared/schema';
 import { MeiliProvider, useMeiliClient } from '../../src/meili';
 
-interface LayoutProps {
+export interface LayoutProps {
   title?: string;
   className?: string;
   scheduleQueryConstraints?: Firestore.QueryConstraint[];

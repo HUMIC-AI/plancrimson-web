@@ -1,4 +1,6 @@
-import { DependencyList, useEffect, useState } from 'react';
+import {
+  DependencyList, useEffect, useMemo, useState,
+} from 'react';
 import {
   setDoc, deleteDoc, getDoc, onSnapshot, query, where,
 } from 'firebase/firestore';
@@ -188,6 +190,27 @@ export function useFriendRequests(uid: string | null | undefined) {
   return { incoming, outgoing };
 }
 
+
+export function useFriends(userId: string) {
+  const { incoming, outgoing } = useFriendRequests(userId);
+
+  const userIds = useMemo(() => {
+    const ids: string[] = [];
+    new Set([...incoming, ...outgoing].flatMap((req) => [req.from, req.to])).forEach((id) => ids.push(id));
+    return ids;
+  }, [incoming, outgoing]);
+
+  const profiles = useProfiles(userIds);
+
+  const friends = profiles && allTruthy([
+    ...incoming.map((req) => (req.accepted ? profiles[req.from] : null)),
+    ...outgoing.map((req) => (req.accepted ? profiles[req.to] : null)),
+  ]);
+
+  const incomingPending = profiles && allTruthy(incoming.map((req) => (req.accepted ? null : profiles[req.from])));
+
+  return { friends, incomingPending };
+}
 
 export function handleError(err: unknown) {
   alert('An unexpected error occurred! Please try again later.');
