@@ -28,7 +28,7 @@ export default function CustomModal() {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-50" />
+            <Dialog.Overlay className="fixed inset-0 bg-black/50" />
           </Transition.Child>
 
           {/* This element is to trick the browser into centering the modal contents. */}
@@ -47,8 +47,8 @@ export default function CustomModal() {
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <div className="inline-block w-full max-w-lg my-8 overflow-hidden text-left align-middle transition-all transform bg-gray-800 shadow-xl rounded-2xl">
-              <div className="p-6 text-white border-none">
+            <div className="my-8 inline-block w-full max-w-lg overflow-hidden rounded-2xl bg-gray-800 text-left align-middle shadow-xl transition-all">
+              <div className="border-none p-6 text-white">
                 <Dialog.Title as="h3" className="text-xl font-bold">
                   {data?.title}
                 </Dialog.Title>
@@ -63,7 +63,7 @@ export default function CustomModal() {
                 type="button"
                 name="Close dialog"
                 onClick={() => setOpen(false)}
-                className="absolute top-5 right-5 text-gray-800 rounded-full p-2 bg-white interactive"
+                className="interactive absolute top-5 right-5 rounded-full bg-white p-2 text-gray-800"
               >
                 <FaTimes />
               </button>

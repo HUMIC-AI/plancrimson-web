@@ -1,10 +1,3 @@
-import {
-  collection,
-  getDocs,
-  getFirestore,
-  query,
-  where,
-} from 'firebase/firestore';
 import type {
   Semester,
   Schedule,
@@ -37,6 +30,14 @@ export function termToSemester(term: Term): Semester {
   return { year, season };
 }
 
+export function titleContainsTerm(title: string, term: Semester) {
+  const titleLower = title.toLowerCase();
+  return (
+    titleLower.includes(term.season.toLowerCase())
+    && titleLower.includes(term.year.toString())
+  );
+}
+
 export function getInitialSettings(): UserSettings {
   return {
     chosenSchedules: {},
@@ -53,6 +54,7 @@ export const ATTRIBUTE_DESCRIPTIONS: AttributeDescriptions = {
   LOCATION_DESCR_LOCATION: 'Location',
   SSR_COMPONENTDESCR: 'Class type',
   IS_SCL_DESCR100_HU_SCL_ATTR_LEVL: 'Level',
+  IS_SCL_DESCR100_HU_SCL_GRADE_BASIS: 'Grading basis',
 };
 
 export const unsplashParams = '?utm_source=Plan+Crimson&utm_medium=referral';
@@ -371,21 +373,6 @@ export const termToSeasonMap: Record<string, Semester> = {
 
 export function adjustAttr(attr: string) {
   return ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr;
-}
-
-/**
- * Fetches from Firestore all the evaluations for a given course.
- * @param courseName The name of the course to get evaluations for.
- * @returns The evaluations for a given course.
- */
-export async function getEvaluations(courseName: string) {
-  const evaluations = await getDocs(
-    query(
-      collection(getFirestore(), 'evaluations'),
-      where('courseName', '==', courseName),
-    ),
-  );
-  return evaluations.docs.map((doc) => doc.data() as Evaluation);
 }
 
 /**

@@ -1,4 +1,6 @@
-import { DependencyList, useEffect, useState } from 'react';
+import {
+  DependencyList, useEffect, useMemo, useState,
+} from 'react';
 import {
   setDoc, deleteDoc, getDoc, onSnapshot, query, where,
 } from 'firebase/firestore';
@@ -7,7 +9,7 @@ import {
 } from 'firebase/auth';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import type {
-  FriendRequest, UserProfile, UserProfileWithId,
+  FriendRequest, UserProfileWithId,
 } from '../shared/types';
 import Schema from '../shared/schema';
 import type { AppDispatch, RootState } from './store';
@@ -56,7 +58,6 @@ export function useBreakpoint(breakpoint: number) {
 
     function handleResize(this: Window) {
       setIsPast(this.innerWidth >= breakpoint);
-      console.log(this.innerWidth >= breakpoint);
     }
 
     setIsPast(window.innerWidth >= breakpoint);
@@ -117,7 +118,14 @@ export async function signInUser() {
 }
 
 
-export async function getProfile(id: string): Promise<UserProfile & { id: string }> {
+/**
+ * Checks for cached user data in the session storage. If not found,
+ * get it from Firestore and save it to session storage.
+ * @param id the user id to query for
+ * @throws Error if invalid cached value or user not found
+ * @returns their profile data
+ */
+export async function getProfile(id: string): Promise<UserProfileWithId> {
   const cached = sessionStorage.getItem(`profile/${id}`);
   if (cached) {
     try {
@@ -182,6 +190,27 @@ export function useFriendRequests(uid: string | null | undefined) {
   return { incoming, outgoing };
 }
 
+
+export function useFriends(userId: string) {
+  const { incoming, outgoing } = useFriendRequests(userId);
+
+  const userIds = useMemo(() => {
+    const ids: string[] = [];
+    new Set([...incoming, ...outgoing].flatMap((req) => [req.from, req.to])).forEach((id) => ids.push(id));
+    return ids;
+  }, [incoming, outgoing]);
+
+  const profiles = useProfiles(userIds);
+
+  const friends = profiles && allTruthy([
+    ...incoming.map((req) => (req.accepted ? profiles[req.from] : null)),
+    ...outgoing.map((req) => (req.accepted ? profiles[req.to] : null)),
+  ]);
+
+  const incomingPending = profiles && allTruthy(incoming.map((req) => (req.accepted ? null : profiles[req.from])));
+
+  return { friends, incomingPending };
+}
 
 export function handleError(err: unknown) {
   alert('An unexpected error occurred! Please try again later.');

@@ -57,7 +57,7 @@ function SearchModal({ client, term }: ModalProps) {
       <Configure hitsPerPage={4} />
       {term && <div className="hidden"><ToggleRefinement attribute="STRM" label="Term" value={term} defaultRefinement /></div>}
       <div className="flex space-x-4">
-        <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
+        <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-300 bg-white p-6 shadow-lg">
           <SearchBox scheduleChooser={false} />
           <Hits />
         </div>
@@ -69,7 +69,7 @@ function SearchModal({ client, term }: ModalProps) {
 
 function ModalWrapper({ selected, term }: { selected: string, term: string | undefined }) {
   const userId = Auth.useAuthProperty('uid');
-  const { client, error } = useMeiliClient(userId);
+  const { client, error } = useMeiliClient();
 
   const context = useMemo(() => ({ chosenScheduleId: selected, chooseSchedule() { } }), [selected]);
 
@@ -80,7 +80,7 @@ function ModalWrapper({ selected, term }: { selected: string, term: string | und
   if (userId === null) {
     return (
       <div className="flex space-x-4">
-        <div className="flex-1 p-6 shadow-lg border-2 border-gray-300 bg-white rounded-lg space-y-4">
+        <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-300 bg-white p-6 shadow-lg">
           <SearchBoxDemo />
           <HitsDemo />
         </div>
@@ -89,6 +89,7 @@ function ModalWrapper({ selected, term }: { selected: string, term: string | und
   }
 
   if (!client || error) {
+    console.error(error);
     return <p>{errorMessages.meiliClient}</p>;
   }
 

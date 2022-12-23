@@ -44,7 +44,7 @@ function useSchedule(userId: string | null | undefined, scheduleId: string) {
   const dispatch = useAppDispatch();
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { client } = useMeiliClient(userId);
+  const { client } = useMeiliClient();
 
   useEffect(() => {
     const unsub = onSnapshot(Schema.schedule(scheduleId), (snap) => {
@@ -52,7 +52,7 @@ function useSchedule(userId: string | null | undefined, scheduleId: string) {
         const scheduleData = snap.data()!;
         setSchedule(scheduleData);
         const classIds = scheduleData.classes.map(({ classId }) => classId);
-        if (client) dispatch(ClassCache.loadCourses(client.MeiliSearchClient.index('courses'), classIds));
+        if (client) dispatch(ClassCache.loadCourses(client, classIds));
       }
     }, (err) => setError(err.message));
     return unsub;

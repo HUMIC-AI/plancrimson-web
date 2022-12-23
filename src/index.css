@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .dark-gradient {
+    @apply from-gray-800 to-blue-900 bg-gradient-to-br;
+  }
+}
+
 @layer components {
   .interactive {
     @apply hover:opacity-50 transition-opacity shadow;

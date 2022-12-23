@@ -1,7 +1,10 @@
 import { instantMeiliSearch, InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
 import { getDoc } from 'firebase/firestore';
-import { useState, useEffect } from 'react';
+import {
+  useState, useEffect, PropsWithChildren, createContext, useContext, useMemo,
+} from 'react';
 import Schema from '../shared/schema';
+import { Auth } from './features';
 
 export type { InstantMeiliSearchInstance };
 
@@ -17,14 +20,23 @@ export function getMeiliHost() {
   return host;
 }
 
-async function getMeiliApiKey() {
+export async function getMeiliApiKey() {
   const metadata = await getDoc(Schema.metadata());
   const key = metadata.data()?.meiliApiKey;
   if (!key && process.env.NODE_ENV !== 'development') throw new Error('metadata not found');
   return key;
 }
 
-export function useMeiliClient(uid: string | null | undefined) {
+const MeiliContext = createContext<{
+  client: InstantMeiliSearchInstance | null;
+  error: string | null;
+}>({
+  client: null,
+  error: null,
+});
+
+export function MeiliProvider({ children }: PropsWithChildren<{}>) {
+  const uid = Auth.useAuthProperty('uid');
   const [client, setClient] = useState<InstantMeiliSearchInstance | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,9 +50,10 @@ export function useMeiliClient(uid: string | null | undefined) {
 
     getMeiliApiKey()
       .then((key) => {
-        setClient(instantMeiliSearch(getMeiliHost(), key, {
-          paginationTotalHits: 500,
-        }));
+        const newClient = instantMeiliSearch(getMeiliHost(), key, {
+          keepZeroFacets: true,
+        });
+        setClient(newClient);
       })
       .catch((err) => {
         console.error('error fetching api key:', err);
@@ -48,5 +61,15 @@ export function useMeiliClient(uid: string | null | undefined) {
       });
   }, [uid]);
 
-  return { client, error };
+  const context = useMemo(() => ({
+    client, error,
+  }), [client, error]);
+
+  return (
+    <MeiliContext.Provider value={context}>
+      {children}
+    </MeiliContext.Provider>
+  );
 }
+
+export const useMeiliClient = () => useContext(MeiliContext);

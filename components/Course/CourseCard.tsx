@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import React, { useMemo } from 'react';
 import {
-  FaInfo, FaTimes, FaPlus, FaExclamationTriangle,
+  FaTimes, FaPlus, FaExclamationTriangle, FaStar, FaStarHalfAlt, FaUserFriends,
 } from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
 import {
@@ -116,6 +116,8 @@ type CourseCardProps = {
   setDragStatus?: React.Dispatch<React.SetStateAction<DragStatus>>;
   warnings?: string;
   interactive?: boolean;
+  hideTerm?: boolean;
+  hideRatings?: boolean;
 };
 
 /**
@@ -136,6 +138,8 @@ export default function CourseCard({
   inSearchContext = true,
   warnings,
   interactive = true,
+  hideTerm = false,
+  hideRatings = false,
 }: CourseCardProps) {
   const isExpanded = useAppSelector(Planner.selectExpandCards);
   const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
@@ -190,15 +194,15 @@ export default function CourseCard({
           {departmentImages[department] && (
             <Image
               src={departmentImages[department].urls.thumb}
-              alt={departmentImages[department].alt_description || undefined}
-              layout="fill"
-              objectFit="cover"
+              alt={departmentImages[department].alt_description || ''}
+              fill
+              style={{ objectFit: 'cover' }}
               className={highlight ? 'opacity-10' : 'opacity-30'}
             />
           )}
-          <div className="relative">
-            <p className="flex justify-between items-start">
-              <span className="font-bold text-blue-300">
+          <div className="relative space-y-1">
+            <p className="flex items-start justify-between">
+              <button type="button" className="interactive border-b text-left font-bold text-blue-300" onClick={() => handleExpand(course)}>
                 <HighlightComponent
                   attribute="SUBJECT"
                   course={course}
@@ -209,24 +213,15 @@ export default function CourseCard({
                   course={course}
                   inSearch={inSearchContext}
                 />
-              </span>
+              </button>
 
               {/* the info and course selection buttons */}
-              <span className="flex items-center space-x-2 ml-2">
+              <span className="ml-2 flex items-center space-x-2">
                 {warnings && (
                 <Tooltip text={warnings} direction="bottom">
                   <FaExclamationTriangle color="yellow" className="text-xl" />
                 </Tooltip>
                 )}
-
-                <button
-                  type="button"
-                  name="More info"
-                  className={buttonStyles}
-                  onClick={() => handleExpand(course)}
-                >
-                  <FaInfo />
-                </button>
 
                 {interactive && <ToggleButton chosenScheduleId={chosenScheduleId!} course={course} />}
               </span>
@@ -238,18 +233,22 @@ export default function CourseCard({
                 inSearch={inSearchContext}
               />
             </h3>
+            {hideTerm || (
             <p className="text-sm text-gray-300">
               {semester.season}
               {' '}
               {semester.year}
             </p>
+            )}
+            {!hideRatings && typeof course.meanRating !== 'undefined' && <StarRating rating={course.meanRating} />}
+            {!hideRatings && typeof course.meanClassSize !== 'undefined' && <ClassSizeRating population={course.meanClassSize} />}
           </div>
         </div>
         {/* end header component */}
 
         {isExpanded && (
-          <div className="p-2 bg-white h-full">
-            <div className="inline-grid grid-cols-[auto_1fr] max-w-full items-center gap-y-2 gap-x-4">
+          <div className="h-full bg-white p-2">
+            <div className="inline-grid max-w-full grid-cols-[auto_1fr] items-center gap-y-2 gap-x-4">
               <Instructors course={course} inSearch={inSearchContext} />
               <Location course={course} inSearch={inSearchContext} />
               <DaysOfWeek course={course} inSearch={inSearchContext} />
@@ -257,7 +256,7 @@ export default function CourseCard({
             </div>
             {course.textDescription.length > 0 && (
               <>
-                <hr className="border-black my-2" />
+                <hr className="my-2 border-black" />
                 <p className="text-sm line-clamp-3">
                   <HighlightComponent
                     attribute="textDescription"
@@ -270,6 +269,78 @@ export default function CourseCard({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * @param value from 0 to 5.
+ * @returns a flat array filled with "full", "half", or "empty".
+ */
+function getStars(value: number): ('full' | 'half' | 'empty')[] {
+  const halfStars = value - Math.floor(value) >= 0.5 ? 1 : 0;
+  const fullStars = Math.min(Math.max(Math.floor(value), 0), 5 - halfStars);
+  const emptyStars = 5 - fullStars - halfStars;
+  return [...Array(fullStars).fill('full'), ...Array(halfStars).fill('half'), ...Array(emptyStars).fill('empty')];
+}
+
+/**
+ * Scale of one to five stars.
+ */
+function StarRating({ rating }: { rating: number }) {
+  const stars = useMemo(() => getStars(rating), [rating]);
+
+  return (
+    <div className="flex items-center space-x-1">
+      {stars.map((star, i) => (star === 'half'
+        ? (
+          <FaStarHalfAlt
+          // eslint-disable-next-line react/no-array-index-key
+            key={i}
+            color="orange"
+            className="text-sm"
+          />
+        )
+        : (
+          <FaStar
+            // eslint-disable-next-line react/no-array-index-key
+            key={i}
+            color={star === 'full' ? 'yellow' : 'gray'}
+            className="text-sm"
+          />
+        )))}
+      <span className="text-sm">
+        {rating.toFixed(2)}
+      </span>
+    </div>
+  );
+}
+
+function ClassSizeRating({ population }: { population: number }) {
+  const stars = useMemo(() => getStars(Math.log(population)), [population]);
+
+  return (
+    <div className="flex items-center space-x-1">
+      {stars.map((star, i) => (star === 'half'
+        ? (
+          <FaUserFriends
+          // eslint-disable-next-line react/no-array-index-key
+            key={i}
+            color="orange"
+            className="text-sm"
+          />
+        )
+        : (
+          <FaUserFriends
+            // eslint-disable-next-line react/no-array-index-key
+            key={i}
+            color={star === 'full' ? 'yellow' : 'gray'}
+            className="text-sm"
+          />
+        )))}
+      <span className="text-sm">
+        {Math.floor(population)}
+      </span>
     </div>
   );
 }

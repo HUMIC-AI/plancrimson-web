@@ -78,7 +78,7 @@ export function ModalProvider({ children }: PropsWithChildren<{}>) {
 
     const headerContent = course && (
       <>
-        <p className="text-lg font-medium my-2">{course.Title}</p>
+        <p className="my-2 text-lg font-medium">{course.Title}</p>
         {semester && (
           <p className="text-sm">{`${semester.season} ${semester.year}`}</p>
         )}

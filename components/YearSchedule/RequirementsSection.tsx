@@ -76,7 +76,7 @@ export default function RequirementsSection({
       'md:max-w-xs lg:max-w-sm xl:max-w-md w-screen', // container effect
     )}
     >
-      <div className="md:absolute md:inset-4 flex flex-col space-y-4">
+      <div className="flex flex-col space-y-4 md:absolute md:inset-4">
         <Listbox
           value={selectedReqGroup.groupId}
           onChange={(groupId) => setSelectedRequirements(
@@ -88,14 +88,14 @@ export default function RequirementsSection({
           className="relative"
         >
           <div className="flex items-center">
-            <Listbox.Button className="flex justify-between items-center w-full shadow py-2 px-3 border-2 rounded text-left font-medium">
+            <Listbox.Button className="flex w-full items-center justify-between rounded border-2 py-2 px-3 text-left font-medium shadow">
               {selectedReqGroup.groupId}
               <FaChevronDown />
             </Listbox.Button>
 
             <button
               type="button"
-              className="interactive p-2 rounded-xl ml-4"
+              className="interactive ml-4 rounded-xl p-2"
               onClick={() => dispatch(Planner.setShowReqs(false))}
               title="Hide requirements panel"
             >
@@ -104,12 +104,12 @@ export default function RequirementsSection({
           </div>
 
           <FadeTransition>
-            <Listbox.Options className="absolute w-full bg-gray-800 rounded-b-lg overflow-hidden shadow border z-20">
+            <Listbox.Options className="absolute z-20 w-full overflow-hidden rounded-b-lg border bg-gray-800 shadow">
               {allRequirements.map(({ groupId }) => (
                 <Listbox.Option
                   key={groupId}
                   value={groupId}
-                  className="odd:bg-gray-300 even:bg-white interactive py-2 px-4 cursor-pointer"
+                  className="interactive cursor-pointer py-2 px-4 odd:bg-gray-300 even:bg-white"
                 >
                   {groupId}
                 </Listbox.Option>
@@ -119,7 +119,7 @@ export default function RequirementsSection({
         </Listbox>
 
         <Disclosure>
-          <Disclosure.Button className="leading-none text-sm underline text-gray-600 py-2 interactive w-max mx-auto px-4">
+          <Disclosure.Button className="interactive mx-auto w-max py-2 px-4 text-sm leading-none text-gray-600 underline">
             Suggest new programs and concentrations
           </Disclosure.Button>
           <FadeTransition>
@@ -131,7 +131,7 @@ export default function RequirementsSection({
 
         {selectedReqGroup.sampleSchedules && (
           <Disclosure>
-            <Disclosure.Button className="leading-none text-sm underline text-gray-600 pl-2 interactive">
+            <Disclosure.Button className="interactive pl-2 text-sm leading-none text-gray-600 underline">
               Sample schedules
             </Disclosure.Button>
             <FadeTransition>
@@ -149,7 +149,7 @@ export default function RequirementsSection({
         )}
 
         <FadeTransition show={notification}>
-          <div className="relative rounded-lg bg-blue-300 py-2 lg:py-4 px-6 mx-4 md:mx-0 text-sm text-left italic">
+          <div className="relative mx-4 rounded-lg bg-blue-300 py-2 px-6 text-left text-sm italic md:mx-0 lg:py-4">
             <div className="flex flex-col space-y-2">
               <span>
                 Remember that this is an unofficial tool
@@ -178,14 +178,14 @@ export default function RequirementsSection({
             <button
               type="button"
               onClick={() => setNotification(false)}
-              className="absolute top-2 right-2 not-italic text-xl interactive"
+              className="interactive absolute top-2 right-2 text-xl not-italic"
             >
               <FaTimes />
             </button>
           </div>
         </FadeTransition>
 
-        <div className="flex-1 relative">
+        <div className="relative flex-1">
           <div
             className={classNames(
               'md:absolute md:inset-0 overflow-y-auto box-content md:border-black md:border-dashed',
@@ -230,7 +230,7 @@ function SuggestionForm() {
   }, []);
 
   const submitSuggestion = useCallback(
-    async (ev) => {
+    async (ev: any) => {
       ev.preventDefault();
       // only allow user to submit every 2 seconds
       if (typeof timeoutRef.current !== 'undefined') return;
@@ -299,16 +299,16 @@ function SuggestionForm() {
         />
         <button
           type="submit"
-          className="ml-2 p-2 rounded bg-black bg-opacity-30 hover:bg-opacity-50 transition-colors relative group"
+          className="group relative ml-2 rounded bg-black/30 p-2 transition-colors hover:bg-black/50"
         >
           <FaEnvelope />
-          <span className="hidden text-sm group-hover:block absolute top-full mt-2 right-0 bg-black bg-opacity-80 text-white z-10 w-32 p-2 rounded">
+          <span className="absolute top-full right-0 z-10 mt-2 hidden w-32 rounded bg-black/80 p-2 text-sm text-white group-hover:block">
             Your email will be recorded when making a suggestion.
           </span>
         </button>
       </form>
       <FadeTransition show={show}>
-        <p className="text-gray-600 text-xs pl-2 mt-1 text-center">
+        <p className="mt-1 pl-2 text-center text-xs text-gray-600">
           {suggestion}
         </p>
       </FadeTransition>
@@ -369,7 +369,7 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
       <button
         type="button"
         onClick={clone}
-        className="font-medium interactive"
+        className="interactive font-medium"
       >
         Clone
       </button>
@@ -377,7 +377,7 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
         href={schedule.source}
         target="_blank"
         rel="noopener noreferrer"
-        className="font-medium interactive"
+        className="interactive font-medium"
       >
         Source
       </a>

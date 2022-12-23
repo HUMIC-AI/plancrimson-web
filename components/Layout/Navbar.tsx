@@ -27,22 +27,20 @@ export default function Navbar() {
     <Disclosure as="nav" className="bg-gray-800">
       {({ open }) => (
         <>
-          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-            <div className="relative flex items-center justify-between h-16">
+          <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+            <div className="relative flex h-16 items-center justify-between">
               <SmallComponents.MenuButton open={open} />
 
-              <div className="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
-                <div className="flex-shrink-0 flex items-center text-white">
+              <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+                <div className="flex shrink-0 items-center text-white">
                   <Link href="/home">
-                    <a>
-                      {/* this on <lg */}
-                      <FaCalendarCheck className="block lg:hidden h-8 w-auto" />
-                      {/* this on >=lg */}
-                      <div className="hidden lg:flex items-center gap-4">
-                        <FaCalendarCheck className="h-8 w-auto" />
-                        <h1 className="text-lg">Plan Crimson</h1>
-                      </div>
-                    </a>
+                    {/* this on <lg */}
+                    <FaCalendarCheck className="block h-8 w-auto lg:hidden" />
+                    {/* this on >=lg */}
+                    <div className="hidden items-center gap-4 lg:flex">
+                      <FaCalendarCheck className="h-8 w-auto" />
+                      <h1 className="text-lg">Plan Crimson</h1>
+                    </div>
                   </Link>
                 </div>
 
@@ -68,7 +66,7 @@ const SmallComponents = {
       <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
         <Disclosure.Button
           name="Open main menu"
-          className="inline-flex items-center justify-center p-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+          className="inline-flex items-center justify-center rounded-md p-2 text-gray-300 hover:bg-gray-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
         >
           <span className="sr-only">Open main menu</span>
           {open ? (
@@ -85,23 +83,22 @@ const SmallComponents = {
 
     return (
       <Disclosure.Panel className="sm:hidden">
-        <div className="px-4 pb-4 flex justify-center">
+        <div className="flex justify-center px-4 pb-4">
           {paths.map((item) => (
             <Disclosure.Button
               key={item.name}
               aria-current={item.href === pathname ? 'page' : undefined}
             >
-              <Link href={item.href}>
-                <a
-                  className={classNames(
-                    item.href === pathname
-                      ? 'bg-gray-800 text-white font-bold'
-                      : 'text-gray-300 font-medium hover:bg-gray-800 hover:text-white',
-                    'block px-3 py-2 rounded-md text-base',
-                  )}
-                >
-                  {item.name}
-                </a>
+              <Link
+                href={item.href}
+                className={classNames(
+                  item.href === pathname
+                    ? 'bg-gray-800 text-white font-bold'
+                    : 'text-gray-300 font-medium hover:bg-gray-800 hover:text-white',
+                  'block px-3 py-2 rounded-md text-base',
+                )}
+              >
+                {item.name}
               </Link>
             </Disclosure.Button>
           ))}
@@ -117,24 +114,22 @@ const LargeOnly = {
     const { pathname } = useRouter();
 
     return (
-      <div className="hidden sm:block sm:ml-6">
-        <div className="flex space-x-4 items-center">
+      <div className="hidden sm:ml-6 sm:block">
+        <div className="flex items-center space-x-4">
           {paths.map((item) => (
             // pass the query between pages to preserve the selected schedule
-            <Link key={item.name} href={item.href}>
-              <a
-                className={classNames(
-                  item.href === pathname
-                    ? 'bg-gray-800 text-white font-bold'
-                    : 'text-gray-300 hover:bg-gray-800 font-medium hover:text-white',
-                  'px-3 py-2 rounded-md text-sm text-center',
-                )}
-                aria-current={
-              item.href === pathname ? 'page' : undefined
-            }
-              >
-                {item.name}
-              </a>
+            <Link
+              key={item.name}
+              href={item.href}
+              className={classNames(
+                item.href === pathname
+                  ? 'bg-gray-800 text-white font-bold'
+                  : 'text-gray-300 hover:bg-gray-800 font-medium hover:text-white',
+                'px-3 py-2 rounded-md text-sm text-center',
+              )}
+              aria-current={item.href === pathname ? 'page' : 'false'}
+            >
+              {item.name}
             </Link>
           ))}
         </div>
@@ -157,13 +152,13 @@ function UserMenu() {
   );
 
   return (
-    <Menu as="div" className="ml-3 relative z-10">
+    <Menu as="div" className="relative z-10 ml-3">
       <Menu.Button
         name="Open user menu"
-        className="flex items-center bg-gray-800 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+        className="flex items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
       >
         <span className="sr-only">Open user menu</span>
-        <ImageWrapper url={photoUrl} />
+        <ImageWrapper url={photoUrl} alt="User profile" />
       </Menu.Button>
 
       <Transition
@@ -181,15 +176,15 @@ function UserMenu() {
         >
           {email && (
           <Menu.Item>
-            <span className="text-gray-500 text-xs">{email}</span>
+            <span className="text-xs text-gray-500">{email}</span>
           </Menu.Item>
           )}
 
           {uid && (
           <Menu.Item>
             {({ active }) => (
-              <Link href={`/user/${username}`}>
-                <a className={buttonStyles(active)}>Profile</a>
+              <Link href={`/user/${username}`} className={buttonStyles(active)}>
+                Profile
               </Link>
             )}
           </Menu.Item>

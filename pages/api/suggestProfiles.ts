@@ -51,8 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       counts[userId] = profiles[uid].filter((id) => courses.includes(id)).length;
     });
   const ranked = Object.entries(counts)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    .sort(([a, aCount], [b, bCount]) => aCount - bCount);
+    .sort(([, aCount], [, bCount]) => aCount - bCount);
 
   res.json(ranked.slice(0, parseInt(req.body.limit, 10) || 12));
 }

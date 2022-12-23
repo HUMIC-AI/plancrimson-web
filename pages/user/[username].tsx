@@ -1,15 +1,14 @@
 import {
   DocumentReference,
   getDoc,
-  getDocs,
   onSnapshot, query, where,
 } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
-import useSWR from 'swr';
+import ScheduleSection from 'components/SemesterSchedule/ScheduleList';
 import Layout, { errorMessages, ErrorPage, LoadingPage } from '../../components/Layout/Layout';
-import { ImageWrapper, ScheduleSection } from '../../components/UserLink';
-import { FriendRequest } from '../../shared/types';
+import { ImageWrapper } from '../../components/UserLink';
+import { FriendRequest, UserProfileWithId } from '../../shared/types';
 import Schema from '../../shared/schema';
 import { Auth, Schedules } from '../../src/features';
 import {
@@ -22,21 +21,37 @@ const statusMessage: Record<FriendStatus, string> = {
   loading: 'Loading...',
   self: '',
   none: 'Add friend',
-  friends: 'Friends',
+  friends: 'Unfriend',
   pending: 'Cancel request',
 };
 
 // get the profile of the user with the given username
-async function fetchProfile(username: string) {
-  const snap = await getDocs(query(Schema.Collection.profiles(), where('username', '==', username)));
-  if (snap.empty) {
-    throw new Error('No users found with that username.');
-  } else if (snap.size > 1) {
-    throw new Error('Multiple users found with that username. This should not occur');
-  } else {
-    const [doc] = snap.docs;
-    return { ...doc.data(), userId: doc.id };
-  }
+function useProfile(username: string) {
+  const [profile, setProfile] = useState<UserProfileWithId | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!username) return;
+    const unsubscribe = onSnapshot(
+      query(Schema.Collection.profiles(), where('username', '==', username)),
+      (snap) => {
+        if (snap.empty) {
+          throw new Error('No users found with that username.');
+        } else if (snap.size > 1) {
+          throw new Error('Multiple users found with that username. This should not occur');
+        } else {
+          const [doc] = snap.docs;
+          setProfile({ ...doc.data(), id: doc.id });
+        }
+      },
+      (err) => {
+        setError(err);
+      },
+    );
+    return () => unsubscribe();
+  }, [username]);
+
+  return [profile, error] as const;
 }
 
 // this is a little jank but should be fine.
@@ -97,17 +112,17 @@ export default function UserPage() {
   const elapsed = useElapsed(5000, [username]);
   const [refresh, setRefresh] = useState(true);
 
-  const { data: pageProfile, error } = useSWR(username, fetchProfile);
-  const friendStatus = useFriendStatus(uid, pageProfile?.userId, refresh);
+  const [pageProfile, error] = useProfile(username);
+  const friendStatus = useFriendStatus(uid, pageProfile?.id, refresh);
 
   const queryConstraints = useMemo(() => {
     if (!uid || !pageProfile) return [];
 
     if (friendStatus === 'friends' || friendStatus === 'self') {
-      return [where('ownerUid', '==', pageProfile.userId)];
+      return [where('ownerUid', '==', pageProfile.id)];
     }
 
-    return [where('ownerUid', '==', pageProfile.userId), where('public', '==', true)];
+    return [where('ownerUid', '==', pageProfile.id), where('public', '==', true)];
   }, [uid]);
 
   if (uid === null) {
@@ -130,10 +145,10 @@ export default function UserPage() {
   const schedules = Object.values(scheduleMap);
 
   return (
-    <Layout scheduleQueryConstraints={queryConstraints} className="flex-1 mx-auto p-8 w-full max-w-screen-md">
-      <div className="flex flex-col space-y-8 border-2 border-blue-900 rounded-xl shadow p-8">
+    <Layout scheduleQueryConstraints={queryConstraints} className="mx-auto w-full max-w-screen-md flex-1 p-8">
+      <div className="flex flex-col space-y-8 rounded-xl border-2 border-blue-900 p-8 shadow">
         <div className="flex items-center">
-          <ImageWrapper url={pageProfile.photoUrl} size="md" />
+          <ImageWrapper url={pageProfile.photoUrl} size="md" alt="User profile" />
 
           <div className="ml-8">
             <h1 className="text-3xl">{pageProfile.username}</h1>
@@ -143,14 +158,14 @@ export default function UserPage() {
               type="button"
               onClick={() => {
                 if (friendStatus === 'friends' || friendStatus === 'pending') {
-                  unfriend(uid, pageProfile.userId);
+                  unfriend(uid, pageProfile.id);
                   setRefresh(!refresh);
                 } else if (friendStatus === 'none') {
-                  sendFriendRequest(uid, pageProfile.userId);
+                  sendFriendRequest(uid, pageProfile.id);
                   setRefresh(!refresh);
                 }
               }}
-              className="px-2 py-1 mt-2 rounded interactive bg-blue-900 text-white"
+              className="interactive mt-2 rounded bg-blue-900 px-2 py-1 text-white"
             >
               {statusMessage[friendStatus]}
             </button>

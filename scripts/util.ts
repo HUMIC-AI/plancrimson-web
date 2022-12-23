@@ -9,7 +9,7 @@ import inquirer from 'inquirer';
  */
 // eslint-disable-next-line import/prefer-default-export
 export async function getFilePath(message: string, prefix: string, readonly = false): Promise<string> {
-  const question: inquirer.DistinctQuestion = {
+  const question: Record<string, string> = {
     name: 'filePath',
     type: 'input',
     message,
@@ -41,4 +41,12 @@ export async function getFilePath(message: string, prefix: string, readonly = fa
   }
 
   return filePath.replace(/\/$/, ''); // remove trailing
+}
+
+export function assertEnvVar(varName: string) {
+  const varValue = process.env[varName];
+  if (!varValue) {
+    throw new Error(`must set "${varName}" env variable`);
+  }
+  return varValue;
 }

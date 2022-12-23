@@ -30,12 +30,12 @@ const siteInfoLinks = [
 const AboutPage: React.FC = function () {
   return (
     <Layout>
-      <div className="max-w-md mx-auto space-y-4">
-        <h1 className="text-2xl leading-loose font-semibold">
+      <div className="mx-auto max-w-md space-y-4">
+        <h1 className="text-2xl font-semibold leading-loose">
           About this site
         </h1>
         <p>Here&apos;s some of the tech this site was built with:</p>
-        <ul className="list-disc list-inside">
+        <ul className="list-inside list-disc">
           {siteInfoLinks.map(([name, href]) => (
             <li key={href}>
               <ExternalLink href={href}>{name}</ExternalLink>
@@ -48,7 +48,7 @@ const AboutPage: React.FC = function () {
           bug reports, requests, etc. at alexcai [at] college [dot] harvard
           [dot] edu.
         </p>
-        <h1 className="text-2xl leading-loose font-semibold">
+        <h1 className="text-2xl font-semibold leading-loose">
           Other Resources
         </h1>
         <p>
@@ -71,7 +71,7 @@ const AboutPage: React.FC = function () {
           site. Here&apos;s some other useful sites for planning out your
           concentration!
         </p>
-        <ul className="list-disc list-inside">
+        <ul className="list-inside list-disc">
           {links.map(([name, href]) => (
             <li key={href}>
               <ExternalLink href={href}>{name}</ExternalLink>

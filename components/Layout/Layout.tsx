@@ -10,11 +10,11 @@ import ExternalLink from '../ExternalLink';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
 import { useAppDispatch } from '../../src/hooks';
-import { Auth, ClassCache, Schedules } from '../../src/features';
+import { ClassCache, Schedules } from '../../src/features';
 import Schema from '../../shared/schema';
-import { useMeiliClient } from '../../src/meili';
+import { MeiliProvider, useMeiliClient } from '../../src/meili';
 
-interface LayoutProps {
+export interface LayoutProps {
   title?: string;
   className?: string;
   scheduleQueryConstraints?: Firestore.QueryConstraint[];
@@ -26,7 +26,7 @@ export function Footer() {
 
   return (
     <footer className="bg-gray-800">
-      <div className="p-4 container mx-auto text-white text-sm text-center flex flex-col space-y-1">
+      <div className="container mx-auto flex flex-col space-y-1 p-4 text-center text-sm text-white">
         <span>Course data last updated 2022-01-15</span>
         <span>
           &#169; 2022 Alexander Cai | alexcai [at] college |
@@ -55,10 +55,9 @@ export function Footer() {
               pathname: '/privacy',
               query,
             }}
+            className="interactive font-bold"
           >
-            <a className="font-bold interactive">
-              Attributions
-            </a>
+            Attributions
           </Link>
         </span>
         <span>
@@ -81,10 +80,9 @@ export function Footer() {
               pathname: '/privacy',
               query,
             }}
+            className="interactive font-bold"
           >
-            <a className="font-bold interactive">
-              Privacy
-            </a>
+            Privacy
           </Link>
         </span>
       </div>
@@ -101,10 +99,6 @@ export default function Layout({
 }: PropsWithChildren<LayoutProps>) {
   const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
 
-  const alerts = useAlerts();
-
-  useSchedules(constraints);
-
   const description = 'Wait no longer to plan out your concentration. For Harvard College students. Q Reports, Course Evaluations, my.harvard, and more, all in one place.';
 
   return (
@@ -120,31 +114,49 @@ export default function Layout({
         <meta property="og:url" content="https://plancrimson.xyz/" />
       </Head>
 
-      {custom ? children : (
-        <>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
+      <MeiliProvider>
+        <Wrapper scheduleQueryConstraints={constraints} custom={custom} className={className}>
+          {children}
+        </Wrapper>
 
-            {alerts.map((alert) => <div key={alert}>{alert}</div>)}
-
-            <main className={className}>
-              {children}
-            </main>
-          </div>
-
-          <Footer />
-        </>
-      )}
-
-      <CustomModal />
+        <CustomModal />
+      </MeiliProvider>
     </>
   );
 }
 
+function Wrapper({
+  children, scheduleQueryConstraints: constraints, custom, className,
+}: PropsWithChildren<Pick<LayoutProps, 'scheduleQueryConstraints' | 'custom' | 'className'>>) {
+  const alerts = useAlerts();
+
+  useSchedules(constraints!);
+
+  // eslint-disable-next-line react/jsx-no-useless-fragment
+  if (custom) return <>{children}</>;
+
+  return (
+    <>
+      <div className="flex min-h-screen flex-col">
+        <Navbar />
+        {alerts.map((alert) => <div key={alert}>{alert}</div>)}
+        <main className={className}>
+          {children}
+        </main>
+      </div>
+
+      <Footer />
+    </>
+  );
+}
+
+/**
+ * Listen to the user's schedules on Firestore meeting the given constraints.
+ * Load all courses from the schedule into the Redux "class cache".
+ */
 function useSchedules(constraints: QueryConstraint[]) {
   const dispatch = useAppDispatch();
-  const userId = Auth.useAuthProperty('uid');
-  const { client } = useMeiliClient(userId);
+  const { client } = useMeiliClient();
 
   useEffect(() => {
     if (constraints.length === 0) {
@@ -156,7 +168,9 @@ function useSchedules(constraints: QueryConstraint[]) {
       const classIds = scheduleEntries.flatMap((schedule) => schedule.classes.map(({ classId }) => classId));
 
       // load all of the classes into the class cache
-      if (client) dispatch(ClassCache.loadCourses(client.MeiliSearchClient.index('courses'), classIds));
+      if (client) {
+        dispatch(ClassCache.loadCourses(client, classIds));
+      }
 
       dispatch(Schedules.overwriteSchedules(scheduleEntries));
     }, (err) => {
@@ -189,7 +203,7 @@ export function LoadingPage() {
           <li
             // eslint-disable-next-line react/no-array-index-key
             key={i}
-            className="bg-blue-300 animate-pulse rounded"
+            className="animate-pulse rounded bg-blue-300"
             style={{ animationDelay: `${i * 250}ms` }}
           >
             &nbsp;
@@ -202,8 +216,8 @@ export function LoadingPage() {
 
 export function ErrorPage({ children }: PropsWithChildren<{}>) {
   return (
-    <Layout className="flex-1 flex flex-col items-center">
-      <p className="mt-8 bg-red-300 shadow p-8 rounded-xl">
+    <Layout className="flex flex-1 flex-col items-center">
+      <p className="mt-8 rounded-xl bg-red-300 p-8 shadow">
         {children}
       </p>
     </Layout>

@@ -49,7 +49,7 @@ function UploadForm() {
 
   return (
     <form
-      className="bg-white p-6 flex flex-col items-start space-y-4"
+      className="flex flex-col items-start space-y-4 bg-white p-6"
       onSubmit={handleUpload}
     >
       <Dialog.Description>Upload a plan</Dialog.Description>
@@ -63,7 +63,7 @@ function UploadForm() {
       />
       <button
         type="submit"
-        className="bg-gray-400 py-2 px-4 rounded-md interactive"
+        className="interactive rounded-md bg-gray-400 py-2 px-4"
       >
         Submit
       </button>
@@ -81,7 +81,7 @@ export default function UploadPlan() {
         content: <UploadForm />,
         title: 'Upload plan',
       })}
-      className="underline interactive"
+      className="interactive underline"
     >
       Upload plan
     </button>

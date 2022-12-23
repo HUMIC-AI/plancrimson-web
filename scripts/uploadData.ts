@@ -1,27 +1,39 @@
-import axios, { AxiosRequestHeaders } from 'axios';
-import { existsSync, readFileSync } from 'fs';
+import axios from 'axios';
+import {
+  existsSync, readdirSync, readFileSync, statSync,
+} from 'fs';
 import inquirer from 'inquirer';
 import { ExtendedClass } from '../shared/apiTypes';
+// import { assertEnvVar } from './util';
 
 const defaultMeiliUrl = 'http://127.0.0.1:7700';
 
-function getHeaders(meiliRequired: boolean): AxiosRequestHeaders {
+function getHeaders(meiliRequired: boolean) {
   if (!meiliRequired) {
     return {
       'Content-Type': 'application/json',
     };
   }
 
-  const MEILI_PRIVATE = process.env.MEILI_PRIVATE!;
-  if (!MEILI_PRIVATE) {
-    throw new Error('must set MEILI_PRIVATE env variable');
+  const meiliPrivate = process.env.MEILI_PRIVATE;
+
+  if (!meiliPrivate) {
+    return {
+      'Content-Type': 'application/json',
+    };
   }
+
   return {
-    'X-Meili-API-Key': MEILI_PRIVATE,
+    'X-Meili-API-Key': meiliPrivate,
     'Content-Type': 'application/json',
   };
 }
 
+/**
+ * Uploads data to MeiliSearch
+ * @param url the url of the MeiliSearch instance
+ * @param data the data to upload
+ */
 async function uploadData(url: string, data: ExtendedClass[]) {
   try {
     await axios({
@@ -48,8 +60,6 @@ export default {
     if (!existsSync(filepath)) {
       throw new Error('file does not exist');
     }
-    const data = readFileSync(filepath).toString('utf8');
-    const allCourses: ExtendedClass[] = JSON.parse(data);
 
     const { meiliUrl } = await inquirer.prompt([
       {
@@ -60,11 +70,24 @@ export default {
       },
     ]);
 
+    await getAllCourses(filepath, meiliUrl);
+  },
+};
+
+async function getAllCourses(filepath: string, meiliUrl: string): Promise<void> {
+  if (statSync(filepath).isDirectory()) {
+    const files = readdirSync(filepath);
+    const promises = files.map((file) => getAllCourses(`${filepath}/${file}`, meiliUrl));
+    await Promise.all(promises);
+  } else {
+    const data = readFileSync(filepath).toString('utf8');
+    const allCourses: ExtendedClass[] = JSON.parse(data);
+
     for (let i = 0; i < allCourses.length; i += 500) {
       console.log(`uploading from index ${i}`);
       await uploadData(meiliUrl, allCourses.slice(i, i + 500));
     }
-  },
-};
+  }
+}
 
 // data/courses/courses-2022-02-01

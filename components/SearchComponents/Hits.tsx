@@ -74,7 +74,7 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
   const { chosenScheduleId } = useChosenScheduleContext();
 
   return (
-    <div className="space-y-6 flex flex-col items-center">
+    <div className="flex flex-col items-center space-y-6">
       <CustomButton
         enabled={hasPrevious}
         onClick={refinePrevious}
@@ -87,7 +87,10 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
         // </div>
         <span>No results found</span>
       ) : (
-        <div className={oneCol ? 'flex flex-col space-y-2' : 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4'}>
+        <div className={oneCol
+          ? 'flex w-full flex-col items-stretch space-y-2'
+          : 'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4'}
+        >
           {hits.map((hit) => (
             <CourseCard
               key={getClassId(hit)}

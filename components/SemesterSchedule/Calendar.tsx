@@ -58,14 +58,14 @@ export default function Calendar({ schedule }: CalendarProps) {
   );
 
   return (
-    <div className="border-gray-800 sm:border-4 sm:rounded-lg shadow-lg">
+    <div className="border-gray-800 shadow-lg sm:rounded-lg sm:border-4">
       <HeaderSection events={events} schedule={schedule} />
 
       <div className="overflow-auto">
         <div className="min-w-[52rem]">
-          <div className="pl-6 py-2 bg-gray-800 text-white grid grid-cols-5">
+          <div className="grid grid-cols-5 bg-gray-800 py-2 pl-6 text-white">
             {DAY_SHORT.slice(0, 5).map((day) => (
-              <h3 key={day} className="font-semibold text-center">
+              <h3 key={day} className="text-center font-semibold">
                 {day}
               </h3>
             ))}
@@ -73,7 +73,7 @@ export default function Calendar({ schedule }: CalendarProps) {
 
           <div className="relative h-[60rem] overflow-auto">
             {/* draw the hours on the left */}
-            <div className="absolute w-6 inset-y-0 z-10 text-center bg-gray-300">
+            <div className="absolute inset-y-0 z-10 w-6 bg-gray-300 text-center">
               {[...new Array(dayEndTime - dayStartTime)].map((_, i) => (
                 <span
                 // eslint-disable-next-line react/no-array-index-key
@@ -90,7 +90,7 @@ export default function Calendar({ schedule }: CalendarProps) {
             </div>
 
             {/* central courses area */}
-            <div className="grid grid-cols-5 h-full relative ml-6">
+            <div className="relative ml-6 grid h-full grid-cols-5">
               {DAYS_OF_WEEK.slice(0, 5).map((day) => (
                 <DayComponent
                   events={events
@@ -118,7 +118,7 @@ export default function Calendar({ schedule }: CalendarProps) {
 
           {unscheduledClasses.length > 0 && (
             <div className="p-6">
-              <h2 className="text-2xl font-semibold mb-4">
+              <h2 className="mb-4 text-2xl font-semibold">
                 Unscheduled classes
               </h2>
               <ul className="space-y-4">
@@ -149,8 +149,8 @@ function HeaderSection({ events, schedule }: { events: EventAttributes[], schedu
   }
 
   return (
-    <div className="bg-gray-800 p-4 text-center flex items-center justify-center space-x-4">
-      <p className="text-white font-bold text-xl">
+    <div className="flex items-center justify-center space-x-4 bg-gray-800 p-4 text-center">
+      <p className="text-xl font-bold text-white">
         {schedule.title}
       </p>
 
@@ -165,7 +165,7 @@ function HeaderSection({ events, schedule }: { events: EventAttributes[], schedu
       <button
         type="button"
         onClick={handleExport}
-        className="bg-gray-300 interactive py-2 px-4 rounded-xl"
+        className="interactive rounded-xl bg-gray-300 py-2 px-4"
       >
         Export to ICS
       </button>
@@ -178,7 +178,7 @@ function DayComponent({ events }: { events: EventAttributes[] }) {
   const overlapCounter: Record<string, number> = {};
 
   return (
-    <div className="odd:bg-gray-300 even:bg-white h-full relative">
+    <div className="relative h-full odd:bg-gray-300 even:bg-white">
       {events.map((ev, i) => {
         const overlap = getOverlap(events, i);
         const key = overlap[0].uid!;
@@ -194,7 +194,7 @@ function DayComponent({ events }: { events: EventAttributes[] }) {
           <div
             // eslint-disable-next-line react/no-array-index-key
             key={ev.uid}
-            className="bg-gray-800 bg-opacity-70 rounded absolute z-10 hover:z-20"
+            className="absolute z-10 rounded bg-gray-800/70 hover:z-20"
             style={{
               top: `${toPercent(ev.start)}%`,
               // @ts-expect-error
@@ -203,7 +203,7 @@ function DayComponent({ events }: { events: EventAttributes[] }) {
               right: `${right * 100}%`,
             }}
           >
-            <div className="absolute inset-2 overflow-auto flex flex-col items-center text-center text-white">
+            <div className="absolute inset-2 flex flex-col items-center overflow-auto text-center text-white">
               <span className="font-semibold">{label}</span>
               <span>{title}</span>
               <span className="italic">{ev.location}</span>
@@ -244,13 +244,13 @@ function MissingClass({ cls }: { cls: ExtendedClass }) {
     <>
       <h4>{`${cls.SUBJECT + cls.CATALOG_NBR} | ${cls.Title}`}</h4>
       <Disclosure as="div">
-        <Disclosure.Button className="hover:opacity-50 font-bold underline transition-opacity">
+        <Disclosure.Button className="font-bold underline transition-opacity hover:opacity-50">
           Add time
         </Disclosure.Button>
         <Disclosure.Panel>
           <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
-              <div className="grid grid-cols-[auto_1fr] items-center p-2 border-2 shadow rounded-lg">
+              <div className="grid grid-cols-[auto_1fr] items-center rounded-lg border-2 p-2 shadow">
                 {DAYS_OF_WEEK.slice(0, 5).map((day) => (
                   <Fragment key={classId + day}>
                     <label htmlFor={classId + day} className="text-right">
@@ -259,14 +259,14 @@ function MissingClass({ cls }: { cls: ExtendedClass }) {
                     <input
                       type="checkbox"
                       id={classId + day}
-                      className="py-1 px-2 ml-2"
+                      className="ml-2 py-1 px-2"
                       defaultChecked={classTime?.pattern.includes(day)}
                       {...register(day)}
                     />
                   </Fragment>
                 ))}
               </div>
-              <div className="grid grid-cols-[1fr_auto] w-max items-center h-min mt-4 sm:mt-0">
+              <div className="mt-4 grid h-min w-max grid-cols-[1fr_auto] items-center sm:mt-0">
                 <label htmlFor="startTime" className="mr-2 text-right">
                   Start time:
                 </label>
@@ -308,7 +308,7 @@ function MissingClass({ cls }: { cls: ExtendedClass }) {
             </div>
             <button
               type="submit"
-              className="mt-4 bg-gray-300 interactive px-4 py-2 rounded-md"
+              className="interactive mt-4 rounded-md bg-gray-300 px-4 py-2"
             >
               Save
             </button>

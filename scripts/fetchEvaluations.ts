@@ -11,7 +11,7 @@ import { getFilePath } from './util';
 
 const batchSize = 480;
 
-const terms = ['2021 Fall', '2021 Spring', '2020 Fall', '2019 Fall'];
+const terms = ['2022 Spring', '2021 Fall', '2021 Spring', '2020 Fall', '2019 Fall'];
 
 const baseUrl = 'https://qreports.fas.harvard.edu/browse/index';
 

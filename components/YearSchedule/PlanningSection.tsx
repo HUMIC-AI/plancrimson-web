@@ -109,7 +109,7 @@ export function HeaderSection({ resizeRef }: WithResizeRef) {
   );
 
   return (
-    <div className="text-white relative">
+    <div className="relative text-white">
       {!showReqs && (
       <button
         title="Show requirements panel"
@@ -137,10 +137,13 @@ export function HeaderSection({ resizeRef }: WithResizeRef) {
             onClick={() => dispatch(Planner.toggleExpand())}
             className={classNames(
               isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
-              'rounded-full hover:opacity-50 p-1 border',
+              'rounded-full hover:opacity-50 px-2 border flex items-center',
             )}
           >
             <FaArrowsAltV />
+            <span className="ml-2">
+              {isExpanded ? 'Collapse' : 'Expand'}
+            </span>
           </button>
           {semesterFormat !== 'sample' && (
             <button
@@ -152,11 +155,11 @@ export function HeaderSection({ resizeRef }: WithResizeRef) {
                   dispatch(Planner.showAll());
                 }
               }}
-              className="py-1 px-2 bg-gray-600 interactive rounded"
+              className="interactive rounded bg-gray-600 py-1 px-2"
             >
               {semesterFormat === 'all'
-                ? 'Showing all schedules'
-                : 'Showing only selected schedules'}
+                ? 'All schedules'
+                : 'Only selected schedules'}
             </button>
           )}
           <button
@@ -197,7 +200,7 @@ export function HeaderSection({ resizeRef }: WithResizeRef) {
 
         <div
           ref={resizeRef}
-          className="flex justify-center rounded py-1 w-24 min-w-[96px] max-w-full resize-x bg-gray-600 overflow-auto"
+          className="flex w-24 min-w-[96px] max-w-full resize-x justify-center overflow-auto rounded bg-gray-600 py-1"
         >
           <FaArrowsAltH />
         </div>
@@ -271,15 +274,16 @@ export function SemestersList({
     const [season, year] = earliest.season === 'Spring'
       ? ['Fall' as Season, earliest.year - 1]
       : ['Spring' as Season, earliest.year];
-    dispatch(Schedules.createDefaultSchedule({ season, year }, userId)).catch(handleError);
+    dispatch(Schedules.createDefaultSchedule({ season, year }, userId))
+      .catch(handleError);
   }
 
   return (
-    <div className="relative overflow-x-auto flex-1 mt-4">
+    <div className="relative mt-4 flex-1 overflow-x-auto">
       {/* on small screens, this extends as far as necessary */}
       {/* on medium screens and larger, put this into its own box */}
       <div
-        className="absolute inset-0 grid grid-flow-col rounded-t-lg rounded-b-lg overflow-auto"
+        className="absolute inset-0 grid grid-flow-col overflow-auto rounded-lg"
         ref={semestersContainerRef}
       >
         {/* when dragging a card, drag over this area to scroll left */}
@@ -289,7 +293,7 @@ export function SemestersList({
         {semesterFormat === 'selected' && classYear && (
         <button
           type="button"
-          className="bg-blue-300 interactive h-full px-4 flex-grow-0"
+          className="interactive h-full grow-0 bg-blue-300 px-4"
           onClick={addPrevSemester}
           name="Add previous semester"
           title="Add previous semester"
@@ -331,7 +335,7 @@ export function SemestersList({
       <>
         {leftIntersecting || (
         <div
-          className="absolute inset-y-0 left-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
+          className="absolute inset-y-0 left-0 z-10 flex w-1/6 justify-center bg-gray-800/30 pt-4 text-4xl text-white"
           onDragOver={() => {
             semestersContainerRef.current.scrollBy(-2, 0);
           }}
@@ -342,7 +346,7 @@ export function SemestersList({
 
         {rightIntersecting || (
         <div
-          className="absolute inset-y-0 right-0 w-1/6 flex justify-center text-white text-4xl pt-4 bg-gray-800 bg-opacity-30 z-10"
+          className="absolute inset-y-0 right-0 z-10 flex w-1/6 justify-center bg-gray-800/30 pt-4 text-4xl text-white"
           onDragOver={() => {
             semestersContainerRef.current.scrollBy(2, 0);
           }}
@@ -368,7 +372,7 @@ export function HiddenSchedules() {
   if (Object.keys(hidden).length === 0) return null;
 
   return (
-    <div className="flex text-white items-center mt-4">
+    <div className="mt-4 flex items-center text-white">
       <h3>Hidden schedules:</h3>
       <ul className="flex items-center">
         {Object.keys(hidden).map((data) => {

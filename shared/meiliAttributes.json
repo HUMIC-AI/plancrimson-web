@@ -2,13 +2,16 @@
   "filterableAttributes": [
     "STRM",
     "SUBJECT",
-    "DAY_OF_WEEK",
     "ACAD_ORG",
+    "DAY_OF_WEEK",
     "LOCATION_DESCR_LOCATION",
     "SSR_COMPONENTDESCR",
-    "IS_SCL_DESCR100_HU_SCL_ATTR_LEVL"
+    "IS_SCL_DESCR100_HU_SCL_ATTR_LEVL",
+    "IS_SCL_DESCR100_HU_SCL_GRADE_BASIS"
   ],
-  "displayedAttributes": ["*"],
+  "displayedAttributes": [
+    "*"
+  ],
   "sortableAttributes": [
     "CATALOG_NBR",
     "IS_SCL_STRT_TM_DEC",
@@ -21,29 +24,11 @@
     "Title",
     "SUBJECT",
     "CATALOG_NBR",
-    "HU_SBJCT_CATNBR_NL",
-    "HU_ALIAS_CATNBR_NS",
     "textDescription",
-
-    "DAY_OF_WEEK",
-    "ACAD_CAREER",
     "ACAD_ORG",
-
-    "LOCATION_DESCR_LOCATION",
-    "SSR_COMPONENTDESCR",
-    "HU_REC_PREP",
-    "HU_COURSE_PREQ",
-
-    "CRSE_ID",
-    "CLASS_NBR",
-
-    "IS_SCL_DESCR_IS_SCL_DESCRB",
     "IS_SCL_DESCR_IS_SCL_DESCRD",
-    "IS_SCL_DESCR_IS_SCL_DESCRH",
     "IS_SCL_DESCR_IS_SCL_DESCRL",
     "IS_SCL_DESCR_IS_SCL_DESCRJ",
-    "IS_SCL_DESCR_IS_SCL_DESCRG",
-    "IS_SCL_DESCR100_HU_SCL_GRADE_BASIS",
-    "IS_SCL_DESCR100_HU_SCL_ATTR_LEVL"
+    "IS_SCL_DESCR_IS_SCL_DESCRG"
   ]
 }

@@ -1,3 +1,6 @@
+/**
+ * A CLI interface for typical MeiliSearch tasks
+ */
 /* eslint-disable no-console */
 const { MeiliSearch } = require('meilisearch');
 const inquirer = require('inquirer');

@@ -3,10 +3,10 @@ import '../src/index.css';
 import type { AppProps } from 'next/app';
 import { getApps, initializeApp } from 'firebase/app';
 import {
-  connectFirestoreEmulator, getDoc, getFirestore, onSnapshot, updateDoc,
+  connectFirestoreEmulator, getDocFromServer, getFirestore, onSnapshot,
 } from 'firebase/firestore';
 import { Provider } from 'react-redux';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { connectAuthEmulator, getAuth, onAuthStateChanged } from 'firebase/auth';
 import { SearchStateProvider } from '../src/context/searchState';
 import store from '../src/store';
@@ -17,7 +17,8 @@ import {
   Auth, Profile, Schedules, Settings,
 } from '../src/features';
 import Schema from '../shared/schema';
-import { getInitialSettings, getUniqueSemesters } from '../shared/util';
+import { getInitialSettings } from '../shared/util';
+import GraduationYearDialog from '../components/GraduationYearDialog';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -45,58 +46,6 @@ if (getApps().length === 0) {
   }
 }
 
-/**
- * Ask the user for their graduation year.
- * Create default schedules
- */
-function GraduationYearDialog({ defaultYear, uid } : { defaultYear: number; uid: string; }) {
-  const dispatch = useAppDispatch();
-  const { setOpen } = useModal();
-  const [classYear, setYear] = useState(defaultYear);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    const promises = getUniqueSemesters(classYear).map(async ({ year, season }) => {
-      const { payload: schedule } = await dispatch(Schedules.createDefaultSchedule({ year, season }, uid));
-      await dispatch(Settings.chooseSchedule({ term: `${schedule.year}${schedule.season}`, scheduleId: schedule.id }));
-    });
-    const settled = await Promise.allSettled(promises);
-    console.log(settled);
-    settled.forEach((result) => {
-      if (result.status === 'rejected') {
-        console.error('error creating default schedules', result.reason);
-      }
-    });
-
-    await updateDoc(Schema.profile(uid), 'classYear', classYear).catch((err) => console.error(`error updating class year for ${uid}`, err));
-
-    setOpen(false);
-  }
-
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-4"
-    >
-      <div className="max-w-xs mx-auto flex flex-col items-center space-y-4">
-        <h2 className="text-xl font-semibold">What year are you graduating?</h2>
-        <input
-          type="number"
-          name="graduationYear"
-          id="graduationYear"
-          value={classYear}
-          onChange={(e) => setYear(parseInt(e.currentTarget.value, 10))}
-          className="border-4 hover:border-black transition-colors w-32 text-center rounded-xl text-3xl p-2"
-        />
-        <button type="submit" className="interactive px-4 py-2 text-white bg-gray-900 rounded-xl">
-          Get started
-        </button>
-      </div>
-    </form>
-  );
-}
-
 function MyApp({ Component, pageProps }: AppProps) {
   const auth = getAuth();
   const dispatch = useAppDispatch();
@@ -105,7 +54,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   useEffect(() => {
     const unsub = onAuthStateChanged(
       auth,
-      async (u) => {
+      (u) => {
         if (u) {
           dispatch(Auth.setAuthInfo({
             uid: u.uid,
@@ -113,6 +62,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           }));
           dispatch(Profile.setPhotoUrl(u.photoURL));
         } else { // just signed out
+          console.log('signed out');
           dispatch(Auth.setAuthInfo(null));
           dispatch(Settings.overwriteSettings(getInitialSettings()));
           dispatch(Profile.signOut());
@@ -158,14 +108,18 @@ function useProfile() {
   useEffect(() => {
     if (!uid) return;
 
-    // check if the profile exists
+    // check if the Firebase document for the user's profile exists.
+    // if so, sync it to Redux. Force using latest version
     (async () => {
-      const profile = await getDoc(Schema.profile(uid));
+      const profile = await getDocFromServer(Schema.profile(uid));
 
       if (!profile.exists()) return;
       const data = profile.data()!;
-      if (data.username) dispatch(Profile.setUsername(data.username));
+      if (data.username) {
+        dispatch(Profile.setUsername(data.username));
+      }
 
+      // show the graduation dialog if they haven't filled it in yet
       if (!data.classYear) {
         const now = new Date();
         showContents({
@@ -178,6 +132,7 @@ function useProfile() {
       }
     })();
 
+    // keep the Redux state for the user settings in sync with Firestore
     const userDataRef = Schema.user(uid);
     const unsubUserData = onSnapshot(userDataRef, (snap) => {
       if (!snap.exists()) return;

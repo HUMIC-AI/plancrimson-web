@@ -29,22 +29,22 @@ const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = functio
         as="div"
       >
         <h3 className="flex-1">{label}</h3>
-        <span className="inline-flex items-center ml-4">
+        <span className="ml-4 inline-flex items-center">
           <button
             type="button"
             onClick={(ev) => {
               ev.stopPropagation();
               setOperator(operator === 'and' ? 'or' : 'and');
             }}
-            className="hover:font-semibold w-8 bg-gray-800 rounded text-white"
+            className="w-8 rounded bg-gray-800 text-white hover:font-semibold"
           >
             {operator}
           </button>
-          <FaChevronDown className="w-5 h-5 ml-2" />
+          <FaChevronDown className="ml-2 h-5 w-5" />
         </span>
       </Disclosure.Button>
       <Disclosure.Panel unmount={false}>
-        <div className="p-2 origin-top-right bg-gray-300 rounded-b">
+        <div className="origin-top-right rounded-b bg-gray-300 p-2">
           {user ? (
             <RefinementList
               attribute={attribute}

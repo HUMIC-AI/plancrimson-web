@@ -1,20 +1,12 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { Listbox } from '@headlessui/react';
+import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
-import { Semester } from '../shared/types';
-import { classNames } from '../shared/util';
+import { classNames, titleContainsTerm } from '../shared/util';
 import { Schedules, Settings } from '../src/features';
 import { useAppDispatch, useAppSelector } from '../src/hooks';
 import FadeTransition from './FadeTransition';
-
-function titleContainsTerm(title: string, term: Semester) {
-  const titleLower = title.toLowerCase();
-  return (
-    titleLower.includes(term.season.toLowerCase())
-    && titleLower.includes(term.year.toString())
-  );
-}
 
 interface ButtonTitleProps {
   showTerm: 'on' | 'off' | 'auto';
@@ -60,8 +52,8 @@ function ButtonTitle({
   })();
 
   return (
-    <div className="flex flex-col items-center space-y-1 w-full">
-      <form onSubmit={saveTitle} className="flex px-2 w-full">
+    <div className="flex w-full flex-col items-center space-y-1">
+      <form onSubmit={saveTitle} className="flex w-full px-2">
         <input
           type="text"
           className={classNames(
@@ -76,7 +68,7 @@ function ButtonTitle({
         {!showDropdown && (
         <button
           type="button"
-          className="w-4 ml-2"
+          className="ml-2 w-4"
           onClick={() => dispatch(Settings.chooseSchedule({
             term: `${schedule.year}${schedule.season}`,
             scheduleId: schedule?.title || null,
@@ -103,10 +95,10 @@ function ChooserOption({ scheduleId }: { scheduleId: string }) {
     <Listbox.Option
       key={scheduleId}
       value={scheduleId}
-      className="odd:bg-gray-200 even:bg-white cursor-default py-1.5 px-3"
+      className="cursor-default py-1.5 px-3 odd:bg-gray-200 even:bg-white"
     >
-      <span className="flex space-x-2 w-min max-w-full">
-        <span className="flex-grow whitespace-nowrap overflow-auto">
+      <span className="flex w-min max-w-full space-x-2">
+        <span className="grow overflow-auto whitespace-nowrap">
           {schedule.title}
         </span>
         <span>
@@ -202,7 +194,7 @@ function ScheduleChooser({
             : (
               <Listbox.Button
                 name="Select schedule"
-                className="text-center w-full border rounded-xl py-1 px-2 interactive"
+                className="interactive w-full rounded-xl border py-1 px-2 text-center"
               >
                 Select a schedule
               </Listbox.Button>
@@ -227,9 +219,11 @@ function ScheduleChooser({
               ) : (
                 <Listbox.Option
                   value={null}
-                  className="w-full py-1.5 px-2 whitespace-nowrap bg-white"
+                  className="w-full whitespace-nowrap bg-white py-1.5 px-2"
                 >
-                  No schedules
+                  <Link href="/" className="interactive">
+                    No schedules. Add one now!
+                  </Link>
                 </Listbox.Option>
               )}
             </Listbox.Options>

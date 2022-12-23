@@ -1,8 +1,10 @@
 /* eslint-disable no-param-reassign */
+import { InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
 import {
   createSlice, PayloadAction,
 } from '@reduxjs/toolkit';
-import type { Index } from 'meilisearch';
+import axios from 'axios';
+import { getMeiliApiKey, getMeiliHost } from 'src/meili';
 import type { ExtendedClass } from '../../shared/apiTypes';
 import { allTruthy } from '../../shared/util';
 import type { AppDispatch, RootState } from '../store';
@@ -35,25 +37,42 @@ export const classCacheSlice = createSlice({
 
 // ========================= SELECTORS =========================
 
-export const selectClassCache = (state: RootState) => state.classCache.cache;
+export const selectClassCache: (state: RootState) => ClassCache = (state: RootState) => state.classCache.cache;
 
-// loads all classes that aren't already in the cache
+/**
+ * Load the given classes from the index into Redux.
+ * @param index the Meilisearch index to get classes from
+ * @param classIds the IDs of the classes to add to the Redux class cache
+ *
+ * Note that the latest Meilisearch client does not support the `getDocument` method.
+ * We use axios to get the document directly from the Meilisearch API.
+ */
 export function loadCourses(
-  index: Index<ExtendedClass<string | string[], string | string[]>>,
+  index: InstantMeiliSearchInstance,
   classIds: string[],
 ) {
   return async (dispatch: AppDispatch, getState: () => RootState) => {
     const state = getState();
     const cache = selectClassCache(state);
-    const classes = await Promise.allSettled(classIds.map((classId) => {
+
+    const classes = await Promise.allSettled(classIds.map(async (classId) => {
       if (classId in cache) {
-        return Promise.resolve(cache[classId]);
+        return cache[classId];
       }
-      return index.getDocument(classId);
+      const apiKey = await getMeiliApiKey();
+
+      // get the specified document from the Meilisearch index
+      const response = await axios.get<ExtendedClass>(`${getMeiliHost()}/indexes/courses/documents/${classId}`, {
+        headers: {
+          authorization: `Bearer ${apiKey}`,
+        },
+      });
+      return response.data;
     }));
+
     const fetchedClasses = allTruthy(classes.map((result) => {
       if (result.status === 'fulfilled') {
-        return result.value;
+        return result.value as ExtendedClass;
       }
       console.error(result.reason);
       return null;

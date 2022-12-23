@@ -30,7 +30,7 @@ import Tooltip from '../../Tooltip';
 const InfoPanel: React.FC<{ course: ExtendedClass }> = function ({ course }) {
   return (
     <Tab.Panel>
-      <p className="max-w-lg mb-4">
+      <p className="mb-4 max-w-lg">
         {course.textDescription || 'No description'}
       </p>
 
@@ -125,9 +125,9 @@ const InfoPanel: React.FC<{ course: ExtendedClass }> = function ({ course }) {
         <span>{course.IS_SCL_DESCR100_HU_SCL_ATTR_XREG}</span>
       </div>
       <div>
-        <h3 className="font-semibold mt-4">Recommended preparation</h3>
+        <h3 className="mt-4 font-semibold">Recommended preparation</h3>
         <p className="mt-4">{course.HU_REC_PREP || 'None'}</p>
-        <h3 className="font-semibold mt-4">Other details</h3>
+        <h3 className="mt-4 font-semibold">Other details</h3>
         <p className="mt-2">{course.HU_COURSE_PREQ || 'None'}</p>
       </div>
     </Tab.Panel>

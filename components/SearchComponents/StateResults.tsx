@@ -25,7 +25,7 @@ Pick<StateResultsProvided, 'searchState'>
       <button
         type="button"
         onClick={handleClick}
-        className="underline interactive"
+        className="interactive underline"
       >
         Copy search
       </button>
@@ -33,7 +33,7 @@ Pick<StateResultsProvided, 'searchState'>
         show={popup}
         afterEnter={() => setTimeout(() => setPopup(false), POPUP_DURATION)}
       >
-        <span className="p-1 rounded shadow inline-block absolute left-full top-1/2 transform -translate-y-1/2 ml-4 bg-gray-800 text-white text-xs text-center opacity-80">
+        <span className="absolute left-full top-1/2 ml-4 inline-block -translate-y-1/2 rounded bg-gray-800 p-1 text-center text-xs text-white opacity-80 shadow">
           Copied to clipboard!
         </span>
       </FadeTransition>

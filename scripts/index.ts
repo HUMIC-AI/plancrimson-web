@@ -1,5 +1,5 @@
-/* eslint-disable no-console */
 import axios from 'axios';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import inquirer from 'inquirer';
 import downloadData from './downloadData';
 import fetchCsTags from './fetchCsTags';
@@ -29,6 +29,32 @@ const commands = [
   fetchOldEvaluations,
   uploadEvaluations,
   fetchSyllabi,
+  {
+    label: 'Fix evaluations (remove wrong comments key)',
+    async run() {
+      const shortKey = 'What would you like to tell future students about this class?';
+      // const longKey = 'What would you like to tell future students about this class? (Your response to this question may be published anonymously.)';
+      // const data = await getFirestore().collection('evaluations').get();
+      const data = await getFirestore().collection('evaluations').where(shortKey, '!=', null).get();
+      const results = await Promise.allSettled(data.docs.map(async (snap) => {
+        const d = snap.data();
+        // if (longKey in d) {
+        //   await snap.ref.set({
+        //     comments: d[longKey],
+        //     'What would you like to tell future students about this class?': FieldValue.delete(),
+        //     [longKey]: FieldValue.delete()
+        //   }, { merge: true });
+        //   console.log('set', snap.id);
+        // } else if (shortKey in d) {
+        await snap.ref.set({
+          comments: d[shortKey],
+          [shortKey]: FieldValue.delete(),
+        }, { merge: true });
+        // }
+      }));
+      console.log(results.filter((d) => d.status === 'rejected'), results.length);
+    },
+  },
   newLabel('Department specific'),
   {
     label: 'Download the SEAS Four Year Plan course data',

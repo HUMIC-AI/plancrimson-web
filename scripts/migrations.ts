@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import '../server/initFirebase';
 import { getAuth, UserRecord } from 'firebase-admin/auth';
 import { BulkWriter, FieldValue, getFirestore } from 'firebase-admin/firestore';
