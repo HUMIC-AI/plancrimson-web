@@ -24,8 +24,6 @@ import {
   ClassCache, Planner, Profile, Schedules,
 } from '../../src/features';
 
-const buttonStyles = 'bg-white text-blue-900 bg-opacity-60 hover:bg-opacity-90 transition-colors rounded-full p-1';
-
 type Department = keyof typeof departmentImages;
 
 export type DragStatus =
@@ -84,9 +82,9 @@ function ToggleButton({ chosenScheduleId, course } : { chosenScheduleId: string;
         type="button"
         name="Add class to schedule"
         onClick={addClass}
-        className={buttonStyles}
+        className="transition-opacity hover:opacity-50"
       >
-        <FaPlus />
+        <FaPlus color="white" />
       </button>
     );
   }
@@ -99,9 +97,9 @@ function ToggleButton({ chosenScheduleId, course } : { chosenScheduleId: string;
         courseIds: [getClassId(course)],
         scheduleId: chosenSchedule.id,
       }))}
-      className={buttonStyles}
+      className="transition-opacity hover:opacity-50"
     >
-      <FaTimes />
+      <FaTimes color="yellow" />
     </button>
   );
 }
@@ -201,7 +199,7 @@ export default function CourseCard({
             />
           )}
           <div className="relative space-y-1">
-            <p className="flex items-start justify-between">
+            <p className="flex items-center justify-between">
               <button type="button" className="interactive border-b text-left font-bold text-blue-300" onClick={() => handleExpand(course)}>
                 <HighlightComponent
                   attribute="SUBJECT"

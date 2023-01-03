@@ -1,15 +1,15 @@
 import Link from 'next/link';
-import { UserProfileWithId } from 'shared/types';
 import { ImageWrapper } from 'components/UserLink';
+import { UserProfile, WithId } from 'shared/types';
 
-export default function ProfileList({ profiles, Button }: { profiles: Array<UserProfileWithId>; Button: React.FC<{ profile: UserProfileWithId; }>; }) {
+export default function ProfileList({ profiles, Button }: { profiles: Array<WithId<UserProfile>>; Button: React.FC<{ profile: WithId<UserProfile>; }>; }) {
   return (
     <div className="grid grid-cols-[auto_1fr] gap-4">
       {profiles.map((profile) => (
         <li key={profile.id} className="contents">
           <div className="flex items-center">
             <ImageWrapper url={profile.photoUrl} alt="User profile" />
-            <Link href={`/user/${profile.username}`} className="ml-2 font-bold">
+            <Link href={`/user/${profile.username}`} className="ml-2 font-bold hover:opacity-50">
               {profile.username}
             </Link>
           </div>

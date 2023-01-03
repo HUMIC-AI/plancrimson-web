@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { PropsWithChildren } from 'react';
 
-export default function ConnectLayout({ children, ...props }: PropsWithChildren<LayoutProps>) {
+export default function ConnectLayout({ children, className = '', ...props }: PropsWithChildren<LayoutProps>) {
   return (
-    <Layout {...props}>
+    <Layout className={`${className} mx-auto w-full max-w-screen-md flex-1 p-8`} {...props}>
       <ConnectNavbar />
       {children}
     </Layout>

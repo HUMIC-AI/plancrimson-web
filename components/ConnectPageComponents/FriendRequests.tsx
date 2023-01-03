@@ -1,6 +1,6 @@
 import { updateDoc, deleteDoc } from 'firebase/firestore';
 import Schema from 'shared/schema';
-import { UserProfileWithId } from 'shared/types';
+import { UserProfile, WithId } from 'shared/types';
 import { Auth } from 'src/features';
 import { useElapsed, useFriends } from 'src/hooks';
 import ProfileList from './ProfileList';
@@ -34,7 +34,7 @@ function Wrapper({ userId }: { userId: string }) {
   );
 }
 
-function IncomingRequestButtons({ profile }: { profile: UserProfileWithId }) {
+function IncomingRequestButtons({ profile }: { profile: WithId<UserProfile> }) {
   const userId = Auth.useAuthProperty('uid');
 
   const ref = Schema.friendRequest(profile.id, userId!);

@@ -2,22 +2,20 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { PropsWithChildren, useEffect, useState } from 'react';
-import * as Firestore from 'firebase/firestore';
-import { getDocs, QueryConstraint } from 'firebase/firestore';
+import React, { PropsWithChildren } from 'react';
+import type { QueryConstraint } from 'firebase/firestore';
+import useSchedules from 'src/schedules';
 import { unsplashParams } from '../../shared/util';
 import ExternalLink from '../ExternalLink';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
-import { useAppDispatch } from '../../src/hooks';
-import { ClassCache, Schedules } from '../../src/features';
-import Schema from '../../shared/schema';
-import { MeiliProvider, useMeiliClient } from '../../src/meili';
+import { MeiliProvider } from '../../src/meili';
+import Alerts from './Alerts';
 
 export interface LayoutProps {
   title?: string;
   className?: string;
-  scheduleQueryConstraints?: Firestore.QueryConstraint[];
+  scheduleQueryConstraints?: QueryConstraint[];
   custom?: boolean;
 }
 
@@ -27,9 +25,9 @@ export function Footer() {
   return (
     <footer className="bg-gray-800">
       <div className="container mx-auto flex flex-col space-y-1 p-4 text-center text-sm text-white">
-        <span>Course data last updated 2022-01-15</span>
+        <span>Course data last updated 2023-01-03</span>
         <span>
-          &#169; 2022 Alexander Cai | alexcai [at] college |
+          &#169; 2023 Alexander Cai | alexcai [at] college |
           {' '}
           <ExternalLink href="https://account.venmo.com/u/Alexander-Cai-1">
             Buy me a coffee
@@ -64,7 +62,7 @@ export function Footer() {
           Course metadata and evaluations
           {' '}
           <ExternalLink href="https://www.harvard.edu/">
-            &#169; 2022 The President and Fellows of Harvard College
+            &#169; 2023 The President and Fellows of Harvard College
           </ExternalLink>
         </span>
         <span>
@@ -126,20 +124,17 @@ export default function Layout({
 }
 
 function Wrapper({
-  children, scheduleQueryConstraints: constraints, custom, className,
+  children, scheduleQueryConstraints: constraints = [], custom, className,
 }: PropsWithChildren<Pick<LayoutProps, 'scheduleQueryConstraints' | 'custom' | 'className'>>) {
-  const alerts = useAlerts();
+  useSchedules(constraints);
 
-  useSchedules(constraints!);
-
-  // eslint-disable-next-line react/jsx-no-useless-fragment
   if (custom) return <>{children}</>;
 
   return (
     <>
       <div className="flex min-h-screen flex-col">
         <Navbar />
-        {alerts.map((alert) => <div key={alert}>{alert}</div>)}
+        <Alerts />
         <main className={className}>
           {children}
         </main>
@@ -148,51 +143,6 @@ function Wrapper({
       <Footer />
     </>
   );
-}
-
-/**
- * Listen to the user's schedules on Firestore meeting the given constraints.
- * Load all courses from the schedule into the Redux "class cache".
- */
-function useSchedules(constraints: QueryConstraint[]) {
-  const dispatch = useAppDispatch();
-  const { client } = useMeiliClient();
-
-  useEffect(() => {
-    if (constraints.length === 0) {
-      return;
-    }
-    const q = Firestore.query(Schema.Collection.schedules(), ...constraints);
-    const unsubSchedules = Firestore.onSnapshot(q, (snap) => {
-      const scheduleEntries = snap.docs.map((doc) => doc.data());
-      const classIds = scheduleEntries.flatMap((schedule) => schedule.classes.map(({ classId }) => classId));
-
-      // load all of the classes into the class cache
-      if (client) {
-        dispatch(ClassCache.loadCourses(client, classIds));
-      }
-
-      dispatch(Schedules.overwriteSchedules(scheduleEntries));
-    }, (err) => {
-      console.error('error listening for schedules (in the layout):', err);
-    });
-
-    return unsubSchedules;
-  }, [constraints, client]);
-}
-
-function useAlerts() {
-  const [alerts, setAlerts] = useState<string[]>([]);
-
-  useEffect(() => {
-    getDocs(Schema.Collection.alerts())
-      .then((snap) => setAlerts(snap.docs.map((doc) => doc.data().alert)))
-      .catch((err) => {
-        console.error('an error occurred when fetching alerts', err);
-      });
-  }, []);
-
-  return alerts;
 }
 
 export function LoadingPage() {

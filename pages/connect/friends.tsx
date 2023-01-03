@@ -1,18 +1,18 @@
 import { getDoc, deleteDoc } from 'firebase/firestore';
 import Schema from 'shared/schema';
-import { UserProfileWithId } from 'shared/types';
 import {
   useElapsed, useFriends,
 } from 'src/hooks';
 import { Auth } from 'src/features';
 import ProfileList from 'components/ConnectPageComponents/ProfileList';
 import ConnectLayout from 'components/ConnectPageComponents/ConnectLayout';
+import { UserProfile, WithId } from 'shared/types';
 
 export default function FriendsPage() {
   const userId = Auth.useAuthProperty('uid');
   if (!userId) return <ConnectLayout />;
   return (
-    <ConnectLayout>
+    <ConnectLayout title="Friends">
       <Wrapper userId={userId} />
     </ConnectLayout>
   );
@@ -39,20 +39,30 @@ function Wrapper({ userId }: { userId: string }) {
   );
 }
 
-function UnfriendButton({ profile }: { profile: UserProfileWithId }) {
+function UnfriendButton({ profile }: { profile: WithId<UserProfile> }) {
   const userId = Auth.useAuthProperty('uid');
+
+  /**
+   * If the user has sent a friend request to the profile, delete the friend request.
+   * Otherwise, delete the friend request that the profile sent to the user.
+   */
+  async function handleClick() {
+    try {
+      const outgoing = await getDoc(Schema.friendRequest(userId!, profile.id));
+      if (outgoing.exists()) {
+        await deleteDoc(outgoing.ref);
+      } else {
+        await deleteDoc(Schema.friendRequest(profile.id, userId!));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
   return (
     <button
       type="button"
-      onClick={async () => {
-        const outgoing = await getDoc(Schema.friendRequest(userId!, profile.id));
-        if (outgoing.exists()) {
-          await deleteDoc(outgoing.ref);
-        } else {
-          await deleteDoc(Schema.friendRequest(profile.id, userId!));
-        }
-      }}
+      onClick={handleClick}
       className="interactive rounded bg-blue-900 px-2 py-1 text-white"
     >
       Unfriend

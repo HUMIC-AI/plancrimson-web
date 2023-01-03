@@ -59,16 +59,14 @@ function CustomButton({
   );
 }
 
-export const HitsComponent: React.FC<
-InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
-> = function ({
+export function HitsComponent({
   hits,
   hasPrevious,
   hasMore,
   refinePrevious,
   refineNext,
   inSearch = true,
-}) {
+}: InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }) {
   const { showCourse } = useModal();
   const { oneCol } = useSearchState();
   const { chosenScheduleId } = useChosenScheduleContext();
@@ -111,7 +109,7 @@ InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }
       />
     </div>
   );
-};
+}
 
 export function HitsDemo() {
   return (

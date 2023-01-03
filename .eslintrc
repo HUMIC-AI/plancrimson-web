@@ -24,7 +24,10 @@
     "sourceType": "module",
     "project": "tsconfig.json"
   },
-  "plugins": ["react", "@typescript-eslint"],
+  "plugins": [
+    "react",
+    "@typescript-eslint"
+  ],
   "rules": {
     "consistent-return": "off",
     "func-names": "off",
@@ -33,12 +36,18 @@
     "no-alert": "off",
     "no-await-in-loop": "off",
     "no-console": "off",
-    "no-multiple-empty-lines": ["error", { "max": 2 }],
+    "no-multiple-empty-lines": [
+      "error",
+      {
+        "max": 2
+      }
+    ],
     "no-nested-ternary": "off",
     "no-param-reassign": "off",
     "no-restricted-globals": "off",
     "no-restricted-syntax": "off",
     "react/jsx-props-no-spreading": "off",
+    "react/jsx-no-useless-fragment": "off",
     "react/require-default-props": "off",
     "@typescript-eslint/no-use-before-define": "off"
   }
