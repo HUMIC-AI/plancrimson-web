@@ -57,7 +57,6 @@ export const CurrentRefinementsComponent = function ({
     </Fragment>
   ));
 
-  // eslint-disable-next-line react/jsx-no-useless-fragment
   return <>{refinementElements}</>;
 };
 
