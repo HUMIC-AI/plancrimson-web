@@ -1,8 +1,8 @@
+import CourseCard from 'components/Course/CourseCard';
 import { ImageWrapper } from 'components/UserLink';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { Schedule } from 'shared/types';
-import { useModal } from 'src/context/modal';
 import { ClassCache } from 'src/features';
 import { useAppSelector, useProfiles } from 'src/hooks';
 
@@ -13,7 +13,6 @@ export type ScheduleListProps = {
 
 export default function ScheduleSection({ schedule, hideAuthor = false }: ScheduleListProps) {
   const classCache = useAppSelector(ClassCache.selectClassCache);
-  const { showCourse } = useModal();
   const ownerUid = useMemo(() => [schedule.ownerUid], [schedule.ownerUid]);
   const profiles = useProfiles(ownerUid);
   const profile = profiles?.[schedule.ownerUid];
@@ -50,21 +49,19 @@ export default function ScheduleSection({ schedule, hideAuthor = false }: Schedu
 
       {schedule.classes.length > 0 ? (
         <ul className="mt-2 list-inside list-disc">
-          {schedule.classes.map((classData) => classData.classId in classCache && (
-          <li key={classData.classId}>
-            <button
-              type="button"
-              className="font-bold underline transition-opacity hover:opacity-50"
-              onClick={() => showCourse(classCache[classData.classId])}
-            >
-              {classCache[classData.classId].SUBJECT}
-              {classCache[classData.classId].CATALOG_NBR}
-              :
-            </button>
-            {' '}
-            {classCache[classData.classId].Title}
-          </li>
-          ))}
+          {schedule.classes.map((classData) => (classData.classId in classCache ? (
+            <CourseCard
+              course={classCache[classData.classId]}
+              key={classData.classId}
+            />
+          ) : (
+            <span key={classData.classId}>
+              Unknown class
+              {' '}
+              {classData.classId.slice(0, 12)}
+              ...
+            </span>
+          )))}
         </ul>
       ) : <p>No classes yet</p>}
     </div>

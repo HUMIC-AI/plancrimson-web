@@ -1,11 +1,10 @@
 import { connectInfiniteHits } from 'react-instantsearch-dom';
-import React from 'react'; // useEffect, useRef, useState,
+import React from 'react';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { ExtendedClass } from '../../shared/apiTypes';
 import { classNames, DAY_SHORT, getClassId } from '../../shared/util';
 import CourseCard from '../Course/CourseCard';
-import { useModal } from '../../src/context/modal';
 import sampleCourses from '../../shared/assets/sampleCourses.json';
 import { alertSignIn } from './searchUtils';
 import useChosenScheduleContext from '../../src/context/selectedSchedule';
@@ -67,7 +66,6 @@ export function HitsComponent({
   refineNext,
   inSearch = true,
 }: InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }) {
-  const { showCourse } = useModal();
   const { oneCol } = useSearchState();
   const { chosenScheduleId } = useChosenScheduleContext();
 
@@ -94,7 +92,6 @@ export function HitsComponent({
               key={getClassId(hit)}
               course={hit}
               chosenScheduleId={chosenScheduleId}
-              handleExpand={() => showCourse(hit)}
               inSearchContext={inSearch}
             />
           ))}

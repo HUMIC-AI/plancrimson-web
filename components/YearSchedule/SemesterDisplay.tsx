@@ -17,7 +17,6 @@ import CourseCard, { DragStatus } from '../Course/CourseCard';
 import FadeTransition from '../FadeTransition';
 import { Requirement } from '../../src/requirements/util';
 import ButtonMenu from './ButtonMenu';
-import { useModal } from '../../src/context/modal';
 import {
   ClassCache, Planner, Profile, Schedules, Settings,
 } from '../../src/features';
@@ -300,7 +299,6 @@ function CoursesSection({ schedule, highlightedRequirement, setDragStatus }: {
   highlightedRequirement: Requirement | undefined;
   setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>;
 }) {
-  const { showCourse } = useModal();
   const profile = useAppSelector(Profile.selectUserProfile);
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
@@ -325,7 +323,6 @@ function CoursesSection({ schedule, highlightedRequirement, setDragStatus }: {
           <CourseCard
             key={id}
             course={classCache[id]}
-            handleExpand={() => showCourse(classCache[id])}
             highlight={doHighlight(id)}
             chosenScheduleId={schedule.id}
             setDragStatus={semesterFormat === 'sample' ? undefined : setDragStatus}

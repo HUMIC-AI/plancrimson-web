@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import {
   FaTimes, FaPlus, FaExclamationTriangle, FaStar, FaStarHalfAlt, FaUserFriends,
 } from 'react-icons/fa';
+import { useModal } from 'src/context/modal';
 import { ExtendedClass } from '../../shared/apiTypes';
 import {
   getClassId,
@@ -107,8 +108,7 @@ function ToggleButton({ chosenScheduleId, course } : { chosenScheduleId: string;
 // see below
 type CourseCardProps = {
   course: ExtendedClass;
-  chosenScheduleId: string | null;
-  handleExpand: (course: ExtendedClass) => void;
+  chosenScheduleId?: string | null;
   highlight?: boolean;
   inSearchContext?: boolean;
   setDragStatus?: React.Dispatch<React.SetStateAction<DragStatus>>;
@@ -122,15 +122,13 @@ type CourseCardProps = {
  * Renders a given small expandable course card on the planning page or in the search page.
  * @param course the course to summarize in this card
  * @param chosenScheduleId the current chosen schedule. Used for various button interactions.
- * @param handleExpand the callback to expand the card
  * @param highlight whether to highlight this class. default false
  * @param setDragStatus a callback when this card starts to be dragged
  * @param warnings an optional list of warnings, eg time collisions with other classes
  */
 export default function CourseCard({
   course,
-  chosenScheduleId,
-  handleExpand,
+  chosenScheduleId = null,
   highlight = false,
   setDragStatus,
   inSearchContext = true,
@@ -141,6 +139,7 @@ export default function CourseCard({
 }: CourseCardProps) {
   const cardExpandStyle = useAppSelector(Planner.selectExpandCards);
   const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
+  const { showCourse } = useModal();
 
   const draggable = typeof setDragStatus !== 'undefined';
   const [semester, department] = useMemo(
@@ -174,7 +173,7 @@ export default function CourseCard({
         <button
           type="button"
           draggable={draggable}
-          onClick={() => handleExpand(course)}
+          onClick={() => showCourse(course)}
         >
           {course.SUBJECT + course.CATALOG_NBR}
         </button>
@@ -216,7 +215,7 @@ export default function CourseCard({
           )}
           <div className="relative space-y-1">
             <p className="flex items-center justify-between">
-              <button type="button" className="interactive border-b text-left font-bold text-blue-300" onClick={() => handleExpand(course)}>
+              <button type="button" className="interactive border-b text-left font-bold text-blue-300" onClick={() => showCourse(course)}>
                 <HighlightComponent
                   attribute="SUBJECT"
                   course={course}
