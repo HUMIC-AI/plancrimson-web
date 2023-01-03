@@ -184,6 +184,13 @@ type HeaderProps = {
   colWidth: number;
 };
 
+/**
+ * The header for a semester
+ * @param highlight the highlighted requirement
+ * @param semester the semester
+ * @param chosenScheduleId the schedule to show
+ * @param colWidth the width of the column
+ */
 function HeaderSection({
   highlight, semester, chosenScheduleId, colWidth,
 }: HeaderProps) {
@@ -223,7 +230,6 @@ function HeaderSection({
 
   return (
     <div className="flex flex-col items-stretch space-y-2 border-b-2 border-black p-4">
-      {/* only show */}
       {semesterFormat !== 'all' && (
       <h1 className="min-w-max text-center text-lg font-semibold">
         {semester.season}

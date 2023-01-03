@@ -4,7 +4,6 @@ import React, {
 import {
   FaAngleDoubleLeft,
   FaArrowsAltH,
-  FaArrowsAltV,
   FaChevronLeft,
   FaChevronRight,
   FaPlus,
@@ -81,12 +80,15 @@ function useColumns() {
   return columns;
 }
 
+/**
+ * The header section of the planning page.
+ */
 export function HeaderSection({ resizeRef }: WithResizeRef) {
   const dispatch = useAppDispatch();
   const userSchedules = useAppSelector(Schedules.selectSchedules);
   const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
   const showReqs = useAppSelector(Planner.selectShowReqs);
-  const isExpanded = useAppSelector(Planner.selectExpandCards);
+  const cardExpandStyle = useAppSelector(Planner.selectExpandCards);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
   const columns = useColumns();
@@ -136,14 +138,12 @@ export function HeaderSection({ resizeRef }: WithResizeRef) {
             type="button"
             onClick={() => dispatch(Planner.toggleExpand())}
             className={classNames(
-              isExpanded ? 'bg-white text-gray-800' : 'bg-gray-800 text-white',
-              'rounded-full hover:opacity-50 px-2 border flex items-center',
+              'bg-white text-gray-800 rounded-full hover:opacity-50 px-2 border flex items-center',
             )}
           >
-            <FaArrowsAltV />
-            <span className="ml-2">
-              {isExpanded ? 'Collapse' : 'Expand'}
-            </span>
+            {cardExpandStyle === 'text' && 'Text'}
+            {cardExpandStyle === 'collapsed' && 'Collapsed'}
+            {cardExpandStyle === 'expanded' && 'Expanded'}
           </button>
           {semesterFormat !== 'sample' && (
             <button

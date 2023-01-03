@@ -139,7 +139,7 @@ export default function CourseCard({
   hideTerm = false,
   hideRatings = false,
 }: CourseCardProps) {
-  const isExpanded = useAppSelector(Planner.selectExpandCards);
+  const cardExpandStyle = useAppSelector(Planner.selectExpandCards);
   const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
 
   const draggable = typeof setDragStatus !== 'undefined';
@@ -167,6 +167,22 @@ export default function CourseCard({
       });
     }
   };
+
+  if (cardExpandStyle === 'text') {
+    return (
+      <div onDragStart={draggable ? handleDragStart : undefined}>
+        <button
+          type="button"
+          draggable={draggable}
+          onClick={() => handleExpand(course)}
+        >
+          {course.SUBJECT + course.CATALOG_NBR}
+        </button>
+      </div>
+    );
+  }
+
+  const isExpanded = cardExpandStyle === 'expanded';
 
   return (
     // move the shadow outside to avoid it getting hidden

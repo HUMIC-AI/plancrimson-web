@@ -4,10 +4,12 @@ import type { Term } from '../../shared/types';
 import type { SampleSchedule } from '../requirements/util';
 import type { RootState } from '../store';
 
+const CARD_STYLES = ['text', 'collapsed', 'expanded'] as const;
+
 interface SemesterFormat {
   format: 'all' | 'selected' | 'sample' | null;
   sampleSchedule: SampleSchedule | null;
-  expandCards: boolean;
+  expandCards: typeof CARD_STYLES[number];
   showAttributes: boolean;
   showRequirements: boolean;
   hiddenIds: Record<string, boolean>;
@@ -17,7 +19,7 @@ interface SemesterFormat {
 const initialState: SemesterFormat = {
   format: 'selected',
   sampleSchedule: null,
-  expandCards: false,
+  expandCards: 'expanded',
   showAttributes: true,
   showRequirements: false,
   hiddenIds: {},
@@ -40,7 +42,8 @@ export const semesterFormatSlice = createSlice({
       state.sampleSchedule = action.payload;
     },
     toggleExpand: (state) => {
-      state.expandCards = !state.expandCards;
+      // next card style in CARD_STYLES
+      state.expandCards = CARD_STYLES[(CARD_STYLES.indexOf(state.expandCards) + 1) % CARD_STYLES.length];
     },
     setShowAttributes: (state, action: PayloadAction<boolean>) => {
       state.showAttributes = action.payload;
