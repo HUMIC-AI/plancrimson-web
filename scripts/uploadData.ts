@@ -24,7 +24,7 @@ function getHeaders(meiliRequired: boolean) {
   }
 
   return {
-    'X-Meili-API-Key': meiliPrivate,
+    Authorization: `Bearer ${meiliPrivate}`,
     'Content-Type': 'application/json',
   };
 }
