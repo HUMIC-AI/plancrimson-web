@@ -6,7 +6,12 @@ import { useModal } from 'src/context/modal';
 import { ClassCache } from 'src/features';
 import { useAppSelector, useProfiles } from 'src/hooks';
 
-export default function ScheduleSection({ schedule, hideAuthor = false }: { schedule: Schedule, hideAuthor?: boolean }) {
+export type ScheduleListProps = {
+  schedule: Schedule;
+  hideAuthor?: boolean;
+};
+
+export default function ScheduleSection({ schedule, hideAuthor = false }: ScheduleListProps) {
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const { showCourse } = useModal();
   const ownerUid = useMemo(() => [schedule.ownerUid], [schedule.ownerUid]);
