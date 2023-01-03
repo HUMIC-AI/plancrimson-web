@@ -25,6 +25,96 @@ const statusMessage: Record<FriendStatus, string> = {
   pending: 'Cancel request',
 };
 
+export default function UserPage() {
+  const router = useRouter();
+  const username = router.query.username as string;
+  const uid = Auth.useAuthProperty('uid');
+  const scheduleMap = useAppSelector(Schedules.selectSchedules);
+  const elapsed = useElapsed(5000, [username]);
+  const [refresh, setRefresh] = useState(true);
+
+  const [pageProfile, error] = useProfile(username);
+  const friendStatus = useFriendStatus(uid, pageProfile?.id, refresh);
+
+  const queryConstraints = useMemo(() => {
+    if (!uid || !pageProfile) return [];
+
+    if (friendStatus === 'friends' || friendStatus === 'self') {
+      return [where('ownerUid', '==', pageProfile.id)];
+    }
+
+    return [where('ownerUid', '==', pageProfile.id), where('public', '==', true)];
+  }, [uid]);
+
+  if (uid === null) {
+    return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
+  }
+
+  if (typeof uid === 'undefined') {
+    if (elapsed) return <LoadingPage />;
+    return <Layout />;
+  }
+
+  if (error) {
+    return <ErrorPage>{error.message}</ErrorPage>;
+  }
+
+  if (!pageProfile) {
+    return <LoadingPage />;
+  }
+
+  const schedules = Object.values(scheduleMap);
+
+  return (
+    <Layout
+      scheduleQueryConstraints={queryConstraints}
+      className="mx-auto w-full max-w-screen-md flex-1 p-8"
+    >
+      <div className="flex flex-col space-y-8">
+        <div className="flex items-center">
+          <ImageWrapper url={pageProfile.photoUrl} size="md" alt="User profile" />
+
+          <div className="ml-8">
+            <h1 className="text-3xl">{pageProfile.username}</h1>
+
+            {friendStatus !== 'self' && (
+            <button
+              type="button"
+              onClick={() => {
+                if (friendStatus === 'friends' || friendStatus === 'pending') {
+                  unfriend(uid, pageProfile.id);
+                  setRefresh(!refresh);
+                } else if (friendStatus === 'none') {
+                  sendFriendRequest(uid, pageProfile.id);
+                  setRefresh(!refresh);
+                }
+              }}
+              className="interactive mt-2 rounded bg-blue-900 px-2 py-1 text-white"
+            >
+              {statusMessage[friendStatus]}
+            </button>
+            )}
+          </div>
+        </div>
+
+        <section>
+          <h2 className="mb-4 border-b-2 text-xl font-medium">Schedules</h2>
+
+          {schedules.length > 0 ? (
+            <ul className="space-y-2">
+              {schedules.map((schedule) => (
+                <li key={schedule.id}>
+                  <ScheduleSection schedule={schedule} hideAuthor />
+                </li>
+              ))}
+            </ul>
+          ) : <p>No schedules yet</p>}
+        </section>
+      </div>
+    </Layout>
+  );
+}
+
 // get the profile of the user with the given username
 function useProfile(username: string) {
   const [profile, setProfile] = useState<WithId<UserProfile> | null>(null);
@@ -102,91 +192,4 @@ function useFriendStatus(user1: string | null | undefined, user2: string | null 
   }, [ref]);
 
   return status;
-}
-
-export default function UserPage() {
-  const router = useRouter();
-  const username = router.query.username as string;
-  const uid = Auth.useAuthProperty('uid');
-  const scheduleMap = useAppSelector(Schedules.selectSchedules);
-  const elapsed = useElapsed(5000, [username]);
-  const [refresh, setRefresh] = useState(true);
-
-  const [pageProfile, error] = useProfile(username);
-  const friendStatus = useFriendStatus(uid, pageProfile?.id, refresh);
-
-  const queryConstraints = useMemo(() => {
-    if (!uid || !pageProfile) return [];
-
-    if (friendStatus === 'friends' || friendStatus === 'self') {
-      return [where('ownerUid', '==', pageProfile.id)];
-    }
-
-    return [where('ownerUid', '==', pageProfile.id), where('public', '==', true)];
-  }, [uid]);
-
-  if (uid === null) {
-    return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
-  }
-
-  if (typeof uid === 'undefined') {
-    if (elapsed) return <LoadingPage />;
-    return <Layout />;
-  }
-
-  if (error) {
-    return <ErrorPage>{error.message}</ErrorPage>;
-  }
-
-  if (!pageProfile) {
-    return <LoadingPage />;
-  }
-
-  const schedules = Object.values(scheduleMap);
-
-  return (
-    <Layout scheduleQueryConstraints={queryConstraints} className="mx-auto w-full max-w-screen-md flex-1 p-8">
-      <div className="flex flex-col space-y-8 rounded-xl border-2 border-blue-900 p-8 shadow">
-        <div className="flex items-center">
-          <ImageWrapper url={pageProfile.photoUrl} size="md" alt="User profile" />
-
-          <div className="ml-8">
-            <h1 className="text-3xl">{pageProfile.username}</h1>
-
-            {friendStatus !== 'self' && (
-            <button
-              type="button"
-              onClick={() => {
-                if (friendStatus === 'friends' || friendStatus === 'pending') {
-                  unfriend(uid, pageProfile.id);
-                  setRefresh(!refresh);
-                } else if (friendStatus === 'none') {
-                  sendFriendRequest(uid, pageProfile.id);
-                  setRefresh(!refresh);
-                }
-              }}
-              className="interactive mt-2 rounded bg-blue-900 px-2 py-1 text-white"
-            >
-              {statusMessage[friendStatus]}
-            </button>
-            )}
-          </div>
-        </div>
-
-        <section className="space-y-2">
-          <h2 className="text-xl">Schedules</h2>
-
-          {schedules.length > 0 ? (
-            <ul>
-              {schedules.map((schedule) => (
-                <li key={schedule.id}>
-                  <ScheduleSection schedule={schedule} />
-                </li>
-              ))}
-            </ul>
-          ) : <p>No schedules yet</p>}
-        </section>
-      </div>
-    </Layout>
-  );
 }
