@@ -33,9 +33,7 @@ export interface UserProfile {
   concentrationRanking: Concentration[] | null;
 }
 
-export interface UserProfileWithId extends UserProfile {
-  id: string;
-}
+export type WithId<T> = T & { id: string };
 
 // ============================== /users ==============================
 

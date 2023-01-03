@@ -9,7 +9,7 @@ import {
 } from 'firebase/auth';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import type {
-  FriendRequest, UserProfileWithId,
+  FriendRequest, UserProfile, WithId,
 } from '../shared/types';
 import Schema from '../shared/schema';
 import type { AppDispatch, RootState } from './store';
@@ -125,7 +125,7 @@ export async function signInUser() {
  * @throws Error if invalid cached value or user not found
  * @returns their profile data
  */
-export async function getProfile(id: string): Promise<UserProfileWithId> {
+export async function getProfile(id: string): Promise<WithId<UserProfile>> {
   const cached = sessionStorage.getItem(`profile/${id}`);
   if (cached) {
     try {
@@ -147,21 +147,28 @@ export async function getProfile(id: string): Promise<UserProfileWithId> {
   return profile;
 }
 
+/**
+ * @param ids the user ids to query for
+ * @returns a map of user ids to their profile data
+ */
 export function useProfiles(ids: string[] | undefined) {
-  const [profiles, setProfiles] = useState<Record<string, UserProfileWithId>>();
+  const [profiles, setProfiles] = useState<Record<string, WithId<UserProfile>>>();
 
   useEffect(() => {
     if (!ids) return;
 
-    (async () => {
-      const settled = await Promise.allSettled(ids.map(getProfile));
-      const users = allTruthy(settled.map((result) => {
-        if (result.status === 'fulfilled') return result.value;
-        console.error('failed getting profiles:', result.reason);
-        return null;
-      }));
-      setProfiles(Object.fromEntries(users.map((user) => [user.id, user])));
-    })();
+    Promise.allSettled(ids.map(getProfile))
+      .then((settled) => {
+        // filter out any failed requests and log them
+        const results = settled.map((result) => {
+          if (result.status === 'fulfilled') return result.value;
+          console.error('failed getting profile:', result.reason);
+          return null;
+        });
+        const users = allTruthy(results);
+        setProfiles(Object.fromEntries(users.map((user) => [user.id, user])));
+      })
+      .catch((err) => console.error('[useProfiles] error getting profiles:', err));
   }, [ids]);
 
   return profiles;
@@ -169,8 +176,8 @@ export function useProfiles(ids: string[] | undefined) {
 
 
 export function useFriendRequests(uid: string | null | undefined) {
-  const [incoming, setIncoming] = useState<(FriendRequest & { id: string })[]>([]);
-  const [outgoing, setOutgoing] = useState<(FriendRequest & { id: string })[]>([]);
+  const [incoming, setIncoming] = useState<(WithId<FriendRequest>)[]>([]);
+  const [outgoing, setOutgoing] = useState<(WithId<FriendRequest>)[]>([]);
 
   useEffect(() => {
     if (!uid) return;
@@ -191,6 +198,11 @@ export function useFriendRequests(uid: string | null | undefined) {
 }
 
 
+/**
+ * Gets the friends of a user.
+ * @param userId the user id to get friends for
+ * @returns the friends, incoming pending requests, and outgoing pending requests
+ */
 export function useFriends(userId: string) {
   const { incoming, outgoing } = useFriendRequests(userId);
 

@@ -24,7 +24,10 @@ export default function ConnectPage() {
   }
 
   return (
-    <ConnectLayout title="Connect" scheduleQueryConstraints={constraints} className="mx-auto w-full max-w-screen-md flex-1 p-8">
+    <ConnectLayout
+      title="Connect"
+      scheduleQueryConstraints={constraints}
+    >
       <FriendRequests />
       <PublicSchedules />
     </ConnectLayout>

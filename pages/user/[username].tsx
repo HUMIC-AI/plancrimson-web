@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import ScheduleSection from 'components/SemesterSchedule/ScheduleList';
 import Layout, { errorMessages, ErrorPage, LoadingPage } from '../../components/Layout/Layout';
 import { ImageWrapper } from '../../components/UserLink';
-import { FriendRequest, UserProfileWithId } from '../../shared/types';
+import { FriendRequest, UserProfile, WithId } from '../../shared/types';
 import Schema from '../../shared/schema';
 import { Auth, Schedules } from '../../src/features';
 import {
@@ -27,7 +27,7 @@ const statusMessage: Record<FriendStatus, string> = {
 
 // get the profile of the user with the given username
 function useProfile(username: string) {
-  const [profile, setProfile] = useState<UserProfileWithId | null>(null);
+  const [profile, setProfile] = useState<WithId<UserProfile> | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
