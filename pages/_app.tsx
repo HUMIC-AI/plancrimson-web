@@ -100,6 +100,9 @@ export default function Wrapper(props: AppProps) {
   );
 }
 
+/**
+ * Syncs the user's profile data in Firestore to Redux.
+ */
 function useProfile() {
   const dispatch = useAppDispatch();
   const uid = Auth.useAuthProperty('uid');

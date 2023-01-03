@@ -20,6 +20,7 @@ export const schedulesSlice = createSlice({
   initialState,
   reducers: {
     overwriteSchedules(state, action: PayloadAction<Schedule[]>) {
+      // clear all current schedules
       Object.keys(state).forEach((key) => delete state[key]);
       action.payload.forEach((schedule) => {
         state[schedule.id] = schedule;

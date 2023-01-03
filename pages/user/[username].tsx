@@ -44,7 +44,7 @@ export default function UserPage() {
     }
 
     return [where('ownerUid', '==', pageProfile.id), where('public', '==', true)];
-  }, [uid]);
+  }, [uid, pageProfile, friendStatus]);
 
   if (uid === null) {
     return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
