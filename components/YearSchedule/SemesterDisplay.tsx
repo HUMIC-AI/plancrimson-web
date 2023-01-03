@@ -11,7 +11,7 @@ import {
   getSchedulesBySemester,
 } from '../../shared/util';
 import { Schedule, Semester, Viability } from '../../shared/types';
-import { useAppDispatch, useAppSelector } from '../../src/hooks';
+import { useAppDispatch, useAppSelector, useElapsed } from '../../src/hooks';
 import ScheduleChooser from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
 import FadeTransition from '../FadeTransition';
@@ -299,6 +299,7 @@ function CoursesSection({ schedule, highlightedRequirement, setDragStatus }: {
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const conflicts = findConflicts(allTruthy(schedule.classes.map(({ classId }) => classCache[classId])));
+  const elapsed = useElapsed(3000, []);
 
   const doHighlight = (id: string) => highlightedRequirement && highlightedRequirement.reducer(
     highlightedRequirement.initialValue || 0,
@@ -326,7 +327,7 @@ function CoursesSection({ schedule, highlightedRequirement, setDragStatus }: {
             warnings={warnings(id)}
           />
         ) : (
-          <div key={id}>Loading course data...</div>
+          <div key={id}>{elapsed ? `Course ${id.slice(0, 12)}... not found` : 'Loading course data...'}</div>
         )))}
       </div>
     </div>
