@@ -3,8 +3,9 @@ import { Listbox } from '@headlessui/react';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
+import { Season } from 'shared/types';
 import { classNames, titleContainsTerm } from '../shared/util';
-import { Schedules, Settings } from '../src/features';
+import { Auth, Schedules, Settings } from '../src/features';
 import { useAppDispatch, useAppSelector } from '../src/hooks';
 import FadeTransition from './FadeTransition';
 
@@ -95,7 +96,7 @@ function ChooserOption({ scheduleId }: { scheduleId: string }) {
     <Listbox.Option
       key={scheduleId}
       value={scheduleId}
-      className="cursor-default py-1.5 px-3 odd:bg-gray-200 even:bg-white"
+      className="cursor-pointer py-1.5 px-3 odd:bg-gray-200 even:bg-white"
     >
       <span className="flex w-min max-w-full space-x-2">
         <span className="grow overflow-auto whitespace-nowrap">
@@ -115,6 +116,8 @@ export interface ScheduleChooserProps {
   chosenScheduleId: string | null;
   handleChooseSchedule: React.Dispatch<string | null>;
   scheduleIds: string[];
+  season?: Season;
+  year?: number;
 
   // the direction to expand the selector
   direction: 'left' | 'center' | 'right';
@@ -142,6 +145,8 @@ export interface ScheduleChooserProps {
 function ScheduleChooser({
   scheduleIds,
   chosenScheduleId,
+  season,
+  year,
   handleChooseSchedule,
   direction,
   showTerm = 'auto',
@@ -149,6 +154,9 @@ function ScheduleChooser({
   showDropdown = false,
   highlight = false,
 }: ScheduleChooserProps) {
+  const userId = Auth.useAuthProperty('uid');
+  const dispatch = useAppDispatch();
+
   // if we're showing all schedules, don't render a dropdown menu
   // instead just have the title be clickable to select
   if (!showDropdown) {
@@ -225,6 +233,31 @@ function ScheduleChooser({
                     No schedules. Add one now!
                   </Link>
                 </Listbox.Option>
+              )}
+
+              {year && season && (
+              <Listbox.Option
+                value={null}
+                className="cursor-pointer py-1.5 px-3 odd:bg-gray-200 even:bg-white"
+                onClick={async () => {
+                  if (!userId) {
+                    alert('You must be logged in!');
+                    return;
+                  }
+                  const newSchedule = await dispatch(Schedules.createDefaultSchedule({ season, year }, userId));
+                  try {
+                    await dispatch(Settings.chooseSchedule({
+                      term: `${newSchedule.payload.year}${newSchedule.payload.season}`,
+                      scheduleId: newSchedule.payload.id,
+                    }));
+                  } catch (err) {
+                    console.error(err);
+                    alert("Couldn't create a new schedule! Please try again later.");
+                  }
+                }}
+              >
+                Add new
+              </Listbox.Option>
               )}
             </Listbox.Options>
           </FadeTransition>

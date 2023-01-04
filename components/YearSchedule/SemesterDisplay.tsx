@@ -277,6 +277,8 @@ function HeaderSection({
         showTerm={semesterFormat === 'all' ? 'on' : 'auto'}
         highlight={doHighlight}
         showDropdown={semesterFormat !== 'all'}
+        season={semester.season}
+        year={semester.year}
       />
       )}
 
@@ -284,8 +286,6 @@ function HeaderSection({
       <ButtonMenu
         prevScheduleId={prevScheduleId}
         handleChooseSchedule={chooseSchedule}
-        season={semester.season}
-        year={semester.year}
         chosenScheduleId={chosenScheduleId}
       />
       )}
