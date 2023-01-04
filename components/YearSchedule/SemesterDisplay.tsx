@@ -204,7 +204,7 @@ function HeaderSection({
   const [editing, setEditing] = useState(false);
   const editRef = useRef<HTMLInputElement>(null!);
 
-  const prevScheduleId = currentSchedules[0]?.title === chosenScheduleId ? null : (currentSchedules[0]?.title || null);
+  const prevScheduleId = currentSchedules.find((schedule) => schedule.id !== chosenScheduleId)?.id ?? null;
 
   async function handleRenameSchedule(ev: React.FormEvent) {
     ev.preventDefault();
