@@ -1,8 +1,9 @@
 import Image from 'next/image';
 import React, { useMemo } from 'react';
 import {
-  FaTimes, FaPlus, FaExclamationTriangle, FaStar, FaStarHalfAlt, FaUserFriends,
+  FaTimes, FaPlus, FaExclamationTriangle,
 } from 'react-icons/fa';
+import { useModal } from 'src/context/modal';
 import { ExtendedClass } from '../../shared/apiTypes';
 import {
   getClassId,
@@ -23,6 +24,7 @@ import departmentImages from '../../shared/assets/departmentImages.json';
 import {
   ClassCache, Planner, Profile, Schedules,
 } from '../../src/features';
+import { ClassSizeRating, HoursRating, StarRating } from './RatingIndicators';
 
 type Department = keyof typeof departmentImages;
 
@@ -107,13 +109,11 @@ function ToggleButton({ chosenScheduleId, course } : { chosenScheduleId: string;
 // see below
 type CourseCardProps = {
   course: ExtendedClass;
-  chosenScheduleId: string | null;
-  handleExpand: (course: ExtendedClass) => void;
+  chosenScheduleId?: string | null;
   highlight?: boolean;
   inSearchContext?: boolean;
   setDragStatus?: React.Dispatch<React.SetStateAction<DragStatus>>;
   warnings?: string;
-  interactive?: boolean;
   hideTerm?: boolean;
   hideRatings?: boolean;
 };
@@ -122,25 +122,23 @@ type CourseCardProps = {
  * Renders a given small expandable course card on the planning page or in the search page.
  * @param course the course to summarize in this card
  * @param chosenScheduleId the current chosen schedule. Used for various button interactions.
- * @param handleExpand the callback to expand the card
  * @param highlight whether to highlight this class. default false
  * @param setDragStatus a callback when this card starts to be dragged
  * @param warnings an optional list of warnings, eg time collisions with other classes
  */
 export default function CourseCard({
   course,
-  chosenScheduleId,
-  handleExpand,
+  chosenScheduleId = null,
   highlight = false,
   setDragStatus,
   inSearchContext = true,
   warnings,
-  interactive = true,
   hideTerm = false,
   hideRatings = false,
 }: CourseCardProps) {
-  const isExpanded = useAppSelector(Planner.selectExpandCards);
+  const cardExpandStyle = useAppSelector(Planner.selectExpandCards);
   const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
+  const { showCourse } = useModal();
 
   const draggable = typeof setDragStatus !== 'undefined';
   const [semester, department] = useMemo(
@@ -168,13 +166,30 @@ export default function CourseCard({
     }
   };
 
+  if (cardExpandStyle === 'text') {
+    return (
+      <span onDragStart={draggable ? handleDragStart : undefined}>
+        <button
+          type="button"
+          draggable={draggable}
+          onClick={() => showCourse(course)}
+          className="transition-opacity hover:opacity-50"
+        >
+          {course.SUBJECT + course.CATALOG_NBR}
+        </button>
+      </span>
+    );
+  }
+
+  const isExpanded = cardExpandStyle === 'expanded';
+
   return (
     // move the shadow outside to avoid it getting hidden
-    <div className="shadow-lg">
+    <div className="overflow-hidden rounded-xl shadow-xl">
       <div
         className={classNames(
-          'relative rounded-xl overflow-hidden border-gray-800 from-gray-800 border-4 text-left h-full',
-          isExpanded ? 'bg-gray-800' : 'bg-gradient-to-br',
+          'relative from-gray-800 text-left h-full',
+          isExpanded || 'bg-gradient-to-br',
           isExpanded || (highlight ? 'to-blue-500' : 'to-blue-900'),
         )}
         draggable={draggable}
@@ -190,17 +205,19 @@ export default function CourseCard({
           )}
         >
           {departmentImages[department] && (
-            <Image
-              src={departmentImages[department].urls.thumb}
-              alt={departmentImages[department].alt_description || ''}
-              fill
-              style={{ objectFit: 'cover' }}
-              className={highlight ? 'opacity-10' : 'opacity-30'}
-            />
+          <Image
+            src={departmentImages[department].urls.thumb}
+            alt={departmentImages[department].alt_description || ''}
+            fill
+            style={{ objectFit: 'cover' }}
+            className={highlight ? 'opacity-10' : 'opacity-30'}
+          />
           )}
+
+          {/* relative so it appears above the image */}
           <div className="relative space-y-1">
             <p className="flex items-center justify-between">
-              <button type="button" className="interactive border-b text-left font-bold text-blue-300" onClick={() => handleExpand(course)}>
+              <button type="button" className="interactive border-b text-left font-bold text-blue-300" onClick={() => showCourse(course)}>
                 <HighlightComponent
                   attribute="SUBJECT"
                   course={course}
@@ -221,7 +238,7 @@ export default function CourseCard({
                 </Tooltip>
                 )}
 
-                {interactive && <ToggleButton chosenScheduleId={chosenScheduleId!} course={course} />}
+                <ToggleButton chosenScheduleId={chosenScheduleId!} course={course} />
               </span>
             </p>
             <h3 className={classNames(isExpanded || 'text-sm')}>
@@ -238,107 +255,41 @@ export default function CourseCard({
               {semester.year}
             </p>
             )}
-            {!hideRatings && typeof course.meanRating !== 'undefined' && <StarRating rating={course.meanRating} />}
-            {!hideRatings && typeof course.meanClassSize !== 'undefined' && <ClassSizeRating population={course.meanClassSize} />}
+
+            {!hideRatings && (
+            <>
+              {typeof course.meanRating !== 'undefined' && <StarRating rating={course.meanRating} />}
+              {typeof course.meanClassSize !== 'undefined' && <ClassSizeRating population={course.meanClassSize} />}
+              {typeof course.meanHours !== 'undefined' && <HoursRating hours={course.meanHours} />}
+            </>
+            )}
           </div>
         </div>
         {/* end header component */}
 
         {isExpanded && (
-          <div className="h-full bg-white p-2">
-            <div className="inline-grid max-w-full grid-cols-[auto_1fr] items-center gap-y-2 gap-x-4">
-              <Instructors course={course} inSearch={inSearchContext} />
-              <Location course={course} inSearch={inSearchContext} />
-              <DaysOfWeek course={course} inSearch={inSearchContext} />
-              <ClassTime course={course} inSearch={inSearchContext} />
-            </div>
-            {course.textDescription.length > 0 && (
-              <>
-                <hr className="my-2 border-black" />
-                <p className="text-sm line-clamp-3">
-                  <HighlightComponent
-                    attribute="textDescription"
-                    course={course}
-                    inSearch={inSearchContext}
-                  />
-                </p>
-              </>
-            )}
+        <div className="h-full bg-white p-2 text-black">
+          <div className="inline-grid max-w-full grid-cols-[auto_1fr] items-center gap-y-2 gap-x-4">
+            <Instructors course={course} inSearch={inSearchContext} />
+            <Location course={course} inSearch={inSearchContext} />
+            <DaysOfWeek course={course} inSearch={inSearchContext} />
+            <ClassTime course={course} inSearch={inSearchContext} />
           </div>
+          {course.textDescription.length > 0 && (
+          <>
+            <hr className="my-2 border-black" />
+            <p className="text-sm line-clamp-3">
+              <HighlightComponent
+                attribute="textDescription"
+                course={course}
+                inSearch={inSearchContext}
+              />
+            </p>
+          </>
+          )}
+        </div>
         )}
       </div>
-    </div>
-  );
-}
-
-/**
- * @param value from 0 to 5.
- * @returns a flat array filled with "full", "half", or "empty".
- */
-function getStars(value: number): ('full' | 'half' | 'empty')[] {
-  const halfStars = value - Math.floor(value) >= 0.5 ? 1 : 0;
-  const fullStars = Math.min(Math.max(Math.floor(value), 0), 5 - halfStars);
-  const emptyStars = 5 - fullStars - halfStars;
-  return [...Array(fullStars).fill('full'), ...Array(halfStars).fill('half'), ...Array(emptyStars).fill('empty')];
-}
-
-/**
- * Scale of one to five stars.
- */
-function StarRating({ rating }: { rating: number }) {
-  const stars = useMemo(() => getStars(rating), [rating]);
-
-  return (
-    <div className="flex items-center space-x-1">
-      {stars.map((star, i) => (star === 'half'
-        ? (
-          <FaStarHalfAlt
-          // eslint-disable-next-line react/no-array-index-key
-            key={i}
-            color="orange"
-            className="text-sm"
-          />
-        )
-        : (
-          <FaStar
-            // eslint-disable-next-line react/no-array-index-key
-            key={i}
-            color={star === 'full' ? 'yellow' : 'gray'}
-            className="text-sm"
-          />
-        )))}
-      <span className="text-sm">
-        {rating.toFixed(2)}
-      </span>
-    </div>
-  );
-}
-
-function ClassSizeRating({ population }: { population: number }) {
-  const stars = useMemo(() => getStars(Math.log(population)), [population]);
-
-  return (
-    <div className="flex items-center space-x-1">
-      {stars.map((star, i) => (star === 'half'
-        ? (
-          <FaUserFriends
-          // eslint-disable-next-line react/no-array-index-key
-            key={i}
-            color="orange"
-            className="text-sm"
-          />
-        )
-        : (
-          <FaUserFriends
-            // eslint-disable-next-line react/no-array-index-key
-            key={i}
-            color={star === 'full' ? 'yellow' : 'gray'}
-            className="text-sm"
-          />
-        )))}
-      <span className="text-sm">
-        {Math.floor(population)}
-      </span>
     </div>
   );
 }

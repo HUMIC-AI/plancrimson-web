@@ -6,10 +6,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { useProfiles, useElapsed } from 'src/hooks';
 
 export default function FindClassmates() {
-  const suggestedProfiles = useSuggestedProfiles();
+  const { profiles: suggestedProfiles, error } = useSuggestedProfiles();
   const ids = useMemo(() => suggestedProfiles?.map(([id]) => id), [suggestedProfiles]);
   const profiles = useProfiles(ids);
   const elapsed = useElapsed(500, []);
+
+  if (error) {
+    return <p>Something went wrong. Please try again later.</p>;
+  }
 
   if (typeof suggestedProfiles === 'undefined' || typeof profiles === 'undefined') {
     if (elapsed) return <p>Loading...</p>;
@@ -46,10 +50,15 @@ export default function FindClassmates() {
   );
 }
 
-
+/**
+ * A hook that returns a list of suggested profiles to follow.
+ * The list is cached in sessionStorage for an hour.
+ * @returns a list of user ids and the number of courses in common
+ */
 function useSuggestedProfiles() {
   // a list of user ids and the number of courses in common
   const [profiles, setProfiles] = useState<[string, number][]>();
+  const [error, setError] = useState<Error>();
 
   useEffect(() => {
     const lastUpdated = parseInt(sessionStorage.getItem('suggestProfiles/lastUpdated')!, 10);
@@ -77,7 +86,7 @@ function useSuggestedProfiles() {
         return;
       }
       user.getIdToken(true)
-        .then((token) => axios({ url: '/api/suggestProfiles', headers: { authorization: `Bearer ${token}` } }))
+        .then((token) => axios({ url: '/api/suggestProfiles', headers: { Authorization: `Bearer ${token}` } }))
         .then(({ data }) => {
           sessionStorage.setItem('suggestProfiles/lastUpdated', Date.now().toString());
           sessionStorage.setItem('suggestProfiles/profiles', JSON.stringify(data));
@@ -85,9 +94,10 @@ function useSuggestedProfiles() {
         })
         .catch((err) => {
           console.error('error getting suggested profiles:', err);
+          setError(err);
         });
     }
   }, []);
 
-  return profiles;
+  return { profiles, error };
 }

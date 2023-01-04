@@ -11,13 +11,12 @@ import {
   getSchedulesBySemester,
 } from '../../shared/util';
 import { Schedule, Semester, Viability } from '../../shared/types';
-import { useAppDispatch, useAppSelector } from '../../src/hooks';
+import { useAppDispatch, useAppSelector, useElapsed } from '../../src/hooks';
 import ScheduleChooser from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
 import FadeTransition from '../FadeTransition';
 import { Requirement } from '../../src/requirements/util';
 import ButtonMenu from './ButtonMenu';
-import { useModal } from '../../src/context/modal';
 import {
   ClassCache, Planner, Profile, Schedules, Settings,
 } from '../../src/features';
@@ -184,6 +183,13 @@ type HeaderProps = {
   colWidth: number;
 };
 
+/**
+ * The header for a semester
+ * @param highlight the highlighted requirement
+ * @param semester the semester
+ * @param chosenScheduleId the schedule to show
+ * @param colWidth the width of the column
+ */
 function HeaderSection({
   highlight, semester, chosenScheduleId, colWidth,
 }: HeaderProps) {
@@ -198,7 +204,7 @@ function HeaderSection({
   const [editing, setEditing] = useState(false);
   const editRef = useRef<HTMLInputElement>(null!);
 
-  const prevScheduleId = currentSchedules[0]?.title === chosenScheduleId ? null : (currentSchedules[0]?.title || null);
+  const prevScheduleId = currentSchedules.find((schedule) => schedule.id !== chosenScheduleId)?.id ?? null;
 
   async function handleRenameSchedule(ev: React.FormEvent) {
     ev.preventDefault();
@@ -223,7 +229,6 @@ function HeaderSection({
 
   return (
     <div className="flex flex-col items-stretch space-y-2 border-b-2 border-black p-4">
-      {/* only show */}
       {semesterFormat !== 'all' && (
       <h1 className="min-w-max text-center text-lg font-semibold">
         {semester.season}
@@ -272,6 +277,8 @@ function HeaderSection({
         showTerm={semesterFormat === 'all' ? 'on' : 'auto'}
         highlight={doHighlight}
         showDropdown={semesterFormat !== 'all'}
+        season={semester.season}
+        year={semester.year}
       />
       )}
 
@@ -279,8 +286,6 @@ function HeaderSection({
       <ButtonMenu
         prevScheduleId={prevScheduleId}
         handleChooseSchedule={chooseSchedule}
-        season={semester.season}
-        year={semester.year}
         chosenScheduleId={chosenScheduleId}
       />
       )}
@@ -294,11 +299,11 @@ function CoursesSection({ schedule, highlightedRequirement, setDragStatus }: {
   highlightedRequirement: Requirement | undefined;
   setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>;
 }) {
-  const { showCourse } = useModal();
   const profile = useAppSelector(Profile.selectUserProfile);
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const conflicts = findConflicts(allTruthy(schedule.classes.map(({ classId }) => classCache[classId])));
+  const elapsed = useElapsed(3000, []);
 
   const doHighlight = (id: string) => highlightedRequirement && highlightedRequirement.reducer(
     highlightedRequirement.initialValue || 0,
@@ -318,7 +323,6 @@ function CoursesSection({ schedule, highlightedRequirement, setDragStatus }: {
           <CourseCard
             key={id}
             course={classCache[id]}
-            handleExpand={() => showCourse(classCache[id])}
             highlight={doHighlight(id)}
             chosenScheduleId={schedule.id}
             setDragStatus={semesterFormat === 'sample' ? undefined : setDragStatus}
@@ -326,7 +330,7 @@ function CoursesSection({ schedule, highlightedRequirement, setDragStatus }: {
             warnings={warnings(id)}
           />
         ) : (
-          <div key={id}>Loading course data...</div>
+          <div key={id}>{elapsed ? `Course ${id.slice(0, 12)}... not found` : 'Loading course data...'}</div>
         )))}
       </div>
     </div>

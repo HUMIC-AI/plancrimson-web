@@ -7,13 +7,49 @@ import { Auth } from 'src/features';
 import ProfileList from 'components/ConnectPageComponents/ProfileList';
 import ConnectLayout from 'components/ConnectPageComponents/ConnectLayout';
 import { UserProfile, WithId } from 'shared/types';
+import FindClassmates from 'components/ConnectPageComponents/FindClassmates';
+import { useState } from 'react';
+import { useRouter } from 'next/router';
 
 export default function FriendsPage() {
   const userId = Auth.useAuthProperty('uid');
-  if (!userId) return <ConnectLayout />;
+  const router = useRouter();
+  const [username, setUsername] = useState<string>();
+
+  if (!userId) return <ConnectLayout title="Friends" />;
+
   return (
     <ConnectLayout title="Friends">
       <Wrapper userId={userId} />
+
+      <p className="my-2 text-sm">To search for a user, type the first part of their college email.</p>
+
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        if (username) {
+          router.push(`/user/${username}`);
+        }
+      }}
+      >
+        <input
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.currentTarget.value)}
+          className="rounded border border-gray-300 px-2 py-1"
+        />
+        @college.harvard.edu
+
+        <button
+          type="submit"
+          className="ml-2 rounded bg-blue-900 px-2 py-1 text-white"
+        >
+          Search
+        </button>
+      </form>
+
+      <h3 className="mt-4 mb-2 text-2xl font-medium">Recommended</h3>
+
+      <FindClassmates />
     </ConnectLayout>
   );
 }

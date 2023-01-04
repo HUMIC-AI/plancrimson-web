@@ -9,9 +9,17 @@ import ConnectLayout from 'components/ConnectPageComponents/ConnectLayout';
 import PublicSchedules from 'components/ConnectPageComponents/PublicSchedules';
 import FriendRequests from 'components/ConnectPageComponents/FriendRequests';
 
+/**
+ * TODO add search bar for public schedules
+ */
 export default function ConnectPage() {
   const userId = Auth.useAuthProperty('uid');
-  const constraints = useMemo(() => [where('public', '==', true), limit(20)], []);
+  const constraints = useMemo(() => [
+    where('public', '==', true),
+    where('owner', '!=', userId),
+    limit(20),
+  ], []);
+
   const elapsed = useElapsed(2000, []);
 
   if (userId === null) {

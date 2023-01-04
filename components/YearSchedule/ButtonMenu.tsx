@@ -3,15 +3,13 @@ import React, { useCallback } from 'react';
 import {
   FaCalendarWeek,
   FaClone,
-  FaPlus,
   FaTrash,
   FaLink,
   FaUnlink,
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
 import { v4 as uuidv4 } from 'uuid';
-import { Season } from '../../shared/types';
-import { Auth, Schedules, Settings } from '../../src/features';
+import { Schedules } from '../../src/features';
 import { useAppDispatch, useAppSelector } from '../../src/hooks';
 import Tooltip from '../Tooltip';
 
@@ -62,20 +60,15 @@ function CustomButton({ name, Icon, ...rest }: ButtonProps | LinkProps) {
 interface ButtonMenuProps {
   chosenScheduleId: string | null;
   handleChooseSchedule: React.Dispatch<string | null>;
-  year: number;
-  season: Season;
   prevScheduleId: string | null;
 }
 
 export default function ButtonMenu({
   chosenScheduleId,
   handleChooseSchedule,
-  year,
-  season,
   prevScheduleId,
 }: ButtonMenuProps) {
   const dispatch = useAppDispatch();
-  const userId = Auth.useAuthProperty('uid');
   const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
 
   const handleDuplicate = useCallback(async () => {
@@ -125,27 +118,6 @@ export default function ButtonMenu({
             />
           </>
         )}
-
-        <CustomButton
-          name="New schedule"
-          onClick={async () => {
-            if (!userId) {
-              alert('You must be logged in!');
-              return;
-            }
-            const schedule = await dispatch(Schedules.createDefaultSchedule({ season, year }, userId));
-            try {
-              await dispatch(Settings.chooseSchedule({
-                term: `${schedule.payload.year}${schedule.payload.season}`,
-                scheduleId: schedule.payload.id,
-              }));
-            } catch (err) {
-              console.error(err);
-              alert("Couldn't create a new schedule! Please try again later.");
-            }
-          }}
-          Icon={FaPlus}
-        />
 
         {chosenSchedule && (
           <>

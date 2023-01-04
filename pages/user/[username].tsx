@@ -1,11 +1,12 @@
 import {
   DocumentReference,
   getDoc,
-  onSnapshot, query, where,
+  onSnapshot, query, updateDoc, where,
 } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import ScheduleSection from 'components/SemesterSchedule/ScheduleList';
+import CardExpandToggler from 'components/YearSchedule/CardExpandToggler';
 import Layout, { errorMessages, ErrorPage, LoadingPage } from '../../components/Layout/Layout';
 import { ImageWrapper } from '../../components/UserLink';
 import { FriendRequest, UserProfile, WithId } from '../../shared/types';
@@ -71,34 +72,58 @@ export default function UserPage() {
       className="mx-auto w-full max-w-screen-md flex-1 p-8"
     >
       <div className="flex flex-col space-y-8">
-        <div className="flex items-center">
-          <ImageWrapper url={pageProfile.photoUrl} size="md" alt="User profile" />
+        <div>
+          {/* top region with image and name */}
+          <div className="flex items-center">
+            <ImageWrapper url={pageProfile.photoUrl} size="md" alt="User profile" />
 
-          <div className="ml-8">
-            <h1 className="text-3xl">{pageProfile.username}</h1>
+            <div className="ml-8">
+              <h1 className="text-3xl">{pageProfile.username}</h1>
 
-            {friendStatus !== 'self' && (
-            <button
-              type="button"
-              onClick={() => {
-                if (friendStatus === 'friends' || friendStatus === 'pending') {
-                  unfriend(uid, pageProfile.id);
-                  setRefresh(!refresh);
-                } else if (friendStatus === 'none') {
-                  sendFriendRequest(uid, pageProfile.id);
-                  setRefresh(!refresh);
-                }
-              }}
-              className="interactive mt-2 rounded bg-blue-900 px-2 py-1 text-white"
-            >
-              {statusMessage[friendStatus]}
-            </button>
-            )}
+              {friendStatus !== 'self' && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (friendStatus === 'friends' || friendStatus === 'pending') {
+                    unfriend(uid, pageProfile.id);
+                    setRefresh(!refresh);
+                  } else if (friendStatus === 'none') {
+                    sendFriendRequest(uid, pageProfile.id);
+                    setRefresh(!refresh);
+                  }
+                }}
+                className="interactive mt-2 rounded bg-blue-900 px-2 py-1 text-white"
+              >
+                {statusMessage[friendStatus]}
+              </button>
+              )}
+            </div>
           </div>
+
+          {/* bio */}
+          <p className="mt-4">
+            Class of
+            {' '}
+            {pageProfile.classYear}
+          </p>
+
+          <h3 className="mt-4 text-xl font-medium">Bio</h3>
+          {/* show an editable textarea for own page, otherwise other's bio */}
+          {pageProfile.id === uid ? (
+            <EditBioForm uid={uid} />
+          ) : (
+            <p className="mt-2">{pageProfile.bio}</p>
+          )}
         </div>
 
+        {/* schedules */}
         <section>
-          <h2 className="mb-4 border-b-2 text-xl font-medium">Schedules</h2>
+          <div className="mb-4 flex items-center justify-between border-b-2">
+            <h2 className="text-xl font-medium">
+              Schedules
+            </h2>
+            <CardExpandToggler />
+          </div>
 
           {schedules.length > 0 ? (
             <ul className="space-y-2">
@@ -192,4 +217,55 @@ function useFriendStatus(user1: string | null | undefined, user2: string | null 
   }, [ref]);
 
   return status;
+}
+
+function EditBioForm({ uid }: { uid: string }) {
+  const [bio, setBio] = useState('');
+  const [error, setError] = useState<Error | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const unsub = onSnapshot(
+      Schema.profile(uid),
+      (snap) => {
+        setBio(snap.data()?.bio ?? '');
+      },
+      (err) => {
+        setError(err);
+      },
+    );
+    return () => unsub();
+  }, [uid]);
+
+  if (error) {
+    return <ErrorPage>{error.message}</ErrorPage>;
+  }
+
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+          await updateDoc(Schema.profile(uid), { bio });
+        } catch (err) {
+          setError(err as Error);
+        }
+        setLoading(false);
+      }}
+    >
+      <textarea
+        className="mt-2 h-32 w-full rounded border-2 px-1"
+        value={bio}
+        onChange={(e) => setBio(e.target.value)}
+      />
+      <button
+        type="submit"
+        className="interactive mt-2 rounded bg-blue-900 px-2 py-1 text-white"
+        disabled={loading}
+      >
+        {loading ? 'Saving...' : 'Save'}
+      </button>
+    </form>
+  );
 }

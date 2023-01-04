@@ -1,11 +1,10 @@
 import { Dialog } from '@headlessui/react';
 import type { DownloadPlan } from '../shared/types';
 import { allTruthy, SEASON_ORDER } from '../shared/util';
-import { useModal } from '../src/context/modal';
 import { Schedules } from '../src/features';
 import { useAppDispatch } from '../src/hooks';
 
-function UploadForm() {
+export default function UploadForm() {
   const dispatch = useAppDispatch();
 
   const handleUpload: React.FormEventHandler<HTMLFormElement> = async (ev) => {
@@ -68,22 +67,5 @@ function UploadForm() {
         Submit
       </button>
     </form>
-  );
-}
-
-export default function UploadPlan() {
-  const { showContents } = useModal();
-
-  return (
-    <button
-      type="button"
-      onClick={() => showContents({
-        content: <UploadForm />,
-        title: 'Upload plan',
-      })}
-      className="interactive underline"
-    >
-      Upload plan
-    </button>
   );
 }
