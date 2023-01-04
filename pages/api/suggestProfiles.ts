@@ -5,8 +5,8 @@ if (admin.apps.length === 0) {
   admin.initializeApp();
 }
 
-// eslint-disable-next-line max-len
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // authenticate
   const auth = req.headers.authorization;
   if (!auth?.startsWith('Bearer ')) {
     res.status(401).send('Unauthenticated');
@@ -21,6 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return;
   }
 
+  // get all incoming and outgoing friend requests
   const incomingFriends = await admin.firestore().collectionGroup('friends')
     .where('from', '==', uid)
     .where('accepted', '==', true)
@@ -35,20 +36,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   ];
 
   const schedules = await admin.firestore().collection('schedules').get();
-  const profiles: Record<string, string[]> = { [uid]: [] };
+  const mapProfileToClasses: Record<string, string[]> = { [uid]: [] };
   schedules.docs.forEach((schedule) => {
     const owner = schedule.data().ownerUid;
-    if (!profiles[owner]) profiles[owner] = [];
+    if (!mapProfileToClasses[owner]) mapProfileToClasses[owner] = [];
     schedule.data().classes.forEach(({ classId }: { classId: string }) => {
-      profiles[owner].push(classId);
+      mapProfileToClasses[owner].push(classId);
     });
   });
 
+  // rank profiles according to how many courses they share in common
   const counts: Record<string, number> = {};
-  Object.entries(profiles)
+  Object.entries(mapProfileToClasses)
     .filter(([id]) => id !== uid && !friendIds.includes(id))
     .forEach(([userId, courses]) => {
-      counts[userId] = profiles[uid].filter((id) => courses.includes(id)).length;
+      counts[userId] = mapProfileToClasses[uid].filter((id) => courses.includes(id)).length;
     });
   const ranked = Object.entries(counts)
     .sort(([, aCount], [, bCount]) => aCount - bCount);

@@ -14,6 +14,8 @@ export type ScheduleListProps = {
 export default function ScheduleSection({ schedule, hideAuthor = false }: ScheduleListProps) {
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const cardExpand = useAppSelector(Planner.selectExpandCards);
+
+  // make a singleton list of the owner's uid so that we can use it as a dependency
   const ownerUid = useMemo(() => [schedule.ownerUid], [schedule.ownerUid]);
   const profiles = useProfiles(ownerUid);
   const profile = profiles?.[schedule.ownerUid];

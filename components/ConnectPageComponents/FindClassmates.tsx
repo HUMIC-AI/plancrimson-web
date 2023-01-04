@@ -46,7 +46,11 @@ export default function FindClassmates() {
   );
 }
 
-
+/**
+ * A hook that returns a list of suggested profiles to follow.
+ * The list is cached in sessionStorage for an hour.
+ * @returns a list of user ids and the number of courses in common
+ */
 function useSuggestedProfiles() {
   // a list of user ids and the number of courses in common
   const [profiles, setProfiles] = useState<[string, number][]>();
@@ -77,7 +81,7 @@ function useSuggestedProfiles() {
         return;
       }
       user.getIdToken(true)
-        .then((token) => axios({ url: '/api/suggestProfiles', headers: { authorization: `Bearer ${token}` } }))
+        .then((token) => axios({ url: '/api/suggestProfiles', headers: { Authorization: `Bearer ${token}` } }))
         .then(({ data }) => {
           sessionStorage.setItem('suggestProfiles/lastUpdated', Date.now().toString());
           sessionStorage.setItem('suggestProfiles/profiles', JSON.stringify(data));

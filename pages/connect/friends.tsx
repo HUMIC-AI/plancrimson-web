@@ -7,13 +7,20 @@ import { Auth } from 'src/features';
 import ProfileList from 'components/ConnectPageComponents/ProfileList';
 import ConnectLayout from 'components/ConnectPageComponents/ConnectLayout';
 import { UserProfile, WithId } from 'shared/types';
+import FindClassmates from 'components/ConnectPageComponents/FindClassmates';
 
 export default function FriendsPage() {
   const userId = Auth.useAuthProperty('uid');
-  if (!userId) return <ConnectLayout />;
+
+  if (!userId) return <ConnectLayout title="Friends" />;
+
   return (
     <ConnectLayout title="Friends">
       <Wrapper userId={userId} />
+
+      <h3 className="mt-4 mb-2 text-2xl font-medium">Recommended</h3>
+
+      <FindClassmates />
     </ConnectLayout>
   );
 }
