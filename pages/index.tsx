@@ -2,11 +2,16 @@ import { where } from 'firebase/firestore';
 import {
   useState, useEffect, useMemo, useRef,
 } from 'react';
+import { SemesterDisplayProps } from 'components/YearSchedule/SemesterDisplay';
 import Layout, { Footer } from '../components/Layout/Layout';
 import Navbar from '../components/Layout/Navbar';
-import { HeaderSection, HiddenSchedules, SemestersList } from '../components/YearSchedule/PlanningSection';
+import { SemestersList } from '../components/YearSchedule/PlanningSection';
+import HiddenSchedules from '../components/YearSchedule/HiddenSchedules';
+import HeaderSection from '../components/YearSchedule/HeaderSection';
 import RequirementsSection from '../components/YearSchedule/RequirementsSection';
-import { allTruthy, breakpoints, classNames } from '../shared/util';
+import {
+  allTruthy, breakpoints, classNames, compareSemesters, getUniqueSemesters,
+} from '../shared/util';
 import {
   Auth, ClassCache, Planner, Profile, Schedules, Settings,
 } from '../src/features';
@@ -31,6 +36,7 @@ export default function PlanPage() {
   const schedules = useAppSelector(Schedules.selectSchedules);
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const md = useBreakpoint(breakpoints.md);
+  const columns = useColumns();
 
   const [validationResults, setValidationResults] = useState<GroupResult | null>(null);
   const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(collegeRequirements);
@@ -88,8 +94,8 @@ export default function PlanPage() {
             showReqs && 'md:rounded-lg md:shadow-lg',
           )}
           >
-            <HeaderSection resizeRef={resizeRef} />
-            <SemestersList highlightedRequirement={highlightedRequirement} resizeRef={resizeRef} />
+            <HeaderSection resizeRef={resizeRef} columns={columns} />
+            <SemestersList highlightedRequirement={highlightedRequirement} resizeRef={resizeRef} columns={columns} />
             <HiddenSchedules />
           </div>
         </div>
@@ -118,8 +124,8 @@ export default function PlanPage() {
         showReqs && 'md:rounded-lg md:shadow-lg',
       )}
       >
-        <HeaderSection resizeRef={resizeRef} />
-        <SemestersList highlightedRequirement={highlightedRequirement} resizeRef={resizeRef} />
+        <HeaderSection resizeRef={resizeRef} columns={columns} />
+        <SemestersList highlightedRequirement={highlightedRequirement} resizeRef={resizeRef} columns={columns} />
         <HiddenSchedules />
       </div>
 
@@ -136,4 +142,50 @@ export default function PlanPage() {
       )}
     </Layout>
   );
+}
+
+function useColumns() {
+  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
+  const userSchedules = useAppSelector(Schedules.selectSchedules);
+  const classYear = useAppSelector(Profile.selectClassYear);
+  const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
+  const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
+
+  const columns: SemesterDisplayProps[] = useMemo(() => {
+    switch (semesterFormat) {
+      case 'sample':
+        if (!sampleSchedule) return [];
+        return sampleSchedule.schedules.map(({ year, season, id }) => ({
+          semester: { year, season },
+          chosenScheduleId: id,
+          key: id,
+        }));
+
+      case 'selected':
+        if (!classYear) return [];
+        return getUniqueSemesters(
+          classYear,
+          ...Object.values(userSchedules),
+        ).map(({ year, season }) => ({
+          key: `${year}${season}`,
+          semester: { year, season },
+          chosenScheduleId: chosenSchedules[`${year}${season}`] || null,
+        }));
+
+      case 'all':
+        return Object.values(userSchedules)
+          .sort(compareSemesters)
+          .map(({ year, season, id }) => ({
+            key: id,
+            semester: { year, season },
+            chosenScheduleId: id,
+            highlight: chosenSchedules[`${year}${season}`] || undefined,
+          }));
+
+      default:
+        return [];
+    }
+  }, [classYear, sampleSchedule?.schedules, userSchedules, chosenSchedules, semesterFormat]);
+
+  return columns;
 }
