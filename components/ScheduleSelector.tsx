@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { Listbox } from '@headlessui/react';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
 import { Season } from 'shared/types';
 import { classNames, titleContainsTerm } from '../shared/util';
@@ -89,14 +89,23 @@ function ButtonTitle({
   );
 }
 
+function StyledOption({ children, ...props }: Parameters<typeof Listbox.Option>[0]) {
+  return (
+    <Listbox.Option {...props} className="py-1.5 px-3 odd:bg-gray-200 even:bg-white">
+      <span className="cursor-pointer transition-opacity hover:opacity-50">
+        {children as ReactNode}
+      </span>
+    </Listbox.Option>
+  );
+}
+
 function ChooserOption({ scheduleId }: { scheduleId: string }) {
   const schedule = useAppSelector(Schedules.selectSchedule(scheduleId));
   if (!schedule) return null;
   return (
-    <Listbox.Option
+    <StyledOption
       key={scheduleId}
       value={scheduleId}
-      className="cursor-pointer py-1.5 px-3 odd:bg-gray-200 even:bg-white"
     >
       <span className="flex w-min max-w-full space-x-2">
         <span className="grow overflow-auto whitespace-nowrap">
@@ -108,7 +117,7 @@ function ChooserOption({ scheduleId }: { scheduleId: string }) {
           )
         </span>
       </span>
-    </Listbox.Option>
+    </StyledOption>
   );
 }
 
@@ -222,23 +231,20 @@ function ScheduleChooser({
                   : '16rem',
               }}
             >
+              {/* Only show the "no schedules" dialog if not on schedule list on planning page */}
               {scheduleIds.length > 0 ? (
                 scheduleIds.map((scheduleId) => <ChooserOption key={scheduleId} scheduleId={scheduleId} />)
-              ) : (
-                <Listbox.Option
-                  value={null}
-                  className="w-full whitespace-nowrap bg-white py-1.5 px-2"
-                >
+              ) : !(year && season) && (
+                <StyledOption value={null}>
                   <Link href="/" className="interactive">
                     No schedules. Add one now!
                   </Link>
-                </Listbox.Option>
+                </StyledOption>
               )}
 
               {year && season && (
-              <Listbox.Option
+              <StyledOption
                 value={null}
-                className="cursor-pointer py-1.5 px-3 odd:bg-gray-200 even:bg-white"
                 onClick={async () => {
                   if (!userId) {
                     alert('You must be logged in!');
@@ -257,7 +263,7 @@ function ScheduleChooser({
                 }}
               >
                 Add new
-              </Listbox.Option>
+              </StyledOption>
               )}
             </Listbox.Options>
           </FadeTransition>
