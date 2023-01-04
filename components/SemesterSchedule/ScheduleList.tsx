@@ -3,7 +3,7 @@ import { ImageWrapper } from 'components/UserLink';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { Schedule } from 'shared/types';
-import { ClassCache } from 'src/features';
+import { ClassCache, Planner } from 'src/features';
 import { useAppSelector, useProfiles } from 'src/hooks';
 
 export type ScheduleListProps = {
@@ -13,13 +13,14 @@ export type ScheduleListProps = {
 
 export default function ScheduleSection({ schedule, hideAuthor = false }: ScheduleListProps) {
   const classCache = useAppSelector(ClassCache.selectClassCache);
+  const cardExpand = useAppSelector(Planner.selectExpandCards);
   const ownerUid = useMemo(() => [schedule.ownerUid], [schedule.ownerUid]);
   const profiles = useProfiles(ownerUid);
   const profile = profiles?.[schedule.ownerUid];
 
   return (
     <div className="dark-gradient rounded-xl p-4 text-slate-200 shadow-xl">
-      <div className="flex items-center space-x-4">
+      <div className="mb-2 flex items-center space-x-4">
         {!hideAuthor && <ImageWrapper url={profile?.photoUrl} alt="User profile" />}
         <div>
           <h3 className="flex items-center">
@@ -48,19 +49,22 @@ export default function ScheduleSection({ schedule, hideAuthor = false }: Schedu
       </div>
 
       {schedule.classes.length > 0 ? (
-        <ul className="mt-2 list-inside list-disc">
+        <ul className={cardExpand === 'text' ? 'list-inside list-disc' : cardExpand === 'collapsed' ? 'flex space-x-2' : 'flex flex-wrap justify-between gap-2'}>
           {schedule.classes.map((classData) => (classData.classId in classCache ? (
-            <CourseCard
-              course={classCache[classData.classId]}
-              key={classData.classId}
-            />
+            <li key={classData.classId} className="max-w-xs">
+              <CourseCard
+                course={classCache[classData.classId]}
+                inSearchContext={false}
+                hideTerm
+              />
+            </li>
           ) : (
-            <span key={classData.classId}>
+            <li key={classData.classId}>
               Unknown class
               {' '}
               {classData.classId.slice(0, 12)}
               ...
-            </span>
+            </li>
           )))}
         </ul>
       ) : <p>No classes yet</p>}

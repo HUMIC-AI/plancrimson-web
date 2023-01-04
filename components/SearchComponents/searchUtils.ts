@@ -12,7 +12,7 @@ export const SORT_INDEXES = [
   },
   {
     label: 'Light Workload',
-    value: 'courses:meanClassSize:asc',
+    value: 'courses:meanHours:asc',
   },
   {
     label: 'Highly Recommended',

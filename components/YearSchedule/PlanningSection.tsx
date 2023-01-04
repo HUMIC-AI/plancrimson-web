@@ -11,7 +11,6 @@ import {
 import type { DownloadPlan, Season, Term } from '../../shared/types';
 import {
   allTruthy,
-  classNames,
   compareSemesters,
   getUniqueSemesters,
   sortSchedules,
@@ -27,6 +26,7 @@ import {
 import { Requirement } from '../../src/requirements/util';
 import type { DragStatus } from '../Course/CourseCard';
 import UploadPlan from '../UploadPlan';
+import CardExpandToggler from './CardExpandToggler';
 import SemesterComponent, { SemesterDisplayProps } from './SemesterDisplay';
 
 interface WithResizeRef {
@@ -88,7 +88,6 @@ export function HeaderSection({ resizeRef }: WithResizeRef) {
   const userSchedules = useAppSelector(Schedules.selectSchedules);
   const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
   const showReqs = useAppSelector(Planner.selectShowReqs);
-  const cardExpandStyle = useAppSelector(Planner.selectExpandCards);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
   const columns = useColumns();
@@ -134,17 +133,7 @@ export function HeaderSection({ resizeRef }: WithResizeRef) {
         </span>
 
         <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
-          <button
-            type="button"
-            onClick={() => dispatch(Planner.toggleExpand())}
-            className={classNames(
-              'bg-white text-gray-800 rounded-full hover:opacity-50 px-2 border flex items-center',
-            )}
-          >
-            {cardExpandStyle === 'text' && 'Text'}
-            {cardExpandStyle === 'collapsed' && 'Collapsed'}
-            {cardExpandStyle === 'expanded' && 'Expanded'}
-          </button>
+          <CardExpandToggler />
           {semesterFormat !== 'sample' && (
             <button
               type="button"
@@ -208,7 +197,6 @@ export function HeaderSection({ resizeRef }: WithResizeRef) {
     </div>
   );
 }
-
 
 export function SemestersList({
   resizeRef, highlightedRequirement,

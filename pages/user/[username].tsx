@@ -6,6 +6,7 @@ import {
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import ScheduleSection from 'components/SemesterSchedule/ScheduleList';
+import CardExpandToggler from 'components/YearSchedule/CardExpandToggler';
 import Layout, { errorMessages, ErrorPage, LoadingPage } from '../../components/Layout/Layout';
 import { ImageWrapper } from '../../components/UserLink';
 import { FriendRequest, UserProfile, WithId } from '../../shared/types';
@@ -98,7 +99,12 @@ export default function UserPage() {
         </div>
 
         <section>
-          <h2 className="mb-4 border-b-2 text-xl font-medium">Schedules</h2>
+          <div className="mb-4 flex items-center justify-between border-b-2">
+            <h2 className="text-xl font-medium">
+              Schedules
+            </h2>
+            <CardExpandToggler />
+          </div>
 
           {schedules.length > 0 ? (
             <ul className="space-y-2">

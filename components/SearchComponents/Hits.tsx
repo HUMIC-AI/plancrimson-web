@@ -2,6 +2,7 @@ import { connectInfiniteHits } from 'react-instantsearch-dom';
 import React from 'react';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import CardExpandToggler from 'components/YearSchedule/CardExpandToggler';
 import { ExtendedClass } from '../../shared/apiTypes';
 import { classNames, DAY_SHORT, getClassId } from '../../shared/util';
 import CourseCard from '../Course/CourseCard';
@@ -9,8 +10,6 @@ import sampleCourses from '../../shared/assets/sampleCourses.json';
 import { alertSignIn } from './searchUtils';
 import useChosenScheduleContext from '../../src/context/selectedSchedule';
 import useSearchState from '../../src/context/searchState';
-import { useAppDispatch, useAppSelector } from '../../src/hooks';
-import { Planner } from '../../src/features';
 
 interface ButtonProps {
   onClick: () => void;
@@ -23,9 +22,6 @@ function CustomButton({
   enabled,
   direction,
 }: ButtonProps) {
-  const dispatch = useAppDispatch();
-  const isExpanded = useAppSelector(Planner.selectExpandCards);
-
   return (
     <div className="relative">
       <button
@@ -43,17 +39,9 @@ function CustomButton({
         {direction === 'up' && <FaChevronUp />}
         {direction === 'down' && <FaChevronDown />}
       </button>
-      <button
-        type="button"
-        onClick={() => dispatch(Planner.toggleExpand())}
-        className={classNames(
-          'bg-gray-800 text-white',
-          'rounded-full interactive py-1 px-3 absolute inset-y-0 left-full ml-4',
-          'flex items-center',
-        )}
-      >
-        {isExpanded ? 'Collapse' : 'Expand'}
-      </button>
+      <div className="absolute top-1/2 left-full ml-2 -translate-y-1/2">
+        <CardExpandToggler />
+      </div>
     </div>
   );
 }
