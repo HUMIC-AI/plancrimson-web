@@ -10,7 +10,7 @@ import { DownloadPlan } from '../../shared/types';
 import { allTruthy } from '../../shared/util';
 import { Planner, Schedules, Settings } from '../../src/features';
 import { downloadJson, useAppDispatch, useAppSelector } from '../../src/hooks';
-import UploadForm from '../UploadPlan';
+import UploadForm from '../UploadForm';
 import CardExpandToggler from './CardExpandToggler';
 import { WithResizeRef } from './PlanningSection';
 import { SemesterDisplayProps } from './SemesterDisplay';
