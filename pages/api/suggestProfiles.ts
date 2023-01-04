@@ -17,6 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const token = await admin.auth().verifyIdToken(auth.slice('Bearer '.length));
     uid = token.uid;
   } catch (err) {
+    console.error("Couldn't verify token:", err);
     res.status(401).send('Unauthenticated');
     return;
   }
