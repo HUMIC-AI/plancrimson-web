@@ -13,6 +13,8 @@ const links: [string, string][] = [
   ['WhatClass', 'https://www.whatclass.net/'],
   ['Curricle', 'https://curricle.berkman.harvard.edu/#/home'],
   ['Coursicle', 'https://www.coursicle.com/harvard/'],
+  ['Deez Classes', 'https://www.deezclasses.com/?F22=false'],
+  ['classes.wtf', 'https://classes.wtf/'],
 ];
 
 const siteInfoLinks = [

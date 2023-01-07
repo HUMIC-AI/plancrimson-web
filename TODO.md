@@ -46,7 +46,13 @@ what should stay the same between user logins?
 - selected schedules should be saved in firestore
 - see which concentrations each course fits into
 - eventual flexibility for adding "custom courses" to simulate study abroad
+- no way to add schedules in "all schedules" view
 
 ## schedule page
 
 - add export to calendar function
+- clickable course cards
+
+## connect page
+
+- search-as-you-type for people
