@@ -2494,7 +2494,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-instantsearch-core@npm:*":
+"@types/react-instantsearch-core@npm:*, @types/react-instantsearch-core@npm:^6.26.3":
   version: 6.26.3
   resolution: "@types/react-instantsearch-core@npm:6.26.3"
   dependencies:
@@ -5653,6 +5653,7 @@ __metadata:
     "@types/node": 18.11.17
     "@types/qs": ^6.9.7
     "@types/react": 18.0.26
+    "@types/react-instantsearch-core": ^6.26.3
     "@types/react-instantsearch-dom": ^6.12.1
     "@types/react-redux": ^7.1.24
     "@types/three": ^0.146.0

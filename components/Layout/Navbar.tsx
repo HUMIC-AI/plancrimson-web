@@ -15,7 +15,7 @@ import { ImageWrapper } from '../UserLink';
 
 const paths = [
   { href: '/search', name: 'Search' },
-  // { href: '/explore', name: 'Explore' },
+  { href: '/explore', name: 'Explore' },
   { href: '/connect', name: 'Connect' },
   { href: '/', name: 'My Courses' },
   { href: '/about', name: 'About' },
