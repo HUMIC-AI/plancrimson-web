@@ -1,5 +1,7 @@
 {
-    "recommendations": [
-        "github.copilot"
-    ]
+  "recommendations": [
+    "github.copilot",
+    "arcanis.vscode-zipfs",
+    "dbaeumer.vscode-eslint"
+  ]
 }

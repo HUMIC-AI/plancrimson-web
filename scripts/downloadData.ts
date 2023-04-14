@@ -65,7 +65,7 @@ async function downloadPage(
 
   const promises = response[0].ResultsCollection.map(async (cls): Promise<ExtendedClass> => {
     try {
-      const extended = await extendClass(cls);
+      const extended = await extendClass(cls, false);
       return extended;
     } catch (err) {
       const { info, message } = err as FetchError;
