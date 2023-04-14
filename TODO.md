@@ -56,3 +56,7 @@ what should stay the same between user logins?
 ## connect page
 
 - search-as-you-type for people
+
+## scrollable visitas
+
+

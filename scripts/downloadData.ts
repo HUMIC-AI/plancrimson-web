@@ -28,7 +28,7 @@ function getPage({
   searchText: string;
   cookie: string;
 }) {
-  return axios({
+  return axios<MyHarvardResponse>({
     url: searchUrl,
     method: 'POST',
     headers: {
@@ -63,23 +63,27 @@ async function downloadPage(
 
   const { data: response } = await getPage({ pageNumber, searchText, cookie });
 
-  const classes = await Promise.all<ExtendedClass>(
-    response[0].ResultsCollection.map(async (cls: Class) => {
-      try {
-        const extended = await extendClass(cls);
-        return extended;
-      } catch (err) {
-        const { info, message } = err as FetchError;
-        console.error(message, info.error);
-        return info.data;
-      }
-    }),
-  );
+  const promises = response[0].ResultsCollection.map(async (cls): Promise<ExtendedClass> => {
+    try {
+      const extended = await extendClass(cls);
+      return extended;
+    } catch (err) {
+      const { info, message } = err as FetchError;
+      console.error('Error extending class data', message, info.error);
+      return info.data;
+    }
+  });
+
+  const classes = await Promise.all<ExtendedClass>(promises);
 
   return classes;
 }
 
-async function downloadData(baseDir: string) {
+/**
+ * Download data from my.harvard.
+ * @param baseDir the base directory to save the data to
+ */
+async function fetchAllData(baseDir: string) {
   const MY_HARVARD_COOKIE = process.env.MY_HARVARD_COOKIE!;
   const GOOGLE_APPLICATION_CREDENTIALS = process.env.GOOGLE_APPLICATION_CREDENTIALS!;
   if (!MY_HARVARD_COOKIE || !GOOGLE_APPLICATION_CREDENTIALS) {
@@ -103,9 +107,7 @@ async function downloadData(baseDir: string) {
     cookie: MY_HARVARD_COOKIE,
   });
 
-  const { TotalPages, HitCount, PageSize } = (
-    firstPage as MyHarvardResponse
-  )[2];
+  const { TotalPages, HitCount, PageSize } = firstPage[2];
 
   if (!TotalPages) {
     throw new Error('could not get my.harvard information');
@@ -132,37 +134,46 @@ to be loaded in ${nBatches} batches of ${BATCH_SIZE} pages each`);
 
   for (let batch = startBatch; batch <= nBatches; batch += 1) {
     console.log(`Starting batch ${batch}/${nBatches}`);
-    const promises: Promise<ExtendedClass[]>[] = [];
     const startPage = (batch - 1) * BATCH_SIZE;
-    for (
-      let pageNumber = startPage + 1;
-      pageNumber <= Math.min(batch * BATCH_SIZE, TotalPages);
-      pageNumber += 1
-    ) {
-      promises.push(
-        new Promise((resolve, reject) => setTimeout(() => {
-          downloadPage(pageNumber, searchText, MY_HARVARD_COOKIE)
-            .then(resolve)
-          // eslint-disable-next-line prefer-promise-reject-errors
-            .catch((err) => reject({ pageNumber, message: err.message }));
-        }, 200 * (pageNumber - startPage))),
-      );
-    }
+    const endPage = Math.min(batch * BATCH_SIZE, TotalPages); // inclusive
+    const { fulfilled, rejected } = await processBatch(startPage, endPage, searchText, MY_HARVARD_COOKIE);
 
-    // eslint-disable-next-line no-await-in-loop
-    const settled = await Promise.allSettled(promises);
-    const fulfilled = allTruthy(
-      settled.map((v) => (v.status === 'fulfilled' ? v.value : null)),
-    ).flat();
     console.log(
       `Done batch ${batch}/${nBatches} with ${fulfilled.length} successful pages`,
     );
     writeFileSync(`${baseDir}/batch${batch}.json`, JSON.stringify(fulfilled));
-    const rejected = allTruthy(
-      settled.map((v) => (v.status === 'rejected' ? v.reason : null)),
-    );
     console.error(JSON.stringify(rejected, null, 2));
   }
+}
+
+async function processBatch(startPage: number, endPage: number, searchText: string, cookie: string) {
+  const promises: Promise<ExtendedClass[]>[] = [];
+
+  for (
+    let pageNumber = startPage + 1;
+    pageNumber <= endPage;
+    pageNumber += 1
+  ) {
+    promises.push(
+      new Promise((resolve, reject) => setTimeout(() => {
+        downloadPage(pageNumber, searchText, cookie)
+          .then(resolve)
+          // eslint-disable-next-line prefer-promise-reject-errors
+          .catch((err) => reject({ pageNumber, message: err.message }));
+      }, 200 * (pageNumber - startPage))), // stagger requests every 200ms
+    );
+  }
+
+  const settled = await Promise.allSettled(promises);
+
+  const fulfilled = allTruthy(
+    settled.map((v) => (v.status === 'fulfilled' ? v.value : null)),
+  ).flat();
+  const rejected = allTruthy(
+    settled.map((v) => (v.status === 'rejected' ? v.reason as { pageNumber: number, message: string } : null)),
+  );
+
+  return { fulfilled, rejected };
 }
 
 export default {
@@ -173,7 +184,7 @@ export default {
       'data/courses/courses',
     );
     try {
-      await downloadData(filePath);
+      await fetchAllData(filePath);
     } catch (err) {
       console.error(err);
     }

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync } from 'fs';
 import inquirer from 'inquirer';
 
 /**
@@ -7,7 +7,6 @@ import inquirer from 'inquirer';
  * @param readonly if the file only reads from the given file or directory
  * @returns the entered file path
  */
-// eslint-disable-next-line import/prefer-default-export
 export async function getFilePath(message: string, prefix: string, readonly = false): Promise<string> {
   const question: Record<string, string> = {
     name: 'filePath',
@@ -26,13 +25,16 @@ export async function getFilePath(message: string, prefix: string, readonly = fa
     if (!existsSync(filePath)) {
       throw new Error('No such file or directory exists');
     }
-  } else if (existsSync(filePath)) {
+    // if we're writing and there are files in the given directory
+  } else if (
+    existsSync(filePath) && readdirSync(filePath).length > 0
+  ) {
     const { confirm } = await inquirer.prompt([
       {
         type: 'confirm',
         name: 'confirm',
         message:
-            'That directory already exists. Continue? This may overwrite existing files!',
+          'That directory already exists. Continue? This may overwrite existing files!',
       },
     ]);
     if (!confirm) throw new Error('That directory already exists');

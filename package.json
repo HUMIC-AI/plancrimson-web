@@ -9,7 +9,7 @@
     "watch": "tsc -w --noEmit false --outDir build --module commonjs",
     "start": "next start",
     "lint": "next lint --fix -d . --ignore-path .gitignore",
-    "script": "node build/scripts",
+    "script": "tsc --outDir build && node build/scripts",
     "script:dev": "npm run use-emulators npm run script",
     "test": "firebase emulators:exec jest"
   },
