@@ -4,7 +4,9 @@ import qs from 'qs';
 import { useAppSelector, useElapsed } from '../src/hooks';
 
 // components
-import Layout, { errorMessages, ErrorPage, LoadingPage } from '../components/Layout/Layout';
+import Layout, { errorMessages } from '../components/Layout/Layout';
+import { ErrorPage } from "../components/Layout/ErrorPage";
+import { LoadingPage } from "../components/Layout/LoadingPage";
 import SearchBox, {
   SearchBoxDemo,
 } from '../components/SearchComponents/SearchBox';

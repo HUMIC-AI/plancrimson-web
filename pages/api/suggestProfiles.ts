@@ -23,14 +23,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // get all incoming and outgoing friend requests
-  const incomingFriends = await admin.firestore().collectionGroup('friends')
-    .where('from', '==', uid)
-    .where('accepted', '==', true)
-    .get();
-  const outgoingFriends = await admin.firestore().collectionGroup('friends')
-    .where('to', '==', uid)
-    .where('accepted', '==', true)
-    .get();
+  const incomingFriends = await getIncomingFriends(uid);
+  const outgoingFriends = await getOutgoingFriends(uid);
   const friendIds = [
     ...incomingFriends.docs.map((doc) => doc.data().to),
     ...outgoingFriends.docs.map((doc) => doc.data().from),
@@ -57,4 +51,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .sort(([, aCount], [, bCount]) => aCount - bCount);
 
   res.json(ranked.slice(0, parseInt(req.body.limit, 10) || 12));
+}
+
+function getIncomingFriends(uid: string) {
+  return admin.firestore().collectionGroup('friends')
+    .where('from', '==', uid)
+    .where('accepted', '==', true)
+    .get()
+}
+
+function getOutgoingFriends(uid: string) {
+  return admin.firestore().collectionGroup('friends')
+    .where('to', '==', uid)
+    .where('accepted', '==', true)
+    .get()
 }

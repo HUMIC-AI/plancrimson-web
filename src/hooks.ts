@@ -90,7 +90,7 @@ export async function signInUser() {
   const auth = getAuth();
   let user: User;
   if (process.env.NODE_ENV === 'development') {
-    const email = prompt('Enter email:')!;
+    const email = prompt('In development mode. Enter email:')!;
     if (!email) return;
     const sub = Buffer.from(email).toString('base64');
     const newUser = await signInWithCredential(auth, GoogleAuthProvider.credential(JSON.stringify({ sub, email })));

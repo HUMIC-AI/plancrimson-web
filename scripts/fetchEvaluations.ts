@@ -11,9 +11,29 @@ import { getFilePath } from './util';
 
 const batchSize = 480;
 
-const terms = ['2022 Spring', '2021 Fall', '2021 Spring', '2020 Fall', '2019 Fall'];
+const terms = ['2022 Fall', '2022 Spring', '2021 Fall', '2021 Spring', '2020 Fall', '2019 Fall'] as const;
+
+type AvailableTerm = typeof terms[number];
 
 const baseUrl = 'https://qreports.fas.harvard.edu/browse/index';
+
+/**
+ * Get the list of courses for a term by scraping the Q-Reports page
+ */
+async function extractCourses(term: AvailableTerm) {
+  const html = await fetcher({
+    url: baseUrl,
+    method: 'GET',
+    params: { calTerm: term },
+    headers: {
+      Cookie: process.env.Q_REPORTS_COOKIE!,
+    },
+  });
+  const $ = cheerio.load(html);
+  return $('#bluecourses a')
+    .map((_, a) => $(a).attr('href')!)
+    .toArray();
+}
 
 async function defaultUrls() {
   const selectedTerms = (
@@ -25,22 +45,10 @@ async function defaultUrls() {
         choices: terms,
       },
     ])
-  ).selectedTerms as string[];
+  ).selectedTerms as AvailableTerm[];
 
   const urls = await Promise.all(
-    selectedTerms.map((term) => fetcher({
-      url: baseUrl,
-      method: 'GET',
-      params: { calTerm: term },
-      headers: {
-        Cookie: process.env.Q_REPORTS_COOKIE!,
-      },
-    }).then((html) => {
-      const $ = cheerio.load(html);
-      return $('#bluecourses a')
-        .map((_, a) => $(a).attr('href')!)
-        .toArray();
-    })),
+    selectedTerms.map(extractCourses),
   );
 
   return urls.flat();
@@ -50,14 +58,11 @@ async function defaultUrls() {
  * Prints a list of JSON objects to the console
  * which can be joined together using `jq --slurp` on the command line.
  */
-async function downloadEvaluations(exportPath: string, evaluationUrls?: string[]) {
-  if (!evaluationUrls) {
-    // eslint-disable-next-line no-param-reassign
-    evaluationUrls = await defaultUrls();
-  }
+async function downloadEvaluations(exportPath: string, baseUrls?: string[]) {
+  const evaluationUrls = baseUrls || await defaultUrls();
 
+  // runtime type check
   const invalidUrls = evaluationUrls.filter((u) => typeof u !== 'string');
-
   if (invalidUrls.length > 0) {
     throw new Error(
       `urls need to be strings but received ${JSON.stringify(invalidUrls)}`,
@@ -66,20 +71,21 @@ async function downloadEvaluations(exportPath: string, evaluationUrls?: string[]
 
   console.log(`found ${evaluationUrls.length} evaluations`);
 
+  const totalBatches = Math.ceil(
+    evaluationUrls.length / batchSize,
+  )
+
   for (let i = 0; i < evaluationUrls.length; i += batchSize) {
     const urls = evaluationUrls.slice(i, i + batchSize);
     const batchNumber = i / batchSize + 1;
     console.log(
-      `loading ${urls.length} evaluations (${batchNumber}/${Math.ceil(
-        evaluationUrls.length / batchSize,
-      )})`,
+      `loading ${urls.length} evaluations (${batchNumber}/${totalBatches})`,
     );
 
     const evls = await Promise.all(
       urls.map(async (url, j) => {
         try {
           // rate limit ourselves to one request per 200ms
-          // eslint-disable-next-line no-promise-executor-return
           await new Promise((resolve) => setTimeout(resolve, 200 * j));
           const evl = await getEvaluation(url, { auth: process.env.BLUERA_COOKIE! });
           return evl;

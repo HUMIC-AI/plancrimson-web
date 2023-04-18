@@ -22,6 +22,7 @@ const siteInfoLinks = [
   ['Next.js', 'https://nextjs.org/'],
   ['TypeScript', 'https://www.typescriptlang.org/'],
   ['Tailwind CSS', 'https://tailwindcss.com/'],
+  ['Redux (Toolkit)', 'https://redux-toolkit.js.org/'],
   ['MeiliSearch', 'https://www.meilisearch.com/'],
   ['Firebase', 'https://firebase.google.com/'],
   ['DigitalOcean', 'https://www.digitalocean.com/'],

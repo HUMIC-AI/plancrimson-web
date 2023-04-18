@@ -1,12 +1,11 @@
-import cheerio, { AnyNode, BasicAcceptedElems, CheerioAPI } from 'cheerio';
+import cheerio, { CheerioAPI } from 'cheerio';
 import './initFirebase';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as ApiTypes from '../shared/apiTypes';
 import fetcher, { FetchError } from '../shared/fetcher';
 import { allTruthy, getClassId } from '../shared/util';
 import { Season } from '../shared/types';
-
-type Scraper<T> = ($: CheerioAPI, el: BasicAcceptedElems<AnyNode>) => T;
+import { COMPONENT_MAPPING, altCommentsSectionTitle, commentsSectionTitle } from './evaluationComponents';
 
 async function fetchEvaluations(
   courseName: string,
@@ -37,12 +36,16 @@ function calcMean(arr: Mean[]) {
  * @returns the class object with the added textDescirption and evals properties
  */
 export async function extendClass(cls: ApiTypes.Class, withEvals = true) {
+  // add the text description and id
   const ret: ApiTypes.ExtendedClass = {
     ...cls,
     id: getClassId(cls),
     textDescription: getDescriptionText(cls),
   };
+
+  // don't fetch evaluations if we don't need to
   if (!withEvals) return ret;
+
   try {
     const evals = await fetchEvaluations(cls.SUBJECT + cls.CATALOG_NBR);
     console.error(
@@ -110,26 +113,9 @@ export function getDescriptionText(course: ApiTypes.Class) {
   }
 }
 
-export async function getEvaluation(
-  url: string,
-  { auth }: { auth: string },
-): Promise<ApiTypes.Evaluation> {
-  const response = await fetcher({
-    method: 'GET',
-    url,
-    headers: {
-      Cookie: auth,
-    },
-  });
-
-  const $ = cheerio.load(response);
-  const text = $('.ChildReportSkipNav h3 a').text();
-  const [courseName = 'UNKNOWN', instructorName = 'UNKNOWN'] = text
-    .slice('Feedback for '.length, text.indexOf('('))
-    .split('-')
-    .map((str) => str.trim());
+export function scrapeYear($: CheerioAPI) {
+  // do some processing for different formats
   const toc = $('.TOC h2').text().trim().split(' ');
-
   const tmpYear = parseInt(toc[4], 10);
   let year: number;
   let season: Season;
@@ -145,8 +131,32 @@ export async function getEvaluation(
     }
   }
 
+  return [year, season] as const;
+}
 
-  const initial: ApiTypes.Evaluation = {
+export async function getEvaluation(
+  url: string,
+  { auth }: { auth: string },
+): Promise<ApiTypes.Evaluation> {
+  const response = await fetcher({
+    method: 'GET',
+    url,
+    headers: {
+      Cookie: auth,
+    },
+  });
+
+  const $ = cheerio.load(response);
+  const text = $('.ChildReportSkipNav h3 > a').text();
+  const [courseName = 'UNKNOWN', instructorName = 'UNKNOWN'] = text
+    .slice('Feedback for'.length, text.indexOf('('))
+    .split('-')
+    .map((str) => str.trim());
+
+  const [year, season] = scrapeYear($);
+
+  // the base properties
+  const evaluation: ApiTypes.Evaluation = {
     url,
     year,
     season,
@@ -154,219 +164,40 @@ export async function getEvaluation(
     instructorName,
   };
 
-  return $('.report-block')
-    .toArray()
-    .reduce((acc, el) => {
-      let title = $(el).find('h3, h4').text().trim();
+  for (const el of $('.report-block').toArray()) {
+    let sectionTitle = $(el).find('h3, h4').text().trim();
 
-      let data = null;
-
-      try {
-        if (title === 'Course Response Rate') {
-          data = getResponseRate($, el);
-        } else if (title === 'Response Rate') {
-          title = 'Course Response Rate';
-          const [invited, responded] = $(el)
-            .find('tbody td')
-            .map((_, td) => parseInt($(td).text().trim(), 10))
-            .toArray();
-          data = { invited, responded };
-        } else if (title === 'Course General Questions') {
-          data = getGeneralQuestions($, el);
-        } else if (title === 'General Instructor Questions') {
-          data = getGeneralQuestions($, el);
-        } else if (
-          title
-          === 'On average, how many hours per week did you spend on coursework outside of class? Enter a whole number between 0 and 168.'
-        ) {
-          data = getHours($, el);
-        } else if (
-          title
-          === 'How strongly would you recommend this course to your peers?'
-        ) {
-          data = getRecommendations($, el);
-        } else if (
-          title
-          === 'What was/were your reason(s) for enrolling in this course? (Please check all that apply)'
-        ) {
-          data = getReasons($, el);
-        } else if (
-          title
-          === 'What would you like to tell future students about this class?' || title === 'What would you like to tell future students about this class? (Your response to this question may be published anonymously.)'
-        ) {
-          data = getComments($, el);
-        } else {
-          if (
-            !['Course Feedback', 'Instructor Feedback'].some((ignoredHeading) => title.startsWith(ignoredHeading))
-          ) {
-            console.error(`unknown heading (${url}): ${title}`);
-          }
-          // if this element is unimportant
-          return acc;
-        }
-      } catch (err) {
-        console.error(`error parsing ${title} when loading ${url}`);
-        console.error((err as Error).message);
-        return acc;
-      }
-
-      return {
-        ...acc,
-        [title]: data,
-      };
-    }, initial);
-}
-
-const getResponseRate: Scraper<ApiTypes.CourseResponseRate> = ($, el) => {
-  const nums = $(el)
-    .find('tbody td')
-    .toArray()
-    .map((td) => parseInt($(td).text().trim(), 10));
-  if (nums.length !== 3) {
-    throw new Error('Could not read course participation');
-  }
-  const [responded, invited] = nums;
-  return { responded, invited };
-};
-
-// gets the votes in descending order, i.e. excellent, then very good, etc., down to unsatisfactory
-// same way it shows up in the q guide
-const getGeneralQuestions: Scraper<ApiTypes.CourseGeneralQuestions> = ($, el) => $(el)
-  .find('tbody tr')
-  .toArray()
-  .reduce((acc, tr) => {
-    const row = $(tr)
-      .children()
-      .toArray()
-      .map((child) => $(child).text().trim());
-    if (row.length !== 9) {
-      throw new Error('Could not read course feedback');
+    // these sections contain charts that can be derived from the other data
+    if (sectionTitle.startsWith('Course Feedback') || sectionTitle.startsWith('Instructor Feedback')) {
+      continue;
     }
 
-    const title = row[0];
-    const count = parseInt(row[1], 10);
-    const votes = row
-      .slice(2, 7)
-      .map((v) => Math.round((parseInt(v, 10) * count) / 100));
-    const courseMean = parseFloat(row[7]);
-    const fasMean = parseFloat(row[8]);
-    const ret: ApiTypes.CourseGeneralQuestions = {
-      ...acc,
-      [title]: {
-        count,
-        votes,
-        courseMean,
-        fasMean,
-      },
-    };
-    return ret;
-  }, {} as ApiTypes.CourseGeneralQuestions);
+    if (sectionTitle === 'Response Rate') {
+      const [invited, responded] = $(el)
+        .find('tbody td')
+        .map((_, td) => parseInt($(td).text().trim(), 10))
+        .toArray();
+      evaluation['Course Response Rate'] = { invited, responded };
+      continue;
+    }
 
-const getRecommendations: Scraper<ApiTypes.RecommendationsStats> = ($, el) => {
-  const tables = $(el).find('tbody');
-  if (tables.length !== 2) throw new Error('Could not read recommendations');
+    if (sectionTitle === altCommentsSectionTitle) {
+      sectionTitle = commentsSectionTitle;
+    }
 
-  const recommendations = tables
-    .first()
-    .children() // trs
-    .toArray()
-    .map((tr) => {
-      const row = $(tr)
-        .children() // td
-        .toArray()
-        .map((td) => $(td).text().trim());
-      if (row.length !== 4) {
-        throw new Error('Could not read recommendations');
-      }
-      return parseInt(row[2], 10);
-    });
-  const count = recommendations.reduce((acc, val) => acc + val, 0);
+    if (!(sectionTitle in COMPONENT_MAPPING)) {
+      console.error(`Unknown component ${sectionTitle} for ${url}`);
+      continue;
+    }
 
-  const stats = tables
-    .last()
-    .find('td')
-    .toArray()
-    .map((td) => parseFloat($(td).text().trim().replace('%', '')));
-
-  if (stats.length === 5) {
-    const [ratio, mean, median, , stdev] = stats;
-    return {
-      recommendations,
-      count,
-      ratio,
-      mean,
-      median,
-      stdev,
-    };
+    try {
+      // @ts-ignore
+      evaluation[sectionTitle] = COMPONENT_MAPPING[sectionTitle]($, el);
+    } catch (err) {
+      console.error(`Could not parse component ${sectionTitle} for ${url}`);
+      console.error(err);
+    }
   }
 
-  if (stats.length !== 4) {
-    throw new Error('Could not read recommendation statistics');
-  }
-  const [ratio, mean, median, stdev] = stats;
-  return {
-    recommendations,
-    count,
-    ratio,
-    mean,
-    median,
-    stdev,
-  };
-};
-
-const getHours: Scraper<ApiTypes.HoursStats> = ($, el) => {
-  const nums = $(el)
-    .find('tbody td')
-    .map((_, td) => parseFloat($(td).text().trim().replace('%', '')))
-    .toArray();
-  if (nums.length !== 6) {
-    throw new Error('Could not read course hours');
-  }
-  const [count, ratio, mean, median, mode, stdev] = nums;
-  return {
-    count,
-    ratio,
-    mean,
-    median,
-    mode,
-    stdev,
-  };
-};
-
-const getReasons: Scraper<ApiTypes.ReasonsForEnrolling> = ($, el) => {
-  const nums = $(el)
-    .find('tbody td')
-    .map((_, td) => parseInt($(td).text().trim(), 10))
-    .toArray();
-
-  if (nums.length !== 9) {
-    throw new Error('Could not read reasons for enrolling');
-  }
-  const [
-    elective,
-    concentration,
-    secondary,
-    gened,
-    expos,
-    language,
-    premed,
-    distribution,
-    qrd,
-  ] = nums;
-  return {
-    elective,
-    concentration,
-    secondary,
-    gened,
-    expos,
-    language,
-    premed,
-    distribution,
-    qrd,
-  };
-};
-
-const getComments: Scraper<string[]> = ($, el) => $(el)
-  .find('tbody td')
-  .map((_, td) => $(td).text().trim())
-  .toArray();
+  return evaluation;
+}
