@@ -3,7 +3,8 @@ import {
   useState, useEffect, useMemo, useRef,
 } from 'react';
 import { SemesterDisplayProps } from 'components/YearSchedule/SemesterDisplay';
-import Layout, { Footer } from '../components/Layout/Layout';
+import Layout from '../components/Layout/Layout';
+import { Footer } from "../components/Layout/Footer";
 import Navbar from '../components/Layout/Navbar';
 import { SemestersList } from '../components/YearSchedule/PlanningSection';
 import HiddenSchedules from '../components/YearSchedule/HiddenSchedules';

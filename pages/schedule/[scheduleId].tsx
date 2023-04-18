@@ -1,7 +1,9 @@
 import { onSnapshot } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import Layout, { errorMessages, ErrorPage, LoadingPage } from '../../components/Layout/Layout';
+import Layout, { errorMessages } from '../../components/Layout/Layout';
+import { ErrorPage } from "../../components/Layout/ErrorPage";
+import { LoadingPage } from "../../components/Layout/LoadingPage";
 import Calendar from '../../components/SemesterSchedule/Calendar';
 import { Schedule } from '../../shared/types';
 import Schema from '../../shared/schema';

@@ -1,5 +1,7 @@
 import { InstantSearch, Configure, connectInfiniteHits } from 'react-instantsearch-dom';
-import Layout, { errorMessages, ErrorPage, LoadingPage } from '../components/Layout/Layout';
+import Layout, { errorMessages } from '../components/Layout/Layout';
+import { ErrorPage } from "../components/Layout/ErrorPage";
+import { LoadingPage } from "../components/Layout/LoadingPage";
 import AttributeMenu from '../components/SearchComponents/AttributeMenu';
 import type { ExtendedClass } from '../shared/apiTypes';
 import useSearchState from '../src/context/searchState';

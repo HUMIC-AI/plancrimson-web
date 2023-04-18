@@ -62,6 +62,7 @@ export default function ChartComponent({
     }
   }, [demo, elapsed]);
 
+  // get all the circles in the chart
   const getDots = () => objects.current!.g.selectAll<SVGCircleElement, Embedding>('circle');
 
   const getRadius = (metric: number, maxMetric: number) => (
@@ -127,6 +128,7 @@ export default function ChartComponent({
   }, [demo, client]);
 
   function focusRandom() {
+    // select a random, valid datum
     const index = Math.floor(Math.random() * hits.length);
     const {
       svg, g, scales, tooltip,
@@ -136,22 +138,27 @@ export default function ChartComponent({
       focusRandom();
       return;
     }
-
     const focus = focusItem.datum() as Embedding;
+
     // show 1/5 of the total width and height
     const spanx = (scales.maxx - scales.minx) / 5;
     const spany = (scales.maxy - scales.miny) / 5;
 
+    // change the x and y scales to show the selected datum and a bit more
     scales.x.domain([focus.x - spanx / 2, focus.x + spanx / 2]);
     scales.y.domain([focus.y - spany / 2, focus.y + spany / 2]);
+
+    // move the points to their new positions
     getDots()
       .transition()
       .duration(500)
       .attr('cx', (d) => scales.x(d.x))
       .attr('cy', (d) => scales.y(d.y));
 
+    // highlight the selected point
     focusItem.attr('stroke', 'black');
 
+    // center the tooltip on the selected point
     const [centerx, centery] = [svg.attr('width'), svg.attr('height')].map((t) => parseInt(t, 10) / 2);
     tooltip
       .html(`<p class="font-bold">${focus.subject + focus.catalogNumber}</p><p>${focus.title}</p>`)
