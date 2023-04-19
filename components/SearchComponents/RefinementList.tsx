@@ -30,7 +30,7 @@ export function RefinementListComponent({ items, refine, showSubjectColor }: Pro
       <button
         type="button"
         onClick={() => refine([])}
-        className="ml-1 mb-2 text-xs leading-none text-gray-600 underline transition-colors hover:opacity-50"
+        className="mb-2 ml-1 text-xs leading-none text-gray-600 underline transition-colors hover:opacity-50"
       >
         Clear all
       </button>

@@ -40,7 +40,7 @@ export default function Percentages({ categories: allCategories }: Props) {
           >
             {rec}
           </span>
-          <span className="absolute bottom-full left-1/2 mb-2 hidden w-28 -translate-x-1/2 rounded-md bg-gray-800 py-1 px-2 text-white group-hover:block">
+          <span className="absolute bottom-full left-1/2 mb-2 hidden w-28 -translate-x-1/2 rounded-md bg-gray-800 px-2 py-1 text-white group-hover:block">
             {`${rec} students voted ${allCategories.length - i}/${allCategories.length}`}
           </span>
         </div>

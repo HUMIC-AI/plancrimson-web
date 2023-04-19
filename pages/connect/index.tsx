@@ -3,8 +3,8 @@ import {
 } from 'firebase/firestore';
 import { useMemo } from 'react';
 import Layout, { errorMessages } from 'components/Layout/Layout';
-import { ErrorPage } from "components/Layout/ErrorPage";
-import { LoadingPage } from "components/Layout/LoadingPage";
+import { ErrorPage } from 'components/Layout/ErrorPage';
+import { LoadingPage } from 'components/Layout/LoadingPage';
 import { Auth } from 'src/features';
 import { useElapsed } from 'src/hooks';
 import ConnectLayout from 'components/ConnectPageComponents/ConnectLayout';

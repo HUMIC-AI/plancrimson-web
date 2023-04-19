@@ -2,10 +2,10 @@
 
 import { onSnapshot, query, QueryConstraint } from 'firebase/firestore';
 import { useEffect } from 'react';
-import Schema from 'shared/schema';
 import { ClassCache, Schedules } from './features';
 import { useAppDispatch } from './hooks';
 import { useMeiliClient } from './meili';
+import Schema from './schema';
 
 /**
  * Listen to all schedules on Firestore that meet the given constraints.

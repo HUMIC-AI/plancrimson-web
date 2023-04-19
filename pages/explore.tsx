@@ -1,7 +1,7 @@
 import { InstantSearch, Configure, connectInfiniteHits } from 'react-instantsearch-dom';
 import Layout, { errorMessages } from '../components/Layout/Layout';
-import { ErrorPage } from "../components/Layout/ErrorPage";
-import { LoadingPage } from "../components/Layout/LoadingPage";
+import { ErrorPage } from '../components/Layout/ErrorPage';
+import { LoadingPage } from '../components/Layout/LoadingPage';
 import AttributeMenu from '../components/SearchComponents/AttributeMenu';
 import type { ExtendedClass } from '../shared/apiTypes';
 import useSearchState from '../src/context/searchState';
@@ -9,7 +9,7 @@ import { useElapsed } from '../src/hooks';
 import { useMeiliClient } from '../src/meili';
 import { Auth } from '../src/features';
 import sampleCourses from '../shared/assets/sampleCourses.json';
-import ChartComponent from '../components/Chart/ChartComponent'
+import ChartComponent from '../components/Chart/ChartComponent';
 
 const Chart = connectInfiniteHits(ChartComponent);
 

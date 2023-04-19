@@ -11,24 +11,23 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
-    "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
     "types": [
       "@types/jest"
     ],
-    "baseUrl": "."
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "isolatedModules": true
   },
   "include": [
-    "**/*.{ts,tsx}",
-    "*.config.js",
+    "**/*",
+    "*.config.js"
   ],
   "exclude": [
-    "node_modules",
     "build"
   ]
 }

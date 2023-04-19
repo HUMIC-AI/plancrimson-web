@@ -30,7 +30,7 @@ export default function HeaderSection({ resizeRef, columns }: WithResizeRef & { 
           title="Show requirements panel"
           type="button"
           onClick={() => dispatch(Planner.setShowReqs(true))}
-          className="interactive absolute top-1 left-2"
+          className="interactive absolute left-2 top-1"
         >
           <FaAngleDoubleLeft />
         </button>
@@ -53,7 +53,7 @@ export default function HeaderSection({ resizeRef, columns }: WithResizeRef & { 
                   dispatch(Planner.showAll());
                 }
               }}
-              className="interactive rounded bg-gray-600 py-1 px-2"
+              className="interactive rounded bg-gray-600 px-2 py-1"
             >
               {semesterFormat === 'all'
                 ? 'All schedules'
@@ -100,11 +100,11 @@ function OptionsMenu({ columns }: { columns: SemesterDisplayProps[] }) {
   };
 
   return (
-    <Menu as="div" className="absolute top-1 right-2">
+    <Menu as="div" className="absolute right-2 top-1">
       <Menu.Button>
         <FaCog className="transition-opacity hover:opacity-50" />
       </Menu.Button>
-      <Menu.Items className="absolute top-full right-0 z-10 mt-2 space-y-1  rounded bg-white p-2 text-sm text-black shadow-xl">
+      <Menu.Items className="absolute right-0 top-full z-10 mt-2 space-y-1  rounded bg-white p-2 text-sm text-black shadow-xl">
         <span className="whitespace-nowrap text-gray-600">
           Total courses:
           {' '}

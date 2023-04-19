@@ -165,7 +165,7 @@ function HeaderSection({ events, schedule }: { events: EventAttributes[], schedu
       <button
         type="button"
         onClick={handleExport}
-        className="interactive rounded-xl bg-gray-300 py-2 px-4"
+        className="interactive rounded-xl bg-gray-300 px-4 py-2"
       >
         Export to ICS
       </button>
@@ -259,7 +259,7 @@ function MissingClass({ cls }: { cls: ExtendedClass }) {
                     <input
                       type="checkbox"
                       id={classId + day}
-                      className="ml-2 py-1 px-2"
+                      className="ml-2 px-2 py-1"
                       defaultChecked={classTime?.pattern.includes(day)}
                       {...register(day)}
                     />

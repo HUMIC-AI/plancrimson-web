@@ -1,21 +1,25 @@
-import { Listbox } from "@headlessui/react";
-import { InstantMeiliSearchInstance } from "@meilisearch/instant-meilisearch";
-import FadeTransition from "components/FadeTransition";
-import Tooltip from "components/Tooltip";
-import { Auth } from "src/features";
-import { query, where, getDocs } from "firebase/firestore";
-import { MutableRefObject, useRef, createRef, useState, useEffect, useCallback } from "react";
-import { FaChevronDown, FaInfo, FaSpinner } from "react-icons/fa";
-import { InfiniteHitsProvided } from "react-instantsearch-core";
-import { ExtendedClass } from "shared/apiTypes";
-import Schema from "shared/schema";
-import { getSubjectColor, getAllClassIds, classNames, allTruthy } from "shared/util";
-import { useModal } from "src/context/modal";
-import { ClassCache } from "src/features";
-import { useAppDispatch, useElapsed } from "src/hooks";
-import sampleCourses from 'shared/assets/sampleCourses.json';
-import * as d3 from 'd3'
-import { Embedding, initChart, makeData, metricNames, metrics } from "./chartHelpers";
+import { Listbox } from '@headlessui/react';
+import { InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
+import FadeTransition from 'components/FadeTransition';
+import Tooltip from 'components/Tooltip';
+import { Auth, ClassCache } from 'src/features';
+import { query, where, getDocs } from 'firebase/firestore';
+import {
+  MutableRefObject, useRef, createRef, useState, useEffect, useCallback,
+} from 'react';
+import { FaChevronDown, FaInfo, FaSpinner } from 'react-icons/fa';
+import { InfiniteHitsProvided } from 'react-instantsearch-core';
+import { useModal } from 'src/context/modal';
+import { useAppDispatch, useElapsed } from 'src/hooks';
+import * as d3 from 'd3';
+import {
+  ExtendedClass, sampleCourses, getSubjectColor, classNames,
+} from 'plancrimson-utils';
+import Schema from 'src/schema';
+import { getAllClassIds } from 'src/utils';
+import {
+  initChart, metrics, Embedding, makeData, metricNames,
+} from './chartHelpers';
 
 
 const SEARCH_DELAY = 1000;
@@ -72,7 +76,7 @@ export default function ChartComponent({
   // assume that queries will not return the same number of hits
   useEffect(() => {
     const [newData, maxMetric] = makeData(hits, radiusMetric);
-    const dots = getDots().data(newData, (d) => d.id);
+    const dots = getDots().data(newData, (d: any) => d.id);
     addDots(dots, maxMetric);
   }, [hits.length, radiusMetric]);
 
@@ -200,7 +204,7 @@ export default function ChartComponent({
   return (
     <div className="relative min-h-[28rem] md:flex-1">
       <div ref={chart} className="h-full w-full" />
-      <div className="absolute top-0 left-0 flex items-center space-x-2">
+      <div className="absolute left-0 top-0 flex items-center space-x-2">
         <button
           type="button"
           onClick={focusRandom}

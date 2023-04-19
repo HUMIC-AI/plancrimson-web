@@ -35,7 +35,7 @@ const InfoPanel: React.FC<{ course: ExtendedClass }> = function ({ course }) {
       </p>
 
       {/* Class information */}
-      <div className="grid grid-cols-[auto_1fr] items-center gap-y-2 gap-x-4">
+      <div className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2">
         <Instructors course={course} />
         <Location course={course} />
         <DaysOfWeek course={course} />

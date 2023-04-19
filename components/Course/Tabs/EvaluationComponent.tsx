@@ -65,7 +65,7 @@ function DisclosureComponent({
         <>
           <Disclosure.Button
             name={heading}
-            className="flex w-full items-center space-x-2 bg-gray-600 py-1 px-4 text-left text-white"
+            className="flex w-full items-center space-x-2 bg-gray-600 px-4 py-1 text-left text-white"
           >
             <h4 className="flex-1 text-base font-bold">{heading}</h4>
             {visibleStats && (

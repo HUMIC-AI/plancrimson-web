@@ -63,7 +63,7 @@ export default function CustomModal() {
                 type="button"
                 name="Close dialog"
                 onClick={() => setOpen(false)}
-                className="interactive absolute top-5 right-5 rounded-full bg-white p-2 text-gray-800"
+                className="interactive absolute right-5 top-5 rounded-full bg-white p-2 text-gray-800"
               >
                 <FaTimes />
               </button>

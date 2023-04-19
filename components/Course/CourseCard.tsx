@@ -269,7 +269,7 @@ export default function CourseCard({
 
         {isExpanded && (
         <div className="h-full bg-white p-2 text-black">
-          <div className="inline-grid max-w-full grid-cols-[auto_1fr] items-center gap-y-2 gap-x-4">
+          <div className="inline-grid max-w-full grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2">
             <Instructors course={course} inSearch={inSearchContext} />
             <Location course={course} inSearch={inSearchContext} />
             <DaysOfWeek course={course} inSearch={inSearchContext} />
@@ -278,7 +278,7 @@ export default function CourseCard({
           {course.textDescription.length > 0 && (
           <>
             <hr className="my-2 border-black" />
-            <p className="text-sm line-clamp-3">
+            <p className="line-clamp-3 text-sm">
               <HighlightComponent
                 attribute="textDescription"
                 course={course}

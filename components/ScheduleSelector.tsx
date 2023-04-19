@@ -91,7 +91,7 @@ function ButtonTitle({
 
 function StyledOption({ children, ...props }: Parameters<typeof Listbox.Option>[0]) {
   return (
-    <Listbox.Option {...props} className="py-1.5 px-3 odd:bg-gray-200 even:bg-white">
+    <Listbox.Option {...props} className="px-3 py-1.5 odd:bg-gray-200 even:bg-white">
       <span className="cursor-pointer transition-opacity hover:opacity-50">
         {children as ReactNode}
       </span>
@@ -211,7 +211,7 @@ function ScheduleChooser({
             : (
               <Listbox.Button
                 name="Select schedule"
-                className="interactive w-full rounded-xl border py-1 px-2 text-center"
+                className="interactive w-full rounded-xl border px-2 py-1 text-center"
               >
                 Select a schedule
               </Listbox.Button>

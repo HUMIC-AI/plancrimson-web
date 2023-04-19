@@ -123,7 +123,7 @@ export default function SemesterComponent({
     >
       <button
         type="button"
-        className="absolute top-2 right-2 text-sm hover:opacity-50"
+        className="absolute right-2 top-2 text-sm hover:opacity-50"
         onClick={() => {
           if (semesterFormat === 'selected') {
             dispatch(Planner.setHiddenTerm({ term: `${semester.year}${semester.season}`, hidden: true }));

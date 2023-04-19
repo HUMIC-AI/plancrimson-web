@@ -88,7 +88,7 @@ export default function RequirementsSection({
           className="relative"
         >
           <div className="flex items-center">
-            <Listbox.Button className="flex w-full items-center justify-between rounded border-2 py-2 px-3 text-left font-medium shadow">
+            <Listbox.Button className="flex w-full items-center justify-between rounded border-2 px-3 py-2 text-left font-medium shadow">
               {selectedReqGroup.groupId}
               <FaChevronDown />
             </Listbox.Button>
@@ -109,7 +109,7 @@ export default function RequirementsSection({
                 <Listbox.Option
                   key={groupId}
                   value={groupId}
-                  className="interactive cursor-pointer py-2 px-4 odd:bg-gray-300 even:bg-white"
+                  className="interactive cursor-pointer px-4 py-2 odd:bg-gray-300 even:bg-white"
                 >
                   {groupId}
                 </Listbox.Option>
@@ -119,7 +119,7 @@ export default function RequirementsSection({
         </Listbox>
 
         <Disclosure>
-          <Disclosure.Button className="interactive mx-auto w-max py-2 px-4 text-sm leading-none text-gray-600 underline">
+          <Disclosure.Button className="interactive mx-auto w-max px-4 py-2 text-sm leading-none text-gray-600 underline">
             Suggest new programs and concentrations
           </Disclosure.Button>
           <FadeTransition>
@@ -149,7 +149,7 @@ export default function RequirementsSection({
         )}
 
         <FadeTransition show={notification}>
-          <div className="relative mx-4 rounded-lg bg-blue-300 py-2 px-6 text-left text-sm italic md:mx-0 lg:py-4">
+          <div className="relative mx-4 rounded-lg bg-blue-300 px-6 py-2 text-left text-sm italic md:mx-0 lg:py-4">
             <div className="flex flex-col space-y-2">
               <span>
                 Remember that this is an unofficial tool
@@ -178,7 +178,7 @@ export default function RequirementsSection({
             <button
               type="button"
               onClick={() => setNotification(false)}
-              className="interactive absolute top-2 right-2 text-xl not-italic"
+              className="interactive absolute right-2 top-2 text-xl not-italic"
             >
               <FaTimes />
             </button>
@@ -302,7 +302,7 @@ function SuggestionForm() {
           className="group relative ml-2 rounded bg-black/30 p-2 transition-colors hover:bg-black/50"
         >
           <FaEnvelope />
-          <span className="absolute top-full right-0 z-10 mt-2 hidden w-32 rounded bg-black/80 p-2 text-sm text-white group-hover:block">
+          <span className="absolute right-0 top-full z-10 mt-2 hidden w-32 rounded bg-black/80 p-2 text-sm text-white group-hover:block">
             Your email will be recorded when making a suggestion.
           </span>
         </button>

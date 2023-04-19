@@ -39,7 +39,7 @@ function CustomButton({
         {direction === 'up' && <FaChevronUp />}
         {direction === 'down' && <FaChevronDown />}
       </button>
-      <div className="absolute top-1/2 left-full ml-2 -translate-y-1/2">
+      <div className="absolute left-full top-1/2 ml-2 -translate-y-1/2">
         <CardExpandToggler />
       </div>
     </div>

@@ -47,7 +47,7 @@ export default function FriendsPage() {
         </button>
       </form>
 
-      <h3 className="mt-4 mb-2 text-2xl font-medium">Recommended</h3>
+      <h3 className="mb-2 mt-4 text-2xl font-medium">Recommended</h3>
 
       <FindClassmates />
     </ConnectLayout>

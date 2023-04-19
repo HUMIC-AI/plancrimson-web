@@ -5,8 +5,8 @@ import { useAppSelector, useElapsed } from '../src/hooks';
 
 // components
 import Layout, { errorMessages } from '../components/Layout/Layout';
-import { ErrorPage } from "../components/Layout/ErrorPage";
-import { LoadingPage } from "../components/Layout/LoadingPage";
+import { ErrorPage } from '../components/Layout/ErrorPage';
+import { LoadingPage } from '../components/Layout/LoadingPage';
 import SearchBox, {
   SearchBoxDemo,
 } from '../components/SearchComponents/SearchBox';

@@ -57,12 +57,12 @@ function getIncomingFriends(uid: string) {
   return admin.firestore().collectionGroup('friends')
     .where('from', '==', uid)
     .where('accepted', '==', true)
-    .get()
+    .get();
 }
 
 function getOutgoingFriends(uid: string) {
   return admin.firestore().collectionGroup('friends')
     .where('to', '==', uid)
     .where('accepted', '==', true)
-    .get()
+    .get();
 }
