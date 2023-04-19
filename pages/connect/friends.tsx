@@ -1,15 +1,14 @@
 import { getDoc, deleteDoc } from 'firebase/firestore';
-import Schema from 'plancrimson-utils';
-import {
-  useElapsed, useFriends,
-} from 'src/hooks';
-import { Auth } from 'src/features';
-import ProfileList from 'components/ConnectPageComponents/ProfileList';
-import ConnectLayout from 'components/ConnectPageComponents/ConnectLayout';
-import { UserProfile, WithId } from 'plancrimson-utils';
-import FindClassmates from 'components/ConnectPageComponents/FindClassmates';
+import Schema, { UserProfile, WithId } from 'plancrimson-utils';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import {
+  useElapsed, useFriends,
+} from '@/src/hooks';
+import { Auth } from '@/src/features';
+import ProfileList from '@/components/ConnectPageComponents/ProfileList';
+import ConnectLayout from '@/components/ConnectPageComponents/ConnectLayout';
+import FindClassmates from '@/components/ConnectPageComponents/FindClassmates';
 
 export default function FriendsPage() {
   const userId = Auth.useAuthProperty('uid');

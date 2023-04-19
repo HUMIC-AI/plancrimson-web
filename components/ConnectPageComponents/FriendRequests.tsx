@@ -1,8 +1,7 @@
 import { updateDoc, deleteDoc } from 'firebase/firestore';
-import Schema from 'plancrimson-utils';
-import { UserProfile, WithId } from 'plancrimson-utils';
-import { Auth } from 'src/features';
-import { useElapsed, useFriends } from 'src/hooks';
+import Schema, { UserProfile, WithId } from 'plancrimson-utils';
+import { Auth } from '@/src/features';
+import { useElapsed, useFriends } from '@/src/hooks';
 import ProfileList from './ProfileList';
 
 export default function IncomingRequests() {

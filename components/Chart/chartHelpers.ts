@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
-import { ExtendedClass } from 'plancrimson-utils';
-import embeddings from 'plancrimson-utils';
-import { allTruthy } from 'plancrimson-utils';
+import {
+  tsne2d, ExtendedClass, allTruthy, Subject,
+} from 'plancrimson-utils';
 
 
 export const metrics = {
@@ -18,7 +18,7 @@ export const metricNames = Object.keys(metrics).sort() as (keyof typeof metrics)
 export type Embedding = {
   x: number;
   y: number;
-  subject: string;
+  subject: Subject;
   catalogNumber: string;
   title: string;
   id: string;
@@ -35,7 +35,7 @@ export function makeData(courses: ExtendedClass[], radiusMetric: keyof typeof me
       console.error('no embedding for', id);
       return null;
     }
-    const [x, y] = embeddings[id];
+    const [x, y] = tsne2d[id];  // TODO fix all deduplication stuff
     const metric = radiusMetric === 'uniform' ? 0 : (parseFloat(course[radiusMetric]?.toString() || '') || 0);
     maxMetric = Math.max(metric, maxMetric);
     return {

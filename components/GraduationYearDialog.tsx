@@ -1,11 +1,10 @@
 import { updateDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
+import Schema, { getUniqueSemesters } from 'plancrimson-utils';
 import { useAppDispatch } from '@/src/hooks';
 import { useModal } from '@/src/context/modal';
 import { Schedules, Settings } from '@/src/features';
-import Schema from 'plancrimson-utils';
-import { getUniqueSemesters } from 'plancrimson-utils';
 
 /**
  * Rendered in _app.tsx once user first logs in.

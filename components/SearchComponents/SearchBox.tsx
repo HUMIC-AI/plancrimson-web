@@ -3,19 +3,18 @@ import { FaTimes, FaBars, FaAngleDoubleRight } from 'react-icons/fa';
 import { connectSearchBox } from 'react-instantsearch-dom';
 import React, { Fragment } from 'react';
 import type { SearchBoxProvided } from 'react-instantsearch-core';
-import MEILI_ATTRIBUTES from 'plancrimson-utils';
-import Attribute from './Attribute';
-import ScheduleChooser from '../ScheduleSelector';
-import {
+import MEILI_ATTRIBUTES, {
   ATTRIBUTE_DESCRIPTIONS, breakpoints, classNames, sortSchedules,
 } from 'plancrimson-utils';
+import type { Class } from 'plancrimson-utils';
+import Attribute from './Attribute';
+import ScheduleChooser from '../ScheduleSelector';
 import Stats, { StatsComponent } from './Stats';
 import StateResults, { StateResultsComponent } from './StateResults';
 import { alertSignIn } from './searchUtils';
 import useChosenScheduleContext from '@/src/context/selectedSchedule';
 import { useAppDispatch, useAppSelector, useBreakpoint } from '@/src/hooks';
 import { Auth, Planner, Schedules } from '@/src/features';
-import type { Class } from 'plancrimson-utils';
 
 
 type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean };

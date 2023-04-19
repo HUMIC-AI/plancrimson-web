@@ -2,11 +2,11 @@ import { connectInfiniteHits } from 'react-instantsearch-dom';
 import React from 'react';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import CardExpandToggler from 'components/YearSchedule/CardExpandToggler';
-import { ExtendedClass } from 'plancrimson-utils';
-import { classNames, DAY_SHORT, getClassId } from 'plancrimson-utils';
+import {
+  sampleCourses, ExtendedClass, DAY_SHORT, getClassId,
+} from 'plancrimson-utils';
 import CourseCard from '../Course/CourseCard';
-import sampleCourses from 'plancrimson-utils';
+import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
 import { alertSignIn } from './searchUtils';
 import useChosenScheduleContext from '@/src/context/selectedSchedule';
 import useSearchState from '@/src/context/searchState';

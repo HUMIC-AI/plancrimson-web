@@ -5,9 +5,8 @@ import {
   FaArrowsAltH,
   FaCog,
 } from 'react-icons/fa';
-import { useModal } from 'src/context/modal';
-import { DownloadPlan } from 'plancrimson-utils';
-import { allTruthy } from 'plancrimson-utils';
+import { DownloadPlan, allTruthy } from 'plancrimson-utils';
+import { useModal } from '@/src/context/modal';
 import { Planner, Schedules, Settings } from '@/src/features';
 import { downloadJson, useAppDispatch, useAppSelector } from '@/src/hooks';
 import UploadForm from '../UploadForm';

@@ -3,9 +3,8 @@ import {
 } from 'firebase/firestore';
 import { Tab } from '@headlessui/react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { ExtendedClass, Evaluation } from 'plancrimson-utils';
-import { Season } from 'plancrimson-utils';
 import {
+  ExtendedClass, Evaluation, Season,
   compareSemesters,
   getEvaluationId,
 } from 'plancrimson-utils';

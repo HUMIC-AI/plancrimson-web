@@ -1,7 +1,7 @@
-import Layout, { LayoutProps } from 'components/Layout/Layout';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { PropsWithChildren } from 'react';
+import Layout, { LayoutProps } from '@/components/Layout/Layout';
 
 export default function ConnectLayout({ children, className = '', ...props }: PropsWithChildren<LayoutProps>) {
   return (

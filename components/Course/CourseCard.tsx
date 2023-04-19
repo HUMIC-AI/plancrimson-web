@@ -3,14 +3,11 @@ import React, { useMemo } from 'react';
 import {
   FaTimes, FaPlus, FaExclamationTriangle,
 } from 'react-icons/fa';
-import { useModal } from 'src/context/modal';
-import { ExtendedClass } from 'plancrimson-utils';
 import {
-  getClassId,
-  classNames,
-  getSemester,
-  checkViable,
+  ExtendedClass,
+  getClassId, departmentImages, getSemester,
 } from 'plancrimson-utils';
+import { useModal } from '@/src/context/modal';
 import { handleError, useAppDispatch, useAppSelector } from '@/src/hooks';
 import Tooltip from '../Tooltip';
 import {
@@ -20,7 +17,6 @@ import {
   Instructors,
   Location,
 } from './CourseComponents';
-import departmentImages from 'plancrimson-utils';
 import {
   ClassCache, Planner, Profile, Schedules,
 } from '@/src/features';

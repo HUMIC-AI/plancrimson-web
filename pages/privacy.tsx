@@ -1,7 +1,6 @@
+import { departmentImages, unsplashParams } from 'plancrimson-utils';
 import ExternalLink from '../components/ExternalLink';
 import Layout from '../components/Layout/Layout';
-import departmentImages from 'plancrimson-utils';
-import { unsplashParams } from 'plancrimson-utils';
 
 const PrivacyPage = function () {
   return (

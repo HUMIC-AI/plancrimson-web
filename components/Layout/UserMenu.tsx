@@ -46,7 +46,7 @@ export function UserMenu() {
         >
           {email && (
             <Menu.Item>
-              <span className="text-xs text-gray-500">{email}</span>
+              <span className="text-gray-dark text-xs">{email}</span>
             </Menu.Item>
           )}
 

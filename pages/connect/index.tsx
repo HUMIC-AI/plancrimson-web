@@ -2,14 +2,14 @@ import {
   limit, where,
 } from 'firebase/firestore';
 import { useMemo } from 'react';
-import Layout, { errorMessages } from 'components/Layout/Layout';
-import { ErrorPage } from 'components/Layout/ErrorPage';
-import { LoadingPage } from 'components/Layout/LoadingPage';
-import { Auth } from 'src/features';
-import { useElapsed } from 'src/hooks';
-import ConnectLayout from 'components/ConnectPageComponents/ConnectLayout';
-import PublicSchedules from 'components/ConnectPageComponents/PublicSchedules';
-import FriendRequests from 'components/ConnectPageComponents/FriendRequests';
+import Layout, { errorMessages } from '@/components/Layout/Layout';
+import { ErrorPage } from '@/components/Layout/ErrorPage';
+import { LoadingPage } from '@/components/Layout/LoadingPage';
+import { Auth } from '@/src/features';
+import { useElapsed } from '@/src/hooks';
+import ConnectLayout from '@/components/ConnectPageComponents/ConnectLayout';
+import PublicSchedules from '@/components/ConnectPageComponents/PublicSchedules';
+import FriendRequests from '@/components/ConnectPageComponents/FriendRequests';
 
 /**
  * TODO add search bar for public schedules

@@ -1,5 +1,5 @@
-import type { ExtendedClass } from 'plancrimson-utils';
 import type {
+  ExtendedClass,
   Schedule, UserProfile,
 } from 'plancrimson-utils';
 import { allTruthy, getClassId } from 'plancrimson-utils';

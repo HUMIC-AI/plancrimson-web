@@ -7,9 +7,8 @@ import {
   FaExclamationCircle,
   FaSmile,
 } from 'react-icons/fa';
-import { ExtendedClass } from 'plancrimson-utils';
-import { Schedule } from 'plancrimson-utils';
 import {
+  ExtendedClass, Schedule,
   sortSchedules,
   getClassId,
   classNames,

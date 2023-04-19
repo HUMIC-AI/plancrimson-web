@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import type { RefinementListProvided } from 'react-instantsearch-core';
 import { connectRefinementList } from 'react-instantsearch-dom';
-import { classNames, getSubjectColor, termToSeasonMap } from 'plancrimson-utils';
+import subjects, { classNames, getSubjectColor, termToSeasonMap } from 'plancrimson-utils';
 import { alertSignIn } from './searchUtils';
-import subjects from 'plancrimson-utils';
 
 type Props = Pick<RefinementListProvided, 'items' | 'refine'> & { showSubjectColor: boolean };
 

@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { ImageWrapper } from 'components/UserLink';
 import { getAuth } from 'firebase/auth';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { useProfiles, useElapsed } from 'src/hooks';
+import { ImageWrapper } from '@/components/UserLink';
+import { useProfiles, useElapsed } from '@/src/hooks';
 
 export default function FindClassmates() {
   const { profiles: suggestedProfiles, error } = useSuggestedProfiles();

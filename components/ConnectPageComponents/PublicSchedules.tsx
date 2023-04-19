@@ -1,6 +1,6 @@
-import ScheduleSection from 'components/SemesterSchedule/ScheduleList';
-import { Schedules } from 'src/features';
-import { useAppSelector } from 'src/hooks';
+import ScheduleSection from '@/components/SemesterSchedule/ScheduleList';
+import { Schedules } from '@/src/features';
+import { useAppSelector } from '@/src/hooks';
 
 export default function PublicSchedules() {
   // the proper schedules are already selected by the constraints argument to Layout

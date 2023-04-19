@@ -1,8 +1,7 @@
 import { Disclosure } from '@headlessui/react';
 import React, { useMemo } from 'react';
 import { FaChevronDown, FaExternalLinkAlt } from 'react-icons/fa';
-import { Evaluation, EvaluationStatistics } from 'plancrimson-utils';
-import { classNames } from 'plancrimson-utils';
+import { Evaluation, EvaluationStatistics, classNames } from 'plancrimson-utils';
 import ExternalLink from '../../ExternalLink';
 import FadeTransition from '../../FadeTransition';
 import Tooltip from '../../Tooltip';

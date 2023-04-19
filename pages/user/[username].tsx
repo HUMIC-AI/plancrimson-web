@@ -5,14 +5,13 @@ import {
 } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
-import ScheduleSection from 'components/SemesterSchedule/ScheduleList';
-import CardExpandToggler from 'components/YearSchedule/CardExpandToggler';
+import Schema, { FriendRequest, UserProfile, WithId } from 'plancrimson-utils';
+import ScheduleSection from '@/components/SemesterSchedule/ScheduleList';
+import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
 import Layout, { errorMessages } from '../../components/Layout/Layout';
 import { ErrorPage } from '../../components/Layout/ErrorPage';
 import { LoadingPage } from '../../components/Layout/LoadingPage';
 import { ImageWrapper } from '../../components/UserLink';
-import { FriendRequest, UserProfile, WithId } from 'plancrimson-utils';
-import Schema from 'plancrimson-utils';
 import { Auth, Schedules } from '@/src/features';
 import {
   sendFriendRequest, unfriend, useAppSelector, useElapsed,

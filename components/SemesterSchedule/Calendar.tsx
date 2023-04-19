@@ -3,8 +3,7 @@ import { Disclosure } from '@headlessui/react';
 import React, { Fragment } from 'react';
 import { useForm, FieldValues } from 'react-hook-form';
 import { createEvents, DateArray, EventAttributes } from 'ics';
-import type { ExtendedClass } from 'plancrimson-utils';
-import type { Schedule } from 'plancrimson-utils';
+import type { ExtendedClass, Schedule } from 'plancrimson-utils';
 import {
   allTruthy, getClassId, DAYS_OF_WEEK, DAY_SHORT,
 } from 'plancrimson-utils';

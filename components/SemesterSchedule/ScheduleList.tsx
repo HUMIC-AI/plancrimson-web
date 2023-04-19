@@ -1,10 +1,9 @@
-import CourseCard from 'components/Course/CourseCard';
-import { ImageWrapper } from 'components/UserLink';
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { Schedule } from 'plancrimson-utils';
-import { ClassCache, Planner } from 'src/features';
-import { useAppSelector, useProfiles } from 'src/hooks';
+import { ImageWrapper } from '@/components/UserLink';
+import CourseCard from '@/components/Course/CourseCard';
+import { ClassCache, Planner } from '@/src/features';
+import { useAppSelector, useProfiles } from '@/src/hooks';
 
 export type ScheduleListProps = {
   schedule: Schedule;
@@ -21,7 +20,7 @@ export default function ScheduleSection({ schedule, hideAuthor = false }: Schedu
   const profile = profiles?.[schedule.ownerUid];
 
   return (
-    <div className="dark-gradient rounded-xl p-4 text-slate-200 shadow-xl">
+    <div className="dark-gradient text-gray-light rounded-xl p-4 shadow-xl">
       <div className="mb-2 flex items-center space-x-4">
         {!hideAuthor && <ImageWrapper url={profile?.photoUrl} alt="User profile" />}
         <div>

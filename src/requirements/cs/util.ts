@@ -1,7 +1,5 @@
-import { Class } from 'plancrimson-utils';
-import { allTruthy } from 'plancrimson-utils';
+import TAGS, { Class, allTruthy } from 'plancrimson-utils';
 import { Requirement } from '../util';
-import TAGS from 'plancrimson-utils';
 
 export function hasTag(cls: Class, tag: CSCourseTag) {
   const possibleNames = allTruthy([

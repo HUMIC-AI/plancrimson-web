@@ -12,6 +12,7 @@ import {
   getFirestore,
   setDoc,
 } from 'firebase/firestore';
+import { classNames, Schedule } from 'plancrimson-utils';
 import {
   GroupResult,
   Requirement,
@@ -21,13 +22,11 @@ import {
 import ExternalLink from '../ExternalLink';
 import FadeTransition from '../FadeTransition';
 import RequirementGroupComponent from './RequirementsDisplay';
-import { classNames } from 'plancrimson-utils';
 import { allRequirements } from '@/src/requirements';
 import { handleError, useAppDispatch, useAppSelector } from '@/src/hooks';
 import {
   Auth, Planner, Schedules, Settings,
 } from '@/src/features';
-import { Schedule } from 'plancrimson-utils';
 import { selectShowReqs } from '@/src/features/semesterFormat';
 
 

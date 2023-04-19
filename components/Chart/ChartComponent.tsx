@@ -1,22 +1,22 @@
 import { Listbox } from '@headlessui/react';
 import { InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
-import FadeTransition from 'components/FadeTransition';
-import Tooltip from 'components/Tooltip';
-import { Auth, ClassCache } from 'src/features';
 import { query, where, getDocs } from 'firebase/firestore';
 import {
   MutableRefObject, useRef, createRef, useState, useEffect, useCallback,
 } from 'react';
 import { FaChevronDown, FaInfo, FaSpinner } from 'react-icons/fa';
 import { InfiniteHitsProvided } from 'react-instantsearch-core';
-import { useModal } from 'src/context/modal';
-import { useAppDispatch, useElapsed } from 'src/hooks';
 import * as d3 from 'd3';
 import {
-  ExtendedClass, sampleCourses, getSubjectColor, classNames,
+  ExtendedClass, sampleCourses, getSubjectColor,
 } from 'plancrimson-utils';
-import Schema from 'src/schema';
-import { getAllClassIds } from 'src/utils';
+import { useModal } from '@/src/context/modal';
+import { useAppDispatch, useElapsed } from '@/src/hooks';
+import { Auth, ClassCache } from '@/src/features';
+import Schema from '@/src/schema';
+import { getAllClassIds } from '@/src/utils';
+import Tooltip from '@/components/Tooltip';
+import FadeTransition from '@/components/FadeTransition';
 import {
   initChart, metrics, Embedding, makeData, metricNames,
 } from './chartHelpers';
