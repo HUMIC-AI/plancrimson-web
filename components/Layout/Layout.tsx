@@ -2,12 +2,12 @@
 import Head from 'next/head';
 import React, { PropsWithChildren } from 'react';
 import type { QueryConstraint } from 'firebase/firestore';
-import useSchedules from 'src/schedules';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
 import { MeiliProvider } from '@/src/meili';
 import Alerts from './Alerts';
 import { Footer } from './Footer';
+import useSchedules from '@/src/schedules';
 
 export interface LayoutProps {
   title?: string;
@@ -29,19 +29,10 @@ export default function Layout({
 
   return (
     <>
-      <Head>
-        <title>{pageTitle}</title>
-        <link rel="icon" href="favicon.svg" type="image/x-icon" />
-        <meta name="description" content={description} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={description} />
-        <meta property="og:image" content="https://plancrimson.xyz/demo.png" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://plancrimson.xyz/" />
-      </Head>
+      <HeadMeta pageTitle={pageTitle} description={description} />
 
       <MeiliProvider>
-        <Wrapper scheduleQueryConstraints={constraints} custom={custom} className={className}>
+        <Wrapper scheduleQueryConstraints={constraints} className={className} custom={custom}>
           {children}
         </Wrapper>
 
@@ -51,6 +42,26 @@ export default function Layout({
   );
 }
 
+function HeadMeta({
+  pageTitle, description,
+}: { pageTitle: string, description: string }) {
+  return (
+    <Head>
+      <title>{pageTitle}</title>
+      <link rel="icon" href="favicon.svg" type="image/x-icon" />
+      <meta name="description" content={description} />
+      <meta property="og:title" content={pageTitle} />
+      <meta property="og:description" content={description} />
+      <meta property="og:image" content="https://plancrimson.xyz/demo.png" />
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content="https://plancrimson.xyz/" />
+    </Head>
+  );
+}
+
+/**
+ * Listen to the schedules given by the constraints.
+ */
 function Wrapper({
   children, scheduleQueryConstraints: constraints = [], custom, className,
 }: PropsWithChildren<Pick<LayoutProps, 'scheduleQueryConstraints' | 'custom' | 'className'>>) {

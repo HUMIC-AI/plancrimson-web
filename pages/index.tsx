@@ -15,9 +15,7 @@ import RequirementsSection from '../components/YearSchedule/RequirementsSection'
 import {
   Auth, ClassCache, Planner, Profile, Schedules, Settings,
 } from '@/src/features';
-import {
-  handleError, signInUser, useAppSelector, useBreakpoint,
-} from '@/src/hooks';
+import { useAppSelector, useBreakpoint } from '@/src/hooks';
 import validateSchedules from '@/src/requirements';
 import collegeRequirements from '@/src/requirements/college';
 import {
@@ -27,6 +25,7 @@ import {
 } from '@/src/requirements/util';
 import { SemesterDisplayProps } from '@/components/YearSchedule/SemesterDisplay';
 import { classNames } from '@/src/utils';
+import { ClassesCloud } from './ClassesCloud';
 
 export default function PlanPage() {
   const userId = Auth.useAuthProperty('uid');
@@ -66,17 +65,7 @@ export default function PlanPage() {
   }, [selectedRequirements, classCache, sampleSchedule, semesterFormat, profile]);
 
   if (!userId) {
-    return (
-      <Layout className="flex flex-1 items-center justify-center bg-black p-8" title="Plan">
-        <button
-          type="button"
-          className="interactive text-6xl font-black text-white"
-          onClick={() => signInUser().catch(handleError)}
-        >
-          Sign in to get started!
-        </button>
-      </Layout>
-    );
+    return <ClassesCloud />;
   }
 
 

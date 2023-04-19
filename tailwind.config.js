@@ -8,9 +8,7 @@ module.exports = {
   ],
   theme: {
     colors: {
-      primary: {
-        DEFAULT: '#64748b',
-      },
+      primary: colors.amber[600],
       accent: colors.cyan[300],
       blue: {
         light: colors.sky[200],
