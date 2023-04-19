@@ -1,5 +1,5 @@
 {
-  "name": "harvard-concentration-planner",
+  "name": "plan-crimson",
   "private": true,
   "scripts": {
     "db": "firebase emulators:start --import ./emulators --export-on-exit",
@@ -26,7 +26,7 @@
     "ics": "^2.35.0",
     "meilisearch": "^0.30.0",
     "next": "13.0.7",
-    "plancrimson-utils": "link:../plancrimson-utils/",
+    "plancrimson-utils": "portal:../plancrimson-utils",
     "qs": "^6.10.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -76,8 +76,5 @@
     "typescript": "4.9.4",
     "unsplash-js": "^7.0.15"
   },
-  "packageManager": "yarn@3.5.0",
-  "resolutions": {
-    "plancrimson-utils": "portal:/data/projects/course-recommender/plancrimson-utils"
-  }
+  "packageManager": "yarn@3.5.0"
 }
