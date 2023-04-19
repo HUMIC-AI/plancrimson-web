@@ -17,7 +17,6 @@
     "@headlessui/react": "^1.4.2",
     "@meilisearch/instant-meilisearch": "^0.10.1",
     "@reduxjs/toolkit": "^1.7.1",
-    "@tailwindcss/line-clamp": "^0.4.2",
     "axios": "^1.2.1",
     "d3": "^7.4.4",
     "firebase": "^9.6.1",

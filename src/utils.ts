@@ -25,3 +25,18 @@ export function sortSchedules(schedules: ScheduleMap) {
 export function getAllClassIds(schedules: Schedule[]): string[] {
   return schedules.flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
 }
+
+export function classNames(...classes: (string | boolean)[]) {
+  return classes
+    .filter(Boolean)
+    .join(' ')
+    .replace(
+      'hover-blue',
+      'shadow rounded bg-black hover:bg-opacity-50 text-white transition-colors',
+    );
+}
+
+
+export function throwMissingContext<T>(): T {
+  throw new Error('must provide context element');
+}

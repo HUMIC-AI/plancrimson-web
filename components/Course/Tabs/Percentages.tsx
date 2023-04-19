@@ -1,12 +1,12 @@
 import React from 'react';
-import { classNames } from '../../../shared/util';
+import { classNames } from '@/src/utils';
 
 const colors = [
-  'bg-blue-300',
-  'bg-yellow-300',
-  'bg-green-300',
-  'bg-gray-300',
-  'bg-red-300',
+  'bg-percents-1',
+  'bg-percents-2',
+  'bg-percents-3',
+  'bg-percents-4',
+  'bg-percents-5',
 ];
 
 type Props = { categories: number[] | null };
@@ -40,7 +40,7 @@ export default function Percentages({ categories: allCategories }: Props) {
           >
             {rec}
           </span>
-          <span className="absolute bottom-full left-1/2 mb-2 hidden w-28 -translate-x-1/2 rounded-md bg-gray-800 px-2 py-1 text-white group-hover:block">
+          <span className="absolute bottom-full left-1/2 mb-2 hidden w-28 -translate-x-1/2 rounded-md bg-black px-2 py-1 text-white group-hover:block">
             {`${rec} students voted ${allCategories.length - i}/${allCategories.length}`}
           </span>
         </div>

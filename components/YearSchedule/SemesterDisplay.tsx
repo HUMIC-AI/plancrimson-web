@@ -3,28 +3,25 @@ import React, {
 } from 'react';
 import { FaCheck, FaMinus } from 'react-icons/fa';
 import {
-  allTruthy,
-  checkViable,
-  classNames,
-  compareSemesters,
-  findConflicts,
-  getSchedulesBySemester,
-} from '../../shared/util';
-import { Schedule, Semester, Viability } from '../../shared/types';
-import { useAppDispatch, useAppSelector, useElapsed } from '../../src/hooks';
+  Semester, compareSemesters, findConflicts, allTruthy,
+} from 'plancrimson-utils';
+import { useAppDispatch, useAppSelector, useElapsed } from '@/src/hooks';
 import ScheduleChooser from '../ScheduleSelector';
 import CourseCard, { DragStatus } from '../Course/CourseCard';
 import FadeTransition from '../FadeTransition';
-import { Requirement } from '../../src/requirements/util';
+import { Requirement } from '@/src/requirements/util';
 import ButtonMenu from './ButtonMenu';
 import {
   ClassCache, Planner, Profile, Schedules, Settings,
-} from '../../src/features';
+} from '@/src/features';
 import AddCoursesButton from '../CourseSearchModal';
+import { checkViable } from '@/src/searchSchedule';
+import { Viability, Schedule } from '@/src/types';
+import { classNames, getSchedulesBySemester } from '@/src/utils';
 
 const VIABILITY_COLORS: Record<Viability, string> = {
-  Yes: 'bg-green-200',
-  Likely: 'bg-blue-300',
+  Yes: 'bg-green-300',
+  Likely: 'bg-blue-light',
   Unlikely: 'bg-yellow-200',
   No: 'bg-red-300',
 };
@@ -115,9 +112,9 @@ export default function SemesterComponent({
         dragStatus.dragging
           ? dragStatus.data.originScheduleId === chosenScheduleId
             || !viableDrop
-            ? 'bg-gray-300 cursor-not-allowed'
+            ? 'bg-gray-light cursor-not-allowed'
             : VIABILITY_COLORS[viableDrop?.viability]
-          : 'odd:bg-gray-300 even:bg-white',
+          : 'odd:bg-gray-light even:bg-white',
       )}
       style={{ width: `${colWidth}px` }}
     >

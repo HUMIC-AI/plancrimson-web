@@ -5,7 +5,7 @@ import type { QueryConstraint } from 'firebase/firestore';
 import useSchedules from 'src/schedules';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
-import { MeiliProvider } from '../../src/meili';
+import { MeiliProvider } from '@/src/meili';
 import Alerts from './Alerts';
 import { Footer } from './Footer';
 

@@ -3,12 +3,12 @@ import {
 } from 'firebase/firestore';
 import { Tab } from '@headlessui/react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { ExtendedClass, Evaluation } from '../../../shared/apiTypes';
-import { Season } from '../../../shared/types';
+import { ExtendedClass, Evaluation } from 'plancrimson-utils';
+import { Season } from 'plancrimson-utils';
 import {
   compareSemesters,
   getEvaluationId,
-} from '../../../shared/util';
+} from 'plancrimson-utils';
 import EvaluationComponent from './EvaluationComponent';
 
 /**

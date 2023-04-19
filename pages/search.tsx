@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Configure, InstantSearch } from 'react-instantsearch-dom';
 import qs from 'qs';
-import { useAppSelector, useElapsed } from '../src/hooks';
+import { useAppSelector, useElapsed } from '@/src/hooks';
 
 // components
 import Layout, { errorMessages } from '../components/Layout/Layout';
@@ -15,10 +15,10 @@ import CurrentRefinements, {
   CurrentRefinementsDemo,
 } from '../components/SearchComponents/CurrentRefinements';
 import SortBy, { SortByDemo } from '../components/SearchComponents/SortBy';
-import useSearchState from '../src/context/searchState';
+import useSearchState from '@/src/context/searchState';
 import AttributeMenu from '../components/SearchComponents/AttributeMenu';
-import { Planner, Auth } from '../src/features';
-import { useMeiliClient } from '../src/meili';
+import { Planner, Auth } from '@/src/features';
+import { useMeiliClient } from '@/src/meili';
 
 // we show a demo if the user is not logged in,
 // but do not allow them to send requests to the database
@@ -79,7 +79,7 @@ function InnerPage({ elapsed }: { elapsed: boolean }) {
           <AttributeMenu withWrapper lgOnly />
         </div>
 
-        <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-300 bg-white p-6 shadow-lg">
+        <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-light bg-white p-6 shadow-lg">
           <SearchBox />
           <div className="grid grid-cols-[auto_1fr] gap-4">
             <SortBy />
@@ -102,7 +102,7 @@ function DemoPage() {
           <AttributeMenu withWrapper lgOnly />
         </div>
 
-        <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-300 bg-white p-6 shadow-lg">
+        <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-light bg-white p-6 shadow-lg">
           <SearchBoxDemo />
           <div className="grid grid-cols-[auto_1fr] gap-4">
             <SortByDemo />

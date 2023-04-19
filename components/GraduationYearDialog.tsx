@@ -1,11 +1,11 @@
 import { updateDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import { useAppDispatch } from '../src/hooks';
-import { useModal } from '../src/context/modal';
-import { Schedules, Settings } from '../src/features';
-import Schema from '../shared/schema';
-import { getUniqueSemesters } from '../shared/util';
+import { useAppDispatch } from '@/src/hooks';
+import { useModal } from '@/src/context/modal';
+import { Schedules, Settings } from '@/src/features';
+import Schema from 'plancrimson-utils';
+import { getUniqueSemesters } from 'plancrimson-utils';
 
 /**
  * Rendered in _app.tsx once user first logs in.
@@ -59,7 +59,7 @@ export default function GraduationYearDialog({ defaultYear, uid }: { defaultYear
           onChange={(e) => setYear(parseInt(e.currentTarget.value, 10))}
           className="w-32 rounded-xl border-4 p-2 text-center text-3xl transition-colors hover:border-black"
         />
-        <button type="submit" className="interactive rounded-xl bg-gray-900 px-4 py-2 text-white">
+        <button type="submit" className="interactive rounded-xl bg-black px-4 py-2 text-white">
           Get started
         </button>
       </div>

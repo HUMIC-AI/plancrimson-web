@@ -8,17 +8,17 @@ import {
 import { Provider } from 'react-redux';
 import React, { useEffect } from 'react';
 import { connectAuthEmulator, getAuth, onAuthStateChanged } from 'firebase/auth';
-import { SearchStateProvider } from '../src/context/searchState';
-import store from '../src/store';
-import { useAppDispatch } from '../src/hooks';
-import { ModalProvider, useModal } from '../src/context/modal';
-import { SelectedScheduleProvider } from '../src/context/selectedSchedule';
+import { SearchStateProvider } from '@/src/context/searchState';
+import store from '@/src/store';
+import { useAppDispatch } from '@/src/hooks';
+import { ModalProvider, useModal } from '@/src/context/modal';
+import { SelectedScheduleProvider } from '@/src/context/selectedSchedule';
 import {
   Auth, Profile, Schedules, Settings,
-} from '../src/features';
-import Schema from '../shared/schema';
-import { getInitialSettings } from '../shared/util';
+} from '@/src/features';
 import GraduationYearDialog from '../components/GraduationYearDialog';
+import Schema from '@/src/schema';
+import { getInitialSettings } from '@/src/utils';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -47,10 +47,36 @@ if (getApps().length === 0) {
 }
 
 function MyApp({ Component, pageProps }: AppProps) {
+  useSyncAuth();
+  useSyncProfileToRedux();
+
+  return (
+    <SearchStateProvider>
+      <SelectedScheduleProvider>
+        {/* @ts-ignore */}
+        <Component {...pageProps} />
+      </SelectedScheduleProvider>
+    </SearchStateProvider>
+  );
+}
+
+export default function Wrapper(props: AppProps) {
+  return (
+    <Provider store={store}>
+      <ModalProvider>
+        <MyApp {...props} />
+      </ModalProvider>
+    </Provider>
+  );
+}
+
+/**
+ * Sync the firebase auth state with Redux.
+ */
+function useSyncAuth() {
   const auth = getAuth();
   const dispatch = useAppDispatch();
 
-  // When the user logs in/out, dispatch to redux
   useEffect(() => {
     const unsub = onAuthStateChanged(
       auth,
@@ -77,43 +103,21 @@ function MyApp({ Component, pageProps }: AppProps) {
 
     return unsub;
   }, []);
-
-  useProfile();
-
-  return (
-    <SearchStateProvider>
-      <SelectedScheduleProvider>
-        {/* @ts-ignore */}
-        <Component {...pageProps} />
-      </SelectedScheduleProvider>
-    </SearchStateProvider>
-  );
 }
 
-export default function Wrapper(props: AppProps) {
-  return (
-    <Provider store={store}>
-      <ModalProvider>
-        <MyApp {...props} />
-      </ModalProvider>
-    </Provider>
-  );
-}
-
-/**
- * Syncs the user's profile data in Firestore to Redux.
- */
-function useProfile() {
+function useSyncProfileToRedux() {
   const dispatch = useAppDispatch();
   const uid = Auth.useAuthProperty('uid');
   const { showContents } = useModal();
 
+  // run whenever the uid changes
   useEffect(() => {
     if (!uid) return;
 
     // check if the Firebase document for the user's profile exists.
     // if so, sync it to Redux. Force using latest version
     (async () => {
+      console.info(`fetching profile for ${uid}`);
       const profile = await getDocFromServer(Schema.profile(uid));
 
       if (!profile.exists()) return;
@@ -127,13 +131,18 @@ function useProfile() {
         const now = new Date();
         showContents({
           title: 'Set graduation year',
-          content: <GraduationYearDialog defaultYear={now.getFullYear() + (now.getMonth() > 5 ? 4 : 3)} uid={uid} />,
+          content: <GraduationYearDialog
+            defaultYear={now.getFullYear() + (now.getMonth() > 5 ? 4 : 3)}
+            uid={uid}
+          />,
           noExit: true,
         });
       } else {
         dispatch(Profile.setClassYear(data.classYear));
       }
-    })();
+    })().catch((err) => {
+      console.error(`error fetching profile for ${uid}:`, err);
+    });
 
     // keep the Redux state for the user settings in sync with Firestore
     const userDataRef = Schema.user(uid);

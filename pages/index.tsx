@@ -2,7 +2,9 @@ import { where } from 'firebase/firestore';
 import {
   useState, useEffect, useMemo, useRef,
 } from 'react';
-import { SemesterDisplayProps } from 'components/YearSchedule/SemesterDisplay';
+import {
+  breakpoints, allTruthy, getUniqueSemesters, compareSemesters,
+} from 'plancrimson-utils';
 import Layout from '../components/Layout/Layout';
 import { Footer } from '../components/Layout/Footer';
 import Navbar from '../components/Layout/Navbar';
@@ -11,21 +13,20 @@ import HiddenSchedules from '../components/YearSchedule/HiddenSchedules';
 import HeaderSection from '../components/YearSchedule/HeaderSection';
 import RequirementsSection from '../components/YearSchedule/RequirementsSection';
 import {
-  allTruthy, breakpoints, classNames, compareSemesters, getUniqueSemesters,
-} from '../shared/util';
-import {
   Auth, ClassCache, Planner, Profile, Schedules, Settings,
-} from '../src/features';
+} from '@/src/features';
 import {
   handleError, signInUser, useAppSelector, useBreakpoint,
-} from '../src/hooks';
-import validateSchedules from '../src/requirements';
-import collegeRequirements from '../src/requirements/college';
+} from '@/src/hooks';
+import validateSchedules from '@/src/requirements';
+import collegeRequirements from '@/src/requirements/college';
 import {
   GroupResult,
   Requirement,
   RequirementGroup,
-} from '../src/requirements/util';
+} from '@/src/requirements/util';
+import { SemesterDisplayProps } from '@/components/YearSchedule/SemesterDisplay';
+import { classNames } from '@/src/utils';
 
 export default function PlanPage() {
   const userId = Auth.useAuthProperty('uid');
@@ -66,7 +67,7 @@ export default function PlanPage() {
 
   if (!userId) {
     return (
-      <Layout className="flex flex-1 items-center justify-center bg-gray-800 p-8" title="Plan">
+      <Layout className="flex flex-1 items-center justify-center bg-black p-8" title="Plan">
         <button
           type="button"
           className="interactive text-6xl font-black text-white"
@@ -91,7 +92,7 @@ export default function PlanPage() {
           <Navbar />
 
           <div className={classNames(
-            'flex-1 flex flex-col relative bg-gray-800 md:p-4',
+            'flex-1 flex flex-col relative bg-black md:p-4',
             showReqs && 'md:rounded-lg md:shadow-lg',
           )}
           >
@@ -121,7 +122,7 @@ export default function PlanPage() {
   return (
     <Layout title="Plan" scheduleQueryConstraints={q} className="flex flex-1 flex-row-reverse">
       <div className={classNames(
-        'flex-1 flex flex-col relative bg-gray-800 md:p-4',
+        'flex-1 flex flex-col relative bg-black md:p-4',
         showReqs && 'md:rounded-lg md:shadow-lg',
       )}
       >

@@ -1,5 +1,5 @@
 import React from 'react';
-import { classNames } from '../shared/util';
+import { classNames } from 'plancrimson-utils';
 
 type Props = {
   text: string;

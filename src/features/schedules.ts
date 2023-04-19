@@ -3,12 +3,11 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
   deleteDoc, getDoc, setDoc, updateDoc,
 } from 'firebase/firestore';
+import { Semester } from 'plancrimson-utils';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  Schedule, ScheduleMap, Semester, UserClassData,
-} from '../../shared/types';
-import Schema from '../../shared/schema';
+import Schema from '../schema';
 import type { AppDispatch, RootState } from '../store';
+import { ScheduleMap, UserClassData, Schedule } from '../types';
 
 const initialState: ScheduleMap = {};
 

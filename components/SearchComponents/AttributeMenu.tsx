@@ -1,9 +1,9 @@
 import { FaAngleDoubleLeft } from 'react-icons/fa';
-import { adjustAttr, breakpoints, classNames } from '../../shared/util';
-import { useAppDispatch, useBreakpoint } from '../../src/hooks';
+import { adjustAttr, breakpoints, classNames } from 'plancrimson-utils';
+import { useAppDispatch, useBreakpoint } from '@/src/hooks';
 import Attribute from './Attribute';
-import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
-import { Planner } from '../../src/features';
+import MEILI_ATTRIBUTES from 'plancrimson-utils';
+import { Planner } from '@/src/features';
 
 interface Props {
   lgOnly?: boolean;

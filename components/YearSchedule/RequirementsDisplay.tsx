@@ -1,14 +1,14 @@
 import { Disclosure } from '@headlessui/react';
 import React, { Fragment, useMemo } from 'react';
 import { FaCheck, FaTimes } from 'react-icons/fa';
-import { classNames } from '../../shared/util';
 import {
   GroupResult,
   ReqResult,
   Requirement,
   RequirementGroup,
-} from '../../src/requirements/util';
+} from '@/src/requirements/util';
 import FadeTransition from '../FadeTransition';
+import { classNames } from '@/src/utils';
 
 interface HighlightedState {
   highlightRequirement: React.Dispatch<
@@ -24,7 +24,7 @@ const Description: React.FC<{ description: React.ReactNode }> = function ({
     <Disclosure>
       {({ open }) => (
         <>
-          <Disclosure.Button className="font-medium text-gray-300 hover:text-gray-800">
+          <Disclosure.Button className="font-medium text-gray-light hover:text-black">
             {open ? 'Hide details' : 'Show details'}
           </Disclosure.Button>
           <Disclosure.Panel>
@@ -62,7 +62,7 @@ function RequirementComponent({
       <div
         className={classNames(
           isHighlighted
-            ? 'text-blue-500 font-bold'
+            ? 'text-accent font-bold'
             : result?.satisfied
               ? 'text-green-500'
               : 'text-red-500',
@@ -141,16 +141,16 @@ const RequirementGroupComponent: React.FC<Props> = function ({
       borderStyles = '';
       break;
     case 1:
-      color = 'bg-gray-800';
-      borderStyles = 'border-gray-800 border-4';
+      color = 'bg-black';
+      borderStyles = 'border-black border-4';
       break;
     case 2:
-      color = 'bg-gray-600';
-      borderStyles = 'border-gray-600 border-2';
+      color = 'bg-gray-dark';
+      borderStyles = 'border-gray-dark border-2';
       break;
     default:
-      color = 'bg-gray-600 bg-opacity-70';
-      borderStyles = 'border-gray-300 border-1';
+      color = 'bg-gray-dark bg-opacity-70';
+      borderStyles = 'border-gray-light border-1';
       break;
   }
 
@@ -170,7 +170,7 @@ const RequirementGroupComponent: React.FC<Props> = function ({
     >
       <Disclosure.Button
         className={classNames(
-          'text-left text-white p-2 w-full hover:opacity-80 transition-opacity focus:ring-white focus:outline-none focus:bg-blue-400',
+          'text-left text-white p-2 w-full hover:opacity-80 transition-opacity focus:ring-white focus:outline-none focus:bg-accent',
           color,
         )}
       >
@@ -186,7 +186,7 @@ const RequirementGroupComponent: React.FC<Props> = function ({
         {reqGroup.subheading && (
           <p
             className={
-              depth === 0 ? 'text-sm text-gray-800' : 'text-sm text-gray-300'
+              depth === 0 ? 'text-sm text-black' : 'text-sm text-gray-light'
             }
           >
             {reqGroup.subheading}
@@ -221,7 +221,7 @@ const RequirementGroupComponent: React.FC<Props> = function ({
               <li
                 key={req.id}
                 className={classNames(
-                  depth === 0 && 'p-2 border-gray-900 border-2 rounded-md',
+                  depth === 0 && 'p-2 border-black border-2 rounded-md',
                 )}
               >
                 <RequirementComponent

@@ -8,7 +8,7 @@ import {
   compareItems,
   compareWeekdays,
   termToSeasonMap,
-} from '../../shared/util';
+} from 'plancrimson-utils';
 import { alertSignIn } from './searchUtils';
 
 type Props = Pick<CurrentRefinementsProvided, 'items' | 'refine'>;

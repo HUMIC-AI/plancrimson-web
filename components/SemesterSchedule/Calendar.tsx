@@ -3,19 +3,19 @@ import { Disclosure } from '@headlessui/react';
 import React, { Fragment } from 'react';
 import { useForm, FieldValues } from 'react-hook-form';
 import { createEvents, DateArray, EventAttributes } from 'ics';
-import type { ExtendedClass } from '../../shared/apiTypes';
-import type { Schedule } from '../../shared/types';
+import type { ExtendedClass } from 'plancrimson-utils';
+import type { Schedule } from 'plancrimson-utils';
 import {
   allTruthy, getClassId, DAYS_OF_WEEK, DAY_SHORT,
-} from '../../shared/util';
+} from 'plancrimson-utils';
 import {
   strToDec,
   decToStr,
   getEvents,
   doesRRuleHaveDay,
 } from './calendarUtil';
-import { downloadJson, useAppDispatch, useAppSelector } from '../../src/hooks';
-import { ClassCache, Settings } from '../../src/features';
+import { downloadJson, useAppDispatch, useAppSelector } from '@/src/hooks';
+import { ClassCache, Settings } from '@/src/features';
 import AddCoursesButton from '../CourseSearchModal';
 
 
@@ -58,12 +58,12 @@ export default function Calendar({ schedule }: CalendarProps) {
   );
 
   return (
-    <div className="border-gray-800 shadow-lg sm:rounded-lg sm:border-4">
+    <div className="border-black shadow-lg sm:rounded-lg sm:border-4">
       <HeaderSection events={events} schedule={schedule} />
 
       <div className="overflow-auto">
         <div className="min-w-[52rem]">
-          <div className="grid grid-cols-5 bg-gray-800 py-2 pl-6 text-white">
+          <div className="grid grid-cols-5 bg-black py-2 pl-6 text-white">
             {DAY_SHORT.slice(0, 5).map((day) => (
               <h3 key={day} className="text-center font-semibold">
                 {day}
@@ -73,7 +73,7 @@ export default function Calendar({ schedule }: CalendarProps) {
 
           <div className="relative h-[60rem] overflow-auto">
             {/* draw the hours on the left */}
-            <div className="absolute inset-y-0 z-10 w-6 bg-gray-300 text-center">
+            <div className="absolute inset-y-0 z-10 w-6 bg-gray-light text-center">
               {[...new Array(dayEndTime - dayStartTime)].map((_, i) => (
                 <span
                 // eslint-disable-next-line react/no-array-index-key
@@ -149,7 +149,7 @@ function HeaderSection({ events, schedule }: { events: EventAttributes[], schedu
   }
 
   return (
-    <div className="flex items-center justify-center space-x-4 bg-gray-800 p-4 text-center">
+    <div className="flex items-center justify-center space-x-4 bg-black p-4 text-center">
       <p className="text-xl font-bold text-white">
         {schedule.title}
       </p>
@@ -165,7 +165,7 @@ function HeaderSection({ events, schedule }: { events: EventAttributes[], schedu
       <button
         type="button"
         onClick={handleExport}
-        className="interactive rounded-xl bg-gray-300 px-4 py-2"
+        className="interactive rounded-xl bg-gray-light px-4 py-2"
       >
         Export to ICS
       </button>
@@ -178,7 +178,7 @@ function DayComponent({ events }: { events: EventAttributes[] }) {
   const overlapCounter: Record<string, number> = {};
 
   return (
-    <div className="relative h-full odd:bg-gray-300 even:bg-white">
+    <div className="relative h-full odd:bg-gray-light even:bg-white">
       {events.map((ev, i) => {
         const overlap = getOverlap(events, i);
         const key = overlap[0].uid!;
@@ -194,7 +194,7 @@ function DayComponent({ events }: { events: EventAttributes[] }) {
           <div
             // eslint-disable-next-line react/no-array-index-key
             key={ev.uid}
-            className="absolute z-10 rounded bg-gray-800/70 hover:z-20"
+            className="absolute z-10 rounded bg-black/70 hover:z-20"
             style={{
               top: `${toPercent(ev.start)}%`,
               // @ts-expect-error
@@ -308,7 +308,7 @@ function MissingClass({ cls }: { cls: ExtendedClass }) {
             </div>
             <button
               type="submit"
-              className="interactive mt-4 rounded-md bg-gray-300 px-4 py-2"
+              className="interactive mt-4 rounded-md bg-gray-light px-4 py-2"
             >
               Save
             </button>

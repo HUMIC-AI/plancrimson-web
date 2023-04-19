@@ -9,7 +9,7 @@ import {
   doc, getDoc, setDoc, setLogLevel,
 } from 'firebase/firestore';
 import { writeFileSync } from 'fs';
-import { signInUser } from '../src/hooks';
+import { signInUser } from '@/src/hooks';
 
 // https://firebase.google.com/docs/firestore/security/test-rules-emulator
 

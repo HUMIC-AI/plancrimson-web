@@ -3,10 +3,10 @@ import { Listbox } from '@headlessui/react';
 import Link from 'next/link';
 import React, { ReactNode, useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
-import { Season } from 'shared/types';
-import { classNames, titleContainsTerm } from '../shared/util';
-import { Auth, Schedules, Settings } from '../src/features';
-import { useAppDispatch, useAppSelector } from '../src/hooks';
+import { Season } from 'plancrimson-utils';
+import { classNames, titleContainsTerm } from 'plancrimson-utils';
+import { Auth, Schedules, Settings } from '@/src/features';
+import { useAppDispatch, useAppSelector } from '@/src/hooks';
 import FadeTransition from './FadeTransition';
 
 interface ButtonTitleProps {
@@ -59,8 +59,8 @@ function ButtonTitle({
           type="text"
           className={classNames(
             'text-sm md:text-base font-medium overflow-auto rounded-md hover:shadow text-center w-full',
-            'border-gray-400 hover:border-black transition-colors duration-300 border border-b-4 cursor-text',
-            highlight && 'bg-gray-800 text-white px-1',
+            'border-gray-light hover:border-black transition-colors duration-300 border border-b-4 cursor-text',
+            highlight && 'bg-black text-white px-1',
           )}
           value={newTitle}
           onChange={(e) => setNewTitle(e.currentTarget.value)}
@@ -81,7 +81,7 @@ function ButtonTitle({
       </form>
 
       {doShowTerm && (
-      <span className="text-xs text-gray-400">
+      <span className="text-xs text-gray-light">
         {`${schedule.season} ${schedule.year}`}
       </span>
       )}
@@ -91,7 +91,7 @@ function ButtonTitle({
 
 function StyledOption({ children, ...props }: Parameters<typeof Listbox.Option>[0]) {
   return (
-    <Listbox.Option {...props} className="px-3 py-1.5 odd:bg-gray-200 even:bg-white">
+    <Listbox.Option {...props} className="px-3 py-1.5 odd:bg-gray-light even:bg-white">
       <span className="cursor-pointer transition-opacity hover:opacity-50">
         {children as ReactNode}
       </span>

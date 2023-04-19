@@ -1,11 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { updateDoc } from 'firebase/firestore';
-import type {
-  CustomTimeRecord, Term, UserSettings,
-} from '../../shared/types';
-import Schema from '../../shared/schema';
+import type { Term } from 'plancrimson-utils';
 import type { AppDispatch, RootState } from '../store';
-import { getInitialSettings } from '../../shared/util';
+import { CustomTimeRecord, UserSettings } from '../types';
+import { getInitialSettings } from '../utils';
 
 type CustomTimePayload = CustomTimeRecord & {
   classId: string;

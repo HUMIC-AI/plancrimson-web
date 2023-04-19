@@ -6,18 +6,18 @@ import {
   FaChevronRight,
   FaPlus,
 } from 'react-icons/fa';
-import type { Season, Term } from '../../shared/types';
+import type { Season, Term } from 'plancrimson-utils';
 import {
   sortSchedules,
-} from '../../shared/util';
+} from 'plancrimson-utils';
 import {
   Auth,
   Planner, Profile, Schedules,
-} from '../../src/features';
+} from '@/src/features';
 import {
   handleError, useAppDispatch, useAppSelector,
-} from '../../src/hooks';
-import { Requirement } from '../../src/requirements/util';
+} from '@/src/hooks';
+import { Requirement } from '@/src/requirements/util';
 import type { DragStatus } from '../Course/CourseCard';
 import SemesterComponent, { SemesterDisplayProps } from './SemesterDisplay';
 
@@ -106,7 +106,7 @@ export function SemestersList({
         {semesterFormat === 'selected' && classYear && (
         <button
           type="button"
-          className="interactive h-full grow-0 bg-blue-300 px-4"
+          className="interactive h-full grow-0 bg-blue-light px-4"
           onClick={addPrevSemester}
           name="Add previous semester"
           title="Add previous semester"
@@ -148,7 +148,7 @@ export function SemestersList({
       <>
         {leftIntersecting || (
         <div
-          className="absolute inset-y-0 left-0 z-10 flex w-1/6 justify-center bg-gray-800/30 pt-4 text-4xl text-white"
+          className="absolute inset-y-0 left-0 z-10 flex w-1/6 justify-center bg-black/30 pt-4 text-4xl text-white"
           onDragOver={() => {
             semestersContainerRef.current.scrollBy(-2, 0);
           }}
@@ -159,7 +159,7 @@ export function SemestersList({
 
         {rightIntersecting || (
         <div
-          className="absolute inset-y-0 right-0 z-10 flex w-1/6 justify-center bg-gray-800/30 pt-4 text-4xl text-white"
+          className="absolute inset-y-0 right-0 z-10 flex w-1/6 justify-center bg-black/30 pt-4 text-4xl text-white"
           onDragOver={() => {
             semestersContainerRef.current.scrollBy(2, 0);
           }}

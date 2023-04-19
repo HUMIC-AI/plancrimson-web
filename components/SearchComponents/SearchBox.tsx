@@ -3,19 +3,19 @@ import { FaTimes, FaBars, FaAngleDoubleRight } from 'react-icons/fa';
 import { connectSearchBox } from 'react-instantsearch-dom';
 import React, { Fragment } from 'react';
 import type { SearchBoxProvided } from 'react-instantsearch-core';
-import MEILI_ATTRIBUTES from '../../shared/meiliAttributes.json';
+import MEILI_ATTRIBUTES from 'plancrimson-utils';
 import Attribute from './Attribute';
 import ScheduleChooser from '../ScheduleSelector';
 import {
   ATTRIBUTE_DESCRIPTIONS, breakpoints, classNames, sortSchedules,
-} from '../../shared/util';
+} from 'plancrimson-utils';
 import Stats, { StatsComponent } from './Stats';
 import StateResults, { StateResultsComponent } from './StateResults';
 import { alertSignIn } from './searchUtils';
-import useChosenScheduleContext from '../../src/context/selectedSchedule';
-import { useAppDispatch, useAppSelector, useBreakpoint } from '../../src/hooks';
-import { Auth, Planner, Schedules } from '../../src/features';
-import type { Class } from '../../shared/apiTypes';
+import useChosenScheduleContext from '@/src/context/selectedSchedule';
+import { useAppDispatch, useAppSelector, useBreakpoint } from '@/src/hooks';
+import { Auth, Planner, Schedules } from '@/src/features';
+import type { Class } from 'plancrimson-utils';
 
 
 type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean };
@@ -102,7 +102,7 @@ function SearchBar({
           maxLength={512}
           required
           className={classNames(
-            'flex-1 appearance-none border rounded w-full py-2 px-3 text-gray-700',
+            'flex-1 appearance-none border rounded w-full py-2 px-3 text-gray-dark',
             'focus:outline-none focus:shadow-lg shadow transition-shadow',
           )}
         />
@@ -124,7 +124,7 @@ function SearchBar({
       {/* end box containing search bar and attribute menu */}
 
       {/* caption text */}
-      <div className="flex flex-wrap space-x-2 text-xs text-gray-400">
+      <div className="flex flex-wrap space-x-2 text-xs text-gray-light">
         {uid ? (
           <>
             {isSearchStalled && <span>Loading...</span>}
@@ -152,9 +152,9 @@ function AttributeMenuDropdown() {
           <>
             <Disclosure.Button className="inset-y-0 right-0 flex items-center">
               {open ? (
-                <FaTimes className="h-5 w-5 text-gray-700" />
+                <FaTimes className="h-5 w-5 text-gray-dark" />
               ) : (
-                <FaBars className="h-5 w-5 text-gray-700" />
+                <FaBars className="h-5 w-5 text-gray-dark" />
               )}
             </Disclosure.Button>
             <Disclosure.Panel

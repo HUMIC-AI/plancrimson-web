@@ -7,11 +7,11 @@ import evaluationImg from '../public/evaluation.png';
 
 export default function LandingPage() {
   return (
-    <Layout className="flex w-full flex-col items-center bg-gradient-to-br from-gray-800 to-blue-900 px-8 py-24 text-white sm:px-24">
-      {/* <div className="absolute inset-0 bg-blue-900">Hi</div> */}
+    <Layout className="flex w-full flex-col items-center bg-gradient-to-br from-black to-primary px-8 py-24 text-white sm:px-24">
+      {/* <div className="absolute inset-0 bg-primary">Hi</div> */}
       <h1 className="text-center text-5xl font-black uppercase tracking-wider sm:text-6xl">Plan Crimson</h1>
       <p className="mt-8 text-center text-xl italic">Make the most of your Harvard education</p>
-      <Link href="/search" className="mt-8 inline-block rounded-md bg-white px-8 py-4 text-center text-2xl font-bold text-blue-900 shadow-md transition-all hover:opacity-50 hover:shadow-xl">
+      <Link href="/search" className="mt-8 inline-block rounded-md bg-white px-8 py-4 text-center text-2xl font-bold text-primary shadow-md transition-all hover:opacity-50 hover:shadow-xl">
         Get started now
       </Link>
 
@@ -45,7 +45,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <Link href="/search" className="mt-24 inline-block rounded-md bg-white px-8 py-4 text-2xl font-bold text-blue-900 shadow-md transition-all hover:opacity-50 hover:shadow-xl">
+      <Link href="/search" className="mt-24 inline-block rounded-md bg-white px-8 py-4 text-2xl font-bold text-primary shadow-md transition-all hover:opacity-50 hover:shadow-xl">
         Get started now
       </Link>
     </Layout>

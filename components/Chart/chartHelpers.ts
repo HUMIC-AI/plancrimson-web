@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
-import { ExtendedClass } from 'shared/apiTypes';
-import embeddings from 'shared/assets/embeddings.json';
-import { allTruthy } from 'shared/util';
+import { ExtendedClass } from 'plancrimson-utils';
+import embeddings from 'plancrimson-utils';
+import { allTruthy } from 'plancrimson-utils';
 
 
 export const metrics = {

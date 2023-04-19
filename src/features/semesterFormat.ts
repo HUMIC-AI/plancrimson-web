@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { Term } from '../../shared/types';
+import type { Term } from 'plancrimson-utils';
 import type { SampleSchedule } from '../requirements/util';
 import type { RootState } from '../store';
 

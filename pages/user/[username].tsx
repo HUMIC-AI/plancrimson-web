@@ -11,12 +11,12 @@ import Layout, { errorMessages } from '../../components/Layout/Layout';
 import { ErrorPage } from '../../components/Layout/ErrorPage';
 import { LoadingPage } from '../../components/Layout/LoadingPage';
 import { ImageWrapper } from '../../components/UserLink';
-import { FriendRequest, UserProfile, WithId } from '../../shared/types';
-import Schema from '../../shared/schema';
-import { Auth, Schedules } from '../../src/features';
+import { FriendRequest, UserProfile, WithId } from 'plancrimson-utils';
+import Schema from 'plancrimson-utils';
+import { Auth, Schedules } from '@/src/features';
 import {
   sendFriendRequest, unfriend, useAppSelector, useElapsed,
-} from '../../src/hooks';
+} from '@/src/hooks';
 
 type FriendStatus = 'loading' | 'self' | 'none' | 'friends' | 'pending';
 
@@ -94,7 +94,7 @@ export default function UserPage() {
                     setRefresh(!refresh);
                   }
                 }}
-                className="interactive mt-2 rounded bg-blue-900 px-2 py-1 text-white"
+                className="interactive mt-2 rounded bg-primary px-2 py-1 text-white"
               >
                 {statusMessage[friendStatus]}
               </button>
@@ -263,7 +263,7 @@ function EditBioForm({ uid }: { uid: string }) {
       />
       <button
         type="submit"
-        className="interactive mt-2 rounded bg-blue-900 px-2 py-1 text-white"
+        className="interactive mt-2 rounded bg-primary px-2 py-1 text-white"
         disabled={loading}
       >
         {loading ? 'Saving...' : 'Save'}

@@ -1,6 +1,6 @@
 import {
   FAILING_GRADES, getClassId, getNumCredits, PASSING_GRADES,
-} from '../../shared/util';
+} from 'plancrimson-utils';
 import { getSchoolYear, Requirement, RequirementGroup } from './util';
 
 const totalCredits: Requirement = {

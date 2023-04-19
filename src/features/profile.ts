@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { UserProfile } from '../../shared/types';
+import type { UserProfile } from 'plancrimson-utils';
 import type { RootState } from '../store';
 
 const initialState: UserProfile = {

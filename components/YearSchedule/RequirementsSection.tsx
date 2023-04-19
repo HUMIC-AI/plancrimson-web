@@ -17,18 +17,18 @@ import {
   Requirement,
   RequirementGroup,
   SampleSchedule,
-} from '../../src/requirements/util';
+} from '@/src/requirements/util';
 import ExternalLink from '../ExternalLink';
 import FadeTransition from '../FadeTransition';
 import RequirementGroupComponent from './RequirementsDisplay';
-import { classNames } from '../../shared/util';
-import { allRequirements } from '../../src/requirements';
-import { handleError, useAppDispatch, useAppSelector } from '../../src/hooks';
+import { classNames } from 'plancrimson-utils';
+import { allRequirements } from '@/src/requirements';
+import { handleError, useAppDispatch, useAppSelector } from '@/src/hooks';
 import {
   Auth, Planner, Schedules, Settings,
-} from '../../src/features';
-import { Schedule } from '../../shared/types';
-import { selectShowReqs } from '../../src/features/semesterFormat';
+} from '@/src/features';
+import { Schedule } from 'plancrimson-utils';
+import { selectShowReqs } from '@/src/features/semesterFormat';
 
 
 interface RequirementsSectionProps {
@@ -72,7 +72,7 @@ export default function RequirementsSection({
   return (
     <div className={classNames(
       showReqs && 'md:rounded-lg',
-      'relative mb-12 md:mb-0 border-gray-300 space-y-4 md:border-2 md:shadow-lg sm:overflow-auto sm:resize-x',
+      'relative mb-12 md:mb-0 border-gray-light space-y-4 md:border-2 md:shadow-lg sm:overflow-auto sm:resize-x',
       'md:max-w-xs lg:max-w-sm xl:max-w-md w-screen', // container effect
     )}
     >
@@ -104,12 +104,12 @@ export default function RequirementsSection({
           </div>
 
           <FadeTransition>
-            <Listbox.Options className="absolute z-20 w-full overflow-hidden rounded-b-lg border bg-gray-800 shadow">
+            <Listbox.Options className="absolute z-20 w-full overflow-hidden rounded-b-lg border bg-black shadow">
               {allRequirements.map(({ groupId }) => (
                 <Listbox.Option
                   key={groupId}
                   value={groupId}
-                  className="interactive cursor-pointer px-4 py-2 odd:bg-gray-300 even:bg-white"
+                  className="interactive cursor-pointer px-4 py-2 odd:bg-gray-light even:bg-white"
                 >
                   {groupId}
                 </Listbox.Option>
@@ -119,7 +119,7 @@ export default function RequirementsSection({
         </Listbox>
 
         <Disclosure>
-          <Disclosure.Button className="interactive mx-auto w-max px-4 py-2 text-sm leading-none text-gray-600 underline">
+          <Disclosure.Button className="interactive mx-auto w-max px-4 py-2 text-sm leading-none text-gray-dark underline">
             Suggest new programs and concentrations
           </Disclosure.Button>
           <FadeTransition>
@@ -131,7 +131,7 @@ export default function RequirementsSection({
 
         {selectedReqGroup.sampleSchedules && (
           <Disclosure>
-            <Disclosure.Button className="interactive pl-2 text-sm leading-none text-gray-600 underline">
+            <Disclosure.Button className="interactive pl-2 text-sm leading-none text-gray-dark underline">
               Sample schedules
             </Disclosure.Button>
             <FadeTransition>
@@ -149,7 +149,7 @@ export default function RequirementsSection({
         )}
 
         <FadeTransition show={notification}>
-          <div className="relative mx-4 rounded-lg bg-blue-300 px-6 py-2 text-left text-sm italic md:mx-0 lg:py-4">
+          <div className="relative mx-4 rounded-lg bg-blue-light px-6 py-2 text-left text-sm italic md:mx-0 lg:py-4">
             <div className="flex flex-col space-y-2">
               <span>
                 Remember that this is an unofficial tool
@@ -293,7 +293,7 @@ function SuggestionForm() {
           id="program"
           placeholder="Program"
           className={classNames(
-            'flex-1 appearance-none border rounded w-full py-1 px-2 text-gray-700',
+            'flex-1 appearance-none border rounded w-full py-1 px-2 text-gray-dark',
             'focus:outline-none focus:shadow-lg shadow transition-shadow max-w-[16rem]',
           )}
         />
@@ -308,7 +308,7 @@ function SuggestionForm() {
         </button>
       </form>
       <FadeTransition show={show}>
-        <p className="mt-1 pl-2 text-center text-xs text-gray-600">
+        <p className="mt-1 pl-2 text-center text-xs text-gray-dark">
           {suggestion}
         </p>
       </FadeTransition>

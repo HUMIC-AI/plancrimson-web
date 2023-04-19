@@ -2,7 +2,7 @@ import CourseCard from 'components/Course/CourseCard';
 import { ImageWrapper } from 'components/UserLink';
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { Schedule } from 'shared/types';
+import { Schedule } from 'plancrimson-utils';
 import { ClassCache, Planner } from 'src/features';
 import { useAppSelector, useProfiles } from 'src/hooks';
 

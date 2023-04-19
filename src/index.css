@@ -4,7 +4,7 @@
 
 @layer utilities {
   .dark-gradient {
-    @apply from-gray-800 to-blue-900 bg-gradient-to-br;
+    @apply from-black to-primary bg-gradient-to-br;
   }
 }
 

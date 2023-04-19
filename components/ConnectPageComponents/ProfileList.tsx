@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ImageWrapper } from 'components/UserLink';
-import { UserProfile, WithId } from 'shared/types';
+import { UserProfile, WithId } from 'plancrimson-utils';
 
 export default function ProfileList({ profiles, Button }: { profiles: Array<WithId<UserProfile>>; Button: React.FC<{ profile: WithId<UserProfile>; }>; }) {
   return (

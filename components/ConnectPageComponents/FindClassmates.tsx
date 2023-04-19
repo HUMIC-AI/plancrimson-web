@@ -30,7 +30,7 @@ export default function FindClassmates() {
         const profile = profiles[profileId];
         return (
           <li key={profileId}>
-            <Link href={profile ? `/user/${profile.username}` : '#'} className="interactive m-2 block rounded-xl bg-gray-300 px-4 py-2 shadow">
+            <Link href={profile ? `/user/${profile.username}` : '#'} className="interactive m-2 block rounded-xl bg-gray-light px-4 py-2 shadow">
               <div className="flex items-center space-x-4">
                 <ImageWrapper url={profile?.photoUrl} alt="User profile" />
                 <div>

@@ -1,8 +1,8 @@
 import { Disclosure } from '@headlessui/react';
 import React, { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
-import { classNames, compareItems, compareWeekdays } from '../../shared/util';
-import { Auth } from '../../src/features';
+import { classNames, compareItems, compareWeekdays } from 'plancrimson-utils';
+import { Auth } from '@/src/features';
 import RefinementList, { RefinementListDemo } from './RefinementList';
 
 interface AttributeProps {
@@ -36,7 +36,7 @@ const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = functio
               ev.stopPropagation();
               setOperator(operator === 'and' ? 'or' : 'and');
             }}
-            className="w-8 rounded bg-gray-800 text-white hover:font-semibold"
+            className="w-8 rounded bg-black text-white hover:font-semibold"
           >
             {operator}
           </button>
@@ -44,7 +44,7 @@ const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = functio
         </span>
       </Disclosure.Button>
       <Disclosure.Panel unmount={false}>
-        <div className="origin-top-right rounded-b bg-gray-300 p-2">
+        <div className="origin-top-right rounded-b bg-gray-light p-2">
           {user ? (
             <RefinementList
               attribute={attribute}

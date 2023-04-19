@@ -13,14 +13,13 @@ import {
   FaHourglassEnd,
   FaExchangeAlt,
 } from 'react-icons/fa';
-import { ExtendedClass } from '../../../shared/apiTypes';
+import { ExtendedClass } from 'plancrimson-utils';
 import {
   Instructors,
   DaysOfWeek,
   ClassTime,
   Location,
 } from '../CourseComponents';
-import departments from '../../../shared/assets/departments.json';
 import Tooltip from '../../Tooltip';
 
 /**

@@ -4,14 +4,14 @@ import {
   FaTimes, FaPlus, FaExclamationTriangle,
 } from 'react-icons/fa';
 import { useModal } from 'src/context/modal';
-import { ExtendedClass } from '../../shared/apiTypes';
+import { ExtendedClass } from 'plancrimson-utils';
 import {
   getClassId,
   classNames,
   getSemester,
   checkViable,
-} from '../../shared/util';
-import { handleError, useAppDispatch, useAppSelector } from '../../src/hooks';
+} from 'plancrimson-utils';
+import { handleError, useAppDispatch, useAppSelector } from '@/src/hooks';
 import Tooltip from '../Tooltip';
 import {
   ClassTime,
@@ -20,10 +20,10 @@ import {
   Instructors,
   Location,
 } from './CourseComponents';
-import departmentImages from '../../shared/assets/departmentImages.json';
+import departmentImages from 'plancrimson-utils';
 import {
   ClassCache, Planner, Profile, Schedules,
-} from '../../src/features';
+} from '@/src/features';
 import { ClassSizeRating, HoursRating, StarRating } from './RatingIndicators';
 
 type Department = keyof typeof departmentImages;
@@ -188,9 +188,9 @@ export default function CourseCard({
     <div className="overflow-hidden rounded-xl shadow-xl">
       <div
         className={classNames(
-          'relative from-gray-800 text-left h-full',
+          'relative from-black text-left h-full',
           isExpanded || 'bg-gradient-to-br',
-          isExpanded || (highlight ? 'to-blue-500' : 'to-blue-900'),
+          isExpanded || (highlight ? 'to-accent' : 'to-primary'),
         )}
         draggable={draggable}
         onDragStart={draggable ? handleDragStart : undefined}
@@ -198,8 +198,8 @@ export default function CourseCard({
         {/* header component */}
         <div
           className={classNames(
-            'p-2 text-white from-black via-gray-800 bg-gradient-to-br',
-            isExpanded && (highlight ? 'to-blue-500' : 'to-blue-900'),
+            'p-2 text-white from-black via-black bg-gradient-to-br',
+            isExpanded && (highlight ? 'to-accent' : 'to-primary'),
             draggable && 'cursor-move',
             isExpanded && 'relative',
           )}
@@ -217,7 +217,7 @@ export default function CourseCard({
           {/* relative so it appears above the image */}
           <div className="relative space-y-1">
             <p className="flex items-center justify-between">
-              <button type="button" className="interactive border-b text-left font-bold text-blue-300" onClick={() => showCourse(course)}>
+              <button type="button" className="interactive border-b text-left font-bold text-blue-light" onClick={() => showCourse(course)}>
                 <HighlightComponent
                   attribute="SUBJECT"
                   course={course}
@@ -249,7 +249,7 @@ export default function CourseCard({
               />
             </h3>
             {hideTerm || (
-            <p className="text-sm text-gray-300">
+            <p className="text-sm text-gray-light">
               {semester.season}
               {' '}
               {semester.year}

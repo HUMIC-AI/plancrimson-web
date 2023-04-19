@@ -1,8 +1,8 @@
 import React from 'react';
-import { Term } from '../../shared/types';
-import { termToSemester } from '../../shared/util';
-import { Planner, Schedules } from '../../src/features';
-import { useAppDispatch, useAppSelector } from '../../src/hooks';
+import { Term } from 'plancrimson-utils';
+import { termToSemester } from 'plancrimson-utils';
+import { Planner, Schedules } from '@/src/features';
+import { useAppDispatch, useAppSelector } from '@/src/hooks';
 
 
 export default function HiddenSchedules() {

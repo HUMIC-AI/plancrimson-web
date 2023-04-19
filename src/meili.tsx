@@ -3,7 +3,7 @@ import { getDoc } from 'firebase/firestore';
 import {
   useState, useEffect, PropsWithChildren, createContext, useContext, useMemo,
 } from 'react';
-import Schema from '../shared/schema';
+import Schema from 'plancrimson-utils';
 import { Auth } from './features';
 
 export type { InstantMeiliSearchInstance };

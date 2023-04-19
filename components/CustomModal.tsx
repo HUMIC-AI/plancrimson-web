@@ -1,7 +1,7 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { FaTimes } from 'react-icons/fa';
-import { useModal } from '../src/context/modal';
+import { useModal } from '@/src/context/modal';
 
 /**
  * Based on https://headlessui.dev/react/dialog
@@ -47,7 +47,7 @@ export default function CustomModal() {
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <div className="my-8 inline-block w-full max-w-lg overflow-hidden rounded-2xl bg-gray-800 text-left align-middle shadow-xl transition-all">
+            <div className="my-8 inline-block w-full max-w-lg overflow-hidden rounded-2xl bg-black text-left align-middle shadow-xl transition-all">
               <div className="border-none p-6 text-white">
                 <Dialog.Title as="h3" className="text-xl font-bold">
                   {data?.title}
@@ -63,7 +63,7 @@ export default function CustomModal() {
                 type="button"
                 name="Close dialog"
                 onClick={() => setOpen(false)}
-                className="interactive absolute right-5 top-5 rounded-full bg-white p-2 text-gray-800"
+                className="interactive absolute right-5 top-5 rounded-full bg-white p-2 text-black"
               >
                 <FaTimes />
               </button>

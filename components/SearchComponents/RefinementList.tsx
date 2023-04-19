@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import type { RefinementListProvided } from 'react-instantsearch-core';
 import { connectRefinementList } from 'react-instantsearch-dom';
-import { classNames, getSubjectColor, termToSeasonMap } from '../../shared/util';
+import { classNames, getSubjectColor, termToSeasonMap } from 'plancrimson-utils';
 import { alertSignIn } from './searchUtils';
-import subjects from '../../shared/assets/subjects.json';
+import subjects from 'plancrimson-utils';
 
 type Props = Pick<RefinementListProvided, 'items' | 'refine'> & { showSubjectColor: boolean };
 
@@ -25,12 +25,12 @@ export function RefinementListComponent({ items, refine, showSubjectColor }: Pro
         value={miniSearch}
         onChange={({ currentTarget }) => setMiniSearch(currentTarget.value)}
         placeholder="Filter"
-        className="block w-full rounded-md border-gray-300 py-1 pl-2 shadow-sm sm:text-sm"
+        className="block w-full rounded-md border-gray-light py-1 pl-2 shadow-sm sm:text-sm"
       />
       <button
         type="button"
         onClick={() => refine([])}
-        className="mb-2 ml-1 text-xs leading-none text-gray-600 underline transition-colors hover:opacity-50"
+        className="mb-2 ml-1 text-xs leading-none text-gray-dark underline transition-colors hover:opacity-50"
       >
         Clear all
       </button>

@@ -1,6 +1,6 @@
 import { getDocs } from 'firebase/firestore';
 import { useState, useEffect } from 'react';
-import Schema from 'shared/schema';
+import Schema from '@/src/schema';
 
 export default function Alerts() {
   const alerts = useAlerts();

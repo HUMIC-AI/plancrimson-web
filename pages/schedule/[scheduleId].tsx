@@ -5,11 +5,11 @@ import Layout, { errorMessages } from '../../components/Layout/Layout';
 import { ErrorPage } from '../../components/Layout/ErrorPage';
 import { LoadingPage } from '../../components/Layout/LoadingPage';
 import Calendar from '../../components/SemesterSchedule/Calendar';
-import { Schedule } from '../../shared/types';
-import Schema from '../../shared/schema';
-import { ClassCache, Auth } from '../../src/features';
-import { useAppDispatch, useElapsed } from '../../src/hooks';
-import { useMeiliClient } from '../../src/meili';
+import { Schedule } from 'plancrimson-utils';
+import Schema from 'plancrimson-utils';
+import { ClassCache, Auth } from '@/src/features';
+import { useAppDispatch, useElapsed } from '@/src/hooks';
+import { useMeiliClient } from '@/src/meili';
 
 
 export default function SchedulePage() {

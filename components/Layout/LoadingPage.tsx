@@ -10,7 +10,7 @@ export function LoadingPage() {
           <li
             // eslint-disable-next-line react/no-array-index-key
             key={i}
-            className="animate-pulse rounded bg-blue-300"
+            className="animate-pulse rounded bg-blue-light"
             style={{ animationDelay: `${i * 250}ms` }}
           >
             &nbsp;

@@ -1,8 +1,8 @@
 import { Disclosure } from '@headlessui/react';
 import React, { useMemo } from 'react';
 import { FaChevronDown, FaExternalLinkAlt } from 'react-icons/fa';
-import { Evaluation, EvaluationStatistics } from '../../../shared/apiTypes';
-import { classNames } from '../../../shared/util';
+import { Evaluation, EvaluationStatistics } from 'plancrimson-utils';
+import { classNames } from 'plancrimson-utils';
 import ExternalLink from '../../ExternalLink';
 import FadeTransition from '../../FadeTransition';
 import Tooltip from '../../Tooltip';
@@ -29,7 +29,7 @@ function GridHeading({ title, data } : GridProps) {
     <>
       <div className="text-center">
         <p>{title}</p>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-dark">
           {data.courseMean?.toFixed(2) || 'NA'}
           {' '}
           /
@@ -60,12 +60,12 @@ function DisclosureComponent({
   children,
 }: React.PropsWithChildren<DisclosureComponentProps>) {
   return (
-    <Disclosure as="div" className="rounded-lg border-2 border-gray-600">
+    <Disclosure as="div" className="rounded-lg border-2 border-gray-dark">
       {({ open }) => (
         <>
           <Disclosure.Button
             name={heading}
-            className="flex w-full items-center space-x-2 bg-gray-600 px-4 py-1 text-left text-white"
+            className="flex w-full items-center space-x-2 bg-gray-dark px-4 py-1 text-left text-white"
           >
             <h4 className="flex-1 text-base font-bold">{heading}</h4>
             {visibleStats && (
@@ -194,7 +194,7 @@ export default function EvaluationComponent({ report }: { report: Evaluation | E
     <Disclosure
       defaultOpen
       as="div"
-      className="rounded-lg border-2 border-gray-800"
+      className="rounded-lg border-2 border-black"
     >
       {({ open }) => (
         <>
@@ -202,7 +202,7 @@ export default function EvaluationComponent({ report }: { report: Evaluation | E
             name={buttonTitle}
             className={classNames(
               'w-full flex justify-between space-x-2 items-center',
-              'bg-gray-800 text-white py-2 px-4',
+              'bg-black text-white py-2 px-4',
               'hover:bg-opacity-70 transition-colors',
             )}
           >
@@ -286,7 +286,7 @@ export default function EvaluationComponent({ report }: { report: Evaluation | E
                   <DisclosureComponent heading="Comments">
                     <ul className="-m-2 max-h-72 overflow-auto">
                       {courseEvaluation.comments.map((comment) => (
-                        <li key={comment} className="p-2 even:bg-gray-300">
+                        <li key={comment} className="p-2 even:bg-gray-light">
                           {comment}
                         </li>
                       ))}

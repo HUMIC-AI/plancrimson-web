@@ -1,8 +1,10 @@
 import React from 'react';
-import { Class } from '../../shared/apiTypes';
+import { Class } from 'plancrimson-utils';
 import type {
-  Schedule, Semester, UserProfile,
-} from '../../shared/types';
+  Semester,
+} from 'plancrimson-utils';
+import { UserProfile } from 'firebase/auth';
+import { Schedule } from '../types';
 
 /**
  * Only works for users on a typical four-year schedule.

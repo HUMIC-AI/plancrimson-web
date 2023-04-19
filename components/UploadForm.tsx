@@ -1,8 +1,8 @@
 import { Dialog } from '@headlessui/react';
-import type { DownloadPlan } from '../shared/types';
-import { allTruthy, SEASON_ORDER } from '../shared/util';
-import { Schedules } from '../src/features';
-import { useAppDispatch } from '../src/hooks';
+import type { DownloadPlan } from 'plancrimson-utils';
+import { allTruthy, SEASON_ORDER } from 'plancrimson-utils';
+import { Schedules } from '@/src/features';
+import { useAppDispatch } from '@/src/hooks';
 
 export default function UploadForm() {
   const dispatch = useAppDispatch();
@@ -62,7 +62,7 @@ export default function UploadForm() {
       />
       <button
         type="submit"
-        className="interactive rounded-md bg-gray-400 px-4 py-2"
+        className="interactive rounded-md bg-gray-light px-4 py-2"
       >
         Submit
       </button>

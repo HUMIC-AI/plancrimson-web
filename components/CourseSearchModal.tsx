@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import { Configure, InstantSearch, ToggleRefinement } from 'react-instantsearch-dom';
-import type { Schedule } from '../shared/types';
-import { classNames, termToSeasonMap } from '../shared/util';
-import { useModal } from '../src/context/modal';
-import useSearchState, { SearchStateProvider } from '../src/context/searchState';
-import { ChosenScheduleContext } from '../src/context/selectedSchedule';
-import { Auth } from '../src/features';
-import { InstantMeiliSearchInstance, useMeiliClient } from '../src/meili';
+import type { Schedule } from 'plancrimson-utils';
+import { classNames, termToSeasonMap } from 'plancrimson-utils';
+import { useModal } from '@/src/context/modal';
+import useSearchState, { SearchStateProvider } from '@/src/context/searchState';
+import { ChosenScheduleContext } from '@/src/context/selectedSchedule';
+import { Auth } from '@/src/features';
+import { InstantMeiliSearchInstance, useMeiliClient } from '@/src/meili';
 import { errorMessages } from './Layout/Layout';
 import Hits, { HitsDemo } from './SearchComponents/Hits';
 import SearchBox, { SearchBoxDemo } from './SearchComponents/SearchBox';
@@ -20,7 +20,7 @@ export default function AddCoursesButton({ schedule, className = '', children = 
     <button
       type="button"
       title="Add courses"
-      className={classNames('flex items-center justify-center rounded-xl bg-blue-300 interactive py-2 px-4 outline-none', className)}
+      className={classNames('flex items-center justify-center rounded-xl bg-blue-light interactive py-2 px-4 outline-none', className)}
       onClick={() => {
         const terms = Object.keys(termToSeasonMap);
         const term = terms.find((t) => termToSeasonMap[t].season === schedule.season && termToSeasonMap[t].year === schedule.year);
@@ -57,7 +57,7 @@ function SearchModal({ client, term }: ModalProps) {
       <Configure hitsPerPage={4} />
       {term && <div className="hidden"><ToggleRefinement attribute="STRM" label="Term" value={term} defaultRefinement /></div>}
       <div className="flex space-x-4">
-        <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-300 bg-white p-6 shadow-lg">
+        <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-light bg-white p-6 shadow-lg">
           <SearchBox scheduleChooser={false} />
           <Hits />
         </div>
@@ -80,7 +80,7 @@ function ModalWrapper({ selected, term }: { selected: string, term: string | und
   if (userId === null) {
     return (
       <div className="flex space-x-4">
-        <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-300 bg-white p-6 shadow-lg">
+        <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-light bg-white p-6 shadow-lg">
           <SearchBoxDemo />
           <HitsDemo />
         </div>

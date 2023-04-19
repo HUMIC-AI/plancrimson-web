@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { FaUser } from 'react-icons/fa';
-import { classNames } from '../shared/util';
+import { classNames } from '@/src/utils';
 
 
 export function UserLink({ uid }: { uid: string }) {
@@ -28,7 +28,7 @@ export function ImageWrapper({ url, alt, size = 'sm' }: { url: string | null | u
   return (
     <FaUser className={classNames(
       size === 'sm' ? 'h-8 w-8 p-1' : 'h-16 w-16 p-2',
-      'text-white bg-blue-900 rounded-full',
+      'text-white bg-primary rounded-full',
     )}
     />
   );

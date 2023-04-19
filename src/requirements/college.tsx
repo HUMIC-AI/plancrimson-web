@@ -1,7 +1,7 @@
 import ExternalLink from '../../components/ExternalLink';
-import { Class } from '../../shared/apiTypes';
-import type { Grade } from '../../shared/types';
-import { FAILING_GRADES, getClassId } from '../../shared/util';
+import { Class } from 'plancrimson-utils';
+import type { Grade } from 'plancrimson-utils';
+import { FAILING_GRADES, getClassId } from 'plancrimson-utils';
 import { Requirement, RequirementGroup } from './util';
 
 const genedRequirement = (

@@ -6,10 +6,10 @@ import {
   FaCog,
 } from 'react-icons/fa';
 import { useModal } from 'src/context/modal';
-import { DownloadPlan } from '../../shared/types';
-import { allTruthy } from '../../shared/util';
-import { Planner, Schedules, Settings } from '../../src/features';
-import { downloadJson, useAppDispatch, useAppSelector } from '../../src/hooks';
+import { DownloadPlan } from 'plancrimson-utils';
+import { allTruthy } from 'plancrimson-utils';
+import { Planner, Schedules, Settings } from '@/src/features';
+import { downloadJson, useAppDispatch, useAppSelector } from '@/src/hooks';
 import UploadForm from '../UploadForm';
 import CardExpandToggler from './CardExpandToggler';
 import { WithResizeRef } from './PlanningSection';
@@ -53,7 +53,7 @@ export default function HeaderSection({ resizeRef, columns }: WithResizeRef & { 
                   dispatch(Planner.showAll());
                 }
               }}
-              className="interactive rounded bg-gray-600 px-2 py-1"
+              className="interactive rounded bg-gray-dark px-2 py-1"
             >
               {semesterFormat === 'all'
                 ? 'All schedules'
@@ -63,7 +63,7 @@ export default function HeaderSection({ resizeRef, columns }: WithResizeRef & { 
 
           <div
             ref={resizeRef}
-            className="flex w-24 min-w-[96px] max-w-full resize-x justify-center overflow-auto rounded bg-gray-600 py-1"
+            className="flex w-24 min-w-[96px] max-w-full resize-x justify-center overflow-auto rounded bg-gray-dark py-1"
           >
             <FaArrowsAltH />
           </div>
@@ -105,7 +105,7 @@ function OptionsMenu({ columns }: { columns: SemesterDisplayProps[] }) {
         <FaCog className="transition-opacity hover:opacity-50" />
       </Menu.Button>
       <Menu.Items className="absolute right-0 top-full z-10 mt-2 space-y-1  rounded bg-white p-2 text-sm text-black shadow-xl">
-        <span className="whitespace-nowrap text-gray-600">
+        <span className="whitespace-nowrap text-gray-dark">
           Total courses:
           {' '}
           {totalCourses}

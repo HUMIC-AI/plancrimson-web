@@ -198,7 +198,7 @@ export default function ChartComponent({
 
   const buttonClass = (disabled: boolean) => classNames(
     'text-white px-2 py-1 text-sm rounded-md shadow',
-    disabled ? 'bg-gray-300' : 'bg-blue-900 interactive',
+    disabled ? 'bg-gray-light' : 'bg-primary interactive',
   );
 
   return (
@@ -223,19 +223,19 @@ export default function ChartComponent({
         )}
         <Listbox as="div" className="relative inline-block" value={radiusMetric} onChange={setRadiusMetric}>
           <div>
-            <Listbox.Button className="interactive flex items-center justify-center rounded-md bg-blue-900 px-2 py-1 text-sm text-white shadow">
+            <Listbox.Button className="interactive flex items-center justify-center rounded-md bg-primary px-2 py-1 text-sm text-white shadow">
               {metrics[radiusMetric]}
               <FaChevronDown className="ml-2 text-xs" />
             </Listbox.Button>
           </div>
           <FadeTransition>
-            <Listbox.Options as="div" className="absolute top-full mt-2 list-none overflow-hidden rounded border-2 border-gray-400 shadow-xl">
+            <Listbox.Options as="div" className="absolute top-full mt-2 list-none overflow-hidden rounded border-2 border-gray-light shadow-xl">
               {metricNames.map((metric) => (
                 <Listbox.Option key={metric} value={metric}>
                   {({ selected }) => (
                     <button
                       type="button"
-                      className={classNames(selected ? 'bg-gray-300' : 'bg-white hover:bg-gray-200 transition-colors', 'px-2 py-1 w-full')}
+                      className={classNames(selected ? 'bg-gray-light' : 'bg-white hover:bg-gray-light transition-colors', 'px-2 py-1 w-full')}
                     >
                       {metrics[metric]}
                     </button>

@@ -1,8 +1,8 @@
-import type { ExtendedClass } from '../../shared/apiTypes';
+import type { ExtendedClass } from 'plancrimson-utils';
 import type {
   Schedule, UserProfile,
-} from '../../shared/types';
-import { allTruthy, getClassId } from '../../shared/util';
+} from 'plancrimson-utils';
+import { allTruthy, getClassId } from 'plancrimson-utils';
 import type { ClassCache } from '../features/classCache';
 import collegeRequirements from './college';
 import basicRequirements from './cs/basic';

@@ -7,16 +7,16 @@ import {
   FaExclamationCircle,
   FaSmile,
 } from 'react-icons/fa';
-import { ExtendedClass } from '../../../shared/apiTypes';
-import { Schedule } from '../../../shared/types';
+import { ExtendedClass } from 'plancrimson-utils';
+import { Schedule } from 'plancrimson-utils';
 import {
   sortSchedules,
   getClassId,
   classNames,
   checkViable,
-} from '../../../shared/util';
-import { ClassCache, Profile, Schedules } from '../../../src/features';
-import { useAppSelector, useAppDispatch } from '../../../src/hooks';
+} from 'plancrimson-utils';
+import { ClassCache, Profile, Schedules } from '@/src/features';
+import { useAppSelector, useAppDispatch } from '@/src/hooks';
 import Tooltip from '../../Tooltip';
 
 /**
@@ -100,7 +100,7 @@ function ScheduleRow({ schedule, course }: { schedule: Schedule; course: Extende
       <span className="max-w-[12rem] overflow-hidden text-ellipsis font-semibold sm:max-w-[24rem]">
         {schedule.title}
       </span>
-      <span className="text-gray-600">{`${schedule.season} ${schedule.year}`}</span>
+      <span className="text-gray-dark">{`${schedule.season} ${schedule.year}`}</span>
       <div className="relative flex flex-row-reverse">
         {/* Code from https://headlessui.dev/react/switch */}
         <Switch

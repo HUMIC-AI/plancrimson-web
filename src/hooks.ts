@@ -10,10 +10,10 @@ import {
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import type {
   FriendRequest, UserProfile, WithId,
-} from '../shared/types';
-import Schema from '../shared/schema';
+} from 'plancrimson-utils';
+import Schema from 'plancrimson-utils';
 import type { AppDispatch, RootState } from './store';
-import { allTruthy, getInitialSettings } from '../shared/util';
+import { allTruthy, getInitialSettings } from 'plancrimson-utils';
 
 
 export function downloadJson(filename: string, data: object | string, extension = 'json') {

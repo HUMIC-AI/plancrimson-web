@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React from 'react';
-import { unsplashParams } from '../../shared/util';
+import { unsplashParams } from 'plancrimson-utils';
 import ExternalLink from '../ExternalLink';
 
 
@@ -9,7 +9,7 @@ export function Footer() {
   const { query } = useRouter();
 
   return (
-    <footer className="bg-gray-800">
+    <footer className="bg-black">
       <div className="container mx-auto flex flex-col space-y-1 p-4 text-center text-sm text-white">
         <span>Course data last updated 2023-01-03</span>
         <span>

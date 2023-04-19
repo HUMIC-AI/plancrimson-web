@@ -3,8 +3,8 @@ import {
   collection, getFirestore, onSnapshot, query, where,
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import type { ExtendedClass } from '../../../shared/apiTypes';
-import { Schedule } from '../../../shared/types';
+import type { ExtendedClass } from 'plancrimson-utils';
+import { Schedule } from 'plancrimson-utils';
 
 export default function SocialPanel({ course }: { course: ExtendedClass }) {
   const [publicSchedules, setPublicSchedules] = useState<Schedule[]>([]);

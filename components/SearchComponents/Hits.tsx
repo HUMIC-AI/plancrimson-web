@@ -3,13 +3,13 @@ import React from 'react';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import CardExpandToggler from 'components/YearSchedule/CardExpandToggler';
-import { ExtendedClass } from '../../shared/apiTypes';
-import { classNames, DAY_SHORT, getClassId } from '../../shared/util';
+import { ExtendedClass } from 'plancrimson-utils';
+import { classNames, DAY_SHORT, getClassId } from 'plancrimson-utils';
 import CourseCard from '../Course/CourseCard';
-import sampleCourses from '../../shared/assets/sampleCourses.json';
+import sampleCourses from 'plancrimson-utils';
 import { alertSignIn } from './searchUtils';
-import useChosenScheduleContext from '../../src/context/selectedSchedule';
-import useSearchState from '../../src/context/searchState';
+import useChosenScheduleContext from '@/src/context/selectedSchedule';
+import useSearchState from '@/src/context/searchState';
 
 interface ButtonProps {
   onClick: () => void;
@@ -30,8 +30,8 @@ function CustomButton({
         disabled={!enabled}
         className={classNames(
           enabled
-            ? 'bg-gray-800 hover:opacity-50'
-            : 'bg-gray-300 cursor-not-allowed',
+            ? 'bg-black hover:opacity-50'
+            : 'bg-gray-light cursor-not-allowed',
           'p-2 shadow w-24 sm:w-48 rounded text-white transition-opacity',
           'flex justify-center',
         )}
@@ -66,7 +66,7 @@ export function HitsComponent({
       />
 
       {hits.length === 0 ? (
-        // <div className="animate-pulse py-2 px-4 rounded-full bg-gray-300">
+        // <div className="animate-pulse py-2 px-4 rounded-full bg-gray-light">
         //   Loading results...
         // </div>
         <span>No results found</span>

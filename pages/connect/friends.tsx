@@ -1,12 +1,12 @@
 import { getDoc, deleteDoc } from 'firebase/firestore';
-import Schema from 'shared/schema';
+import Schema from 'plancrimson-utils';
 import {
   useElapsed, useFriends,
 } from 'src/hooks';
 import { Auth } from 'src/features';
 import ProfileList from 'components/ConnectPageComponents/ProfileList';
 import ConnectLayout from 'components/ConnectPageComponents/ConnectLayout';
-import { UserProfile, WithId } from 'shared/types';
+import { UserProfile, WithId } from 'plancrimson-utils';
 import FindClassmates from 'components/ConnectPageComponents/FindClassmates';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
@@ -35,13 +35,13 @@ export default function FriendsPage() {
           type="text"
           value={username}
           onChange={(e) => setUsername(e.currentTarget.value)}
-          className="rounded border border-gray-300 px-2 py-1"
+          className="rounded border border-gray-light px-2 py-1"
         />
         @college.harvard.edu
 
         <button
           type="submit"
-          className="ml-2 rounded bg-blue-900 px-2 py-1 text-white"
+          className="ml-2 rounded bg-primary px-2 py-1 text-white"
         >
           Search
         </button>
@@ -99,7 +99,7 @@ function UnfriendButton({ profile }: { profile: WithId<UserProfile> }) {
     <button
       type="button"
       onClick={handleClick}
-      className="interactive rounded bg-blue-900 px-2 py-1 text-white"
+      className="interactive rounded bg-primary px-2 py-1 text-white"
     >
       Unfriend
     </button>
