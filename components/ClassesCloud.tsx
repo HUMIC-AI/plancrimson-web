@@ -5,15 +5,19 @@ import { createRef, useEffect } from 'react';
 import Layout from '@/components/Layout/Layout';
 import { signInUser, handleError } from '@/src/hooks';
 
+const PARTICLE_SIZE = 0.5;
+
 /**
  * @param autoRotate Whether to automatically rotate the camera. Only works if `withControls` is true.
  */
 export function ClassesCloud({
   withControls = false,
   autoRotate = true,
+  interactive = false,
 }: {
   withControls?: boolean;
   autoRotate?: boolean;
+  interactive?: boolean;
 }) {
   const canvas = createRef<HTMLCanvasElement>();
 
@@ -23,20 +27,13 @@ export function ClassesCloud({
     const points = createPoints();
     scene.add(points);
 
-    const controls = withControls ? createControls({
-      camera,
-      renderer,
-      autoRotate,
-    }) : null;
+    const controls = withControls ? createControls(camera, renderer, autoRotate) : null;
+    const raycaster = interactive ? new THREE.Raycaster() : null;
+    let currentIntersect: number | null = null;
+    const mouseTracker = withControls ? null : createMouseTracker(camera, 20, raycaster);
+    const pointSize = points.geometry.attributes.size;
 
-    const mouseTracker = withControls ? null : createMouseTracker(camera);
-
-    const onResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-    window.addEventListener('resize', onResize);
+    const disposeResizeListener = syncWindow(camera, renderer);
 
     function animate() {
       requestAnimationFrame(animate);
@@ -45,6 +42,23 @@ export function ClassesCloud({
 
       if (controls) controls.update();
       if (mouseTracker) mouseTracker.update();
+      if (raycaster) {
+        const intersects = raycaster.intersectObjects(points as any);
+        if (intersects.length > 0) {
+          if (currentIntersect !== intersects[0].index) {
+            if (currentIntersect !== null) {
+              updateElement(pointSize, currentIntersect, PARTICLE_SIZE);
+              currentIntersect = intersects[0].index!;
+              updateElement(pointSize, currentIntersect, PARTICLE_SIZE * 2);
+              pointSize.needsUpdate = true;
+            }
+          }
+        } else if (currentIntersect !== null) {
+          updateElement(pointSize, currentIntersect, PARTICLE_SIZE);
+          pointSize.needsUpdate = true;
+          currentIntersect = null;
+        }
+      }
 
       renderer.render(scene, camera);
     }
@@ -54,7 +68,7 @@ export function ClassesCloud({
       if (controls) controls.dispose();
       if (mouseTracker) mouseTracker.dispose();
       renderer.dispose();
-      window.removeEventListener('resize', onResize);
+      disposeResizeListener();
     };
   }, []);
 
@@ -72,6 +86,13 @@ export function ClassesCloud({
       </button>
     </Layout>
   );
+}
+
+/**
+ * TypeScript workaround for updating a buffer attribute.
+ */
+function updateElement(buffer: THREE.BufferAttribute | THREE.InterleavedBufferAttribute, index: number, value: number) {
+  (buffer.array as number[])[index] = value;
 }
 
 function createScene(canvas: HTMLCanvasElement) {
@@ -97,11 +118,7 @@ function getSubjectColors() {
   return subjectColors;
 }
 
-function createControls({ autoRotate = false, camera, renderer }: {
-  autoRotate?: boolean;
-  camera: THREE.PerspectiveCamera;
-  renderer: THREE.WebGLRenderer;
-}) {
+function createControls(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, autoRotate: boolean) {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.minDistance = 1;
   controls.maxDistance = 80;
@@ -114,7 +131,7 @@ function createPoints() {
   const sprite = new THREE.TextureLoader().load('disc.png');
   const geometry = new THREE.BufferGeometry();
   const material = new THREE.PointsMaterial({
-    size: 0.5,
+    size: PARTICLE_SIZE,
     sizeAttenuation: true,
     map: sprite,
     alphaTest: 0.5,
@@ -133,7 +150,7 @@ function createPoints() {
   return points;
 }
 
-function createMouseTracker(camera: THREE.PerspectiveCamera, sensitivity = 20) {
+function createMouseTracker(camera: THREE.PerspectiveCamera, sensitivity = 20, raycaster: THREE.Raycaster | null = null) {
   const mouse = new THREE.Vector2();
 
   // on pointer move, update the mouse vector
@@ -147,6 +164,7 @@ function createMouseTracker(camera: THREE.PerspectiveCamera, sensitivity = 20) {
   function update() {
     camera.position.x += (mouse.x - camera.position.x) * 0.05;
     camera.position.y += (-mouse.y - camera.position.y) * 0.05;
+    if (raycaster) raycaster.setFromCamera(mouse, camera);
   }
 
   function dispose() {
@@ -154,4 +172,14 @@ function createMouseTracker(camera: THREE.PerspectiveCamera, sensitivity = 20) {
   }
 
   return { update, dispose };
+}
+
+function syncWindow(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer) {
+  const onResize = () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  };
+  window.addEventListener('resize', onResize);
+  return () => window.removeEventListener('resize', onResize);
 }
