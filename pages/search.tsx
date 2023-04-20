@@ -43,7 +43,7 @@ export default function SearchPage() {
   }
 
   return (
-    <Layout>
+    <Layout className="mx-auto max-w-6xl flex-1 sm:p-8">
       <InnerPage elapsed={elapsed} />
     </Layout>
   );
@@ -74,14 +74,14 @@ function InnerPage({ elapsed }: { elapsed: boolean }) {
       stalledSearchDelay={500}
     >
       <Configure hitsPerPage={12} />
-      <div className="flex space-x-4">
-        <div className={showAttributes ? '' : 'hidden'}>
+      <div className="flex w-screen max-w-full">
+        <div className={showAttributes ? 'mr-8' : 'hidden'}>
           <AttributeMenu withWrapper lgOnly />
         </div>
 
-        <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-light bg-white p-6 shadow-lg">
+        <div className="flex-1 space-y-4">
           <SearchBox />
-          <div className="grid grid-cols-[auto_1fr] gap-4">
+          <div className="grid grid-cols-[auto_1fr] items-center gap-4">
             <SortBy />
             <CurrentRefinements />
           </div>

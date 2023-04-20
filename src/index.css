@@ -10,6 +10,10 @@
   h2 {
     @apply text-2xl font-semibold leading-loose;
   }
+
+  h3 {
+    @apply text-xl font-semibold leading-loose;
+  }
 }
 
 @layer utilities {
@@ -20,6 +24,6 @@
 
 @layer components {
   .interactive {
-    @apply hover:opacity-50 transition-opacity shadow;
+    @apply hover:opacity-50 transition-opacity;
   }
 }

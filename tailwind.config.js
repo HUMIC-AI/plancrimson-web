@@ -8,6 +8,7 @@ module.exports = {
   ],
   theme: {
     colors: {
+      transparent: 'transparent',
       primary: {
         dark: colors.blue[900],
       },
@@ -29,6 +30,10 @@ module.exports = {
         4: colors.stone[200],
         5: colors.red[300],
       },
+      season: {
+        spring: colors.teal[50],
+        fall: colors.rose[50],
+      }
     },
   },
   variants: {

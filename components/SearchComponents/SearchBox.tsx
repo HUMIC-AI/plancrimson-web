@@ -10,7 +10,7 @@ import { useAppDispatch, useAppSelector, useBreakpoint } from '@/src/hooks';
 import { Auth, Planner, Schedules } from '@/src/features';
 import { sortSchedules, classNames, breakpoints } from '@/src/utils';
 import Attribute from './Attribute';
-import ScheduleChooser from '../ScheduleSelector';
+import ScheduleChooser from "../ScheduleChooser";
 import Stats, { StatsComponent } from './Stats';
 import StateResults, { StateResultsComponent } from './StateResults';
 import { alertSignIn } from './searchUtils';

@@ -17,6 +17,9 @@ export interface LayoutProps {
   transparentHeader?: boolean;
 }
 
+/**
+ * Layout component that wraps around all pages.
+ */
 export default function Layout({
   children,
   title,
@@ -68,6 +71,7 @@ function HeadMeta({
 
 /**
  * Listen to the schedules given by the constraints.
+ * Goes inside the meilisearch wrapper.
  */
 function Wrapper({
   children,

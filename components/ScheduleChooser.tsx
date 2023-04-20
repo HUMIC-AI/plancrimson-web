@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { Listbox } from '@headlessui/react';
 import Link from 'next/link';
-import React, { ReactNode, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
 import { Auth, Schedules, Settings } from '@/src/features';
 import { useAppDispatch, useAppSelector } from '@/src/hooks';
@@ -58,14 +58,16 @@ function ButtonTitle({
         <input
           type="text"
           className={classNames(
-            'text-sm md:text-base font-medium overflow-auto rounded-md hover:shadow text-center w-full',
-            'border-gray-light hover:border-black transition-colors duration-300 border border-b-4 cursor-text',
+            'text-sm md:text-base font-medium text-gray-dark text-center py-1',
+            'bg-transparent',
+            'hover:border-b focus:border-b focus:text-black focus:outline-none',
             highlight && 'bg-black text-white px-1',
           )}
           value={newTitle}
           onChange={(e) => setNewTitle(e.currentTarget.value)}
           onBlur={saveTitle}
         />
+
         {!showDropdown && (
         <button
           type="button"
@@ -89,11 +91,11 @@ function ButtonTitle({
   );
 }
 
-function StyledOption({ children, ...props }: Parameters<typeof Listbox.Option>[0]) {
+function StyledOption({ children, ...props }: any) {
   return (
     <Listbox.Option {...props} className="px-3 py-1.5 odd:bg-gray-light even:bg-white">
       <span className="cursor-pointer transition-opacity hover:opacity-50">
-        {children as ReactNode}
+        {children}
       </span>
     </Listbox.Option>
   );

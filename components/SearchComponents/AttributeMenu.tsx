@@ -20,7 +20,7 @@ export default function AttributeMenu({ lgOnly, withWrapper, showSubjectColor = 
 
   return (
     <div className={classNames(
-      'w-64 p-2 flex flex-col space-y-2 rounded-md overflow-auto min-w-min',
+      'w-64 p-2 flex flex-col space-y-2 rounded-md overflow-auto min-w-min sticky top-8',
       lgOnly ? 'hidden lg:block' : false,
       withWrapper ? 'flex-shrink-0 self-start' : false,
     )}

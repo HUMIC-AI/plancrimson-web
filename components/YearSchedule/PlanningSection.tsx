@@ -1,4 +1,5 @@
 import React, {
+  MutableRefObject,
   useEffect, useRef, useState,
 } from 'react';
 import {
@@ -8,9 +9,6 @@ import {
 } from 'react-icons/fa';
 import type { Season, Term } from 'plancrimson-utils';
 import {
-  sortSchedules,
-} from 'plancrimson-utils';
-import {
   Auth,
   Planner, Profile, Schedules,
 } from '@/src/features';
@@ -18,8 +16,9 @@ import {
   handleError, useAppDispatch, useAppSelector,
 } from '@/src/hooks';
 import { Requirement } from '@/src/requirements/util';
+import { sortSchedules } from '@/src/utils';
 import type { DragStatus } from '../Course/CourseCard';
-import SemesterComponent, { SemesterDisplayProps } from './SemesterDisplay';
+import SemesterColumn, { SemesterDisplayProps } from './SemesterColumn/SemesterColumn';
 
 export interface WithResizeRef {
   resizeRef: React.MutableRefObject<HTMLDivElement>;
@@ -36,50 +35,15 @@ export function SemestersList({
   const hiddenTerms = useAppSelector(Planner.selectHiddenTerms);
   const classYear = useAppSelector(Profile.selectClassYear);
 
-  // default w-56 = 224px
-  // the resize bar starts at w-24 = 96px
-  const [colWidth, setWidth] = useState(224);
-  const [leftIntersecting, setLeftIntersecting] = useState(false);
-  const [rightIntersecting, setRightIntersecting] = useState(false);
+  const {
+    colWidth, leftIntersecting, rightIntersecting, leftScrollRef, rightScrollRef,
+  } = useObserver(resizeRef);
 
   const semestersContainerRef = useRef<HTMLDivElement>(null!);
-  const leftScrollRef = useRef<HTMLDivElement>(null!);
-  const rightScrollRef = useRef<HTMLDivElement>(null!);
 
   const [dragStatus, setDragStatus] = useState<DragStatus>({
     dragging: false,
   });
-
-  // conditionally show the left and right scroll bars
-  // based on the user's current scroll position
-  useEffect(() => {
-    const resizeObserver = new ResizeObserver((entries) => {
-      const newWidth = entries?.[0]?.borderBoxSize?.[0]?.inlineSize;
-      if (newWidth) {
-        setWidth(Math.max(Math.min(newWidth + 224 - 96, 2048), 224));
-      }
-    });
-    resizeObserver.observe(resizeRef.current);
-    const leftScrollObserver = new IntersectionObserver((entries) => {
-      const isIntersecting = entries?.[0]?.isIntersecting;
-      if (typeof isIntersecting === 'boolean') {
-        setLeftIntersecting(isIntersecting);
-      }
-    });
-    leftScrollObserver.observe(leftScrollRef.current);
-    const rightScrollObserver = new IntersectionObserver((entries) => {
-      const isIntersecting = entries?.[0]?.isIntersecting;
-      if (typeof isIntersecting === 'boolean') {
-        setRightIntersecting(isIntersecting);
-      }
-    });
-    rightScrollObserver.observe(rightScrollRef.current);
-    return () => {
-      resizeObserver.disconnect();
-      leftScrollObserver.disconnect();
-      rightScrollObserver.disconnect();
-    };
-  }, []);
 
   // add a schedule whose semester is before the current earliest semester
   function addPrevSemester() {
@@ -90,6 +54,20 @@ export function SemestersList({
     dispatch(Schedules.createDefaultSchedule({ season, year }, userId))
       .catch(handleError);
   }
+
+  const showColumns = columns
+    .filter((column) => {
+      if (semesterFormat === 'all') {
+        if (column.chosenScheduleId && column.chosenScheduleId in hiddenIds) {
+          return false;
+        }
+        return true;
+      }
+      if ((`${column.semester.year}${column.semester.season}` as Term) in hiddenTerms) {
+        return false;
+      }
+      return true;
+    });
 
   return (
     <div className="relative mt-4 flex-1 overflow-x-auto">
@@ -106,7 +84,7 @@ export function SemestersList({
         {semesterFormat === 'selected' && classYear && (
         <button
           type="button"
-          className="interactive h-full grow-0 bg-blue-light px-4"
+          className="h-full grow-0 bg-blue-light px-4 transition hover:bg-accent"
           onClick={addPrevSemester}
           name="Add previous semester"
           title="Add previous semester"
@@ -115,30 +93,17 @@ export function SemestersList({
         </button>
         )}
 
-        {columns
-          .filter((column) => {
-            if (semesterFormat === 'all') {
-              if (column.chosenScheduleId && column.chosenScheduleId in hiddenIds) {
-                return false;
-              }
-              return true;
-            }
-            if ((`${column.semester.year}${column.semester.season}` as Term) in hiddenTerms) {
-              return false;
-            }
-            return true;
-          })
-          .map((column) => (
-            <SemesterComponent
-              {...{
-                ...column,
-                colWidth,
-                dragStatus,
-                setDragStatus,
-                highlightedRequirement,
-              }}
-            />
-          ))}
+        {showColumns.map((column) => (
+          <SemesterColumn
+            {...{
+              ...column,
+              colWidth,
+              dragStatus,
+              setDragStatus,
+              highlightedRequirement,
+            }}
+          />
+        ))}
 
         {/* when dragging, drag over this area to scroll right */}
         <div ref={rightScrollRef} />
@@ -173,4 +138,53 @@ export function SemestersList({
   );
 }
 
+function useObserver(resizeRef: MutableRefObject<HTMLDivElement>) {
+  const leftScrollRef = useRef<HTMLDivElement>(null!);
+  const rightScrollRef = useRef<HTMLDivElement>(null!);
+
+  // default w-56 = 224px
+  // the resize bar starts at w-24 = 96px
+  const [colWidth, setWidth] = useState(224);
+  const [leftIntersecting, setLeftIntersecting] = useState(false);
+  const [rightIntersecting, setRightIntersecting] = useState(false);
+
+  // conditionally show the left and right scroll bars
+  // based on the user's current scroll position
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver((entries) => {
+      const newWidth = entries?.[0]?.borderBoxSize?.[0]?.inlineSize;
+      if (newWidth) {
+        setWidth(Math.max(Math.min(newWidth + 224 - 96, 2048), 224));
+      }
+    });
+    resizeObserver.observe(resizeRef.current);
+    const leftScrollObserver = new IntersectionObserver((entries) => {
+      const isIntersecting = entries?.[0]?.isIntersecting;
+      if (typeof isIntersecting === 'boolean') {
+        setLeftIntersecting(isIntersecting);
+      }
+    });
+    leftScrollObserver.observe(leftScrollRef.current);
+    const rightScrollObserver = new IntersectionObserver((entries) => {
+      const isIntersecting = entries?.[0]?.isIntersecting;
+      if (typeof isIntersecting === 'boolean') {
+        setRightIntersecting(isIntersecting);
+      }
+    });
+    rightScrollObserver.observe(rightScrollRef.current);
+    return () => {
+      resizeObserver.disconnect();
+      leftScrollObserver.disconnect();
+      rightScrollObserver.disconnect();
+    };
+  }, [resizeRef]);
+
+  return {
+    leftScrollRef,
+    rightScrollRef,
+    colWidth,
+    leftIntersecting,
+    rightIntersecting,
+  };
+}
 

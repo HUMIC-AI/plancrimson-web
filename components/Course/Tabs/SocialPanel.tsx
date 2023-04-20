@@ -4,7 +4,7 @@ import {
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import type { ExtendedClass } from 'plancrimson-utils';
-import { Schedule } from 'plancrimson-utils';
+import type { Schedule } from '@/src/types';
 
 export default function SocialPanel({ course }: { course: ExtendedClass }) {
   const [publicSchedules, setPublicSchedules] = useState<Schedule[]>([]);
@@ -23,7 +23,7 @@ export default function SocialPanel({ course }: { course: ExtendedClass }) {
 
   return (
     <Tab.Panel>
-      <h1>Others taking this class</h1>
+      <h2>Others taking this class</h2>
       {publicSchedules.length === 0 ? 'None' : (
         <ul>
           {publicSchedules.map((schedule) => (

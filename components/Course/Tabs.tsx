@@ -21,7 +21,7 @@ export default function Tabs({ course }: { course: ExtendedClass }) {
               key={tab}
               className={({ selected }) => classNames(
                 selected
-                  ? 'bg-accent text-white'
+                  ? 'bg-blue-light text-white'
                   : 'bg-white text-black interactive',
                 'flex-1 text-sm py-2 px-4 rounded-t-xl font-medium whitespace-nowrap',
               )}
@@ -31,7 +31,7 @@ export default function Tabs({ course }: { course: ExtendedClass }) {
           ),
         )}
       </Tab.List>
-      <Tab.Panels className="border-t-4 border-accent bg-white p-6">
+      <Tab.Panels className="border-t-4 border-blue-light bg-white p-6">
         <InfoPanel course={course} />
         <EvaluationsPanel course={course} />
         <PlanningPanel course={course} />

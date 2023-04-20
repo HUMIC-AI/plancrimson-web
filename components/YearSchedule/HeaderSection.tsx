@@ -12,7 +12,7 @@ import { downloadJson, useAppDispatch, useAppSelector } from '@/src/hooks';
 import UploadForm from '../UploadForm';
 import CardExpandToggler from './CardExpandToggler';
 import { WithResizeRef } from './PlanningSection';
-import { SemesterDisplayProps } from './SemesterDisplay';
+import { SemesterDisplayProps } from './SemesterColumn/SemesterColumn';
 
 /**
  * The header section of the planning page.

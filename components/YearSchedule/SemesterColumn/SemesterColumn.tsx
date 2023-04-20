@@ -1,23 +1,21 @@
 import React, {
-  useMemo, useRef, useState,
+  useMemo,
 } from 'react';
-import { FaCheck, FaMinus } from 'react-icons/fa';
+import { FaPlus } from 'react-icons/fa';
 import {
-  Semester, compareSemesters, findConflicts, allTruthy,
+  Semester, findConflicts, allTruthy,
 } from 'plancrimson-utils';
 import { useAppDispatch, useAppSelector, useElapsed } from '@/src/hooks';
 import { Requirement } from '@/src/requirements/util';
 import {
-  ClassCache, Planner, Profile, Schedules, Settings,
+  ClassCache, Planner, Profile, Schedules,
 } from '@/src/features';
 import { checkViable } from '@/src/searchSchedule';
 import { Viability, Schedule } from '@/src/types';
-import { classNames, getSchedulesBySemester } from '@/src/utils';
-import ScheduleChooser from '../ScheduleSelector';
-import CourseCard, { DragStatus } from '../Course/CourseCard';
-import FadeTransition from '../FadeTransition';
-import ButtonMenu from './ButtonMenu';
-import AddCoursesButton from '../CourseSearchModal';
+import { classNames } from '@/src/utils';
+import CourseCard, { DragStatus } from '../../Course/CourseCard';
+import AddCoursesButton from '../../CourseSearchModal';
+import { HeaderSection } from './SemesterColumnHeader';
 
 const VIABILITY_COLORS: Record<Viability, string> = {
   Yes: 'bg-green-300',
@@ -48,7 +46,7 @@ interface SemesterComponentProps extends SemesterDisplayProps {
  * @param highlightedRequirement highlight any courses that satisfy this requirement
  * @param highlight highlight this semester
  */
-export default function SemesterComponent({
+export default function SemesterColumn({
   semester,
   chosenScheduleId,
   highlightedRequirement,
@@ -105,6 +103,11 @@ export default function SemesterComponent({
     }
   }
 
+  const backgroundColor = semester.season === 'Fall'
+    ? 'bg-season-fall'
+    : semester.season === 'Spring'
+      ? 'bg-season-spring' : 'bg-gray-light';
+
   return (
     <div
       className={classNames(
@@ -114,24 +117,10 @@ export default function SemesterComponent({
             || !viableDrop
             ? 'bg-gray-light cursor-not-allowed'
             : VIABILITY_COLORS[viableDrop?.viability]
-          : 'odd:bg-gray-light even:bg-white',
+          : backgroundColor,
       )}
       style={{ width: `${colWidth}px` }}
     >
-      <button
-        type="button"
-        className="absolute right-2 top-2 text-sm hover:opacity-50"
-        onClick={() => {
-          if (semesterFormat === 'selected') {
-            dispatch(Planner.setHiddenTerm({ term: `${semester.year}${semester.season}`, hidden: true }));
-          } else if (chosenScheduleId) {
-            dispatch(Planner.setHiddenId({ id: chosenScheduleId, hidden: true }));
-          }
-        }}
-      >
-        <FaMinus />
-      </button>
-
       <div
         className="flex flex-col md:h-full"
         onDragOver={(ev) => {
@@ -172,125 +161,6 @@ export default function SemesterComponent({
   );
 }
 
-
-type HeaderProps = {
-  highlight: string | undefined;
-  semester: Semester;
-  chosenScheduleId: string | null;
-  colWidth: number;
-};
-
-/**
- * The header for a semester
- * @param highlight the highlighted requirement
- * @param semester the semester
- * @param chosenScheduleId the schedule to show
- * @param colWidth the width of the column
- */
-function HeaderSection({
-  highlight, semester, chosenScheduleId, colWidth,
-}: HeaderProps) {
-  const dispatch = useAppDispatch();
-  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
-  const schedules = useAppSelector(Schedules.selectSchedules);
-  const currentSchedules = getSchedulesBySemester(schedules, semester);
-
-  // independent to sync up the transitions nicely
-  const [scheduleTitle, setScheduleTitle] = useState<string>();
-  const [showSelector, setShowSelector] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const editRef = useRef<HTMLInputElement>(null!);
-
-  const prevScheduleId = currentSchedules.find((schedule) => schedule.id !== chosenScheduleId)?.id ?? null;
-
-  async function handleRenameSchedule(ev: React.FormEvent) {
-    ev.preventDefault();
-    if (!chosenScheduleId) {
-      alert('no schedule selected to rename');
-      return;
-    }
-    if (!scheduleTitle) {
-      alert('invalid title given');
-      return;
-    }
-    await dispatch(Schedules.renameSchedule({ scheduleId: chosenScheduleId, title: scheduleTitle }));
-    setEditing(false);
-  }
-
-  const doHighlight = typeof highlight !== 'undefined' && highlight === chosenScheduleId;
-
-  const chooseSchedule = (scheduleId: string | null) => dispatch(Settings.chooseSchedule({
-    term: `${semester.year}${semester.season}`,
-    scheduleId,
-  }));
-
-  return (
-    <div className="flex flex-col items-stretch space-y-2 border-b-2 border-black p-4">
-      {semesterFormat !== 'all' && (
-      <h1 className="min-w-max text-center text-lg font-semibold">
-        {semester.season}
-        {' '}
-        {semester.year}
-      </h1>
-      )}
-
-      <FadeTransition
-        show={editing}
-        unmount={false}
-        beforeEnter={() => setShowSelector(false)}
-        afterLeave={() => setShowSelector(true)}
-      >
-        <form
-          className="relative"
-          onSubmit={handleRenameSchedule}
-        >
-          <input
-            type="text"
-            value={scheduleTitle}
-            onChange={({ currentTarget }) => setScheduleTitle(
-              currentTarget.value
-                .replace(/[^a-zA-Z0-9-_ ]/g, '')
-                .slice(0, 30),
-            )}
-            className="w-full rounded border-2 py-1 pl-2 pr-7 shadow-inner focus:shadow"
-            ref={editRef}
-          />
-          <button
-            type="submit"
-            className="absolute inset-y-0 right-2 flex items-center"
-          >
-            <FaCheck />
-          </button>
-        </form>
-      </FadeTransition>
-
-      {semesterFormat !== 'sample' && showSelector && (
-      <ScheduleChooser
-        scheduleIds={currentSchedules.sort(compareSemesters).map((s) => s.id)}
-        chosenScheduleId={chosenScheduleId}
-        handleChooseSchedule={chooseSchedule}
-        direction="center"
-        parentWidth={`${colWidth}px`}
-        showTerm={semesterFormat === 'all' ? 'on' : 'auto'}
-        highlight={doHighlight}
-        showDropdown={semesterFormat !== 'all'}
-        season={semester.season}
-        year={semester.year}
-      />
-      )}
-
-      {semesterFormat !== 'sample' && (
-      <ButtonMenu
-        prevScheduleId={prevScheduleId}
-        handleChooseSchedule={chooseSchedule}
-        chosenScheduleId={chosenScheduleId}
-      />
-      )}
-    </div>
-  );
-}
-
-
 function CoursesSection({ schedule, highlightedRequirement, setDragStatus }: {
   schedule: Schedule;
   highlightedRequirement: Requirement | undefined;
@@ -314,7 +184,9 @@ function CoursesSection({ schedule, highlightedRequirement, setDragStatus }: {
   return (
     <div className="h-max flex-1 p-4 md:overflow-auto">
       <div className="flex min-h-[12rem] flex-col items-stretch space-y-4">
-        <AddCoursesButton schedule={schedule} />
+        <AddCoursesButton schedule={schedule}>
+          <FaPlus />
+        </AddCoursesButton>
 
         {schedule.classes.map(({ classId: id }) => (id && classCache[id] ? (
           <CourseCard

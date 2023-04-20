@@ -16,7 +16,7 @@ import {
   Requirement,
   RequirementGroup,
 } from '@/src/requirements/util';
-import { SemesterDisplayProps } from '@/components/YearSchedule/SemesterDisplay';
+import { SemesterDisplayProps } from '@/components/YearSchedule/SemesterColumn/SemesterColumn';
 import { classNames } from '@/src/utils';
 import Layout from '@/components/Layout/Layout';
 import { Footer } from '@/components/Layout/Footer';
@@ -116,7 +116,11 @@ export default function PlanPage() {
       )}
       >
         <HeaderSection resizeRef={resizeRef} columns={columns} />
-        <SemestersList highlightedRequirement={highlightedRequirement} resizeRef={resizeRef} columns={columns} />
+        <SemestersList
+          highlightedRequirement={highlightedRequirement}
+          resizeRef={resizeRef}
+          columns={columns}
+        />
         <HiddenSchedules />
       </div>
 
@@ -135,6 +139,9 @@ export default function PlanPage() {
   );
 }
 
+/**
+ * Gets the list of semesters to display in the planner
+ */
 function useColumns() {
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const userSchedules = useAppSelector(Schedules.selectSchedules);

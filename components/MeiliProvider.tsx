@@ -25,6 +25,7 @@ export function MeiliProvider({ children }: PropsWithChildren<{}>) {
           keepZeroFacets: true,
         });
         setClient(newClient);
+        console.log('instantiated MeiliSearch client');
       })
       .catch((err) => {
         console.error('error fetching api key:', err);

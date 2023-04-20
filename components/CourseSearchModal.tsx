@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { FaPlus } from 'react-icons/fa';
 import { Configure, InstantSearch, ToggleRefinement } from 'react-instantsearch-dom';
 import { useModal } from '@/src/context/modal';
 import useSearchState, { SearchStateProvider } from '@/src/context/searchState';
@@ -14,14 +13,21 @@ import Hits, { HitsDemo } from './SearchComponents/Hits';
 import SearchBox, { SearchBoxDemo } from './SearchComponents/SearchBox';
 
 
-export default function AddCoursesButton({ schedule, className = '', children = <FaPlus /> }: React.PropsWithChildren<{ schedule: Schedule, className?: string }>) {
+export default function AddCoursesButton({
+  schedule,
+  className = '',
+  children,
+}: React.PropsWithChildren<{ schedule: Schedule, className?: string }>) {
   const { showContents } = useModal();
 
   return (
     <button
       type="button"
       title="Add courses"
-      className={classNames('flex items-center justify-center rounded-xl bg-blue-light interactive py-2 px-4 outline-none', className)}
+      className={classNames(
+        'flex items-center justify-center interactive',
+        className,
+      )}
       onClick={() => {
         const terms = Object.keys(TERM_TO_SEASON);
         const term = terms.find((t) => TERM_TO_SEASON[t].season === schedule.season && TERM_TO_SEASON[t].year === schedule.year);

@@ -17,9 +17,9 @@ export default function HiddenSchedules() {
   }
 
   return (
-    <div className="mt-4 flex items-center text-white">
-      <h3>Hidden schedules:</h3>
-      <ul className="flex items-center">
+    <div className="mt-4 text-white">
+      <h4 className="inline">Hidden schedules:</h4>
+      <ul className="inline">
         {Object.keys(hidden).map((data) => {
           let title: string;
           if (format === 'all') {
@@ -29,7 +29,7 @@ export default function HiddenSchedules() {
             title = `${semester.season} ${semester.year}`;
           }
           return (
-            <li key={title} className="ml-2">
+            <li key={title} className="ml-2 inline">
               <button
                 type="button"
                 onClick={() => {

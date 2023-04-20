@@ -3,12 +3,13 @@ import { Disclosure } from '@headlessui/react';
 import React, { Fragment } from 'react';
 import { useForm, FieldValues } from 'react-hook-form';
 import { createEvents, DateArray, EventAttributes } from 'ics';
-import type { ExtendedClass, Schedule } from 'plancrimson-utils';
+import type { ExtendedClass } from 'plancrimson-utils';
 import {
   allTruthy, getClassId, DAYS_OF_WEEK, DAY_SHORT,
 } from 'plancrimson-utils';
 import { downloadJson, useAppDispatch, useAppSelector } from '@/src/hooks';
 import { ClassCache, Settings } from '@/src/features';
+import { Schedule } from '@/src/types';
 import {
   strToDec,
   decToStr,
@@ -159,7 +160,9 @@ function HeaderSection({ events, schedule }: { events: EventAttributes[], schedu
         {schedule.season}
       </p>
 
-      <AddCoursesButton schedule={schedule}>Add courses</AddCoursesButton>
+      <AddCoursesButton schedule={schedule}>
+        Add courses
+      </AddCoursesButton>
 
       <button
         type="button"
