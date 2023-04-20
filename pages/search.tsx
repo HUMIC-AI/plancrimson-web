@@ -4,6 +4,9 @@ import qs from 'qs';
 import { useAppSelector, useElapsed } from '@/src/hooks';
 
 // components
+import useSearchState from '@/src/context/searchState';
+import { Planner, Auth } from '@/src/features';
+import { useMeiliClient } from '@/src/meili';
 import Layout, { errorMessages } from '../components/Layout/Layout';
 import { ErrorPage } from '../components/Layout/ErrorPage';
 import { LoadingPage } from '../components/Layout/LoadingPage';
@@ -15,10 +18,7 @@ import CurrentRefinements, {
   CurrentRefinementsDemo,
 } from '../components/SearchComponents/CurrentRefinements';
 import SortBy, { SortByDemo } from '../components/SearchComponents/SortBy';
-import useSearchState from '@/src/context/searchState';
 import AttributeMenu from '../components/SearchComponents/AttributeMenu';
-import { Planner, Auth } from '@/src/features';
-import { useMeiliClient } from '@/src/meili';
 
 // we show a demo if the user is not logged in,
 // but do not allow them to send requests to the database

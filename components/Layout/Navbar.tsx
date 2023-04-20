@@ -48,7 +48,7 @@ export default function Navbar({
                     {/* this on >=lg */}
                     <div className="hidden items-center gap-4 lg:flex">
                       <FaCalendarCheck className="h-8 w-auto" />
-                      <h1 className="text-lg">Plan Crimson</h1>
+                      <h2>Plan Crimson</h2>
                     </div>
                   </Link>
                 </div>
@@ -127,8 +127,7 @@ const LargeOnly = {
     const { pathname } = useRouter();
 
     return (
-      <div className="hidden sm:ml-6 sm:block">
-        <div className="flex items-center space-x-4">
+      <div className="hidden sm:ml-6 sm:flex items-center space-x-4">
           {paths.map((item) => (
             // pass the query between pages to preserve the selected schedule
             <Link
@@ -145,7 +144,6 @@ const LargeOnly = {
               {item.name}
             </Link>
           ))}
-        </div>
       </div>
     );
   },

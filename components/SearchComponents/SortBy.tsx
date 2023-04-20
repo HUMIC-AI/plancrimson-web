@@ -1,6 +1,6 @@
+import { classNames } from '@/src/utils';
 import React from 'react';
 import { connectSortBy } from 'react-instantsearch-dom';
-import { classNames } from 'plancrimson-utils';
 import { alertSignIn, SORT_INDEXES } from './searchUtils';
 
 type Item = {
@@ -27,7 +27,7 @@ export const SortByComponent: React.FC<SortByProps> = function ({
             <button
               type="button"
               className={classNames(
-                item.isRefined && 'font-bold bg-primary',
+                item.isRefined && 'font-bold bg-primary-dark',
                 'shadow rounded py-1 px-2 hover-blue text-sm min-w-min',
               )}
               onClick={(event) => {

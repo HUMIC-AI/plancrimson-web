@@ -8,7 +8,9 @@ module.exports = {
   ],
   theme: {
     colors: {
-      primary: colors.amber[600],
+      primary: {
+        dark: colors.blue[900],
+      },
       accent: colors.cyan[300],
       blue: {
         light: colors.sky[200],
@@ -17,6 +19,7 @@ module.exports = {
         dark: colors.stone[600],
         light: colors.stone[200],
       },
+      red: colors.red[400],
       black: colors.stone[900],
       white: colors.stone[50],
       percents: {

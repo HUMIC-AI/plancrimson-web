@@ -7,14 +7,14 @@ import type { ExtendedClass, Schedule } from 'plancrimson-utils';
 import {
   allTruthy, getClassId, DAYS_OF_WEEK, DAY_SHORT,
 } from 'plancrimson-utils';
+import { downloadJson, useAppDispatch, useAppSelector } from '@/src/hooks';
+import { ClassCache, Settings } from '@/src/features';
 import {
   strToDec,
   decToStr,
   getEvents,
   doesRRuleHaveDay,
 } from './calendarUtil';
-import { downloadJson, useAppDispatch, useAppSelector } from '@/src/hooks';
-import { ClassCache, Settings } from '@/src/features';
 import AddCoursesButton from '../CourseSearchModal';
 
 

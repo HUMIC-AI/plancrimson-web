@@ -1,7 +1,8 @@
 import { updateDoc, deleteDoc } from 'firebase/firestore';
-import Schema, { UserProfile, WithId } from 'plancrimson-utils';
 import { Auth } from '@/src/features';
 import { useElapsed, useFriends } from '@/src/hooks';
+import Schema from '@/src/schema';
+import { UserProfile, WithId } from '@/src/types';
 import ProfileList from './ProfileList';
 
 export default function IncomingRequests() {
@@ -44,7 +45,7 @@ function IncomingRequestButtons({ profile }: { profile: WithId<UserProfile> }) {
         onClick={() => {
           updateDoc(ref, { accepted: true }).catch((err) => console.error('error accepting request', err));
         }}
-        className="interactive rounded bg-primary px-2 py-1 text-white"
+        className="interactive rounded bg-primary-dark px-2 py-1 text-white"
       >
         Accept
       </button>
@@ -53,7 +54,7 @@ function IncomingRequestButtons({ profile }: { profile: WithId<UserProfile> }) {
         onClick={() => {
           deleteDoc(ref).catch((err) => console.error('error rejecting request', err));
         }}
-        className="interactive ml-2 rounded bg-primary px-2 py-1 text-white"
+        className="interactive ml-2 rounded bg-primary-dark px-2 py-1 text-white"
       >
         Reject
       </button>

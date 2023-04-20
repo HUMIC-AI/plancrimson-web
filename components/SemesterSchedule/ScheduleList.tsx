@@ -20,7 +20,7 @@ export default function ScheduleSection({ schedule, hideAuthor = false }: Schedu
   const profile = profiles?.[schedule.ownerUid];
 
   return (
-    <div className="dark-gradient text-gray-light rounded-xl p-4 shadow-xl">
+    <div className="dark-gradient rounded-xl p-4 text-gray-light shadow-xl">
       <div className="mb-2 flex items-center space-x-4">
         {!hideAuthor && <ImageWrapper url={profile?.photoUrl} alt="User profile" />}
         <div>

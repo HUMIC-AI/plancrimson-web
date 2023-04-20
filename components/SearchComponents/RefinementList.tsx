@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import type { RefinementListProvided } from 'react-instantsearch-core';
 import { connectRefinementList } from 'react-instantsearch-dom';
-import subjects, { classNames, getSubjectColor, termToSeasonMap } from 'plancrimson-utils';
+import { getSubjectColor, subjects, TERM_TO_SEASON } from 'plancrimson-utils';
 import { alertSignIn } from './searchUtils';
+import { classNames } from '@/src/utils';
 
 type Props = Pick<RefinementListProvided, 'items' | 'refine'> & { showSubjectColor: boolean };
 
@@ -52,7 +53,7 @@ export function RefinementListComponent({ items, refine, showSubjectColor }: Pro
                   className={classNames('ml-2', isRefined && 'font-semibold')}
                   style={{ color: (showSubjectColor && label in subjects) ? getSubjectColor(label) : 'inherit' }}
                 >
-                  {label in termToSeasonMap ? `${termToSeasonMap[label].season} ${termToSeasonMap[label].year}` : label}
+                  {label in TERM_TO_SEASON ? `${TERM_TO_SEASON[label].season} ${TERM_TO_SEASON[label].year}` : label}
                   {' '}
                   (
                   {count}

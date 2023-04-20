@@ -8,11 +8,11 @@ import {
   getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, User,
 } from 'firebase/auth';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import type {
-  FriendRequest, UserProfile, WithId,
-} from 'plancrimson-utils';
-import Schema, { allTruthy, getInitialSettings } from 'plancrimson-utils';
+import { allTruthy } from 'plancrimson-utils';
 import type { AppDispatch, RootState } from './store';
+import Schema from './schema';
+import { getInitialSettings } from './utils';
+import { FriendRequest, UserProfile, WithId } from './types';
 
 
 export function downloadJson(filename: string, data: object | string, extension = 'json') {
@@ -79,7 +79,7 @@ export function useElapsed(ms: number, deps: DependencyList) {
     setElapsed(false);
     const timeout = setTimeout(() => setElapsed(true), ms);
     return () => clearTimeout(timeout);
-  }, deps);
+  }, [...deps, ms]);
 
   return elapsed;
 }

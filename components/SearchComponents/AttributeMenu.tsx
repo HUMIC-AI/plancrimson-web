@@ -1,8 +1,9 @@
-import { FaAngleDoubleLeft } from 'react-icons/fa';
-import MEILI_ATTRIBUTES, { adjustAttr, breakpoints, classNames } from 'plancrimson-utils';
+import { meiliAttributes, adjustAttr, breakpoints } from 'plancrimson-utils';
 import { useAppDispatch, useBreakpoint } from '@/src/hooks';
-import Attribute from './Attribute';
 import { Planner } from '@/src/features';
+import { classNames } from '@/src/utils';
+import { FaChevronLeft } from 'react-icons/fa';
+import Attribute from './Attribute';
 
 interface Props {
   lgOnly?: boolean;
@@ -19,25 +20,36 @@ export default function AttributeMenu({ lgOnly, withWrapper, showSubjectColor = 
 
   return (
     <div className={classNames(
-      'w-64 p-2 flex flex-col space-y-2 dark-gradient rounded-md overflow-auto min-w-min',
+      'w-64 p-2 flex flex-col space-y-2 rounded-md overflow-auto min-w-min',
       lgOnly ? 'hidden lg:block' : false,
       withWrapper ? 'flex-shrink-0 self-start' : false,
     )}
     >
-      <h1 className="relative text-center text-xl font-semibold text-white">
-        Filters
-        <button
-          type="button"
-          className="interactive absolute inset-y-0 right-0"
-          onClick={() => dispatch(Planner.setShowAttributes(false))}
-        >
-          <FaAngleDoubleLeft />
-        </button>
-      </h1>
-      {(!lgOnly || isLg) && MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
-        <Attribute attribute={attr} key={attr} label={adjustAttr(attr)} showSubjectColor={showSubjectColor} />
+      <button
+        className="relative w-full rounded-md transition-colors hover:bg-gray-dark/50"
+        type="button"
+        onClick={() => dispatch(Planner.setShowAttributes(false))}
+      >
+        <h2>
+          Filters
+        </h2>
+
+        <span className="absolute right-2 top-1/2 -translate-y-1/2">
+          <span className="sr-only">Close</span>
+          <FaChevronLeft size={16} />
+        </span>
+      </button>
+
+      {(!lgOnly || isLg) && meiliAttributes.filterableAttributes.map((attr) => (
+        <Attribute
+          attribute={attr}
+          key={attr}
+          label={adjustAttr(attr)}
+          showSubjectColor={showSubjectColor}
+        />
       ))}
-      <p className="p-1 text-xs text-white">
+
+      <p className="p-1 text-sm">
         If filters are not showing up, clear your search and try again.
       </p>
     </div>

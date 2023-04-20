@@ -16,9 +16,9 @@ import { SelectedScheduleProvider } from '@/src/context/selectedSchedule';
 import {
   Auth, Profile, Schedules, Settings,
 } from '@/src/features';
-import GraduationYearDialog from '../components/GraduationYearDialog';
 import Schema from '@/src/schema';
 import { getInitialSettings } from '@/src/utils';
+import GraduationYearDialog from '../components/GraduationYearDialog';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional

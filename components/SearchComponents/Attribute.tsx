@@ -1,8 +1,8 @@
 import { Disclosure } from '@headlessui/react';
 import React, { useState } from 'react';
-import { FaChevronDown } from 'react-icons/fa';
-import { classNames, compareItems, compareWeekdays } from 'plancrimson-utils';
+import { compareItems, compareWeekdays } from 'plancrimson-utils';
 import { Auth } from '@/src/features';
+import { classNames } from '@/src/utils';
 import RefinementList, { RefinementListDemo } from './RefinementList';
 
 interface AttributeProps {
@@ -11,40 +11,59 @@ interface AttributeProps {
   showSubjectColor: boolean;
 }
 
-const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = function ({
-  open, attribute, label, showSubjectColor,
-}) {
+/**
+ * Renders an expandable menu to filter a given attribute
+ * @param attribute the Meilisearch attribute to filter by
+ * @param label the text to show
+ */
+export default function Attribute({ attribute, label, showSubjectColor }: AttributeProps) {
+  return (
+    <Disclosure as="div">
+      <DisclosureChildren
+        attribute={attribute}
+        label={label}
+        showSubjectColor={showSubjectColor}
+      />
+    </Disclosure>
+  );
+}
+
+function DisclosureChildren({
+  attribute, label, showSubjectColor,
+}: AttributeProps) {
   const user = Auth.useAuthProperty('uid');
 
   const [operator, setOperator] = useState<'and' | 'or'>('or');
 
   return (
     <>
-      <Disclosure.Button
-        className={classNames(
-          'bg-white flex justify-between items-center w-full py-2 px-3',
-          'text-sm text-left font-medium cursor-pointer hover:bg-opacity-50 transition-colors',
-          open ? 'rounded-t' : 'rounded',
-        )}
-        as="div"
-      >
-        <h3 className="flex-1">{label}</h3>
-        <span className="ml-4 inline-flex items-center">
-          <button
-            type="button"
-            onClick={(ev) => {
-              ev.stopPropagation();
-              setOperator(operator === 'and' ? 'or' : 'and');
-            }}
-            className="w-8 rounded bg-black text-white hover:font-semibold"
-          >
-            {operator}
-          </button>
-          <FaChevronDown className="ml-2 h-5 w-5" />
-        </span>
-      </Disclosure.Button>
+      <div className="flex items-stretch border-b border-gray-light">
+        <Disclosure.Button
+          className={classNames(
+            'flex-1 py-2 px-3 rounded-tl-lg',
+            'text-sm text-left font-medium cursor-pointer',
+            'hover:bg-gray-dark/50 transition-colors',
+          )}
+          as="h3"
+        >
+          {label}
+        </Disclosure.Button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setOperator(operator === 'and' ? 'or' : 'and');
+          }}
+          className={classNames(
+            'w-10 rounded-tr-lg text-gray-dark transition-colors hover:bg-gray-dark/50',
+          )}
+        >
+          {operator}
+        </button>
+      </div>
+
       <Disclosure.Panel unmount={false}>
-        <div className="origin-top-right rounded-b bg-gray-light p-2">
+        <div className="origin-top-right rounded-b-lg bg-gray-light p-2">
           {user ? (
             <RefinementList
               attribute={attribute}
@@ -62,20 +81,5 @@ const DisclosureChildren: React.FC<AttributeProps & { open: boolean }> = functio
         </div>
       </Disclosure.Panel>
     </>
-  );
-};
-
-/**
- * Renders an expandable menu to filter a given attribute
- * @param attribute the Meilisearch attribute to filter by
- * @param label the text to show
- */
-export default function Attribute({ attribute, label, showSubjectColor }: AttributeProps) {
-  return (
-    <Disclosure as="div">
-      {({ open }) => (
-        <DisclosureChildren open={open} attribute={attribute} label={label} showSubjectColor={showSubjectColor} />
-      )}
-    </Disclosure>
   );
 }

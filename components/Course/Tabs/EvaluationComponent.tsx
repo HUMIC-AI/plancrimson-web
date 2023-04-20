@@ -1,7 +1,10 @@
 import { Disclosure } from '@headlessui/react';
 import React, { useMemo } from 'react';
 import { FaChevronDown, FaExternalLinkAlt } from 'react-icons/fa';
-import { Evaluation, EvaluationStatistics, classNames } from 'plancrimson-utils';
+import {
+  Evaluation, EvaluationStatistics, HoursStats,
+} from 'plancrimson-utils';
+import { classNames } from '@/src/utils';
 import ExternalLink from '../../ExternalLink';
 import FadeTransition from '../../FadeTransition';
 import Tooltip from '../../Tooltip';
@@ -197,107 +200,147 @@ export default function EvaluationComponent({ report }: { report: Evaluation | E
     >
       {({ open }) => (
         <>
-          <Disclosure.Button
-            name={buttonTitle}
-            className={classNames(
-              'w-full flex justify-between space-x-2 items-center',
-              'bg-black text-white py-2 px-4',
-              'hover:bg-opacity-70 transition-colors',
-            )}
-          >
-            <h3 className="font-bold">{buttonTitle}</h3>
-            <span className="flex items-center space-x-4">
-              <ExternalLink href={courseEvaluation.url}>
-                <FaExternalLinkAlt title="open report page" />
-              </ExternalLink>
-              <div
-                className={classNames(
-                  'hover:opacity-50 transition-all',
-                  open && 'transform rotate-180',
-                )}
-              >
-                <FaChevronDown />
-              </div>
-            </span>
-          </Disclosure.Button>
+          <OpenCloseButton
+            buttonTitle={buttonTitle}
+            url={courseEvaluation.url}
+            open={open}
+          />
+
           <FadeTransition>
-            <Disclosure.Panel className="space-y-4 p-4">
-              <p>
-                {courseEvaluation['Course Response Rate']?.invited
-                    || 'Unknown'}
-                {' '}
-                students total
-              </p>
-
-              {overall && generalComponents && (
-              <OverallEvaluation
-                heading="Overall evaluation"
-                visibleStats={overall}
-                components={generalComponents}
-              />
-              )}
-
-              {multipleInstructors ? (
-                report.map((evl) => (
-                  <InstructorFeedback
-                    key={evl.instructorName}
-                    evaluation={evl}
-                  />
-                ))
-              ) : (
-                <InstructorFeedback evaluation={courseEvaluation} />
-              )}
-
-              {hoursData && (
-              <Section title="Hours per week (outside of class)">
-                <p>
-                  Mean:
-                  {' '}
-                  {hoursData.mean?.toFixed(2)}
-                  {' '}
-                  | Median:
-                  {' '}
-                  {hoursData.median?.toFixed(2)}
-                  {' '}
-                  | Mode:
-                  {' '}
-                  {hoursData.mode?.toFixed(2)}
-                  {' '}
-                  | Stdev:
-                  {' '}
-                  {hoursData.stdev?.toFixed(2)}
-                </p>
-              </Section>
-              )}
-
-              <Section title="Recommendations">
-                <Percentages
-                  categories={
-                      courseEvaluation[
-                        'How strongly would you recommend this course to your peers?'
-                      ]?.recommendations || null
-                    }
-                />
-              </Section>
-
-              {courseEvaluation.comments
-                && courseEvaluation.comments.length > 0 ? (
-                  <DisclosureComponent heading="Comments">
-                    <ul className="-m-2 max-h-72 overflow-auto">
-                      {courseEvaluation.comments.map((comment) => (
-                        <li key={comment} className="p-2 even:bg-gray-light">
-                          {comment}
-                        </li>
-                      ))}
-                    </ul>
-                  </DisclosureComponent>
-                ) : (
-                  <p>No comments found</p>
-                )}
-            </Disclosure.Panel>
+            <EvaluationBody
+              courseEvaluation={courseEvaluation}
+              overall={overall}
+              generalComponents={generalComponents}
+              multipleInstructors={multipleInstructors}
+              report={Array.isArray(report) ? report : [report]}
+              hoursData={hoursData}
+            />
           </FadeTransition>
         </>
       )}
     </Disclosure>
   );
 }
+function EvaluationBody({
+  courseEvaluation,
+  overall,
+  generalComponents,
+  multipleInstructors,
+  report,
+  hoursData,
+}: {
+  courseEvaluation: Evaluation;
+  overall: EvaluationStatistics | null;
+  generalComponents: Record<string, EvaluationStatistics | null> | null;
+  multipleInstructors: boolean,
+  report: Evaluation[],
+  hoursData: HoursStats | undefined
+}) {
+  return (
+    <Disclosure.Panel className="space-y-4 p-4">
+      <p>
+        {courseEvaluation['Course Response Rate']?.invited
+        || 'Unknown'}
+        {' '}
+        students total
+      </p>
+
+      {overall && generalComponents && (
+      <OverallEvaluation
+        heading="Overall evaluation"
+        visibleStats={overall}
+        components={generalComponents}
+      />
+      )}
+
+      {multipleInstructors ? (
+        report.map((evl) => (
+          <InstructorFeedback
+            key={evl.instructorName}
+            evaluation={evl}
+          />
+        ))
+      ) : (
+        <InstructorFeedback evaluation={courseEvaluation} />
+      )}
+
+      {hoursData && (
+      <Section title="Hours per week (outside of class)">
+        <p>
+          Mean:
+          {' '}
+          {hoursData.mean?.toFixed(2)}
+          {' '}
+          | Median:
+          {' '}
+          {hoursData.median?.toFixed(2)}
+          {' '}
+          | Mode:
+          {' '}
+          {hoursData.mode?.toFixed(2)}
+          {' '}
+          | Stdev:
+          {' '}
+          {hoursData.stdev?.toFixed(2)}
+        </p>
+      </Section>
+      )}
+
+      <Section title="Recommendations">
+        <Percentages
+          categories={courseEvaluation['How strongly would you recommend this course to your peers?']?.recommendations || null}
+        />
+      </Section>
+
+      {courseEvaluation.comments
+      && courseEvaluation.comments.length > 0 ? (
+        <DisclosureComponent heading="Comments">
+          <ul className="-m-2 max-h-72 overflow-auto">
+            {courseEvaluation.comments.map((comment) => (
+              <li key={comment} className="p-2 even:bg-gray-light">
+                {comment}
+              </li>
+            ))}
+          </ul>
+        </DisclosureComponent>
+        ) : (
+          <p>No comments found</p>
+        )}
+    </Disclosure.Panel>
+  );
+}
+
+function OpenCloseButton({
+  buttonTitle,
+  url,
+  open,
+}: {
+  buttonTitle: string, url: string, open: boolean;
+}) {
+  return (
+    <Disclosure.Button
+      name={buttonTitle}
+      className={classNames(
+        'w-full flex justify-between space-x-2 items-center',
+        'bg-black text-white py-2 px-4',
+        'hover:bg-opacity-70 transition-colors',
+      )}
+    >
+      <h3 className="font-bold">{buttonTitle}</h3>
+      <span className="flex items-center space-x-4">
+        <ExternalLink href={url}>
+          <FaExternalLinkAlt title="open report page" />
+        </ExternalLink>
+        <div
+          className={classNames(
+            'hover:opacity-50 transition-all',
+            open && 'transform rotate-180',
+          )}
+        >
+          <FaChevronDown />
+        </div>
+      </span>
+    </Disclosure.Button>
+  );
+}
+

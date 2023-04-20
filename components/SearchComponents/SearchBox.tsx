@@ -3,18 +3,17 @@ import { FaTimes, FaBars, FaAngleDoubleRight } from 'react-icons/fa';
 import { connectSearchBox } from 'react-instantsearch-dom';
 import React, { Fragment } from 'react';
 import type { SearchBoxProvided } from 'react-instantsearch-core';
-import MEILI_ATTRIBUTES, {
-  ATTRIBUTE_DESCRIPTIONS, breakpoints, classNames, sortSchedules,
-} from 'plancrimson-utils';
+import { ATTRIBUTE_DESCRIPTIONS, meiliAttributes } from 'plancrimson-utils';
 import type { Class } from 'plancrimson-utils';
+import useChosenScheduleContext from '@/src/context/selectedSchedule';
+import { useAppDispatch, useAppSelector, useBreakpoint } from '@/src/hooks';
+import { Auth, Planner, Schedules } from '@/src/features';
+import { sortSchedules, classNames, breakpoints } from '@/src/utils';
 import Attribute from './Attribute';
 import ScheduleChooser from '../ScheduleSelector';
 import Stats, { StatsComponent } from './Stats';
 import StateResults, { StateResultsComponent } from './StateResults';
 import { alertSignIn } from './searchUtils';
-import useChosenScheduleContext from '@/src/context/selectedSchedule';
-import { useAppDispatch, useAppSelector, useBreakpoint } from '@/src/hooks';
-import { Auth, Planner, Schedules } from '@/src/features';
 
 
 type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean };
@@ -163,7 +162,7 @@ function AttributeMenuDropdown() {
                 'flex flex-col space-y-2',
               )}
             >
-              {MEILI_ATTRIBUTES.filterableAttributes.map((attr) => (
+              {meiliAttributes.filterableAttributes.map((attr) => (
                 <Attribute
                   attribute={attr}
                   key={attr}

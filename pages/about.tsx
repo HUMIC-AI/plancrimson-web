@@ -22,6 +22,7 @@ const siteInfoLinks = [
   ['Next.js', 'https://nextjs.org/'],
   ['TypeScript', 'https://www.typescriptlang.org/'],
   ['Tailwind CSS', 'https://tailwindcss.com/'],
+  ['Three.js', 'https://threejs.org/'],
   ['Redux (Toolkit)', 'https://redux-toolkit.js.org/'],
   ['MeiliSearch', 'https://www.meilisearch.com/'],
   ['Firebase', 'https://firebase.google.com/'],
@@ -34,56 +35,72 @@ const AboutPage: React.FC = function () {
   return (
     <Layout>
       <div className="mx-auto max-w-md space-y-4">
-        <h1 className="text-2xl font-semibold leading-loose">
-          About this site
+        <h1>
+          About
         </h1>
-        <p>Here&apos;s some of the tech this site was built with:</p>
-        <ul className="list-inside list-disc">
-          {siteInfoLinks.map(([name, href]) => (
-            <li key={href}>
-              <ExternalLink href={href}>{name}</ExternalLink>
-            </li>
-          ))}
-        </ul>
-        <p>I am not affiliated with any of the above organizations.</p>
         <p>
           Thanks for using Plan Crimson! Reach out with any feedback, questions,
           bug reports, requests, etc. at alexcai [at] college [dot] harvard
           [dot] edu.
         </p>
-        <h1 className="text-2xl font-semibold leading-loose">
-          Other Resources
-        </h1>
-        <p>
-          The data for Plan Crimson is taken from the
-          {' '}
-          <ExternalLink href="https://my.harvard.edu/">my.harvard</ExternalLink>
-          {' '}
-          Course Catalog. Evaluations from Fall 2019 and onwards are from
-          {' '}
-          <ExternalLink href="https://qreports.fas.harvard.edu/">
-            QReports
-          </ExternalLink>
-          {' '}
-          and evaluations from before then are from the old
-          {' '}
-          <ExternalLink href="https://course-evaluation-reports.fas.harvard.edu/fas/list">
-            Course Evaluations
-          </ExternalLink>
-          {' '}
-          site. Here&apos;s some other useful sites for planning out your
-          concentration!
-        </p>
-        <ul className="list-inside list-disc">
-          {links.map(([name, href]) => (
-            <li key={href}>
-              <ExternalLink href={href}>{name}</ExternalLink>
-            </li>
-          ))}
-        </ul>
+        <Resources />
+        <TechStack />
       </div>
     </Layout>
   );
 };
 
 export default AboutPage;
+
+function Resources() {
+  return <>
+    <h2>
+      Other Resources
+    </h2>
+    <p>
+      The data for Plan Crimson is taken from the
+      {' '}
+      <ExternalLink href="https://my.harvard.edu/">my.harvard</ExternalLink>
+      {' '}
+      Course Catalog. Evaluations from Fall 2019 and onwards are from
+      {' '}
+      <ExternalLink href="https://qreports.fas.harvard.edu/">
+        QReports
+      </ExternalLink>
+      {' '}
+      and evaluations from before then are from the old
+      {' '}
+      <ExternalLink href="https://course-evaluation-reports.fas.harvard.edu/fas/list">
+        Course Evaluations
+      </ExternalLink>
+      {' '}
+      site. Here&apos;s some other useful sites for planning out your
+      concentration!
+    </p>
+    <ul className="list-inside list-disc">
+      {links.map(([name, href]) => (
+        <li key={href}>
+          <ExternalLink href={href}>{name}</ExternalLink>
+        </li>
+      ))}
+    </ul>
+  </>;
+}
+
+function TechStack() {
+  return <>
+  <h2>
+    About this site
+  </h2>
+    <p>Here&apos;s some of the tech this site was built with:</p>
+    <ul className="list-inside list-disc">
+      {siteInfoLinks.map(([name, href]) => (
+        <li key={href}>
+          <ExternalLink href={href}>{name}</ExternalLink>
+        </li>
+      ))}
+    </ul>
+    <p>I am not affiliated with any of the above organizations.</p>
+  </>;
+}
+

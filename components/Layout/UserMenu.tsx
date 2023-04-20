@@ -5,8 +5,8 @@ import { Auth, Profile } from '@/src/features';
 import {
   handleError, signInUser, useAppDispatch, useAppSelector,
 } from '@/src/hooks';
-import { ImageWrapper } from '../UserLink';
 import { classNames } from '@/src/utils';
+import { ImageWrapper } from '../UserLink';
 
 // Profile dropdown
 export function UserMenu() {
@@ -46,7 +46,7 @@ export function UserMenu() {
         >
           {email && (
             <Menu.Item>
-              <span className="text-gray-dark text-xs">{email}</span>
+              <span className="text-xs text-gray-dark">{email}</span>
             </Menu.Item>
           )}
 

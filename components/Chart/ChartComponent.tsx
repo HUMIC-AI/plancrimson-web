@@ -14,7 +14,7 @@ import { useModal } from '@/src/context/modal';
 import { useAppDispatch, useElapsed } from '@/src/hooks';
 import { Auth, ClassCache } from '@/src/features';
 import Schema from '@/src/schema';
-import { getAllClassIds } from '@/src/utils';
+import { getAllClassIds, classNames } from '@/src/utils';
 import Tooltip from '@/components/Tooltip';
 import FadeTransition from '@/components/FadeTransition';
 import {
@@ -198,7 +198,7 @@ export default function ChartComponent({
 
   const buttonClass = (disabled: boolean) => classNames(
     'text-white px-2 py-1 text-sm rounded-md shadow',
-    disabled ? 'bg-gray-light' : 'bg-primary interactive',
+    disabled ? 'bg-gray-light' : 'bg-primary-dark interactive',
   );
 
   return (
@@ -223,7 +223,7 @@ export default function ChartComponent({
         )}
         <Listbox as="div" className="relative inline-block" value={radiusMetric} onChange={setRadiusMetric}>
           <div>
-            <Listbox.Button className="interactive flex items-center justify-center rounded-md bg-primary px-2 py-1 text-sm text-white shadow">
+            <Listbox.Button className="interactive flex items-center justify-center rounded-md bg-primary-dark px-2 py-1 text-sm text-white shadow">
               {metrics[radiusMetric]}
               <FaChevronDown className="ml-2 text-xs" />
             </Listbox.Button>

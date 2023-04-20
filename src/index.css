@@ -2,9 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  h1 {
+    @apply text-4xl font-bold leading-loose;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold leading-loose;
+  }
+}
+
 @layer utilities {
   .dark-gradient {
-    @apply from-black to-primary bg-gradient-to-br;
+    @apply from-black to-primary-dark bg-gradient-to-br;
   }
 }
 

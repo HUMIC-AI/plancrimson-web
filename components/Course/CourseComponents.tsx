@@ -2,7 +2,8 @@ import React, { Fragment } from 'react';
 import {
   FaUser, FaMapMarkerAlt, FaCalendarDay, FaClock,
 } from 'react-icons/fa';
-import { ExtendedClass } from 'plancrimson-utils';
+import { ExtendedClass, DAYS_OF_WEEK } from 'plancrimson-utils';
+import { classNames } from '@/src/utils';
 import Highlight from '../SearchComponents/Highlight';
 
 type CourseProps = {

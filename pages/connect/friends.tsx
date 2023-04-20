@@ -40,7 +40,7 @@ export default function FriendsPage() {
 
         <button
           type="submit"
-          className="ml-2 rounded bg-primary px-2 py-1 text-white"
+          className="ml-2 rounded bg-primary-dark px-2 py-1 text-white"
         >
           Search
         </button>
@@ -98,7 +98,7 @@ function UnfriendButton({ profile }: { profile: WithId<UserProfile> }) {
     <button
       type="button"
       onClick={handleClick}
-      className="interactive rounded bg-primary px-2 py-1 text-white"
+      className="interactive rounded bg-primary-dark px-2 py-1 text-white"
     >
       Unfriend
     </button>

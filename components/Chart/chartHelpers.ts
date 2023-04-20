@@ -30,18 +30,18 @@ export function makeData(courses: ExtendedClass[], radiusMetric: keyof typeof me
   let maxMetric = 0;
 
   const data = allTruthy(courses.map((course): Embedding | null => {
-    const id = course.id as keyof typeof embeddings;
-    if (!embeddings[id]) {
+    const id = course.id as keyof typeof tsne2d;
+    if (!tsne2d[id]) {
       console.error('no embedding for', id);
       return null;
     }
-    const [x, y] = tsne2d[id];  // TODO fix all deduplication stuff
+    const [x, y] = tsne2d[id] as [number, number]; // TODO fix all deduplication stuff
     const metric = radiusMetric === 'uniform' ? 0 : (parseFloat(course[radiusMetric]?.toString() || '') || 0);
     maxMetric = Math.max(metric, maxMetric);
     return {
       x,
       y,
-      subject: course.SUBJECT,
+      subject: course.SUBJECT as Subject,
       catalogNumber: course.CATALOG_NBR,
       title: course.Title,
       id: course.id,
@@ -58,7 +58,7 @@ export function initChart(chartDiv: HTMLDivElement) {
   const height = chartDiv.clientHeight;
 
   let [minx, maxx, miny, maxy] = [0, 0, 0, 0];
-  const points = Object.values(embeddings) as [number, number][];
+  const points = Object.values(tsne2d) as [number, number][];
   points.forEach(([x, y]) => {
     minx = Math.min(minx, x);
     maxx = Math.max(maxx, x);

@@ -1,33 +1,20 @@
 {
-  "env": {
-    "browser": true,
-    "es2021": true,
-    "node": true
-  },
   "root": true,
   "extends": [
-    "plugin:@next/next/recommended",
+    "next/core-web-vitals",
     "plugin:react/recommended",
+    "plugin:tailwindcss/recommended",
     "airbnb",
-    "airbnb-typescript",
-    "plugin:tailwindcss/recommended"
+    "airbnb-typescript"
   ],
   "globals": {
     "React": "readonly"
   },
-  "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaFeatures": {
-      "jsx": true
-    },
-    "ecmaVersion": 13,
+    "ecmaVersion": "latest",
     "sourceType": "module",
-    "project": "tsconfig.json"
+    "project": "./tsconfig.json"
   },
-  "plugins": [
-    "react",
-    "@typescript-eslint"
-  ],
   "rules": {
     "consistent-return": "off",
     "func-names": "off",

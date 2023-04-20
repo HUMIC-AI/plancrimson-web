@@ -1,6 +1,11 @@
 import { compareSemesters, Semester } from 'plancrimson-utils';
 import { Schedule, ScheduleMap, UserSettings } from './types';
 
+export const breakpoints = {
+  md: 768,
+  lg: 1024,
+};
+
 export function getInitialSettings(): UserSettings {
   return {
     chosenSchedules: {},

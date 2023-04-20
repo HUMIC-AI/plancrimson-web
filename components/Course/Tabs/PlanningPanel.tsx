@@ -7,16 +7,13 @@ import {
   FaExclamationCircle,
   FaSmile,
 } from 'react-icons/fa';
-import {
-  ExtendedClass, Schedule,
-  sortSchedules,
-  getClassId,
-  classNames,
-  checkViable,
-} from 'plancrimson-utils';
+import { ExtendedClass, getClassId } from 'plancrimson-utils';
 import { ClassCache, Profile, Schedules } from '@/src/features';
 import { useAppSelector, useAppDispatch } from '@/src/hooks';
-import Tooltip from '../../Tooltip';
+import Tooltip from '@/components/Tooltip';
+import { checkViable } from '@/src/searchSchedule';
+import { Schedule } from '@/src/types';
+import { sortSchedules, classNames } from '@/src/utils';
 
 /**
  * The planning panel in the course modal. Returns a Tab.Panel.

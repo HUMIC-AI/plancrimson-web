@@ -7,8 +7,13 @@ import {
   ExtendedClass,
   getClassId, departmentImages, getSemester,
 } from 'plancrimson-utils';
+import { checkViable } from '@/src/searchSchedule';
 import { useModal } from '@/src/context/modal';
 import { handleError, useAppDispatch, useAppSelector } from '@/src/hooks';
+import {
+  ClassCache, Planner, Profile, Schedules,
+} from '@/src/features';
+import { classNames } from '@/src/utils';
 import Tooltip from '../Tooltip';
 import {
   ClassTime,
@@ -17,9 +22,6 @@ import {
   Instructors,
   Location,
 } from './CourseComponents';
-import {
-  ClassCache, Planner, Profile, Schedules,
-} from '@/src/features';
 import { ClassSizeRating, HoursRating, StarRating } from './RatingIndicators';
 
 type Department = keyof typeof departmentImages;
@@ -186,7 +188,7 @@ export default function CourseCard({
         className={classNames(
           'relative from-black text-left h-full',
           isExpanded || 'bg-gradient-to-br',
-          isExpanded || (highlight ? 'to-accent' : 'to-primary'),
+          isExpanded || (highlight ? 'to-accent' : 'to-primary-dark'),
         )}
         draggable={draggable}
         onDragStart={draggable ? handleDragStart : undefined}
@@ -195,7 +197,7 @@ export default function CourseCard({
         <div
           className={classNames(
             'p-2 text-white from-black via-black bg-gradient-to-br',
-            isExpanded && (highlight ? 'to-accent' : 'to-primary'),
+            isExpanded && (highlight ? 'to-accent' : 'to-primary-dark'),
             draggable && 'cursor-move',
             isExpanded && 'relative',
           )}

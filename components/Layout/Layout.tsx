@@ -2,12 +2,12 @@
 import Head from 'next/head';
 import React, { PropsWithChildren } from 'react';
 import type { QueryConstraint } from 'firebase/firestore';
+import { MeiliProvider } from "@/components/MeiliProvider";
+import useSchedules from '@/src/schedules';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
-import { MeiliProvider } from '@/src/meili';
 import Alerts from './Alerts';
 import { Footer } from './Footer';
-import useSchedules from '@/src/schedules';
 
 export interface LayoutProps {
   title?: string;

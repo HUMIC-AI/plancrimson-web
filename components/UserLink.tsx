@@ -28,7 +28,7 @@ export function ImageWrapper({ url, alt, size = 'sm' }: { url: string | null | u
   return (
     <FaUser className={classNames(
       size === 'sm' ? 'h-8 w-8 p-1' : 'h-16 w-16 p-2',
-      'text-white bg-primary rounded-full',
+      'text-white bg-primary-dark rounded-full',
     )}
     />
   );

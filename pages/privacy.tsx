@@ -6,7 +6,7 @@ const PrivacyPage = function () {
   return (
     <Layout title="Privacy">
       <div className="mx-auto max-w-lg space-y-4">
-        <h1 className="text-2xl font-semibold leading-loose">Privacy</h1>
+        <h1>Privacy</h1>
         <p>
           Plan Crimson processes user course selections to provide its service.
           Users&apos; course selections are stored in Firebase, which is owned
@@ -23,7 +23,7 @@ const PrivacyPage = function () {
           Harvard College students and uniquely identify users. No other user
           information is collected.
         </p>
-        <h1 className="text-2xl font-semibold leading-loose">
+        <h1>
           Image Attributions
         </h1>
         <p>
@@ -39,7 +39,7 @@ const PrivacyPage = function () {
             Unsplash License
           </ExternalLink>
           . Images are listed next to their department below. If you believe an
-          image has been used that does not properly represent the respective
+          image has been used that does not appropriately represent the respective
           department, please contact me at alexcai [at] college.
         </p>
         <ul className="list-inside list-disc space-y-1">

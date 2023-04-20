@@ -13,7 +13,7 @@ import {
   FaHourglassEnd,
   FaExchangeAlt,
 } from 'react-icons/fa';
-import { ExtendedClass } from 'plancrimson-utils';
+import { departments, ExtendedClass } from 'plancrimson-utils';
 import {
   Instructors,
   DaysOfWeek,
@@ -55,7 +55,7 @@ const InfoPanel: React.FC<{ course: ExtendedClass }> = function ({ course }) {
           {typeof course.ACAD_ORG === 'string' ? (
             course.ACAD_ORG in departments ? (
               <Tooltip
-                text={departments[course.ACAD_ORG as keyof typeof departments]}
+                text={departments[course.ACAD_ORG]}
                 direction="bottom"
               >
                 {course.ACAD_ORG}

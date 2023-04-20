@@ -3,10 +3,11 @@ import { Listbox } from '@headlessui/react';
 import Link from 'next/link';
 import React, { ReactNode, useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
-import { Season, classNames, titleContainsTerm } from 'plancrimson-utils';
 import { Auth, Schedules, Settings } from '@/src/features';
 import { useAppDispatch, useAppSelector } from '@/src/hooks';
 import FadeTransition from './FadeTransition';
+import { classNames } from '@/src/utils';
+import { titleContainsTerm, Season } from 'plancrimson-utils';
 
 interface ButtonTitleProps {
   showTerm: 'on' | 'off' | 'auto';

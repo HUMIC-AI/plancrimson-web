@@ -6,18 +6,18 @@ import {
   Semester, compareSemesters, findConflicts, allTruthy,
 } from 'plancrimson-utils';
 import { useAppDispatch, useAppSelector, useElapsed } from '@/src/hooks';
-import ScheduleChooser from '../ScheduleSelector';
-import CourseCard, { DragStatus } from '../Course/CourseCard';
-import FadeTransition from '../FadeTransition';
 import { Requirement } from '@/src/requirements/util';
-import ButtonMenu from './ButtonMenu';
 import {
   ClassCache, Planner, Profile, Schedules, Settings,
 } from '@/src/features';
-import AddCoursesButton from '../CourseSearchModal';
 import { checkViable } from '@/src/searchSchedule';
 import { Viability, Schedule } from '@/src/types';
 import { classNames, getSchedulesBySemester } from '@/src/utils';
+import ScheduleChooser from '../ScheduleSelector';
+import CourseCard, { DragStatus } from '../Course/CourseCard';
+import FadeTransition from '../FadeTransition';
+import ButtonMenu from './ButtonMenu';
+import AddCoursesButton from '../CourseSearchModal';
 
 const VIABILITY_COLORS: Record<Viability, string> = {
   Yes: 'bg-green-300',

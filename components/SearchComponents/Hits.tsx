@@ -5,11 +5,12 @@ import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import {
   sampleCourses, ExtendedClass, DAY_SHORT, getClassId,
 } from 'plancrimson-utils';
-import CourseCard from '../Course/CourseCard';
 import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
-import { alertSignIn } from './searchUtils';
 import useChosenScheduleContext from '@/src/context/selectedSchedule';
 import useSearchState from '@/src/context/searchState';
+import { alertSignIn } from './searchUtils';
+import CourseCard from '../Course/CourseCard';
+import { classNames } from '@/src/utils';
 
 interface ButtonProps {
   onClick: () => void;
