@@ -2,7 +2,7 @@
 import Head from 'next/head';
 import React, { PropsWithChildren } from 'react';
 import type { QueryConstraint } from 'firebase/firestore';
-import { MeiliProvider } from "@/components/MeiliProvider";
+import { MeiliProvider } from '@/components/MeiliProvider';
 import useSchedules from '@/src/schedules';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';

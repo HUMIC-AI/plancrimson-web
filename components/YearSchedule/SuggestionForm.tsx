@@ -5,7 +5,7 @@ import {
   doc,
   getDoc,
   getFirestore,
-  setDoc
+  setDoc,
 } from 'firebase/firestore';
 import { Auth } from '@/src/features';
 import { classNames } from '@/src/utils';
@@ -34,8 +34,7 @@ export function SuggestionForm() {
     async (ev: any) => {
       ev.preventDefault();
       // only allow user to submit every 2 seconds
-      if (typeof timeoutRef.current !== 'undefined')
-        return;
+      if (typeof timeoutRef.current !== 'undefined') return;
       if (!uid) {
         setSuggestion('You must be logged in to give suggestions!');
         showMessage();
@@ -47,8 +46,7 @@ export function SuggestionForm() {
         ?.toString()
         .trim()
         .toLowerCase();
-      if (!program)
-        return;
+      if (!program) return;
 
       const db = getFirestore();
       try {
@@ -56,7 +54,7 @@ export function SuggestionForm() {
         const suggestions: string[] | undefined = existing.get('suggestions');
         if (suggestions && suggestions.length >= 10) {
           setSuggestion(
-            'You may only make up to ten suggestions. Please check back later.'
+            'You may only make up to ten suggestions. Please check back later.',
           );
         } else if (suggestions?.includes(program)) {
           setSuggestion('You have already suggested that program!');
@@ -67,22 +65,22 @@ export function SuggestionForm() {
               suggestions: arrayUnion(program),
               userEmail: email,
             },
-            { merge: true }
+            { merge: true },
           );
           setSuggestion(
-            `Suggestion successfully recorded! (${(suggestions?.length || 0) + 1}/10)`
+            `Suggestion successfully recorded! (${(suggestions?.length || 0) + 1}/10)`,
           );
         }
       } catch (err) {
         console.error('error updating suggestion', err);
         setSuggestion(
-          'There was an error recording your suggestion. Please try again.'
+          'There was an error recording your suggestion. Please try again.',
         );
       } finally {
         showMessage();
       }
     },
-    [email, uid]
+    [email, uid],
   );
 
   return (
@@ -95,8 +93,9 @@ export function SuggestionForm() {
           placeholder="Program"
           className={classNames(
             'flex-1 appearance-none border rounded w-full py-1 px-2 text-gray-dark',
-            'focus:outline-none focus:shadow-lg shadow transition-shadow max-w-[16rem]'
-          )} />
+            'focus:outline-none focus:shadow-lg shadow transition-shadow max-w-[16rem]',
+          )}
+        />
         <button
           type="submit"
           className="group relative ml-2 rounded bg-black/30 p-2 transition-colors hover:bg-black/50"

@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { updateDoc } from 'firebase/firestore';
 import type { Term } from 'plancrimson-utils';
+import Schema from '../schema';
 import type { AppDispatch, RootState } from '../store';
 import { CustomTimeRecord, UserSettings } from '../types';
 import { getInitialSettings } from '../utils';
@@ -36,11 +37,18 @@ export const settingsSlice = createSlice({
 
 export const { overwriteSettings, customTime } = settingsSlice.actions;
 
+/**
+ * Get the user id from the local store.
+ * If the user is not signed in, throw an error.
+ * Otherwise, update the user's chosen schedule for the given term in Firestore.
+ * Then update the local store accordingly.
+ * @param scheduleId The id of the schedule to choose.
+ * @param term The term to choose the schedule for.
+ */
 export const chooseSchedule = ({ scheduleId, term }: ChooseSchedulePayload) => async (dispatch: AppDispatch, getState: () => RootState) => {
   const uid = getState().auth.userInfo?.uid;
   if (!uid) throw new Error('not signed in');
-  // @ts-ignore
-  await updateDoc(Schema.user(uid), { [`chosenSchedules.${term}`]: scheduleId });
+  await (updateDoc as any)(Schema.user(uid), { [`chosenSchedules.${term}`]: scheduleId });
   return dispatch(settingsSlice.actions.chooseSchedule({ scheduleId, term }));
 };
 

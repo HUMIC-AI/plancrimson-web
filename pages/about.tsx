@@ -1,5 +1,5 @@
-import ExternalLink from '../components/ExternalLink';
-import Layout from '../components/Layout/Layout';
+import ExternalLink from '@/components/ExternalLink';
+import Layout from '@/components/Layout/Layout';
 
 const links: [string, string][] = [
   ['Harvard College Student Handbook', 'https://handbook.college.harvard.edu/'],
@@ -53,54 +53,58 @@ const AboutPage: React.FC = function () {
 export default AboutPage;
 
 function Resources() {
-  return <>
-    <h2>
-      Other Resources
-    </h2>
-    <p>
-      The data for Plan Crimson is taken from the
-      {' '}
-      <ExternalLink href="https://my.harvard.edu/">my.harvard</ExternalLink>
-      {' '}
-      Course Catalog. Evaluations from Fall 2019 and onwards are from
-      {' '}
-      <ExternalLink href="https://qreports.fas.harvard.edu/">
-        QReports
-      </ExternalLink>
-      {' '}
-      and evaluations from before then are from the old
-      {' '}
-      <ExternalLink href="https://course-evaluation-reports.fas.harvard.edu/fas/list">
-        Course Evaluations
-      </ExternalLink>
-      {' '}
-      site. Here&apos;s some other useful sites for planning out your
-      concentration!
-    </p>
-    <ul className="list-inside list-disc">
-      {links.map(([name, href]) => (
-        <li key={href}>
-          <ExternalLink href={href}>{name}</ExternalLink>
-        </li>
-      ))}
-    </ul>
-  </>;
+  return (
+    <>
+      <h2>
+        Other Resources
+      </h2>
+      <p>
+        The data for Plan Crimson is taken from the
+        {' '}
+        <ExternalLink href="https://my.harvard.edu/">my.harvard</ExternalLink>
+        {' '}
+        Course Catalog. Evaluations from Fall 2019 and onwards are from
+        {' '}
+        <ExternalLink href="https://qreports.fas.harvard.edu/">
+          QReports
+        </ExternalLink>
+        {' '}
+        and evaluations from before then are from the old
+        {' '}
+        <ExternalLink href="https://course-evaluation-reports.fas.harvard.edu/fas/list">
+          Course Evaluations
+        </ExternalLink>
+        {' '}
+        site. Here&apos;s some other useful sites for planning out your
+        concentration!
+      </p>
+      <ul className="list-inside list-disc">
+        {links.map(([name, href]) => (
+          <li key={href}>
+            <ExternalLink href={href}>{name}</ExternalLink>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
 }
 
 function TechStack() {
-  return <>
-  <h2>
-    About this site
-  </h2>
-    <p>Here&apos;s some of the tech this site was built with:</p>
-    <ul className="list-inside list-disc">
-      {siteInfoLinks.map(([name, href]) => (
-        <li key={href}>
-          <ExternalLink href={href}>{name}</ExternalLink>
-        </li>
-      ))}
-    </ul>
-    <p>I am not affiliated with any of the above organizations.</p>
-  </>;
+  return (
+    <>
+      <h2>
+        About this site
+      </h2>
+      <p>Here&apos;s some of the tech this site was built with:</p>
+      <ul className="list-inside list-disc">
+        {siteInfoLinks.map(([name, href]) => (
+          <li key={href}>
+            <ExternalLink href={href}>{name}</ExternalLink>
+          </li>
+        ))}
+      </ul>
+      <p>I am not affiliated with any of the above organizations.</p>
+    </>
+  );
 }
 

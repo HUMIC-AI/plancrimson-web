@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import Layout from '../components/Layout/Layout';
+import Layout from '@/components/Layout/Layout';
 import demoImg from '../public/demo.png';
 import searchImg from '../public/search.png';
 import evaluationImg from '../public/evaluation.png';

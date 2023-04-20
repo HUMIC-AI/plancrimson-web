@@ -1,6 +1,6 @@
 import { getDocs } from 'firebase/firestore';
 import { useState, useEffect } from 'react';
-import Schema from '@/src/schema';
+import Firestore from '@/src/schema';
 
 export default function Alerts() {
   const alerts = useAlerts();
@@ -12,7 +12,7 @@ function useAlerts() {
   const [alerts, setAlerts] = useState<string[]>([]);
 
   useEffect(() => {
-    getDocs(Schema.Collection.alerts())
+    getDocs(Firestore.Collection.alerts())
       .then((snap) => setAlerts(snap.docs.map((doc) => doc.data().alert)))
       .catch((err) => {
         console.error('an error occurred when fetching alerts', err);

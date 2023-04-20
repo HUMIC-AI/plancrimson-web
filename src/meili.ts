@@ -3,7 +3,7 @@ import { getDoc } from 'firebase/firestore';
 import {
   createContext, useContext,
 } from 'react';
-import Schema from './schema';
+import Firestore from './schema';
 
 export type { InstantMeiliSearchInstance };
 
@@ -25,7 +25,7 @@ export function getMeiliHost() {
 }
 
 export async function getMeiliApiKey() {
-  const metadata = await getDoc(Schema.metadata());
+  const metadata = await getDoc(Firestore.metadata());
   const key = metadata.data()?.meiliApiKey;
   if (!key && process.env.NODE_ENV !== 'development') throw new Error('metadata not found');
   return key;

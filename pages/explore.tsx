@@ -5,11 +5,11 @@ import useSearchState from '@/src/context/searchState';
 import { useElapsed } from '@/src/hooks';
 import { useMeiliClient } from '@/src/meili';
 import { Auth } from '@/src/features';
-import Layout, { errorMessages } from '../components/Layout/Layout';
-import { ErrorPage } from '../components/Layout/ErrorPage';
-import { LoadingPage } from '../components/Layout/LoadingPage';
-import AttributeMenu from '../components/SearchComponents/AttributeMenu';
-import ChartComponent from '../components/Chart/ChartComponent';
+import Layout, { errorMessages } from '@/components/Layout/Layout';
+import { ErrorPage } from '@/components/Layout/ErrorPage';
+import { LoadingPage } from '@/components/Layout/LoadingPage';
+import AttributeMenu from '@/components/SearchComponents/AttributeMenu';
+import ChartComponent from '@/components/Chart/ChartComponent';
 
 const Chart = connectInfiniteHits(ChartComponent);
 

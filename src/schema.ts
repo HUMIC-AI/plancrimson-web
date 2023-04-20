@@ -1,38 +1,40 @@
-import * as Firestore from 'firebase/firestore';
+import {
+  getFirestore, doc, DocumentReference, collection, CollectionReference, collectionGroup, Query,
+} from 'firebase/firestore';
 import type {
   UserProfile, UserSettings, Schedule, FriendRequest, Metadata, Alert,
 } from './types';
 
-const db = Firestore.getFirestore;
+const db = getFirestore;
 
 const Schema = {
   profile(uid: string) {
-    return Firestore.doc(db(), 'profiles', uid) as Firestore.DocumentReference<UserProfile>;
+    return doc(db(), 'profiles', uid) as DocumentReference<UserProfile>;
   },
   user(uid: string) {
-    return Firestore.doc(db(), 'users', uid) as Firestore.DocumentReference<UserSettings>;
+    return doc(db(), 'users', uid) as DocumentReference<UserSettings>;
   },
   schedule(scheduleUid: string) {
-    return Firestore.doc(db(), 'schedules', scheduleUid) as Firestore.DocumentReference<Schedule>;
+    return doc(db(), 'schedules', scheduleUid) as DocumentReference<Schedule>;
   },
   friendRequest(from: string, to: string) {
-    return Firestore.doc(db(), 'allFriends', from, 'friends', to) as Firestore.DocumentReference<FriendRequest>;
+    return doc(db(), 'allFriends', from, 'friends', to) as DocumentReference<FriendRequest>;
   },
   metadata() {
-    return Firestore.doc(db(), 'metadata', 'metadata') as Firestore.DocumentReference<Metadata>;
+    return doc(db(), 'metadata', 'metadata') as DocumentReference<Metadata>;
   },
   Collection: {
     profiles() {
-      return Firestore.collection(db(), 'profiles') as Firestore.CollectionReference<UserProfile>;
+      return collection(db(), 'profiles') as CollectionReference<UserProfile>;
     },
     schedules() {
-      return Firestore.collection(db(), 'schedules') as Firestore.CollectionReference<Schedule>;
+      return collection(db(), 'schedules') as CollectionReference<Schedule>;
     },
     allFriends() {
-      return Firestore.collectionGroup(db(), 'friends') as Firestore.Query<FriendRequest>;
+      return collectionGroup(db(), 'friends') as Query<FriendRequest>;
     },
     alerts() {
-      return Firestore.collection(db(), 'alerts') as Firestore.CollectionReference<Alert>;
+      return collection(db(), 'alerts') as CollectionReference<Alert>;
     },
   },
 };

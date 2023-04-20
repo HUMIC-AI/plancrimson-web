@@ -13,7 +13,7 @@ import {
 import { useModal } from '@/src/context/modal';
 import { useAppDispatch, useElapsed } from '@/src/hooks';
 import { Auth, ClassCache } from '@/src/features';
-import Schema from '@/src/schema';
+import Firestore from '@/src/schema';
 import { getAllClassIds, classNames } from '@/src/utils';
 import Tooltip from '@/components/Tooltip';
 import FadeTransition from '@/components/FadeTransition';
@@ -172,7 +172,7 @@ export default function ChartComponent({
   }
 
   async function focusMine(meiliClient: InstantMeiliSearchInstance, userId: string) {
-    const q = query(Schema.Collection.schedules(), where('ownerUid', '==', userId));
+    const q = query(Firestore.Collection.schedules(), where('ownerUid', '==', userId));
     const { docs } = await getDocs(q);
     const courseIds = getAllClassIds(docs.map((doc) => doc.data()));
 

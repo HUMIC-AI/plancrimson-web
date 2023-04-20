@@ -16,9 +16,9 @@ import { SelectedScheduleProvider } from '@/src/context/selectedSchedule';
 import {
   Auth, Profile, Schedules, Settings,
 } from '@/src/features';
-import Schema from '@/src/schema';
+import Firestore from '@/src/schema';
 import { getInitialSettings } from '@/src/utils';
-import GraduationYearDialog from '../components/GraduationYearDialog';
+import GraduationYearDialog from '@/components/GraduationYearDialog';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -118,7 +118,7 @@ function useSyncProfileToRedux() {
     // if so, sync it to Redux. Force using latest version
     (async () => {
       console.info(`fetching profile for ${uid}`);
-      const profile = await getDocFromServer(Schema.profile(uid));
+      const profile = await getDocFromServer(Firestore.profile(uid));
 
       if (!profile.exists()) return;
       const data = profile.data()!;
@@ -145,7 +145,7 @@ function useSyncProfileToRedux() {
     });
 
     // keep the Redux state for the user settings in sync with Firestore
-    const userDataRef = Schema.user(uid);
+    const userDataRef = Firestore.user(uid);
     const unsubUserData = onSnapshot(userDataRef, (snap) => {
       if (!snap.exists()) return;
 

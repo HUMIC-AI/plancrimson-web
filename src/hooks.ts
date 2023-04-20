@@ -10,7 +10,7 @@ import {
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { allTruthy } from 'plancrimson-utils';
 import type { AppDispatch, RootState } from './store';
-import Schema from './schema';
+import Firestore from './schema';
 import { getInitialSettings } from './utils';
 import { FriendRequest, UserProfile, WithId } from './types';
 
@@ -33,7 +33,7 @@ export function downloadJson(filename: string, data: object | string, extension 
  * @param to the uid of the user to send a friend request to
  */
 export function sendFriendRequest(from: string, to: string) {
-  return setDoc(Schema.friendRequest(from, to), {
+  return setDoc(Firestore.friendRequest(from, to), {
     from,
     to,
     accepted: false,
@@ -43,8 +43,8 @@ export function sendFriendRequest(from: string, to: string) {
 
 export function unfriend(from: string, to: string) {
   return Promise.allSettled([
-    deleteDoc(Schema.friendRequest(from, to)),
-    deleteDoc(Schema.friendRequest(to, from)),
+    deleteDoc(Firestore.friendRequest(from, to)),
+    deleteDoc(Firestore.friendRequest(to, from)),
   ]);
 }
 
@@ -105,14 +105,14 @@ export async function signInUser() {
     user = newUser.user;
   }
 
-  await setDoc(Schema.profile(user.uid), {
+  await setDoc(Firestore.profile(user.uid), {
     // we assume people don't use strange characters in their academic emails
     username: user.email!.slice(0, user.email!.lastIndexOf('@')),
     displayName: user.displayName,
     photoUrl: user.photoURL,
   }, { merge: true });
 
-  await setDoc(Schema.user(user.uid), getInitialSettings(), { merge: true });
+  await setDoc(Firestore.user(user.uid), getInitialSettings(), { merge: true });
   return user;
 }
 
@@ -136,7 +136,7 @@ export async function getProfile(id: string): Promise<WithId<UserProfile>> {
     }
   }
 
-  const snap = await getDoc(Schema.profile(id));
+  const snap = await getDoc(Firestore.profile(id));
   if (!snap.exists()) {
     throw new Error(`user ${id} not found`);
   }
@@ -181,8 +181,8 @@ export function useFriendRequests(uid: string | null | undefined) {
   useEffect(() => {
     if (!uid) return;
 
-    const incomingQ = query(Schema.Collection.allFriends(), where('to', '==', uid));
-    const outgoingQ = query(Schema.Collection.allFriends(), where('from', '==', uid));
+    const incomingQ = query(Firestore.Collection.allFriends(), where('to', '==', uid));
+    const outgoingQ = query(Firestore.Collection.allFriends(), where('from', '==', uid));
 
     const unsubIn = onSnapshot(incomingQ, (snap) => setIncoming(snap.docs.map((d) => ({ ...d.data(), id: d.id }))));
     const unsubOut = onSnapshot(outgoingQ, (snap) => setOutgoing(snap.docs.map((d) => ({ ...d.data(), id: d.id }))));

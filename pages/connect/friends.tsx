@@ -1,5 +1,4 @@
 import { getDoc, deleteDoc } from 'firebase/firestore';
-import Schema, { UserProfile, WithId } from 'plancrimson-utils';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import {
@@ -9,6 +8,8 @@ import { Auth } from '@/src/features';
 import ProfileList from '@/components/ConnectPageComponents/ProfileList';
 import ConnectLayout from '@/components/ConnectPageComponents/ConnectLayout';
 import FindClassmates from '@/components/ConnectPageComponents/FindClassmates';
+import Firestore from '@/src/schema';
+import { UserProfile, WithId } from '@/src/types';
 
 export default function FriendsPage() {
   const userId = Auth.useAuthProperty('uid');
@@ -83,11 +84,11 @@ function UnfriendButton({ profile }: { profile: WithId<UserProfile> }) {
    */
   async function handleClick() {
     try {
-      const outgoing = await getDoc(Schema.friendRequest(userId!, profile.id));
+      const outgoing = await getDoc(Firestore.friendRequest(userId!, profile.id));
       if (outgoing.exists()) {
         await deleteDoc(outgoing.ref);
       } else {
-        await deleteDoc(Schema.friendRequest(profile.id, userId!));
+        await deleteDoc(Firestore.friendRequest(profile.id, userId!));
       }
     } catch (e) {
       console.error(e);

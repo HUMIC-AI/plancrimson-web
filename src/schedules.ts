@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { ClassCache, Schedules } from './features';
 import { useAppDispatch } from './hooks';
 import { useMeiliClient } from './meili';
-import Schema from './schema';
+import Firestore from './schema';
 
 /**
  * Listen to all schedules on Firestore that meet the given constraints.
@@ -21,7 +21,7 @@ export default function useSchedules(constraints: QueryConstraint[]) {
       return;
     }
 
-    const q = query(Schema.Collection.schedules(), ...constraints);
+    const q = query(Firestore.Collection.schedules(), ...constraints);
     const unsubSchedules = onSnapshot(q, (snap) => {
       const scheduleEntries = snap.docs.map((doc) => doc.data());
       const classIds = scheduleEntries.flatMap((schedule) => schedule.classes.map(({ classId }) => classId));

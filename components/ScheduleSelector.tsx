@@ -5,9 +5,9 @@ import React, { ReactNode, useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
 import { Auth, Schedules, Settings } from '@/src/features';
 import { useAppDispatch, useAppSelector } from '@/src/hooks';
-import FadeTransition from './FadeTransition';
 import { classNames } from '@/src/utils';
 import { titleContainsTerm, Season } from 'plancrimson-utils';
+import FadeTransition from './FadeTransition';
 
 interface ButtonTitleProps {
   showTerm: 'on' | 'off' | 'auto';

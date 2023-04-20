@@ -8,9 +8,9 @@ import {
 import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
 import useChosenScheduleContext from '@/src/context/selectedSchedule';
 import useSearchState from '@/src/context/searchState';
+import { classNames } from '@/src/utils';
 import { alertSignIn } from './searchUtils';
 import CourseCard from '../Course/CourseCard';
-import { classNames } from '@/src/utils';
 
 interface ButtonProps {
   onClick: () => void;

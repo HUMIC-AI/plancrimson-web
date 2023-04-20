@@ -127,23 +127,23 @@ const LargeOnly = {
     const { pathname } = useRouter();
 
     return (
-      <div className="hidden sm:ml-6 sm:flex items-center space-x-4">
-          {paths.map((item) => (
-            // pass the query between pages to preserve the selected schedule
-            <Link
-              key={item.name}
-              href={item.href}
-              className={classNames(
-                item.href === pathname
-                  ? 'bg-gray-dark text-white font-bold'
-                  : 'text-gray-light hover:bg-black font-medium hover:text-white',
-                'px-3 py-2 rounded-md text-sm text-center',
-              )}
-              aria-current={item.href === pathname ? 'page' : 'false'}
-            >
-              {item.name}
-            </Link>
-          ))}
+      <div className="hidden items-center space-x-4 sm:ml-6 sm:flex">
+        {paths.map((item) => (
+          // pass the query between pages to preserve the selected schedule
+          <Link
+            key={item.name}
+            href={item.href}
+            className={classNames(
+              item.href === pathname
+                ? 'bg-gray-dark text-white font-bold'
+                : 'text-gray-light hover:bg-black font-medium hover:text-white',
+              'px-3 py-2 rounded-md text-sm text-center',
+            )}
+            aria-current={item.href === pathname ? 'page' : 'false'}
+          >
+            {item.name}
+          </Link>
+        ))}
       </div>
     );
   },

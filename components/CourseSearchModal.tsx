@@ -1,13 +1,14 @@
 import React, { useMemo } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import { Configure, InstantSearch, ToggleRefinement } from 'react-instantsearch-dom';
-import type { Schedule } from 'plancrimson-utils';
-import { classNames, termToSeasonMap } from 'plancrimson-utils';
 import { useModal } from '@/src/context/modal';
 import useSearchState, { SearchStateProvider } from '@/src/context/searchState';
 import { ChosenScheduleContext } from '@/src/context/selectedSchedule';
 import { Auth } from '@/src/features';
 import { InstantMeiliSearchInstance, useMeiliClient } from '@/src/meili';
+import { TERM_TO_SEASON } from 'plancrimson-utils';
+import { classNames } from '@/src/utils';
+import { Schedule } from '@/src/types';
 import { errorMessages } from './Layout/Layout';
 import Hits, { HitsDemo } from './SearchComponents/Hits';
 import SearchBox, { SearchBoxDemo } from './SearchComponents/SearchBox';
@@ -22,8 +23,8 @@ export default function AddCoursesButton({ schedule, className = '', children = 
       title="Add courses"
       className={classNames('flex items-center justify-center rounded-xl bg-blue-light interactive py-2 px-4 outline-none', className)}
       onClick={() => {
-        const terms = Object.keys(termToSeasonMap);
-        const term = terms.find((t) => termToSeasonMap[t].season === schedule.season && termToSeasonMap[t].year === schedule.year);
+        const terms = Object.keys(TERM_TO_SEASON);
+        const term = terms.find((t) => TERM_TO_SEASON[t].season === schedule.season && TERM_TO_SEASON[t].year === schedule.year);
         showContents({
           title: 'Add a course',
           content: <ModalWrapper selected={schedule.id} term={term} />,

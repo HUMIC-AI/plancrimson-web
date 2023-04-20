@@ -18,14 +18,14 @@ import {
 } from '@/src/requirements/util';
 import { SemesterDisplayProps } from '@/components/YearSchedule/SemesterDisplay';
 import { classNames } from '@/src/utils';
-import Layout from '../components/Layout/Layout';
-import { Footer } from '../components/Layout/Footer';
-import Navbar from '../components/Layout/Navbar';
-import { SemestersList } from '../components/YearSchedule/PlanningSection';
-import HiddenSchedules from '../components/YearSchedule/HiddenSchedules';
-import HeaderSection from '../components/YearSchedule/HeaderSection';
-import RequirementsSection from '../components/YearSchedule/RequirementsSection';
-import { ClassesCloud } from '../components/ClassesCloud';
+import Layout from '@/components/Layout/Layout';
+import { Footer } from '@/components/Layout/Footer';
+import Navbar from '@/components/Layout/Navbar';
+import { SemestersList } from '@/components/YearSchedule/PlanningSection';
+import HiddenSchedules from '@/components/YearSchedule/HiddenSchedules';
+import HeaderSection from '@/components/YearSchedule/HeaderSection';
+import RequirementsSection from '@/components/YearSchedule/RequirementsSection';
+import { ClassesCloud } from '@/components/ClassesCloud';
 
 export default function PlanPage() {
   const userId = Auth.useAuthProperty('uid');

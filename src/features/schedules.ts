@@ -5,7 +5,7 @@ import {
 } from 'firebase/firestore';
 import { Semester } from 'plancrimson-utils';
 import { v4 as uuidv4 } from 'uuid';
-import Schema from '../schema';
+import Firestore from '../schema';
 import type { AppDispatch, RootState } from '../store';
 import { ScheduleMap, UserClassData, Schedule } from '../types';
 
@@ -67,12 +67,16 @@ export const selectSchedule = (scheduleId: string | null) => function ({ schedul
 
 export const { overwriteSchedules, clearSchedule } = schedulesSlice.actions;
 
+// Checks if the given schedule is in the Redux store.
+// If it is, throw an error.
+// If it isn't, first wait to add it to Firestore.
+// Then, add it to the Redux store.
 export const createSchedule = (schedule: Schedule) => async (dispatch: AppDispatch, getState: () => RootState) => {
   const state = getState();
   if (schedule.id in state.schedules) {
     throw new Error('schedule already exists');
   }
-  await setDoc(Schema.schedule(schedule.id), schedule);
+  await setDoc(Firestore.schedule(schedule.id), schedule);
   return dispatch(schedulesSlice.actions.create(schedule));
 };
 
@@ -88,7 +92,7 @@ export const createDefaultSchedule = ({ season, year }: Semester, uid: string) =
 
 export const removeCourses = (payload: { scheduleId: string, courseIds: string[] }) => async (dispatch: AppDispatch) => {
   const { scheduleId, courseIds } = payload;
-  const snap = await getDoc(Schema.schedule(scheduleId));
+  const snap = await getDoc(Firestore.schedule(scheduleId));
   if (!snap.exists()) throw new Error('schedule does not exist');
   const classes = snap.data()!.classes.filter(({ classId }) => !courseIds.includes(classId));
   await updateDoc(snap.ref, { classes });
@@ -96,22 +100,22 @@ export const removeCourses = (payload: { scheduleId: string, courseIds: string[]
 };
 
 export const renameSchedule = ({ scheduleId, title }: { scheduleId: string, title: string }) => async (dispatch: AppDispatch) => {
-  await updateDoc(Schema.schedule(scheduleId), { title });
+  await updateDoc(Firestore.schedule(scheduleId), { title });
   return dispatch(schedulesSlice.actions.rename({ scheduleId, title }));
 };
 
 export const setPublic = (payload: PublicPayload) => async (dispatch: AppDispatch) => {
-  await updateDoc(Schema.schedule(payload.scheduleId), { public: payload.public });
+  await updateDoc(Firestore.schedule(payload.scheduleId), { public: payload.public });
   return dispatch(schedulesSlice.actions.setPublic(payload));
 };
 
 export const deleteSchedule = (id: string) => async (dispatch: AppDispatch) => {
-  await deleteDoc(Schema.schedule(id));
+  await deleteDoc(Firestore.schedule(id));
   return dispatch(schedulesSlice.actions.deleteSchedule(id));
 };
 
 export const addCourses = ({ scheduleId, courses }: CoursesPayload) => async (dispatch: AppDispatch) => {
-  const snap = await getDoc(Schema.schedule(scheduleId));
+  const snap = await getDoc(Firestore.schedule(scheduleId));
   if (!snap.exists) throw new Error('schedule not found');
   const { classes } = snap.data()!;
   courses.forEach(({ classId }) => {

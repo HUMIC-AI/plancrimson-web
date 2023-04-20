@@ -1,14 +1,15 @@
 import { onSnapshot } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import Schema, { Schedule } from 'plancrimson-utils';
 import { ClassCache, Auth } from '@/src/features';
 import { useAppDispatch, useElapsed } from '@/src/hooks';
 import { useMeiliClient } from '@/src/meili';
-import Layout, { errorMessages } from '../../components/Layout/Layout';
-import { ErrorPage } from '../../components/Layout/ErrorPage';
-import { LoadingPage } from '../../components/Layout/LoadingPage';
-import Calendar from '../../components/SemesterSchedule/Calendar';
+import Firestore from '@/src/schema';
+import { Schedule } from '@/src/types';
+import Layout, { errorMessages } from '@/components/Layout/Layout';
+import { ErrorPage } from '@/components/Layout/ErrorPage';
+import { LoadingPage } from '@/components/Layout/LoadingPage';
+import Calendar from '@/components/SemesterSchedule/Calendar';
 
 
 export default function SchedulePage() {
@@ -48,7 +49,7 @@ function useSchedule(userId: string | null | undefined, scheduleId: string) {
   const { client } = useMeiliClient();
 
   useEffect(() => {
-    const unsub = onSnapshot(Schema.schedule(scheduleId), (snap) => {
+    const unsub = onSnapshot(Firestore.schedule(scheduleId), (snap) => {
       if (snap.exists()) {
         const scheduleData = snap.data()!;
         setSchedule(scheduleData);

@@ -1,13 +1,14 @@
 import { updateDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import Schema, { getUniqueSemesters } from 'plancrimson-utils';
 import { useAppDispatch } from '@/src/hooks';
 import { useModal } from '@/src/context/modal';
 import { Schedules, Settings } from '@/src/features';
+import Firestore from '@/src/schema';
+import { getUniqueSemesters } from 'plancrimson-utils';
 
 /**
- * Rendered in _app.tsx once user first logs in.
+ * Rendered in {@link _app.tsx} once user first logs in.
  * Ask the user for their graduation year.
  * On submission, create default schedules for the default years.
  */
@@ -20,20 +21,29 @@ export default function GraduationYearDialog({ defaultYear, uid }: { defaultYear
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const promises = getUniqueSemesters(classYear).map(async ({ year, season }) => {
-      const { payload: schedule } = await dispatch(Schedules.createDefaultSchedule({ year, season }, uid));
-      await dispatch(Settings.chooseSchedule({ term: `${schedule.year}${schedule.season}`, scheduleId: schedule.id }));
+    const defaultSemesters = getUniqueSemesters(classYear);
+    const promises = defaultSemesters.map(async ({ year, season }) => {
+      const { payload: schedule } = await dispatch(
+        Schedules.createDefaultSchedule({ year, season }, uid),
+      );
+      await dispatch(
+        Settings.chooseSchedule({
+          term: `${schedule.year}${schedule.season}`,
+          scheduleId: schedule.id,
+        }),
+      );
     });
     const settled = await Promise.allSettled(promises);
 
-    settled.forEach((result) => {
-      if (result.status === 'rejected') {
-        console.error('error creating default schedules', result.reason);
-      }
-    });
+    const errors = settled.filter((result) => result.status === 'rejected');
+    if (errors.length > 0) {
+      console.error('error creating default schedules', errors);
+      alert('Error creating default schedules. Please try again later.');
+      return;
+    }
 
     try {
-      await updateDoc(Schema.profile(uid), 'classYear', classYear);
+      await updateDoc(Firestore.profile(uid), 'classYear', classYear);
     } catch (err) {
       console.error(`error updating class year for ${uid}`, err);
     }

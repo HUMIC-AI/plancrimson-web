@@ -5,17 +5,18 @@ import {
 } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
-import Schema, { FriendRequest, UserProfile, WithId } from 'plancrimson-utils';
 import ScheduleSection from '@/components/SemesterSchedule/ScheduleList';
 import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
 import { Auth, Schedules } from '@/src/features';
 import {
   sendFriendRequest, unfriend, useAppSelector, useElapsed,
 } from '@/src/hooks';
-import Layout, { errorMessages } from '../../components/Layout/Layout';
-import { ErrorPage } from '../../components/Layout/ErrorPage';
-import { LoadingPage } from '../../components/Layout/LoadingPage';
-import { ImageWrapper } from '../../components/UserLink';
+import Layout, { errorMessages } from '@/components/Layout/Layout';
+import { ErrorPage } from '@/components/Layout/ErrorPage';
+import { LoadingPage } from '@/components/Layout/LoadingPage';
+import { ImageWrapper } from '@/components/UserLink';
+import Schema from '@/src/schema';
+import { FriendRequest, UserProfile, WithId } from '@/src/types';
 
 type FriendStatus = 'loading' | 'self' | 'none' | 'friends' | 'pending';
 
