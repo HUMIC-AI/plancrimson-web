@@ -14,6 +14,7 @@ export interface LayoutProps {
   className?: string;
   scheduleQueryConstraints?: QueryConstraint[];
   custom?: boolean;
+  transparentHeader?: boolean;
 }
 
 export default function Layout({
@@ -22,6 +23,7 @@ export default function Layout({
   className = 'mx-auto flex-1 container sm:p-8',
   scheduleQueryConstraints: constraints = [],
   custom = false,
+  transparentHeader = false,
 }: PropsWithChildren<LayoutProps>) {
   const pageTitle = `Plan Crimson${title ? ` | ${title}` : ''}`;
 
@@ -32,7 +34,12 @@ export default function Layout({
       <HeadMeta pageTitle={pageTitle} description={description} />
 
       <MeiliProvider>
-        <Wrapper scheduleQueryConstraints={constraints} className={className} custom={custom}>
+        <Wrapper
+          transparentHeader={transparentHeader}
+          scheduleQueryConstraints={constraints}
+          className={className}
+          custom={custom}
+        >
           {children}
         </Wrapper>
 
@@ -63,8 +70,12 @@ function HeadMeta({
  * Listen to the schedules given by the constraints.
  */
 function Wrapper({
-  children, scheduleQueryConstraints: constraints = [], custom, className,
-}: PropsWithChildren<Pick<LayoutProps, 'scheduleQueryConstraints' | 'custom' | 'className'>>) {
+  children,
+  scheduleQueryConstraints: constraints = [],
+  custom,
+  className,
+  transparentHeader,
+}: PropsWithChildren<Pick<LayoutProps, 'scheduleQueryConstraints' | 'custom' | 'className' | 'transparentHeader'>>) {
   useSchedules(constraints);
 
   if (custom) return <>{children}</>;
@@ -72,7 +83,7 @@ function Wrapper({
   return (
     <>
       <div className="flex min-h-screen flex-col">
-        <Navbar />
+        <Navbar transparent={transparentHeader} />
         <Alerts />
         <main className={className}>
           {children}

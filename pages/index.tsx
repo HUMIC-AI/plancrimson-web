@@ -25,7 +25,7 @@ import {
 } from '@/src/requirements/util';
 import { SemesterDisplayProps } from '@/components/YearSchedule/SemesterDisplay';
 import { classNames } from '@/src/utils';
-import { ClassesCloud } from './ClassesCloud';
+import { ClassesCloud } from '../components/ClassesCloud';
 
 export default function PlanPage() {
   const userId = Auth.useAuthProperty('uid');

@@ -22,9 +22,18 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 
-export default function Navbar() {
+export default function Navbar({
+  transparent = false,
+}: {
+  transparent?: boolean;
+}) {
   return (
-    <Disclosure as="nav" className="bg-black">
+    <Disclosure
+      as="nav"
+      className={classNames(
+        transparent ? 'absolute inset-x-0 z-10' : 'bg-black',
+      )}
+    >
       {({ open }) => (
         <>
           <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
@@ -66,7 +75,11 @@ const SmallComponents = {
       <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
         <Disclosure.Button
           name="Open main menu"
-          className="inline-flex items-center justify-center rounded-md p-2 text-gray-light hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+          className={classNames(
+            'inline-flex items-center justify-center rounded-md p-2',
+            'text-gray-light hover:bg-black hover:text-white',
+            'focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white',
+          )}
         >
           <span className="sr-only">Open main menu</span>
           {open ? (
@@ -93,7 +106,7 @@ const SmallComponents = {
                 href={item.href}
                 className={classNames(
                   item.href === pathname
-                    ? 'bg-black text-white font-bold'
+                    ? 'bg-gray-dark text-white font-bold'
                     : 'text-gray-light font-medium hover:bg-black hover:text-white',
                   'block px-3 py-2 rounded-md text-base',
                 )}
@@ -123,7 +136,7 @@ const LargeOnly = {
               href={item.href}
               className={classNames(
                 item.href === pathname
-                  ? 'bg-black text-white font-bold'
+                  ? 'bg-gray-dark text-white font-bold'
                   : 'text-gray-light hover:bg-black font-medium hover:text-white',
                 'px-3 py-2 rounded-md text-sm text-center',
               )}
