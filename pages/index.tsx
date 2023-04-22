@@ -3,7 +3,7 @@ import {
   useState, useEffect, useMemo, useRef,
 } from 'react';
 import {
-  breakpoints, allTruthy, getUniqueSemesters, compareSemesters,
+  allTruthy, getUniqueSemesters, compareSemesters,
 } from 'plancrimson-utils';
 import {
   Auth, ClassCache, Planner, Profile, Schedules, Settings,
@@ -17,7 +17,7 @@ import {
   RequirementGroup,
 } from '@/src/requirements/util';
 import { SemesterDisplayProps } from '@/components/YearSchedule/SemesterColumn/SemesterColumn';
-import { classNames } from '@/src/utils';
+import { breakpoints, classNames } from '@/src/utils';
 import Layout from '@/components/Layout/Layout';
 import { Footer } from '@/components/Layout/Footer';
 import Navbar from '@/components/Layout/Navbar';
