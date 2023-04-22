@@ -1,24 +1,28 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { courses, subjectNames, tsne3d } from 'plancrimson-utils';
-import { createRef, useEffect } from 'react';
+import { createRef, PropsWithChildren, useEffect } from 'react';
 import Layout from '@/components/Layout/Layout';
-import { signInUser, handleError } from '@/src/hooks';
 
 const PARTICLE_SIZE = 0.5;
+const sensitivity = 20;
 
 /**
- * @param autoRotate Whether to automatically rotate the camera. Only works if `withControls` is true.
+ * @param withControls Whether to add orbit controls.
+ * @param autoRotate Whether to automatically rotate the camera. Only works if `withControls` is false.
+ * Set to a number to control the speed.
+ * @param interactive Whether to highlight points on hover.
  */
 export function ClassesCloud({
-  withControls = false,
-  autoRotate = true,
+  controls = 'none',
+  autoRotate = 0,
   interactive = false,
-}: {
-  withControls?: boolean;
-  autoRotate?: boolean;
+  children,
+}: PropsWithChildren<{
+  controls?: 'track' | 'orbit' | 'none';
+  autoRotate?: number;
   interactive?: boolean;
-}) {
+}>) {
   const canvas = createRef<HTMLCanvasElement>();
 
   useEffect(() => {
@@ -27,11 +31,11 @@ export function ClassesCloud({
     const points = createPoints();
     scene.add(points);
 
-    const controls = withControls ? createControls(camera, renderer, autoRotate) : null;
-    const raycaster = interactive ? new THREE.Raycaster() : null;
-    let currentIntersect: number | null = null;
-    const mouseTracker = withControls ? null : createMouseTracker(camera, 20, raycaster);
-    const pointSize = points.geometry.attributes.size;
+    const orbitControls = controls === 'orbit' ? createControls(camera, renderer, autoRotate) : null;
+
+    const mouseTracker = (controls === 'track' || interactive) ? createMouseTracker() : null;
+
+    const raycaster = interactive ? createRaycaster(points) : null;
 
     const disposeResizeListener = syncWindow(camera, renderer);
 
@@ -40,50 +44,33 @@ export function ClassesCloud({
 
       camera.lookAt(scene.position);
 
-      if (controls) controls.update();
-      if (mouseTracker) mouseTracker.update();
-      if (raycaster) {
-        const intersects = raycaster.intersectObjects(points as any);
-        if (intersects.length > 0) {
-          if (currentIntersect !== intersects[0].index) {
-            if (currentIntersect !== null) {
-              updateElement(pointSize, currentIntersect, PARTICLE_SIZE);
-              currentIntersect = intersects[0].index!;
-              updateElement(pointSize, currentIntersect, PARTICLE_SIZE * 2);
-              pointSize.needsUpdate = true;
-            }
-          }
-        } else if (currentIntersect !== null) {
-          updateElement(pointSize, currentIntersect, PARTICLE_SIZE);
-          pointSize.needsUpdate = true;
-          currentIntersect = null;
-        }
+      if (orbitControls) orbitControls.update();
+
+      if (controls === 'track') {
+        camera.position.x += (mouseTracker!.mouse.x * sensitivity - camera.position.x) * 0.05;
+        camera.position.y += (-mouseTracker!.mouse.y * sensitivity - camera.position.y) * 0.05;
       }
+
+      if (raycaster) raycaster.update(mouseTracker!.mouse, camera);
 
       renderer.render(scene, camera);
     }
     animate();
 
     return () => {
-      if (controls) controls.dispose();
+      if (orbitControls) orbitControls.dispose();
       if (mouseTracker) mouseTracker.dispose();
       renderer.dispose();
       disposeResizeListener();
     };
-  }, []);
+  }, [canvas, autoRotate, controls, interactive]);
 
   return (
     <Layout className="relative flex flex-1 items-center justify-center bg-black p-8" title="Plan" transparentHeader>
       <div className="absolute inset-0 overflow-hidden">
         <canvas ref={canvas} />
       </div>
-      <button
-        type="button"
-        className="relative text-6xl font-black text-white drop-shadow-lg transition-opacity hover:opacity-80"
-        onClick={() => signInUser().catch(handleError)}
-      >
-        Sign in to get started!
-      </button>
+      {children}
     </Layout>
   );
 }
@@ -97,7 +84,7 @@ function updateElement(buffer: THREE.BufferAttribute | THREE.InterleavedBufferAt
 
 function createScene(canvas: HTMLCanvasElement) {
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x000000, 0.03);
+  scene.fog = new THREE.FogExp2(0x000000, 0.02);
 
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
   camera.position.z = 30;
@@ -118,12 +105,14 @@ function getSubjectColors() {
   return subjectColors;
 }
 
-function createControls(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, autoRotate: boolean) {
+function createControls(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, autoRotate: number) {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.minDistance = 1;
-  controls.maxDistance = 80;
-  controls.autoRotate = autoRotate;
-  controls.autoRotateSpeed = 0.5;
+  controls.maxDistance = 60;
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.autoRotate = !!autoRotate;
+  controls.autoRotateSpeed = autoRotate;
   return controls;
 }
 
@@ -146,32 +135,61 @@ function createPoints() {
   const colors = courses.flatMap((c) => subjectColors[c.subject] ?? [0, 0, 0]);
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
+  // geometry.setAttribute('size', new THREE.Float32BufferAttribute(courses.map(() => PARTICLE_SIZE), 1));
+
   const points = new THREE.Points(geometry, material);
   return points;
 }
 
-function createMouseTracker(camera: THREE.PerspectiveCamera, sensitivity = 20, raycaster: THREE.Raycaster | null = null) {
+function createRaycaster(points: THREE.Points) {
+  const raycaster = new THREE.Raycaster();
+  raycaster.params.Points!.threshold = PARTICLE_SIZE / 2;
+  let currentIntersect: number | null = null;
+  const pointSizeBuffer = points.geometry.attributes.color;
+
+  function update(mouse: THREE.Vector2, camera: THREE.Camera) {
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects([points], false);
+
+    if (intersects.length > 0) {
+      if (currentIntersect !== intersects[0].index) {
+        if (currentIntersect !== null) {
+          // Reset the previous point's size.
+          updateElement(pointSizeBuffer, currentIntersect, PARTICLE_SIZE);
+        }
+        currentIntersect = intersects[0].index!;
+        updateElement(pointSizeBuffer, currentIntersect, PARTICLE_SIZE * 2);
+        pointSizeBuffer.needsUpdate = true;
+      }
+    } else if (currentIntersect !== null) {
+      updateElement(pointSizeBuffer, currentIntersect, PARTICLE_SIZE);
+      pointSizeBuffer.needsUpdate = true;
+      currentIntersect = null;
+    }
+  }
+
+  return {
+    update,
+  };
+}
+
+function createMouseTracker() {
   const mouse = new THREE.Vector2();
 
   // on pointer move, update the mouse vector
   const onPointerMove = (event: MouseEvent) => {
-    mouse.x = -((event.clientX / window.innerWidth) * 2 - 1) * sensitivity;
-    mouse.y = ((event.clientY / window.innerHeight) * 2 - 1) * sensitivity;
+    mouse.x = -((event.clientX / window.innerWidth) * 2 - 1);
+    mouse.y = (event.clientY / window.innerHeight) * 2 - 1;
   };
 
   window.addEventListener('mousemove', onPointerMove);
-
-  function update() {
-    camera.position.x += (mouse.x - camera.position.x) * 0.05;
-    camera.position.y += (-mouse.y - camera.position.y) * 0.05;
-    if (raycaster) raycaster.setFromCamera(mouse, camera);
-  }
 
   function dispose() {
     window.removeEventListener('mousemove', onPointerMove);
   }
 
-  return { update, dispose };
+  return { mouse, dispose };
 }
 
 function syncWindow(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer) {
