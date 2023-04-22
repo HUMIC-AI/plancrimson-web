@@ -69,7 +69,7 @@ export const Location: React.FC<CourseProps> = function ({ course, inSearch }) {
           {course.IS_SCL_DESCR_IS_SCL_DESCRG && (
             <>
               {' '}
-              <span className="font-light text-gray-light">
+              <span className="font-light text-gray-dark">
                 (
                 {course.IS_SCL_DESCR_IS_SCL_DESCRG}
                 )

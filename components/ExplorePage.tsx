@@ -7,7 +7,7 @@ import { MeiliContext } from '@/src/context/meili';
 import { Auth } from '@/src/features';
 import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { ErrorMessage } from '@/components/Layout/ErrorPage';
-import { LoadingPage } from '@/components/Layout/LoadingPage';
+import { LoadingBars } from '@/components/Layout/LoadingPage';
 import AttributeMenu from '@/components/SearchComponents/AttributeMenu/AttributeMenu';
 import ChartComponent from '@/components/Chart/ChartComponent';
 
@@ -23,8 +23,11 @@ export default function ExplorePage() {
   const elapsed = useElapsed(1000, []);
 
   if (typeof userId === 'undefined') {
-    if (elapsed) return <LoadingPage />;
-    return <Layout />;
+    return (
+      <Layout>
+        {elapsed && <LoadingBars />}
+      </Layout>
+    );
   }
 
   if (userId === null) {
@@ -47,8 +50,11 @@ export default function ExplorePage() {
           }
 
           if (!client) {
-            if (elapsed) return <LoadingPage />;
-            return <Layout />;
+            return (
+              <Layout>
+                {elapsed && <LoadingBars />}
+              </Layout>
+            );
           }
 
           return <ExplorePageInner client={client} />;

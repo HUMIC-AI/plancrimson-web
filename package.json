@@ -6,12 +6,14 @@
     "use-emulators": "cross-env FIRESTORE_EMULATOR_HOST='localhost:8080' FIREBASE_AUTH_EMULATOR_HOST='127.0.0.1:9099'",
     "dev": "npm run use-emulators next dev",
     "build": "next build",
-    "watch": "tsc -w --noEmit false --outDir build --module commonjs",
     "start": "next start",
     "lint": "next lint --fix",
     "script": "tsc --outDir build && node build/scripts",
     "script:dev": "npm run use-emulators npm run script",
-    "test": "firebase emulators:exec jest"
+    "e2e": "start-server-and-test dev http://localhost:3000 \"cypress open --e2e\"",
+    "e2e:headless": "start-server-and-test dev http://localhost:3000 \"cypress run --e2e\"",
+    "component": "cypress open --component",
+    "component:headless": "cypress run --component"
   },
   "dependencies": {
     "@headlessui/react": "^1.4.2",
@@ -32,6 +34,7 @@
     "react-icons": "^4.8.0",
     "react-instantsearch-dom": "^6.39.1",
     "react-redux": "^8.0.5",
+    "start-server-and-test": "^2.0.0",
     "tailwindcss": "^3.3.1",
     "three": "^0.151.3",
     "uuid": "^9.0.0"
@@ -43,7 +46,6 @@
     "@firebase/rules-unit-testing": "^2.0.2",
     "@rushstack/eslint-patch": "^1.2.0",
     "@types/d3": "^7.4.0",
-    "@types/jest": "^29.5.0",
     "@types/node": "18.11.17",
     "@types/qs": "^6.9.7",
     "@types/react": "18.0.26",
@@ -65,9 +67,7 @@
     "eslint-config-next": "^13.3.1",
     "eslint-plugin-tailwindcss": "^3.11.0",
     "firebase-tools": "^11.28.0",
-    "jest": "^29.5.0",
     "postcss": "^8.4.23",
-    "ts-jest": "^29.1.0",
     "typescript": "^5.0.4"
   },
   "packageManager": "yarn@3.5.0"

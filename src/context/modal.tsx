@@ -5,7 +5,7 @@ import {
 import qs from 'qs';
 import type { ExtendedClass } from 'plancrimson-utils';
 import { getSemester } from 'plancrimson-utils';
-import Tabs from '@/components/Course/Tabs';
+import CourseTabs from '@/components/Course/Tabs';
 import ExternalLink from '@/components/ExternalLink';
 
 interface CustomDialogProps {
@@ -93,7 +93,7 @@ export function ModalProvider({ children }: PropsWithChildren<{}>) {
         </p>
       </>
     );
-    const content = course && <Tabs course={course} />;
+    const content = course && <CourseTabs course={course} />;
     showContents({
       title, headerContent, content,
     });

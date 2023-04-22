@@ -13,7 +13,7 @@ import {
 } from '@/src/hooks';
 import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { ErrorPage } from '@/components/Layout/ErrorPage';
-import { LoadingPage } from '@/components/Layout/LoadingPage';
+import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { ImageWrapper } from '@/components/UserLink';
 import Schema from '@/src/schema';
 import { FriendRequest, UserProfile, WithId } from '@/src/types';
@@ -54,8 +54,11 @@ export default function UserPage() {
   }
 
   if (typeof uid === 'undefined') {
-    if (elapsed) return <LoadingPage />;
-    return <Layout />;
+    return (
+      <Layout>
+        {elapsed && <LoadingBars />}
+      </Layout>
+    );
   }
 
   if (error) {
@@ -63,7 +66,11 @@ export default function UserPage() {
   }
 
   if (!pageProfile) {
-    return <LoadingPage />;
+    return (
+      <Layout>
+        <LoadingBars />
+      </Layout>
+    );
   }
 
   const schedules = Object.values(scheduleMap);

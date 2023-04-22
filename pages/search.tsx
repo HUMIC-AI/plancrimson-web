@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { PropsWithChildren, useEffect } from 'react';
 import { Configure, InstantSearch } from 'react-instantsearch-dom';
 import qs from 'qs';
 import { useAppSelector, useElapsed } from '@/src/hooks';
@@ -7,8 +7,8 @@ import { useAppSelector, useElapsed } from '@/src/hooks';
 import useSearchState from '@/src/context/searchState';
 import { Planner, Auth } from '@/src/features';
 import Layout, { errorMessages } from '@/components/Layout/Layout';
-import { ErrorPage } from '@/components/Layout/ErrorPage';
-import { LoadingPage } from '@/components/Layout/LoadingPage';
+import { ErrorMessage } from '@/components/Layout/ErrorPage';
+import { LoadingBars } from '@/components/Layout/LoadingPage';
 import SearchBox, {
   SearchBoxDemo,
 } from '@/components/SearchComponents/SearchBox/SearchBox';
@@ -17,7 +17,7 @@ import CurrentRefinements, {
   CurrentRefinementsDemo,
 } from '@/components/SearchComponents/CurrentRefinements';
 import SortBy, { SortByDemo } from '@/components/SearchComponents/SortBy';
-import { useMeiliClient } from '@/src/context/meili';
+import { InstantMeiliSearchInstance, useMeiliClient } from '@/src/context/meili';
 import AttributeMenu from '@/components/SearchComponents/AttributeMenu/AttributeMenu';
 
 // we show a demo if the user is not logged in,
@@ -34,8 +34,11 @@ export default function SearchPage() {
   }, [userId]);
 
   if (typeof userId === 'undefined') {
-    if (elapsed) return <LoadingPage />;
-    return <Layout />;
+    return (
+      <Layout>
+        {elapsed && <LoadingBars />}
+      </Layout>
+    );
   }
 
   if (userId === null) {
@@ -52,27 +55,18 @@ export default function SearchPage() {
 function InnerPage({ elapsed }: { elapsed: boolean }) {
   const showAttributes = useAppSelector(Planner.selectShowAttributes);
   const { client, error } = useMeiliClient();
-  const { searchState, setSearchState } = useSearchState();
 
   if (error) {
-    return <ErrorPage>{errorMessages.meiliClient}</ErrorPage>;
+    return <ErrorMessage>{errorMessages.meiliClient}</ErrorMessage>;
   }
 
   if (!client) {
-    if (elapsed) return <LoadingPage />;
+    if (elapsed) return <LoadingBars />;
     return null;
   }
 
   return (
-    <InstantSearch
-      indexName="courses"
-      searchClient={client}
-      searchState={searchState}
-      onSearchStateChange={(newState) => {
-        setSearchState({ ...searchState, ...newState });
-      }}
-      stalledSearchDelay={500}
-    >
+    <MaybeWrapper client={client}>
       <Configure hitsPerPage={12} />
       <div className="flex w-screen max-w-full">
         <div className={showAttributes ? 'mr-8' : 'hidden'}>
@@ -88,6 +82,24 @@ function InnerPage({ elapsed }: { elapsed: boolean }) {
           <Hits />
         </div>
       </div>
+    </MaybeWrapper>
+  );
+}
+
+function MaybeWrapper({ children, client }: PropsWithChildren<{ client: InstantMeiliSearchInstance }>) {
+  const { searchState, setSearchState } = useSearchState();
+
+  return (
+    <InstantSearch
+      indexName="courses"
+      searchClient={client}
+      searchState={searchState}
+      onSearchStateChange={(newState) => {
+        setSearchState({ ...searchState, ...newState });
+      }}
+      stalledSearchDelay={500}
+    >
+      {children}
     </InstantSearch>
   );
 }

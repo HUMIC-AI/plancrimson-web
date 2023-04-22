@@ -1,8 +1,8 @@
-import { InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
 import { getDoc } from 'firebase/firestore';
 import {
   createContext, useContext,
 } from 'react';
+import type { InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
 import Firestore from '../schema';
 
 export type { InstantMeiliSearchInstance };

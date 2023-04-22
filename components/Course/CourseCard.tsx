@@ -239,13 +239,15 @@ export default function CourseCard({
                 <ToggleButton chosenScheduleId={chosenScheduleId!} course={course} />
               </span>
             </p>
-            <h3 className={classNames(isExpanded || 'text-sm')}>
+
+            <p className={classNames(isExpanded || 'text-sm')}>
               <HighlightComponent
                 attribute="Title"
                 course={course}
                 inSearch={inSearchContext}
               />
-            </h3>
+            </p>
+
             {hideTerm || (
             <p className="text-sm text-gray-light">
               {semester.season}
@@ -267,12 +269,13 @@ export default function CourseCard({
 
         {isExpanded && (
         <div className="h-full bg-white p-2 text-black">
-          <div className="inline-grid max-w-full grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2">
+          <div className="inline-grid max-w-full grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm">
             <Instructors course={course} inSearch={inSearchContext} />
             <Location course={course} inSearch={inSearchContext} />
             <DaysOfWeek course={course} inSearch={inSearchContext} />
             <ClassTime course={course} inSearch={inSearchContext} />
           </div>
+
           {course.textDescription.length > 0 && (
           <>
             <hr className="my-2 border-black" />

@@ -8,7 +8,7 @@ import Firestore from '@/src/schema';
 import { Schedule } from '@/src/types';
 import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { ErrorPage } from '@/components/Layout/ErrorPage';
-import { LoadingPage } from '@/components/Layout/LoadingPage';
+import { LoadingBars } from '@/components/Layout/LoadingPage';
 import Calendar from '@/components/SemesterSchedule/Calendar';
 
 
@@ -21,8 +21,11 @@ export default function SchedulePage() {
   const elapsed = useElapsed(5000, [scheduleId]);
 
   if (typeof userId === 'undefined') {
-    if (elapsed) return <LoadingPage />;
-    return <Layout />;
+    return (
+      <Layout>
+        {elapsed && <LoadingBars />}
+      </Layout>
+    );
   }
 
   if (userId === null) {
