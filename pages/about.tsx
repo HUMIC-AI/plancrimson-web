@@ -1,4 +1,4 @@
-import ExternalLink from '@/components/ExternalLink';
+import ExternalLink from '@/components/Utils/ExternalLink';
 import Layout from '@/components/Layout/Layout';
 
 const links: [string, string][] = [

@@ -14,7 +14,7 @@ import {
 import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { ErrorPage } from '@/components/Layout/ErrorPage';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
-import { ImageWrapper } from '@/components/UserLink';
+import { ImageWrapper } from '@/components/Utils/UserLink';
 import Schema from '@/src/schema';
 import { FriendRequest, UserProfile, WithId } from '@/src/types';
 

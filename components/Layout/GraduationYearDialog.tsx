@@ -1,6 +1,5 @@
 import { updateDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
-import { useRouter } from 'next/router';
 import { useAppDispatch } from '@/src/hooks';
 import { useModal } from '@/src/context/modal';
 import { Schedules, Settings } from '@/src/features';
@@ -16,7 +15,6 @@ export default function GraduationYearDialog({ defaultYear, uid }: { defaultYear
   const dispatch = useAppDispatch();
   const { setOpen } = useModal();
   const [classYear, setYear] = useState(defaultYear);
-  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,8 +47,6 @@ export default function GraduationYearDialog({ defaultYear, uid }: { defaultYear
     }
 
     setOpen(false);
-
-    router.reload();
   }
 
   return (

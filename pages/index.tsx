@@ -71,7 +71,7 @@ export default function PlanPage() {
       <ClassesCloud controls="track">
         <button
           type="button"
-          className="pointer-events-none relative text-6xl font-black text-white drop-shadow-lg transition-opacity hover:opacity-80"
+          className="relative text-3xl font-black text-white drop-shadow-lg transition-opacity hover:opacity-80 sm:text-6xl"
           onClick={() => signInUser().catch(handleError)}
         >
           Sign in to get started!

@@ -1,3 +1,4 @@
+import { classNames } from '@/src/utils';
 import React, { useMemo } from 'react';
 import {
   FaHourglassHalf, FaStar, FaStarHalfAlt, FaUserFriends,
@@ -16,16 +17,14 @@ export function StarRating({ rating }: { rating: number; }) {
           <FaStarHalfAlt
             // eslint-disable-next-line react/no-array-index-key
             key={i}
-            color="orange"
-            className="text-sm"
+            className="text-sm text-orange"
           />
         )
         : (
           <FaStar
             // eslint-disable-next-line react/no-array-index-key
             key={i}
-            color={star === 'full' ? 'yellow' : 'gray'}
-            className="text-sm"
+            className={classNames('text-sm', star === 'full' ? 'text-yellow' : 'text-gray-dark')}
           />
         )))}
       <span className="text-sm">
@@ -45,16 +44,17 @@ export function ClassSizeRating({ population }: { population: number }) {
           <FaUserFriends
           // eslint-disable-next-line react/no-array-index-key
             key={i}
-            color="orange"
-            className="text-sm"
+            className="text-sm text-orange"
           />
         )
         : (
           <FaUserFriends
             // eslint-disable-next-line react/no-array-index-key
             key={i}
-            color={star === 'full' ? 'yellow' : 'gray'}
-            className="text-sm"
+            className={classNames(
+              'text-sm',
+              star === 'full' ? 'text-blue-light' : 'text-gray-light',
+            )}
           />
         )))}
       <span className="text-sm">
@@ -75,16 +75,14 @@ export function HoursRating({ hours }: { hours: number }) {
           <FaHourglassHalf
           // eslint-disable-next-line react/no-array-index-key
             key={i}
-            color="orange"
-            className="text-sm"
+            className="text-sm text-orange"
           />
         )
         : (
           <FaHourglassHalf
             // eslint-disable-next-line react/no-array-index-key
             key={i}
-            color={star === 'full' ? 'yellow' : 'gray'}
-            className="text-sm"
+            className={classNames('text-sm', star === 'full' ? 'text-pink' : 'text-gray-dark')}
           />
         )))}
       <span className="text-sm">

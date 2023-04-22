@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ImageWrapper } from '@/components/UserLink';
+import { ImageWrapper } from '@/components/Utils/UserLink';
 import { UserProfile, WithId } from '@/src/types';
 
 export default function ProfileList({ profiles, Button }: { profiles: Array<WithId<UserProfile>>; Button: React.FC<{ profile: WithId<UserProfile>; }>; }) {

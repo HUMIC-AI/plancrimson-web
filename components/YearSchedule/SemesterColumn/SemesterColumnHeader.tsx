@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from '@/src/hooks';
 import { Planner, Schedules, Settings } from '@/src/features';
 import { getSchedulesBySemester } from '@/src/utils';
 import ScheduleChooser from '../../ScheduleChooser';
-import FadeTransition from '../../FadeTransition';
+import FadeTransition from '../../Utils/FadeTransition';
 import ButtonMenu from '../ButtonMenu';
 
 type HeaderProps = {

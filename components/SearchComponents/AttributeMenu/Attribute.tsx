@@ -1,9 +1,8 @@
 import { Disclosure } from '@headlessui/react';
 import React, { useState } from 'react';
 import { compareItems, compareWeekdays } from 'plancrimson-utils';
-import { Auth } from '@/src/features';
 import { classNames } from '@/src/utils';
-import RefinementList, { RefinementListDemo } from '../RefinementList';
+import RefinementList from '../RefinementList';
 
 interface AttributeProps {
   attribute: string;
@@ -31,8 +30,6 @@ export default function Attribute({ attribute, label, showSubjectColor }: Attrib
 function DisclosureChildren({
   attribute, label, showSubjectColor,
 }: AttributeProps) {
-  const user = Auth.useAuthProperty('uid');
-
   const [operator, setOperator] = useState<'and' | 'or'>('or');
 
   return (
@@ -64,20 +61,16 @@ function DisclosureChildren({
 
       <Disclosure.Panel unmount={false}>
         <div className="origin-top-right rounded-b-lg bg-gray-light p-2">
-          {user ? (
-            <RefinementList
-              attribute={attribute}
-              operator={operator}
-              showMore
-              showMoreLimit={300}
-              transformItems={(items) => items.sort(
-                attribute === 'DAY_OF_WEEK' ? compareWeekdays : compareItems,
-              )}
-              showSubjectColor={showSubjectColor}
-            />
-          ) : (
-            <RefinementListDemo />
-          )}
+          <RefinementList
+            attribute={attribute}
+            operator={operator}
+            showMore
+            showMoreLimit={300}
+            transformItems={(items: any[]) => items.sort(
+              attribute === 'DAY_OF_WEEK' ? compareWeekdays : compareItems,
+            )}
+            showSubjectColor={showSubjectColor}
+          />
         </div>
       </Disclosure.Panel>
     </>

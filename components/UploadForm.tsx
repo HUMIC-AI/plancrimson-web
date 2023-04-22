@@ -1,8 +1,8 @@
 import { Dialog } from '@headlessui/react';
-import type { DownloadPlan } from 'plancrimson-utils';
 import { allTruthy, SEASON_ORDER } from 'plancrimson-utils';
 import { Schedules } from '@/src/features';
 import { useAppDispatch } from '@/src/hooks';
+import type { DownloadPlan } from '@/src/types';
 
 export default function UploadForm() {
   const dispatch = useAppDispatch();

@@ -95,8 +95,8 @@ const SmallComponents = {
     const { pathname } = useRouter();
 
     return (
-      <Disclosure.Panel className="sm:hidden">
-        <div className="flex justify-center px-4 pb-4">
+      <Disclosure.Panel className="bg-gray-dark/50 sm:hidden">
+        <div className="flex flex-col justify-center p-4">
           {paths.map((item) => (
             <Disclosure.Button
               key={item.name}

@@ -1,7 +1,9 @@
 /* eslint-disable react/no-array-index-key */
 import { connectHighlight } from 'react-instantsearch-dom';
+import type { HighlightProps } from 'react-instantsearch-core';
+import ClientOrDemo from './ClientOrDemo';
 
-const Highlight = connectHighlight(({ highlight, attribute, hit }) => {
+function Highlight({ highlight, attribute, hit }: HighlightProps) {
   const parsedHit = highlight({
     highlightProperty: '_highlightResult',
     attribute,
@@ -17,6 +19,6 @@ const Highlight = connectHighlight(({ highlight, attribute, hit }) => {
       )))}
     </span>
   );
-});
+}
 
-export default Highlight;
+export default <ClientOrDemo connector={connectHighlight} component={Highlight} />;

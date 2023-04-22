@@ -20,7 +20,7 @@ import {
   ClassTime,
   Location,
 } from '../CourseComponents';
-import Tooltip from '../../Tooltip';
+import Tooltip from '../../Utils/Tooltip';
 
 /**
  * The "More Info" panel in a course modal.

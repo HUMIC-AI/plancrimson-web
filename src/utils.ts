@@ -1,7 +1,9 @@
 import { compareSemesters, Semester } from 'plancrimson-utils';
 import { Schedule, ScheduleMap, UserSettings } from './types';
 
+// See the defaults from https://tailwindcss.com/docs/screens
 export const breakpoints = {
+  sm: 640,
   md: 768,
   lg: 1024,
 };

@@ -9,7 +9,7 @@ import {
 } from 'firebase/firestore';
 import { Auth } from '@/src/features';
 import { classNames } from '@/src/utils';
-import FadeTransition from '../FadeTransition';
+import FadeTransition from '../Utils/FadeTransition';
 
 export function SuggestionForm() {
   const uid = Auth.useAuthProperty('uid');

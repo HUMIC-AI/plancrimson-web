@@ -7,7 +7,7 @@ import { Auth, Schedules, Settings } from '@/src/features';
 import { useAppDispatch, useAppSelector } from '@/src/hooks';
 import { classNames } from '@/src/utils';
 import { titleContainsTerm, Season } from 'plancrimson-utils';
-import FadeTransition from './FadeTransition';
+import FadeTransition from './Utils/FadeTransition';
 
 interface ButtonTitleProps {
   showTerm: 'on' | 'off' | 'auto';

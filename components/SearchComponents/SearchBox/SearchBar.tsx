@@ -2,12 +2,12 @@ import { FaAngleDoubleRight } from 'react-icons/fa';
 import React from 'react';
 import useChosenScheduleContext from '@/src/context/selectedSchedule';
 import { useAppDispatch, useAppSelector, useBreakpoint } from '@/src/hooks';
-import { Auth, Planner, Schedules } from '@/src/features';
+import { Planner, Schedules } from '@/src/features';
 import { sortSchedules, classNames, breakpoints } from '@/src/utils';
 import type { SearchBoxProvided } from 'react-instantsearch-core';
 import ScheduleChooser from '../../ScheduleChooser';
-import Stats, { StatsComponent } from '../Stats';
-import StateResults, { StateResultsComponent } from '../StateResults';
+import Stats from '../Stats';
+import StateResults from '../StateResults';
 import { AttributeMenuDropdown } from './AttributeMenuDropdown';
 
 export type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean };
@@ -17,7 +17,6 @@ export function SearchBar({
 }: SearchBoxProps) {
   const dispatch = useAppDispatch();
   const schedules = useAppSelector(Schedules.selectSchedules);
-  const uid = Auth.useAuthProperty('uid');
   const showAttributes = useAppSelector(Planner.selectShowAttributes);
   const isLg = useBreakpoint(breakpoints.lg);
   const { chooseSchedule, chosenScheduleId } = useChosenScheduleContext();
@@ -71,18 +70,9 @@ export function SearchBar({
 
       {/* caption text */}
       <div className="flex flex-wrap space-x-2 text-xs text-gray-light">
-        {uid ? (
-          <>
-            {isSearchStalled && <span>Loading...</span>}
-            <Stats />
-            <StateResults />
-          </>
-        ) : (
-          <>
-            <StatsComponent nbHits={20000} processingTimeMS={50} />
-            <StateResultsComponent searchState={{}} />
-          </>
-        )}
+        {isSearchStalled && <span>Loading...</span>}
+        <Stats />
+        <StateResults />
       </div>
       {/* end caption text */}
     </div>

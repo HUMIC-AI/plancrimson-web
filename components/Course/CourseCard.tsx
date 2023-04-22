@@ -14,7 +14,7 @@ import {
   ClassCache, Planner, Profile, Schedules,
 } from '@/src/features';
 import { classNames } from '@/src/utils';
-import Tooltip from '../Tooltip';
+import Tooltip from '../Utils/Tooltip';
 import {
   ClassTime,
   DaysOfWeek,
@@ -99,7 +99,7 @@ function ToggleButton({ chosenScheduleId, course } : { chosenScheduleId: string;
       }))}
       className="transition-opacity hover:opacity-50"
     >
-      <FaTimes color="yellow" />
+      <FaTimes className="text-yellow" />
     </button>
   );
 }
@@ -232,7 +232,7 @@ export default function CourseCard({
               <span className="ml-2 flex items-center space-x-2">
                 {warnings && (
                 <Tooltip text={warnings} direction="bottom">
-                  <FaExclamationTriangle color="yellow" className="text-xl" />
+                  <FaExclamationTriangle className="text-xl text-orange" />
                 </Tooltip>
                 )}
 

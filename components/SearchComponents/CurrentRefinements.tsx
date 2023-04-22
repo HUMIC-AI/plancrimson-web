@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { connectCurrentRefinements } from 'react-instantsearch-dom';
-import type { CurrentRefinementsProvided, Refinement } from 'react-instantsearch-core';
+import type { CurrentRefinementsExposed, CurrentRefinementsProvided, Refinement } from 'react-instantsearch-core';
 import {
   TERM_TO_SEASON,
   adjustAttr,
@@ -10,12 +10,13 @@ import {
 } from 'plancrimson-utils';
 import { classNames } from '@/src/utils';
 import { alertSignIn } from './SearchBox/searchUtils';
+import ClientOrDemo from './ClientOrDemo';
 
 type Props = Pick<CurrentRefinementsProvided, 'items' | 'refine'>;
 
-export const CurrentRefinementsComponent = function ({
-  items: refinements,
-  refine,
+function CurrentRefinementsComponent({
+  items: refinements = [],
+  refine = alertSignIn,
 }: Props) {
   if (refinements.length === 0) {
     return (
@@ -58,7 +59,7 @@ export const CurrentRefinementsComponent = function ({
   ));
 
   return <>{refinementElements}</>;
-};
+}
 
 function getUniqueRefinements(refinements: Refinement[]) {
   return refinements.reduce(
@@ -68,13 +69,12 @@ function getUniqueRefinements(refinements: Refinement[]) {
   );
 }
 
-export function CurrentRefinementsDemo() {
+export default function (props: CurrentRefinementsExposed) {
   return (
-    <CurrentRefinementsComponent
-      items={[]}
-      refine={alertSignIn}
+    <ClientOrDemo
+      connector={connectCurrentRefinements}
+      component={CurrentRefinementsComponent}
+      extraProps={props}
     />
   );
 }
-
-export default connectCurrentRefinements(CurrentRefinementsComponent);

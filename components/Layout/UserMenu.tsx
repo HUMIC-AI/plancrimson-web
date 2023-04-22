@@ -6,7 +6,7 @@ import {
   handleError, signInUser, useAppDispatch, useAppSelector,
 } from '@/src/hooks';
 import { classNames } from '@/src/utils';
-import { ImageWrapper } from '../UserLink';
+import { ImageWrapper } from '../Utils/UserLink';
 
 // Profile dropdown
 export function UserMenu() {

@@ -8,7 +8,7 @@ import {
   RequirementGroup,
 } from '@/src/requirements/util';
 import { classNames } from '@/src/utils';
-import FadeTransition from '../FadeTransition';
+import FadeTransition from '../Utils/FadeTransition';
 
 interface HighlightedState {
   highlightRequirement: React.Dispatch<

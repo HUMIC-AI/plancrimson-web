@@ -6,7 +6,7 @@ import qs from 'qs';
 import type { ExtendedClass } from 'plancrimson-utils';
 import { getSemester } from 'plancrimson-utils';
 import CourseTabs from '@/components/Course/Tabs';
-import ExternalLink from '@/components/ExternalLink';
+import ExternalLink from '@/components/Utils/ExternalLink';
 
 interface CustomDialogProps {
   title: string;

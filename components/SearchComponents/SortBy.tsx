@@ -2,6 +2,7 @@ import { classNames } from '@/src/utils';
 import React from 'react';
 import { connectSortBy } from 'react-instantsearch-dom';
 import { alertSignIn, SORT_INDEXES } from './SearchBox/searchUtils';
+import ClientOrDemo from './ClientOrDemo';
 
 type Item = {
   value: string;
@@ -14,10 +15,13 @@ type SortByProps = {
   refine: (value: string) => any;
 };
 
-export const SortByComponent: React.FC<SortByProps> = function ({
-  items,
-  refine,
-}) {
+function SortByComponent({
+  items = SORT_INDEXES.map((val, i) => ({
+    ...val,
+    isRefined: i === 0,
+  })),
+  refine = alertSignIn,
+}: SortByProps) {
   return (
     <>
       <h3 className="font-medium md:whitespace-nowrap">
@@ -45,22 +49,18 @@ export const SortByComponent: React.FC<SortByProps> = function ({
       </ul>
     </>
   );
-};
-
-export function SortByDemo() {
-  return (
-    <SortByComponent
-      items={SORT_INDEXES.map((val, i) => ({
-        ...val,
-        isRefined: i === 0,
-      }))}
-      refine={alertSignIn}
-    />
-  );
 }
 
-const Wrapper = connectSortBy(SortByComponent);
 
-export default function SortBy() {
-  return <Wrapper defaultRefinement="courses" items={SORT_INDEXES} />;
+export default function () {
+  return (
+    <ClientOrDemo
+      connector={connectSortBy}
+      component={SortByComponent}
+      extraProps={{
+        defaultRefinement: 'courses',
+        items: SORT_INDEXES,
+      }}
+    />
+  );
 }

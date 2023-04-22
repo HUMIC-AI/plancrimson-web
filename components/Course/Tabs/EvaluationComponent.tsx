@@ -5,9 +5,9 @@ import {
   Evaluation, EvaluationStatistics, HoursStats,
 } from 'plancrimson-utils';
 import { classNames } from '@/src/utils';
-import ExternalLink from '../../ExternalLink';
-import FadeTransition from '../../FadeTransition';
-import Tooltip from '../../Tooltip';
+import ExternalLink from '../../Utils/ExternalLink';
+import FadeTransition from '../../Utils/FadeTransition';
+import Tooltip from '../../Utils/Tooltip';
 import Percentages from './Percentages';
 
 function Section({ title, children }: React.PropsWithChildren<{ title: string }>) {

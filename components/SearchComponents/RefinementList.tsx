@@ -1,18 +1,44 @@
 import React, { useState, useMemo } from 'react';
-import type { RefinementListProvided } from 'react-instantsearch-core';
+import type { RefinementListExposed, RefinementListProvided } from 'react-instantsearch-core';
 import { connectRefinementList } from 'react-instantsearch-dom';
-import { getSubjectColor, subjects, TERM_TO_SEASON } from 'plancrimson-utils';
+import {
+  getSubjectColor, Subject, subjects, TERM_TO_SEASON,
+} from 'plancrimson-utils';
 import { classNames } from '@/src/utils';
 import { alertSignIn } from './SearchBox/searchUtils';
+import ClientOrDemo from './ClientOrDemo';
 
 type Props = Pick<RefinementListProvided, 'items' | 'refine'> & { showSubjectColor: boolean };
+
+const defaultItems = [
+  {
+    count: 42,
+    isRefined: true,
+    label: 'Example',
+    objectID: '',
+    value: ['Example'],
+    _highlightResult: {},
+  },
+  {
+    count: 69,
+    isRefined: false,
+    label: 'Sign in to get started',
+    objectID: '',
+    value: [],
+    _highlightResult: {},
+  },
+];
 
 /**
  * A pure component which renders the list of refinements.
  * E.g. for the "SUBJECT" attribute, this will render a list containing
  * "AFRAMER (88), AFRIKAAN (2), etc" with a checkbox beside each one.
  */
-export function RefinementListComponent({ items, refine, showSubjectColor }: Props) {
+export function RefinementListComponent({
+  items = defaultItems,
+  refine = alertSignIn,
+  showSubjectColor = false,
+}: Props) {
   const [miniSearch, setMiniSearch] = useState('');
 
   const re = useMemo(() => new RegExp(miniSearch, 'i'), [miniSearch]);
@@ -51,7 +77,7 @@ export function RefinementListComponent({ items, refine, showSubjectColor }: Pro
                 />
                 <span
                   className={classNames('ml-2', isRefined && 'font-semibold')}
-                  style={{ color: (showSubjectColor && label in subjects) ? getSubjectColor(label) : 'inherit' }}
+                  style={{ color: (showSubjectColor && label in subjects) ? getSubjectColor(label as Subject) : 'inherit' }}
                 >
                   {label in TERM_TO_SEASON ? `${TERM_TO_SEASON[label].season} ${TERM_TO_SEASON[label].year}` : label}
                   {' '}
@@ -67,31 +93,13 @@ export function RefinementListComponent({ items, refine, showSubjectColor }: Pro
   );
 }
 
-export function RefinementListDemo() {
+// eslint-disable-next-line react/no-unused-prop-types
+export default function (props: RefinementListExposed & { showSubjectColor: boolean }) {
   return (
-    <RefinementListComponent
-      items={[
-        {
-          count: 42,
-          isRefined: true,
-          label: 'Example',
-          objectID: '',
-          value: ['Example'],
-          _highlightResult: {},
-        },
-        {
-          count: 69,
-          isRefined: false,
-          label: 'Sign in to get started',
-          objectID: '',
-          value: [],
-          _highlightResult: {},
-        },
-      ]}
-      refine={alertSignIn}
-      showSubjectColor={false}
+    <ClientOrDemo
+      connector={connectRefinementList}
+      component={RefinementListComponent}
+      extraProps={props}
     />
   );
 }
-
-export default connectRefinementList(RefinementListComponent);

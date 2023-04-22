@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getAuth } from 'firebase/auth';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { ImageWrapper } from '@/components/UserLink';
+import { ImageWrapper } from '@/components/Utils/UserLink';
 import { useProfiles, useElapsed } from '@/src/hooks';
 
 export default function FindClassmates() {

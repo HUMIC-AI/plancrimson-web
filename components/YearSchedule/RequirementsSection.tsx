@@ -20,8 +20,8 @@ import { selectShowReqs } from '@/src/features/semesterFormat';
 import { classNames } from '@/src/utils';
 import { Schedule } from '@/src/types';
 import RequirementGroupComponent from './RequirementsDisplay';
-import FadeTransition from '../FadeTransition';
-import ExternalLink from '../ExternalLink';
+import FadeTransition from '../Utils/FadeTransition';
+import ExternalLink from '../Utils/ExternalLink';
 import { SuggestionForm } from './SuggestionForm';
 
 

@@ -1,6 +1,6 @@
 import { Class, FAILING_GRADES, getClassId } from 'plancrimson-utils';
 import type { Grade } from 'plancrimson-utils';
-import ExternalLink from '@/components/ExternalLink';
+import ExternalLink from '@/components/Utils/ExternalLink';
 import { Requirement, RequirementGroup } from './util';
 
 const genedRequirement = (

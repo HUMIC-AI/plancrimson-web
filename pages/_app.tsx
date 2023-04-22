@@ -18,7 +18,7 @@ import {
 } from '@/src/features';
 import Firestore from '@/src/schema';
 import { getInitialSettings } from '@/src/utils';
-import GraduationYearDialog from '@/components/GraduationYearDialog';
+import GraduationYearDialog from '@/components/Layout/GraduationYearDialog';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional

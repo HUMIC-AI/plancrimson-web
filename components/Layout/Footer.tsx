@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React from 'react';
 import { unsplashParams } from 'plancrimson-utils';
-import ExternalLink from '../ExternalLink';
+import ExternalLink from '../Utils/ExternalLink';
 
 
 export function Footer() {
@@ -10,7 +10,7 @@ export function Footer() {
 
   return (
     <footer className="bg-black">
-      <div className="container mx-auto flex flex-col space-y-1 p-4 text-center text-sm text-white">
+      <div className="container mx-auto flex flex-col space-y-1 p-4 text-center text-xs text-white sm:text-sm">
         <span>Course data last updated 2023-01-03</span>
         <span>
           &#169; 2023 Alexander Cai | alexcai [at] college |

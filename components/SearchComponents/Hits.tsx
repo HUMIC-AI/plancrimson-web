@@ -11,6 +11,7 @@ import useSearchState from '@/src/context/searchState';
 import { classNames } from '@/src/utils';
 import { alertSignIn } from './SearchBox/searchUtils';
 import CourseCard from '../Course/CourseCard';
+import ClientOrDemo from './ClientOrDemo';
 
 interface ButtonProps {
   onClick: () => void;
@@ -47,13 +48,25 @@ function CustomButton({
   );
 }
 
-export function HitsComponent({
-  hits,
-  hasPrevious,
-  hasMore,
-  refinePrevious,
-  refineNext,
-  inSearch = true,
+const sampleHits = sampleCourses
+  // oh, the things i do for typescript
+  .map((course) => ({
+    ...course,
+    ...Object.assign(
+      {},
+      ...DAY_SHORT.map((attr) => ({
+        [attr]: course[attr] as 'Y' | 'N',
+      })),
+    ),
+  }));
+
+function HitsComponent({
+  hits = sampleHits,
+  hasMore = true,
+  hasPrevious = false,
+  refineNext = alertSignIn,
+  refinePrevious = alertSignIn,
+  inSearch = false,
 }: InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }) {
   const { oneCol } = useSearchState();
   const { chosenScheduleId } = useChosenScheduleContext();
@@ -97,27 +110,11 @@ export function HitsComponent({
   );
 }
 
-export function HitsDemo() {
+export default function () {
   return (
-    <HitsComponent
-      hits={sampleCourses
-      // oh, the things i do for typescript
-        .map((course) => ({
-          ...course,
-          ...Object.assign(
-            {},
-            ...DAY_SHORT.map((attr) => ({
-              [attr]: course[attr] as 'Y' | 'N',
-            })),
-          ),
-        }))}
-      hasMore
-      hasPrevious={false}
-      refineNext={alertSignIn}
-      refinePrevious={alertSignIn}
-      inSearch={false}
+    <ClientOrDemo
+      connector={connectInfiniteHits}
+      component={HitsComponent}
     />
   );
 }
-
-export default connectInfiniteHits(HitsComponent);

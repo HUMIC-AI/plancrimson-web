@@ -3,6 +3,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { courses, subjectNames, tsne3d } from 'plancrimson-utils';
 import { createRef, PropsWithChildren, useEffect } from 'react';
 import Layout from '@/components/Layout/Layout';
+import { useBreakpoint } from '@/src/hooks';
+import { breakpoints } from '@/src/utils';
 
 const PARTICLE_SIZE = 0.5;
 const sensitivity = 20;
@@ -14,7 +16,7 @@ const sensitivity = 20;
  * @param interactive Whether to highlight points on hover.
  */
 export function ClassesCloud({
-  controls = 'none',
+  controls: rawControls = 'none',
   autoRotate = 0,
   interactive = false,
   children,
@@ -24,6 +26,10 @@ export function ClassesCloud({
   interactive?: boolean;
 }>) {
   const canvas = createRef<HTMLCanvasElement>();
+  const isSm = useBreakpoint(breakpoints.sm);
+
+  // if on mobile, use orbit controls instead of track controls
+  const controls = rawControls === 'track' && isSm ? 'orbit' : rawControls;
 
   useEffect(() => {
     const { scene, camera, renderer } = createScene(canvas.current!);

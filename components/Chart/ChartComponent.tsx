@@ -15,8 +15,8 @@ import { useAppDispatch, useElapsed } from '@/src/hooks';
 import { Auth, ClassCache } from '@/src/features';
 import Firestore from '@/src/schema';
 import { getAllClassIds, classNames } from '@/src/utils';
-import Tooltip from '@/components/Tooltip';
-import FadeTransition from '@/components/FadeTransition';
+import Tooltip from '@/components/Utils/Tooltip';
+import FadeTransition from '@/components/Utils/FadeTransition';
 import {
   initChart, metrics, Embedding, makeData, metricNames,
 } from './chartHelpers';

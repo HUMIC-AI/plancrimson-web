@@ -11,7 +11,7 @@ import type { IconType } from 'react-icons/lib';
 import { v4 as uuidv4 } from 'uuid';
 import { Schedules } from '@/src/features';
 import { useAppDispatch, useAppSelector } from '@/src/hooks';
-import Tooltip from '../Tooltip';
+import Tooltip from '../Utils/Tooltip';
 
 
 const buttonStyles = 'inline-block p-1 rounded bg-black bg-opacity-0 hover:text-black hover:bg-opacity-50 transition-colors';

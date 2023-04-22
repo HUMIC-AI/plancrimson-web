@@ -6,14 +6,22 @@ import { getMeiliApiKey, getMeiliHost, MeiliContext } from '@/src/context/meili'
 import { Auth } from '@/src/features';
 
 
+/**
+ * Provides the React context for the MeiliSearch client.
+ * Sets the client to be null if the user is not logged in.
+ */
 export function MeiliProvider({ children }: PropsWithChildren<{}>) {
   const uid = Auth.useAuthProperty('uid');
   const [client, setClient] = useState<InstantMeiliSearchInstance | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // reset the client if the user logs out or logs in
+    setClient(null);
+
     if (!uid) {
-      setError('not signed in');
+      console.error('tried to instantiate MeiliSearch client without being signed in');
+      setError('Not signed in');
       return;
     }
 
@@ -25,11 +33,11 @@ export function MeiliProvider({ children }: PropsWithChildren<{}>) {
           keepZeroFacets: true,
         });
         setClient(newClient);
-        console.log('instantiated MeiliSearch client');
+        console.info('instantiated MeiliSearch client');
       })
       .catch((err) => {
-        console.error('error fetching api key:', err);
-        setError('error fetching MeiliSearch API key');
+        console.error('error fetching MeiliSearch api key:', err);
+        setError(`Error fetching MeiliSearch API key: ${err.message}`);
       });
   }, [uid]);
 
