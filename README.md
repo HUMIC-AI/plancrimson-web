@@ -1,4 +1,6 @@
-# Plan Crimson
+# PlanCrimson
+
+The frontend for the Plan Crimson project!
 
 - Search for courses through an intuitive interface
 - Up-to-date with my.harvard
