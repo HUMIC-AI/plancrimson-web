@@ -1,19 +1,16 @@
-import { Disclosure } from '@headlessui/react';
-import { FaTimes, FaBars, FaAngleDoubleRight } from 'react-icons/fa';
+import { FaAngleDoubleRight } from 'react-icons/fa';
+import React from 'react';
 import { connectSearchBox } from 'react-instantsearch-dom';
-import React, { Fragment } from 'react';
-import type { SearchBoxProvided } from 'react-instantsearch-core';
-import { ATTRIBUTE_DESCRIPTIONS, meiliAttributes } from 'plancrimson-utils';
-import type { Class } from 'plancrimson-utils';
 import useChosenScheduleContext from '@/src/context/selectedSchedule';
 import { useAppDispatch, useAppSelector, useBreakpoint } from '@/src/hooks';
 import { Auth, Planner, Schedules } from '@/src/features';
 import { sortSchedules, classNames, breakpoints } from '@/src/utils';
-import Attribute from './Attribute';
-import ScheduleChooser from "../ScheduleChooser";
-import Stats, { StatsComponent } from './Stats';
-import StateResults, { StateResultsComponent } from './StateResults';
+import type { SearchBoxProvided } from 'react-instantsearch-core';
+import ScheduleChooser from '../../ScheduleChooser';
+import Stats, { StatsComponent } from '../Stats';
+import StateResults, { StateResultsComponent } from '../StateResults';
 import { alertSignIn } from './searchUtils';
+import { AttributeMenuDropdown } from './AttributeMenuDropdown';
 
 
 type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean };
@@ -142,42 +139,3 @@ function SearchBar({
 }
 
 
-function AttributeMenuDropdown() {
-  return (
-    <div className="relative">
-      <Disclosure as={Fragment}>
-        {({ open }) => (
-          <>
-            <Disclosure.Button className="inset-y-0 right-0 flex items-center">
-              {open ? (
-                <FaTimes className="h-5 w-5 text-gray-dark" />
-              ) : (
-                <FaBars className="h-5 w-5 text-gray-dark" />
-              )}
-            </Disclosure.Button>
-            <Disclosure.Panel
-              unmount={false}
-              className={classNames(
-                'absolute z-20 mt-2 right-0 w-48 p-2 dark-gradient rounded-md',
-                'flex flex-col space-y-2',
-              )}
-            >
-              {meiliAttributes.filterableAttributes.map((attr) => (
-                <Attribute
-                  attribute={attr}
-                  key={attr}
-                  label={ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr}
-                  showSubjectColor={false}
-                />
-              ))}
-              <span className="p-1 text-xs text-white">
-                If filters are not showing up, clear your search and try
-                again.
-              </span>
-            </Disclosure.Panel>
-          </>
-        )}
-      </Disclosure>
-    </div>
-  );
-}

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { compareItems, compareWeekdays } from 'plancrimson-utils';
 import { Auth } from '@/src/features';
 import { classNames } from '@/src/utils';
-import RefinementList, { RefinementListDemo } from './RefinementList';
+import RefinementList, { RefinementListDemo } from '../RefinementList';
 
 interface AttributeProps {
   attribute: string;

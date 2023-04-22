@@ -5,9 +5,9 @@ import { useAppDispatch, useAppSelector, useBreakpoint } from '@/src/hooks';
 import { Auth, Planner, Schedules } from '@/src/features';
 import { sortSchedules, classNames, breakpoints } from '@/src/utils';
 import type { SearchBoxProvided } from 'react-instantsearch-core';
-import ScheduleChooser from '../ScheduleChooser';
-import Stats, { StatsComponent } from './Stats';
-import StateResults, { StateResultsComponent } from './StateResults';
+import ScheduleChooser from '../../ScheduleChooser';
+import Stats, { StatsComponent } from '../Stats';
+import StateResults, { StateResultsComponent } from '../StateResults';
 import { AttributeMenuDropdown } from './AttributeMenuDropdown';
 
 export type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean };

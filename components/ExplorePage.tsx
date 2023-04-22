@@ -8,7 +8,7 @@ import { Auth } from '@/src/features';
 import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { ErrorMessage } from '@/components/Layout/ErrorPage';
 import { LoadingPage } from '@/components/Layout/LoadingPage';
-import AttributeMenu from '@/components/SearchComponents/AttributeMenu';
+import AttributeMenu from '@/components/SearchComponents/AttributeMenu/AttributeMenu';
 import ChartComponent from '@/components/Chart/ChartComponent';
 
 const Chart = connectInfiniteHits(ChartComponent);

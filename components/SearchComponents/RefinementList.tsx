@@ -3,7 +3,7 @@ import type { RefinementListProvided } from 'react-instantsearch-core';
 import { connectRefinementList } from 'react-instantsearch-dom';
 import { getSubjectColor, subjects, TERM_TO_SEASON } from 'plancrimson-utils';
 import { classNames } from '@/src/utils';
-import { alertSignIn } from './searchUtils';
+import { alertSignIn } from './SearchBox/searchUtils';
 
 type Props = Pick<RefinementListProvided, 'items' | 'refine'> & { showSubjectColor: boolean };
 

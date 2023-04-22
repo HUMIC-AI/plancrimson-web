@@ -4,13 +4,13 @@ import { useModal } from '@/src/context/modal';
 import useSearchState, { SearchStateProvider } from '@/src/context/searchState';
 import { ChosenScheduleContext } from '@/src/context/selectedSchedule';
 import { Auth } from '@/src/features';
-import { InstantMeiliSearchInstance, useMeiliClient } from '@/src/meili';
 import { TERM_TO_SEASON } from 'plancrimson-utils';
 import { classNames } from '@/src/utils';
 import { Schedule } from '@/src/types';
+import { InstantMeiliSearchInstance, useMeiliClient } from '@/src/context/meili';
 import { errorMessages } from './Layout/Layout';
 import Hits, { HitsDemo } from './SearchComponents/Hits';
-import SearchBox, { SearchBoxDemo } from './SearchComponents/SearchBox';
+import SearchBox, { SearchBoxDemo } from './SearchComponents/SearchBox/SearchBox';
 
 
 export default function AddCoursesButton({

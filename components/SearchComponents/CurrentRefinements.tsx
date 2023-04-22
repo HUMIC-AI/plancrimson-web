@@ -1,15 +1,15 @@
 import React, { Fragment } from 'react';
 import { FaTimes } from 'react-icons/fa';
-import type { CurrentRefinementsProvided, Refinement } from 'react-instantsearch-core';
 import { connectCurrentRefinements } from 'react-instantsearch-dom';
+import type { CurrentRefinementsProvided, Refinement } from 'react-instantsearch-core';
 import {
+  TERM_TO_SEASON,
   adjustAttr,
-  classNames,
   compareItems,
   compareWeekdays,
-  termToSeasonMap,
 } from 'plancrimson-utils';
-import { alertSignIn } from './searchUtils';
+import { classNames } from '@/src/utils';
+import { alertSignIn } from './SearchBox/searchUtils';
 
 type Props = Pick<CurrentRefinementsProvided, 'items' | 'refine'>;
 
@@ -43,13 +43,13 @@ export const CurrentRefinementsComponent = function ({
             <button
               key={label}
               type="button"
-              name={termToSeasonMap[label]?.season || label}
+              name={TERM_TO_SEASON[label]?.season || label}
               className={classNames(
                 'py-1 px-2 hover-blue rounded flex items-center text-sm',
               )}
               onClick={() => refine(value)}
             >
-              {termToSeasonMap[label]?.season || label}
+              {TERM_TO_SEASON[label]?.season || label}
               <FaTimes className="ml-2" />
             </button>
           ))}
