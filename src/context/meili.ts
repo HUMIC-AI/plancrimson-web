@@ -3,7 +3,7 @@ import { getDoc } from 'firebase/firestore';
 import {
   createContext, useContext,
 } from 'react';
-import Firestore from './schema';
+import Firestore from '../schema';
 
 export type { InstantMeiliSearchInstance };
 

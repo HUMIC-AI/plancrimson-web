@@ -4,7 +4,7 @@ import { onSnapshot, query, QueryConstraint } from 'firebase/firestore';
 import { useEffect } from 'react';
 import { ClassCache, Schedules } from './features';
 import { useAppDispatch } from './hooks';
-import { useMeiliClient } from './meili';
+import { useMeiliClient } from './context/meili';
 import Firestore from './schema';
 
 /**

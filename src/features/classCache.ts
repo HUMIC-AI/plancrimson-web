@@ -6,7 +6,7 @@ import {
 import axios from 'axios';
 import type { ExtendedClass } from 'plancrimson-utils';
 import { allTruthy } from 'plancrimson-utils';
-import { getMeiliApiKey, getMeiliHost } from '@/src/meili';
+import { getMeiliApiKey, getMeiliHost } from '@/src/context/meili';
 import type { AppDispatch, RootState } from '../store';
 
 export interface ClassCache {

@@ -2,7 +2,7 @@ import { instantMeiliSearch, InstantMeiliSearchInstance } from '@meilisearch/ins
 import {
   useState, useEffect, PropsWithChildren, useMemo,
 } from 'react';
-import { getMeiliApiKey, getMeiliHost, MeiliContext } from '@/src/meili';
+import { getMeiliApiKey, getMeiliHost, MeiliContext } from '@/src/context/meili';
 import { Auth } from '@/src/features';
 
 

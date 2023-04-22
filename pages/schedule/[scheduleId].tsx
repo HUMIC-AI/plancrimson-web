@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { ClassCache, Auth } from '@/src/features';
 import { useAppDispatch, useElapsed } from '@/src/hooks';
-import { useMeiliClient } from '@/src/meili';
+import { useMeiliClient } from '@/src/context/meili';
 import Firestore from '@/src/schema';
 import { Schedule } from '@/src/types';
 import Layout, { errorMessages } from '@/components/Layout/Layout';

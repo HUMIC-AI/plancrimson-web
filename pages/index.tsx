@@ -8,7 +8,9 @@ import {
 import {
   Auth, ClassCache, Planner, Profile, Schedules, Settings,
 } from '@/src/features';
-import { useAppSelector, useBreakpoint } from '@/src/hooks';
+import {
+  handleError, signInUser, useAppSelector, useBreakpoint,
+} from '@/src/hooks';
 import validateSchedules from '@/src/requirements';
 import collegeRequirements from '@/src/requirements/college';
 import {
@@ -65,7 +67,17 @@ export default function PlanPage() {
   }, [selectedRequirements, classCache, sampleSchedule, semesterFormat, profile]);
 
   if (!userId) {
-    return <ClassesCloud />;
+    return (
+      <ClassesCloud controls="track">
+        <button
+          type="button"
+          className="pointer-events-none relative text-6xl font-black text-white drop-shadow-lg transition-opacity hover:opacity-80"
+          onClick={() => signInUser().catch(handleError)}
+        >
+          Sign in to get started!
+        </button>
+      </ClassesCloud>
+    );
   }
 
 
