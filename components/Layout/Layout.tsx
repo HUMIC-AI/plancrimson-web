@@ -1,9 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import Head from 'next/head';
 import React, { PropsWithChildren } from 'react';
-import type { QueryConstraint } from 'firebase/firestore';
 import { MeiliProvider } from '@/components/Layout/MeiliProvider';
-import useSchedules from '@/src/utils/schedules';
 import CustomModal from '../CustomModal';
 import Navbar from './Navbar';
 import Alerts from './Alerts';
@@ -12,7 +10,6 @@ import { Footer } from './Footer';
 export interface LayoutProps {
   title?: string;
   className?: string;
-  scheduleQueryConstraints?: QueryConstraint[];
   custom?: boolean;
   transparentHeader?: boolean;
 }
@@ -24,7 +21,6 @@ export default function Layout({
   children,
   title,
   className = 'mx-auto flex-1 container sm:p-8',
-  scheduleQueryConstraints: constraints = [],
   custom = false,
   transparentHeader = false,
 }: PropsWithChildren<LayoutProps>) {
@@ -39,7 +35,6 @@ export default function Layout({
       <MeiliProvider>
         <Wrapper
           transparentHeader={transparentHeader}
-          scheduleQueryConstraints={constraints}
           className={className}
           custom={custom}
         >
@@ -75,13 +70,10 @@ function HeadMeta({
  */
 function Wrapper({
   children,
-  scheduleQueryConstraints: constraints = [],
   custom,
   className,
   transparentHeader,
-}: PropsWithChildren<Pick<LayoutProps, 'scheduleQueryConstraints' | 'custom' | 'className' | 'transparentHeader'>>) {
-  useSchedules(constraints);
-
+}: PropsWithChildren<Pick<LayoutProps, 'custom' | 'className' | 'transparentHeader'>>) {
   if (custom) return <>{children}</>;
 
   return (

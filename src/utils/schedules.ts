@@ -12,15 +12,11 @@ import { Schedule, ScheduleMap } from '../types';
  * Load these schedules into the Redux store and also load all courses from all schedules into the Redux "class cache".
  * Expects access to the MeiliSearch client through React Context.
  */
-export default function useSchedules(constraints: QueryConstraint[]) {
+export default function useSyncSchedulesMatchingContraints(constraints: QueryConstraint[]) {
   const dispatch = useAppDispatch();
   const { client } = useMeiliClient();
 
   useEffect(() => {
-    if (constraints.length === 0) {
-      return;
-    }
-
     const q = query(Firestore.Collection.schedules(), ...constraints);
     const unsubSchedules = onSnapshot(q, (snap) => {
       const scheduleEntries = snap.docs.map((doc) => doc.data());

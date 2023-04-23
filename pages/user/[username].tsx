@@ -1,7 +1,7 @@
 import {
   DocumentReference,
   getDoc,
-  onSnapshot, query, updateDoc, where,
+  onSnapshot, query, where,
 } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
@@ -18,6 +18,8 @@ import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { ImageWrapper } from '@/components/Utils/UserLink';
 import Schema from '@/src/schema';
 import { FriendRequest, UserProfile, WithId } from '@/src/types';
+import useSyncSchedulesMatchingContraints from '@/src/utils/schedules';
+import { EditBioForm } from '../../components/ConnectPageComponents/EditBioForm';
 
 type FriendStatus = 'loading' | 'self' | 'none' | 'friends' | 'pending';
 
@@ -40,6 +42,7 @@ export default function UserPage() {
   const [pageProfile, error] = useProfile(username);
   const friendStatus = useFriendStatus(uid, pageProfile?.id, refresh);
 
+
   const queryConstraints = useMemo(() => {
     if (!uid || !pageProfile) return [];
 
@@ -49,6 +52,8 @@ export default function UserPage() {
 
     return [where('ownerUid', '==', pageProfile.id), where('public', '==', true)];
   }, [uid, pageProfile, friendStatus]);
+
+  useSyncSchedulesMatchingContraints(queryConstraints);
 
   if (uid === null) {
     return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
@@ -77,10 +82,7 @@ export default function UserPage() {
   const schedules = Object.values(scheduleMap);
 
   return (
-    <Layout
-      scheduleQueryConstraints={queryConstraints}
-      className="mx-auto w-full max-w-screen-md flex-1 p-8"
-    >
+    <Layout title={pageProfile.username ?? 'User'} className="mx-auto w-full max-w-screen-md flex-1 p-8">
       <div className="flex flex-col space-y-8">
         <div>
           {/* top region with image and name */}
@@ -229,53 +231,4 @@ function useFriendStatus(user1: string | null | undefined, user2: string | null 
   return status;
 }
 
-function EditBioForm({ uid }: { uid: string }) {
-  const [bio, setBio] = useState('');
-  const [error, setError] = useState<Error | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const unsub = onSnapshot(
-      Schema.profile(uid),
-      (snap) => {
-        setBio(snap.data()?.bio ?? '');
-      },
-      (err) => {
-        setError(err);
-      },
-    );
-    return () => unsub();
-  }, [uid]);
-
-  if (error) {
-    return <ErrorPage>{error.message}</ErrorPage>;
-  }
-
-  return (
-    <form
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-          await updateDoc(Schema.profile(uid), { bio });
-        } catch (err) {
-          setError(err as Error);
-        }
-        setLoading(false);
-      }}
-    >
-      <textarea
-        className="mt-2 h-32 w-full rounded border-2 px-1"
-        value={bio}
-        onChange={(e) => setBio(e.target.value)}
-      />
-      <button
-        type="submit"
-        className="interactive mt-2 rounded bg-primary-dark px-2 py-1 text-white"
-        disabled={loading}
-      >
-        {loading ? 'Saving...' : 'Save'}
-      </button>
-    </form>
-  );
-}

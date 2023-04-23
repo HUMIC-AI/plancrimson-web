@@ -10,17 +10,21 @@ import { useElapsed } from '@/src/utils/hooks';
 import ConnectLayout from '@/components/ConnectPageComponents/ConnectLayout';
 import PublicSchedules from '@/components/ConnectPageComponents/PublicSchedules';
 import FriendRequests from '@/components/ConnectPageComponents/FriendRequests';
+import useSyncSchedulesMatchingContraints from '@/src/utils/schedules';
 
 /**
  * TODO add search bar for public schedules
  */
 export default function ConnectPage() {
   const userId = Auth.useAuthProperty('uid');
+
+  // get public schedules from other users
   const constraints = useMemo(() => [
     where('public', '==', true),
     where('owner', '!=', userId),
     limit(20),
-  ], []);
+  ], [userId]);
+  useSyncSchedulesMatchingContraints(constraints);
 
   const elapsed = useElapsed(2000, []);
 
@@ -37,10 +41,7 @@ export default function ConnectPage() {
   }
 
   return (
-    <ConnectLayout
-      title="Connect"
-      scheduleQueryConstraints={constraints}
-    >
+    <ConnectLayout title="Connect">
       <FriendRequests />
       <PublicSchedules />
     </ConnectLayout>
