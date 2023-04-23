@@ -27,7 +27,7 @@ import { SemestersList } from '@/components/YearSchedule/PlanningSection';
 import HiddenSchedules from '@/components/YearSchedule/HiddenSchedules';
 import HeaderSection from '@/components/YearSchedule/HeaderSection';
 import RequirementsSection from '@/components/YearSchedule/RequirementsSection';
-import { ClassesCloud } from '@/components/ClassesCloud';
+import { ClassesCloud } from '@/components/ClassesCloudPage';
 import { signInUser } from '@/components/Layout/useSyncAuth';
 
 export default function PlanPage() {
@@ -99,7 +99,11 @@ export default function PlanPage() {
           )}
           >
             <HeaderSection resizeRef={resizeRef} columns={columns} />
-            <SemestersList highlightedRequirement={highlightedRequirement} resizeRef={resizeRef} columns={columns} />
+            <SemestersList
+              highlightedRequirement={highlightedRequirement}
+              resizeRef={resizeRef}
+              columns={columns}
+            />
             <HiddenSchedules />
           </div>
         </div>

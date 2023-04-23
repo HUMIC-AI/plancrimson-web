@@ -16,9 +16,9 @@ import {
   alertUnexpectedError, useAppDispatch, useAppSelector,
 } from '@/src/utils/hooks';
 import { Requirement } from '@/src/requirements/util';
-import { sortSchedules } from '@/src/utils/utils';
 import type { DragStatus } from '../Course/CourseCard';
 import SemesterColumn, { SemesterDisplayProps } from './SemesterColumn/SemesterColumn';
+import { sortSchedules } from '@/src/utils/schedules';
 
 export interface WithResizeRef {
   resizeRef: React.MutableRefObject<HTMLDivElement>;
