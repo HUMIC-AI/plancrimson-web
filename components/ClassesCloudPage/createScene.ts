@@ -1,14 +1,19 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { courses, subjectNames, tsne3d } from 'plancrimson-utils';
+import { subjectNames } from 'plancrimson-utils';
 
 const PARTICLE_SIZE = 0.5;
+
+type RGB = readonly [number, number, number];
 
 /**
  * TypeScript workaround for updating a buffer attribute.
  */
-function updateElement(buffer: THREE.BufferAttribute | THREE.InterleavedBufferAttribute, index: number, value: number) {
-  (buffer.array as number[])[index] = value;
+function updateElement(buffer: THREE.BufferAttribute | THREE.InterleavedBufferAttribute, index: number, value: RGB) {
+  const array = buffer.array as number[];
+  for (let i = 0; i < 3; i += 1) {
+    array[index*3 + i] = value[i];
+  }
 }
 
 export function createScene(canvas: HTMLCanvasElement) {
@@ -46,7 +51,7 @@ export function createControls(camera: THREE.PerspectiveCamera, renderer: THREE.
   return controls;
 }
 
-export function createPoints() {
+export function createPoints(subjects: string[], positions: [number, number, number][]) {
   const sprite = new THREE.TextureLoader().load('disc.png');
   const geometry = new THREE.BufferGeometry();
   const material = new THREE.PointsMaterial({
@@ -58,11 +63,10 @@ export function createPoints() {
     vertexColors: true,
   });
 
-  const positions = tsne3d.flatMap((point) => [point[0], point[1], point[2]]);
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions.flat(), 3));
 
   const subjectColors = getSubjectColors();
-  const colors = courses.flatMap((c) => subjectColors[c.subject] ?? [0, 0, 0]);
+  const colors = subjects.flatMap((subject) => subjectColors[subject] ?? [0.5, 0.5, 0.5]);
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
   // geometry.setAttribute('size', new THREE.Float32BufferAttribute(courses.map(() => PARTICLE_SIZE), 1));
@@ -74,7 +78,7 @@ export function createRaycaster(points: THREE.Points) {
   const raycaster = new THREE.Raycaster();
   raycaster.params.Points!.threshold = PARTICLE_SIZE / 3; // arbitrary value
   let currentIntersect: number | null = null;
-  let originalColor: readonly [number, number, number] | null = null;
+  let originalColor: RGB | null = null;
   const colorBuffer = points.geometry.attributes.color;
 
   function update(mouse: THREE.Vector2, camera: THREE.Camera) {
@@ -88,29 +92,16 @@ export function createRaycaster(points: THREE.Points) {
       if (currentIntersect !== topIntersect) {
         if (currentIntersect !== null) {
           // Reset the previous point's color.
-          for (let i = 0; i < 3; i += 1) {
-            updateElement(colorBuffer, currentIntersect * 3 + i, originalColor![i]);
-          }
+          updateElement(colorBuffer, currentIntersect, originalColor!);
         }
         currentIntersect = topIntersect;
         originalColor = [colorBuffer.getX(currentIntersect), colorBuffer.getY(currentIntersect), colorBuffer.getZ(currentIntersect)] as const;
 
-        // take the RGB color, turn it into HSL, and then set the lightness to 0.5
-        const color = new THREE.Color();
-        color.setRGB(...originalColor!);
-        const hsl = color.getHSL({ h: 0, s: 0, l: 0 });
-        color.setHSL(hsl.h, hsl.s, 0.8);
-        const rgb = color.toArray();
-
-        for (let i = 0; i < 3; i += 1) {
-          updateElement(colorBuffer, currentIntersect * 3 + i, rgb[i]);
-        }
+        updateElement(colorBuffer, currentIntersect, [1, 1, 1]);
         colorBuffer.needsUpdate = true;
       }
     } else if (currentIntersect !== null) {
-      for (let i = 0; i < 3; i += 1) {
-        updateElement(colorBuffer, currentIntersect * 3 + i, originalColor![i]);
-      }
+      updateElement(colorBuffer, currentIntersect, originalColor!);
       colorBuffer.needsUpdate = true;
       currentIntersect = null;
       originalColor = null;
