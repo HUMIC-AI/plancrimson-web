@@ -1,4 +1,6 @@
-import { getDocFromServer, onSnapshot, setDoc } from 'firebase/firestore';
+import {
+  getDoc, onSnapshot, setDoc, updateDoc,
+} from 'firebase/firestore';
 import React, { useEffect } from 'react';
 import {
   GoogleAuthProvider, User, getAuth, onAuthStateChanged, signInWithCredential, signInWithPopup,
@@ -72,7 +74,7 @@ export function useSyncAuth() {
         const profileRef = Firestore.profile(uid);
 
         // make sure we have live data from Firestore
-        const profile = await getDocFromServer(profileRef);
+        const profile = await getDoc(profileRef);
 
         // if the user doesn't have a profile,
         // prompt them for their graduation year and create one
@@ -82,7 +84,7 @@ export function useSyncAuth() {
             title: 'Set graduation year',
             content: <GraduationYearDialog
               defaultYear={now.getFullYear() + (now.getMonth() > 5 ? 4 : 3)}
-              handleSubmit={(classYear) => handleSubmit(dispatch, user, classYear)}
+              handleSubmit={(classYear) => handleSubmit(user, classYear)}
             />,
             noExit: true,
           });
@@ -139,28 +141,13 @@ export function useSyncUserSettings() {
   }, [uid]);
 }
 
-async function handleSubmit(dispatch: ReturnType<typeof useAppDispatch>, user: User, classYear: number) {
-  // create the default schedules and choose them for each semester
-  const defaultSemesters = getUniqueSemesters(classYear);
-  const promises = defaultSemesters.map(async ({ year, season }) => {
-    const { payload: schedule } = await dispatch(
-      Schedules.createDefaultSchedule({ year, season }, user.uid),
-    );
-    await dispatch(
-      Settings.chooseSchedule({
-        term: `${schedule.year}${schedule.season}`,
-        scheduleId: schedule.id,
-      }),
-    );
-  });
-  const settled = await Promise.allSettled(promises);
-
-  const errors = settled.filter((result) => result.status === 'rejected');
-  if (errors.length > 0) {
-    console.error('error creating default schedules', errors);
-    alert('Error creating default schedules. Please try again later.');
-  }
-
+/**
+ * When the user submits the graduation year dialog,
+ * create the default schedules for the user.
+ * Don't save anything to Redux since this will be handled
+ * by useSyncUserSettings.
+ */
+async function handleSubmit(user: User, classYear: number) {
   await setDoc(Firestore.profile(user.uid), {
     username: extractUsername(user.email!),
     displayName: user.displayName,
@@ -170,5 +157,37 @@ async function handleSubmit(dispatch: ReturnType<typeof useAppDispatch>, user: U
     concentrationRanking: [],
   });
 
-  await setDoc(Firestore.user(user.uid), getInitialSettings(), { merge: true });
+  // create the user settings document if it doesn't exist
+  const userRef = Firestore.user(user.uid);
+  const settings = await getDoc(userRef);
+  if (!settings.exists()) {
+    await setDoc(Firestore.user(user.uid), getInitialSettings());
+  }
+
+  // create the default schedules and choose them for each semester
+  const defaultSemesters = getUniqueSemesters(classYear);
+  const promises = defaultSemesters.map(async ({ year, season }) => {
+    const schedule = Schedules.getDefaultSchedule({ year, season }, user.uid);
+    await setDoc(Firestore.schedule(schedule.id), schedule);
+    return schedule;
+  });
+
+  const createdSchedules = await Promise.allSettled(promises);
+  const errors = createdSchedules.filter((result) => result.status === 'rejected');
+  if (errors.length > 0) {
+    console.error('error creating default schedules', errors);
+    alert('Error creating default schedules. Please try again later.');
+    return;
+  }
+
+  // choose the default schedule for each of the user's semesters
+  const update: Record<string, string> = {};
+  createdSchedules.forEach((schedule) => {
+    if (schedule.status === 'fulfilled') { // will certainly be true
+      const { year, season, id } = schedule.value;
+      update[`chosenSchedules.${year}${season}`] = id;
+    }
+  });
+
+  await updateDoc(userRef, update as any);
 }

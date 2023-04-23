@@ -1,9 +1,10 @@
 import { updateDoc, deleteDoc } from 'firebase/firestore';
 import { Auth } from '@/src/features';
-import { useElapsed, useFriends } from '@/src/utils/hooks';
+import { useElapsed } from '@/src/utils/hooks';
 import Firestore from '@/src/schema';
 import { UserProfile, WithId } from '@/src/types';
 import ProfileList from './ProfileList';
+import { useFriends } from './friendUtils';
 
 export default function IncomingRequests() {
   const userId = Auth.useAuthProperty('uid');

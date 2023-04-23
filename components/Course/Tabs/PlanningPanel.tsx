@@ -1,6 +1,6 @@
 import { Tab, Switch } from '@headlessui/react';
 import Link from 'next/link';
-import React, { Fragment, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   FaBan,
   FaCheckCircle,
@@ -13,8 +13,8 @@ import { useAppSelector, useAppDispatch } from '@/src/utils/hooks';
 import Tooltip from '@/components/Utils/Tooltip';
 import { checkViable } from '@/src/searchSchedule';
 import { Schedule } from '@/src/types';
-import { sortSchedules } from '@/src/utils/utils';
 import { classNames } from '@/src/utils/styles';
+import { sortSchedules } from '@/src/utils/schedules';
 
 /**
  * The planning panel in the course modal. Returns a Tab.Panel.

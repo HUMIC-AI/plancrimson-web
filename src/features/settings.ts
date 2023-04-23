@@ -48,7 +48,8 @@ export const { overwriteSettings, customTime } = settingsSlice.actions;
 export const chooseSchedule = ({ scheduleId, term }: ChooseSchedulePayload) => async (dispatch: AppDispatch, getState: () => RootState) => {
   const uid = getState().auth.userInfo?.uid;
   if (!uid) throw new Error('not signed in');
-  await (updateDoc as any)(Schema.user(uid), { [`chosenSchedules.${term}`]: scheduleId });
+  // make sure to use updateDoc to avoid overwriting the entire document
+  await updateDoc(Schema.user(uid), { [`chosenSchedules.${term}`]: scheduleId } as any);
   return dispatch(settingsSlice.actions.chooseSchedule({ scheduleId, term }));
 };
 

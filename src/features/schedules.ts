@@ -80,7 +80,7 @@ export const createSchedule = (schedule: Schedule) => async (dispatch: AppDispat
   return dispatch(schedulesSlice.actions.create(schedule));
 };
 
-export const createDefaultSchedule = ({ season, year }: Semester, uid: string) => createSchedule({
+export const getDefaultSchedule = ({ season, year }: Semester, uid: string) => ({
   id: uuidv4(),
   title: `My ${season} ${year}`,
   season,
@@ -89,6 +89,8 @@ export const createDefaultSchedule = ({ season, year }: Semester, uid: string) =
   ownerUid: uid,
   public: false,
 });
+
+export const createDefaultSchedule = ({ season, year }: Semester, uid: string) => createSchedule(getDefaultSchedule({ season, year }, uid));
 
 export const removeCourses = (payload: { scheduleId: string, courseIds: string[] }) => async (dispatch: AppDispatch) => {
   const { scheduleId, courseIds } = payload;
