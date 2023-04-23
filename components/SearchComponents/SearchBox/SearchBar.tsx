@@ -3,10 +3,10 @@ import React from 'react';
 import useChosenScheduleContext from '@/src/context/selectedSchedule';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { Planner, Schedules } from '@/src/features';
-import { sortSchedules } from '@/src/utils/utils';
+import { sortSchedulesBySemester } from '@/src/utils/schedules';
 import { classNames, breakpoints, useBreakpoint } from '@/src/utils/styles';
 import type { SearchBoxProvided } from 'react-instantsearch-core';
-import ScheduleChooser from '../../ScheduleChooser';
+import ScheduleChooser from '../../ScheduleChooser/ScheduleChooser';
 import Stats from '../Stats';
 import StateResults from '../StateResults';
 import { AttributeMenuDropdown } from './AttributeMenuDropdown';
@@ -56,7 +56,7 @@ export function SearchBar({
         {scheduleChooser && (
           <div className="hidden sm:block">
             <ScheduleChooser
-              scheduleIds={sortSchedules(schedules).map((schedule) => schedule.id)}
+              scheduleIds={sortSchedulesBySemester(schedules).map((schedule) => schedule.id)}
               handleChooseSchedule={chooseSchedule}
               chosenScheduleId={chosenScheduleId}
               direction="left"

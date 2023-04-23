@@ -16,7 +16,7 @@ import {
   alertUnexpectedError, useAppDispatch, useAppSelector,
 } from '@/src/utils/hooks';
 import { Requirement } from '@/src/requirements/util';
-import { sortSchedules } from '@/src/utils/schedules';
+import { sortSchedulesBySemester } from '@/src/utils/schedules';
 import type { DragStatus } from '../Course/CourseCard';
 import SemesterColumn, { SemesterDisplayProps } from './SemesterColumn/SemesterColumn';
 
@@ -47,7 +47,7 @@ export function SemestersList({
 
   // add a schedule whose semester is before the current earliest semester
   function addPrevSemester() {
-    const earliest = sortSchedules(userSchedules)[0];
+    const earliest = sortSchedulesBySemester(userSchedules)[0];
     const [season, year] = earliest.season === 'Spring'
       ? ['Fall' as Season, earliest.year - 1]
       : ['Spring' as Season, earliest.year];

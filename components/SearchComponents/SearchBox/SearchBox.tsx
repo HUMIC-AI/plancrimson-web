@@ -2,10 +2,10 @@ import React from 'react';
 import { connectSearchBox } from 'react-instantsearch-dom';
 import useChosenScheduleContext from '@/src/context/selectedSchedule';
 import { useAppSelector } from '@/src/utils/hooks';
+import { sortSchedulesBySemester } from '@/src/utils/schedules';
 import { Schedules } from '@/src/features';
-import { sortSchedules } from '@/src/utils/utils';
 import type { SearchBoxProvided } from 'react-instantsearch-core';
-import ScheduleChooser from '../../ScheduleChooser';
+import ScheduleChooser from '../../ScheduleChooser/ScheduleChooser';
 import { alertSignIn } from './searchUtils';
 import { SearchBar } from './SearchBar';
 import ClientOrDemo from '../ClientOrDemo';
@@ -39,7 +39,7 @@ function SearchBoxComponent({
       {scheduleChooser && (
       <div className="relative sm:hidden">
         <ScheduleChooser
-          scheduleIds={sortSchedules(schedules).map((schedule) => schedule.id)}
+          scheduleIds={sortSchedulesBySemester(schedules).map((schedule) => schedule.id)}
           handleChooseSchedule={selectSchedule}
           chosenScheduleId={selectedSchedule}
           direction="right"

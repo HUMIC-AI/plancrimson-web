@@ -1,11 +1,10 @@
 import React, {
   useMemo,
 } from 'react';
-import { FaPlus } from 'react-icons/fa';
 import {
-  Semester, findConflicts, allTruthy,
+  Semester,
 } from 'plancrimson-utils';
-import { useAppDispatch, useAppSelector, useElapsed } from '@/src/utils/hooks';
+import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { Requirement } from '@/src/requirements/util';
 import {
   ClassCache, Planner, Profile, Schedules,
@@ -13,9 +12,9 @@ import {
 import { checkViable } from '@/src/searchSchedule';
 import { Viability, Schedule } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
-import CourseCard, { DragStatus } from '../../Course/CourseCard';
-import AddCoursesButton from '../../CourseSearchModal';
-import { HeaderSection } from './SemesterColumnHeader';
+import { DragStatus } from '../../Course/CourseCard';
+import HeaderSection from './SemesterColumnHeader';
+import { CoursesSection } from './CoursesSection';
 
 const VIABILITY_COLORS: Record<Viability, string> = {
   Yes: 'bg-green-300',
@@ -27,7 +26,6 @@ const VIABILITY_COLORS: Record<Viability, string> = {
 export interface SemesterDisplayProps {
   semester: Semester;
   chosenScheduleId: string | null;
-  highlight?: string;
 }
 
 interface SemesterComponentProps extends SemesterDisplayProps {
@@ -53,7 +51,6 @@ export default function SemesterColumn({
   dragStatus,
   setDragStatus,
   colWidth,
-  highlight,
 }: SemesterComponentProps) {
   const dispatch = useAppDispatch();
   const profile = useAppSelector(Profile.selectUserProfile);
@@ -67,7 +64,7 @@ export default function SemesterColumn({
   if (semesterFormat === 'sample') {
     chosenSchedule = sampleSchedule!.schedules.find((schedule) => schedule.id === chosenScheduleId)!;
   } else if (chosenScheduleId) {
-    chosenSchedule = schedules[chosenScheduleId];
+    chosenSchedule = schedules[chosenScheduleId] ?? null;
   }
 
   const draggedClass = dragStatus.dragging && classCache[dragStatus.data.classId];
@@ -130,12 +127,7 @@ export default function SemesterColumn({
         }}
         onDrop={handleDrop}
       >
-        <HeaderSection
-          chosenScheduleId={chosenScheduleId}
-          semester={semester}
-          highlight={highlight}
-          colWidth={colWidth}
-        />
+        <HeaderSection semester={`${semester.year}${semester.season}`} />
 
         {/* {selectedSchedule.classes.length > 0 && (
         <p className="text-sm">
@@ -151,7 +143,7 @@ export default function SemesterColumn({
 
         {chosenSchedule && (
         <CoursesSection
-          schedule={chosenSchedule}
+          scheduleId={chosenScheduleId}
           highlightedRequirement={highlightedRequirement}
           setDragStatus={setDragStatus}
         />
@@ -161,47 +153,4 @@ export default function SemesterColumn({
   );
 }
 
-function CoursesSection({ schedule, highlightedRequirement, setDragStatus }: {
-  schedule: Schedule;
-  highlightedRequirement: Requirement | undefined;
-  setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>;
-}) {
-  const profile = useAppSelector(Profile.selectUserProfile);
-  const classCache = useAppSelector(ClassCache.selectClassCache);
-  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
-  const conflicts = findConflicts(allTruthy(schedule.classes.map(({ classId }) => classCache[classId])));
-  const elapsed = useElapsed(3000, []);
 
-  const doHighlight = (id: string) => highlightedRequirement && highlightedRequirement.reducer(
-    highlightedRequirement.initialValue || 0,
-    classCache[id],
-    schedule!,
-    profile,
-  ) !== null;
-
-  const warnings = (id: string) => ((conflicts[id]?.length || 0) > 0 ? `This class conflicts with: ${conflicts![id].map((i) => classCache[i].SUBJECT + classCache[i].CATALOG_NBR).join(', ')}` : undefined);
-
-  return (
-    <div className="h-max flex-1 p-4 md:overflow-auto">
-      <div className="flex min-h-[12rem] flex-col items-stretch space-y-4">
-        <AddCoursesButton schedule={schedule}>
-          <FaPlus />
-        </AddCoursesButton>
-
-        {schedule.classes.map(({ classId: id }) => (id && classCache[id] ? (
-          <CourseCard
-            key={id}
-            course={classCache[id]}
-            highlight={doHighlight(id)}
-            chosenScheduleId={schedule.id}
-            setDragStatus={semesterFormat === 'sample' ? undefined : setDragStatus}
-            inSearchContext={false}
-            warnings={warnings(id)}
-          />
-        ) : (
-          <div key={id}>{elapsed ? `Course ${id.slice(0, 12)}... not found` : 'Loading course data...'}</div>
-        )))}
-      </div>
-    </div>
-  );
-}

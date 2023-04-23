@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { updateDoc } from 'firebase/firestore';
+import { deleteField, updateDoc } from 'firebase/firestore';
 import type { Term } from 'plancrimson-utils';
 import Schema from '../schema';
 import type { AppDispatch, RootState } from '../store';
@@ -49,7 +49,9 @@ export const chooseSchedule = ({ scheduleId, term }: ChooseSchedulePayload) => a
   const uid = getState().auth.userInfo?.uid;
   if (!uid) throw new Error('not signed in');
   // make sure to use updateDoc to avoid overwriting the entire document
-  await updateDoc(Schema.user(uid), { [`chosenSchedules.${term}`]: scheduleId } as any);
+  await updateDoc(Schema.user(uid), {
+    [`chosenSchedules.${term}`]: scheduleId ?? deleteField(),
+  } as any);
   return dispatch(settingsSlice.actions.chooseSchedule({ scheduleId, term }));
 };
 

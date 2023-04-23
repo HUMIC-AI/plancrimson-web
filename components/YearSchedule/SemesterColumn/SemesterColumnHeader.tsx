@@ -1,140 +1,79 @@
-import React, { useRef, useState } from 'react';
-import { FaCheck } from 'react-icons/fa';
-import { compareSemesters, Semester } from 'plancrimson-utils';
-import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { Planner, Schedules, Settings } from '@/src/features';
-import { getSchedulesBySemester } from '@/src/utils/schedules';
-import ScheduleChooser from '../../ScheduleChooser';
-import FadeTransition from '../../Utils/FadeTransition';
-import ButtonMenu from '../ButtonMenu';
+import { selectSchedules } from '@/src/features/schedules';
+import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
+import { classNames } from '@/src/utils/styles';
+import { Menu } from '@headlessui/react';
+import type { Term } from 'plancrimson-utils';
+import { useState } from 'react';
+import { FaCalendar, FaCog, FaEdit } from 'react-icons/fa';
+import { DeleteScheduleButton } from './DeleteScheduleButton';
+import { DuplicateScheduleButton } from './DuplicateScheduleButton';
+import { MenuButton } from './MenuButton';
+import { EditNameForm } from './EditNameForm';
+import { HideScheduleButton } from './HideScheduleButton';
+import { PublishScheduleButton } from './PublishScheduleButton';
 
 type HeaderProps = {
-  highlight: string | undefined;
-  semester: Semester;
-  chosenScheduleId: string | null;
-  colWidth: number;
+  semester: Term;
 };
 
-/**
- * The header for a semester
- * @param highlight the highlighted requirement
- * @param semester the semester
- * @param chosenScheduleId the schedule to show
- * @param colWidth the width of the column
- */
-export function HeaderSection({
-  highlight, semester, chosenScheduleId, colWidth,
+export default function HeaderSection({
+  semester,
 }: HeaderProps) {
   const dispatch = useAppDispatch();
+  const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
+  const chosenScheduleId = chosenSchedules[semester] ?? null;
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
-  const schedules = useAppSelector(Schedules.selectSchedules);
-  const currentSchedules = getSchedulesBySemester(schedules, semester);
-
-  // independent to sync up the transitions nicely
-  const [scheduleTitle, setScheduleTitle] = useState<string>();
-  const [showSelector, setShowSelector] = useState(true);
+  const schedules = useAppSelector(selectSchedules);
+  const schedule = chosenScheduleId ? schedules[chosenScheduleId] : null;
   const [editing, setEditing] = useState(false);
-  const editRef = useRef<HTMLInputElement>(null!);
 
-  const prevScheduleId = currentSchedules.find((schedule) => schedule.id !== chosenScheduleId)?.id ?? null;
-
-  async function handleRenameSchedule(ev: React.FormEvent) {
-    ev.preventDefault();
-    if (!chosenScheduleId) {
-      alert('no schedule selected to rename');
-      return;
-    }
-    if (!scheduleTitle) {
-      alert('invalid title given');
-      return;
-    }
-    await dispatch(Schedules.renameSchedule({ scheduleId: chosenScheduleId, title: scheduleTitle }));
-    setEditing(false);
-  }
-
-  const doHighlight = typeof highlight !== 'undefined' && highlight === chosenScheduleId;
-
-  const chooseSchedule = (scheduleId: string | null) => dispatch(Settings.chooseSchedule({
-    term: `${semester.year}${semester.season}`,
-    scheduleId,
-  }));
+  if (!schedule) return null; // TODO
 
   return (
-    <div className="flex flex-col items-stretch space-y-2 border-b-2 border-black p-4">
-      {semesterFormat !== 'all' && (
-        <h3 className="text-center">
-          <button
-            type="button"
-            className="transition-opacity hover:line-through hover:opacity-50"
-            title="Hide this semester"
-            onClick={() => {
-              // hide the semester
-              if (semesterFormat === 'selected') {
-                dispatch(Planner.setHiddenTerm({ term: `${semester.year}${semester.season}`, hidden: true }));
-              } else if (chosenScheduleId) {
-                dispatch(Planner.setHiddenId({ id: chosenScheduleId, hidden: true }));
-              }
-            }}
-          >
-            {semester.season}
-            {' '}
-            {semester.year}
-          </button>
-        </h3>
-      )}
-
-      <FadeTransition
-        show={editing}
-        unmount={false}
-        beforeEnter={() => setShowSelector(false)}
-        afterLeave={() => setShowSelector(true)}
-      >
-        <form
-          className="relative"
-          onSubmit={handleRenameSchedule}
-        >
-          <input
-            type="text"
-            value={scheduleTitle}
-            onChange={({ currentTarget }) => setScheduleTitle(
-              currentTarget.value
-                .replace(/[^a-zA-Z0-9-_ ]/g, '')
-                .slice(0, 30),
+    <Menu as="div" className="relative flex flex-col items-center px-2">
+      {({ open }) => (
+        <>
+          <div className="group relative p-2">
+            {editing ? (
+              <EditNameForm
+                title={schedule.title}
+                setEditing={setEditing}
+                handleSubmit={(title) => (title
+                  ? dispatch(Schedules.renameSchedule({ scheduleId: chosenScheduleId!, title }))
+                  : Promise.reject(new Error('Invalid title')))}
+              />
+            ) : (
+              <h3>
+                {schedule.title}
+              </h3>
             )}
-            className="w-full rounded border-2 py-1 pl-2 pr-7 shadow-inner focus:shadow"
-            ref={editRef}
-          />
-          <button
-            type="submit"
-            className="absolute inset-y-0 right-2 flex items-center"
-          >
-            <FaCheck />
-          </button>
-        </form>
-      </FadeTransition>
-
-      {semesterFormat !== 'sample' && showSelector && (
-        <ScheduleChooser
-          scheduleIds={currentSchedules.sort(compareSemesters).map((s) => s.id)}
-          chosenScheduleId={chosenScheduleId}
-          handleChooseSchedule={chooseSchedule}
-          direction="center"
-          parentWidth={`${colWidth}px`}
-          showTerm={semesterFormat === 'all' ? 'on' : 'off'}
-          highlight={doHighlight}
-          showDropdown={semesterFormat !== 'all'}
-          season={semester.season}
-          year={semester.year}
-        />
+            <Menu.Button className={classNames(
+              'absolute left-full top-1/2 ml-1 -translate-y-1/2 transition-opacity',
+              open ? false : 'opacity-0 group-hover:opacity-100',
+            )}
+            >
+              <FaCog />
+            </Menu.Button>
+          </div>
+          <Menu.Items className="absolute top-full z-10 rounded bg-white p-1 text-gray-dark">
+            <MenuButton href={`/schedule/${chosenScheduleId}`} Icon={FaCalendar} title="Calendar" />
+            {semesterFormat !== 'sample' && (
+            <MenuButton onClick={() => { setEditing(true); }} Icon={FaEdit} title="Rename" />
+            )}
+            <HideScheduleButton scheduleId={chosenScheduleId} />
+            {semesterFormat !== 'sample' && chosenScheduleId && (
+              <>
+                <DeleteScheduleButton scheduleId={chosenScheduleId} />
+                <DuplicateScheduleButton scheduleId={chosenScheduleId} />
+                <PublishScheduleButton scheduleId={chosenScheduleId} />
+              </>
+            )}
+          </Menu.Items>
+        </>
       )}
-
-      {semesterFormat !== 'sample' && (
-        <ButtonMenu
-          prevScheduleId={prevScheduleId}
-          handleChooseSchedule={chooseSchedule}
-          chosenScheduleId={chosenScheduleId}
-        />
-      )}
-    </div>
+    </Menu>
   );
 }
+
+

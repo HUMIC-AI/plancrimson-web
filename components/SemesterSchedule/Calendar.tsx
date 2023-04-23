@@ -17,7 +17,7 @@ import {
   getEvents,
   doesRRuleHaveDay,
 } from './calendarUtil';
-import AddCoursesButton from '../CourseSearchModal';
+import AddCoursesButton from "../AddCoursesButton";
 
 
 const dayStartTime = 8; // time to start the calendar at

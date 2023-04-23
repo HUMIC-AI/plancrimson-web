@@ -42,12 +42,19 @@ export function getSchedulesBySemester(
   schedules: ScheduleMap,
   semester: Semester,
 ) {
-  return sortSchedules(schedules).filter(
+  return sortSchedulesBySemester(schedules).filter(
     ({ year, season }) => year === semester.year && season === semester.season,
   );
 }
 
-export function sortSchedules(schedules: ScheduleMap) {
+export function getPreviousSchedule(schedules: ScheduleMap, scheduleId: string) {
+  const schedule = schedules[scheduleId];
+  const schedulesFromSameSemester = getSchedulesBySemester(schedules, schedule);
+  const previous = schedulesFromSameSemester.find((s) => s.id !== scheduleId);
+  return previous;
+}
+
+export function sortSchedulesBySemester(schedules: ScheduleMap) {
   return Object.values(schedules).sort(compareSemesters);
 }
 

@@ -14,7 +14,7 @@ import Tooltip from '@/components/Utils/Tooltip';
 import { checkViable } from '@/src/searchSchedule';
 import { Schedule } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
-import { sortSchedules } from '@/src/utils/schedules';
+import { sortSchedulesBySemester } from '@/src/utils/schedules';
 
 /**
  * The planning panel in the course modal. Returns a Tab.Panel.
@@ -41,7 +41,7 @@ export default function PlanningPanel({ course }: { course: ExtendedClass }) {
   return (
     <Tab.Panel>
       <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
-        {sortSchedules(schedules).map((schedule) => (
+        {sortSchedulesBySemester(schedules).map((schedule) => (
           <ScheduleRow
             key={schedule.title}
             course={course}
