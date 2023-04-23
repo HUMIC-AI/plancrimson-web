@@ -6,6 +6,7 @@ import { Menu } from '@headlessui/react';
 import type { Term } from 'plancrimson-utils';
 import { useState } from 'react';
 import { FaCalendar, FaCog, FaEdit } from 'react-icons/fa';
+import FadeTransition from '@/components/Utils/FadeTransition';
 import { DeleteScheduleButton } from './DeleteScheduleButton';
 import { DuplicateScheduleButton } from './DuplicateScheduleButton';
 import { MenuButton } from './MenuButton';
@@ -34,7 +35,7 @@ export default function HeaderSection({
     <Menu as="div" className="relative flex flex-col items-center px-2">
       {({ open }) => (
         <>
-          <div className="mx-4 relative p-2">
+          <div className="relative mx-4 p-2">
             {editing ? (
               <EditNameForm
                 title={schedule.title}
@@ -56,20 +57,22 @@ export default function HeaderSection({
               <FaCog />
             </Menu.Button>
           </div>
-          <Menu.Items className="absolute top-full z-10 rounded bg-white p-1 text-gray-dark">
-            <MenuButton href={`/schedule/${chosenScheduleId}`} Icon={FaCalendar} title="Calendar" />
-            {semesterFormat !== 'sample' && (
-            <MenuButton onClick={() => { setEditing(true); }} Icon={FaEdit} title="Rename" />
-            )}
-            <HideScheduleButton scheduleId={chosenScheduleId} />
-            {semesterFormat !== 'sample' && chosenScheduleId && (
+          <FadeTransition>
+            <Menu.Items className="absolute top-full z-10 rounded bg-white p-1 text-gray-dark">
+              <MenuButton href={`/schedule/${chosenScheduleId}`} Icon={FaCalendar} title="Calendar" />
+              {semesterFormat !== 'sample' && (
+              <MenuButton onClick={() => { setEditing(true); }} Icon={FaEdit} title="Rename" />
+              )}
+              <HideScheduleButton scheduleId={chosenScheduleId} />
+              {semesterFormat !== 'sample' && chosenScheduleId && (
               <>
                 <DeleteScheduleButton scheduleId={chosenScheduleId} />
                 <DuplicateScheduleButton scheduleId={chosenScheduleId} />
                 <PublishScheduleButton scheduleId={chosenScheduleId} />
               </>
-            )}
-          </Menu.Items>
+              )}
+            </Menu.Items>
+          </FadeTransition>
         </>
       )}
     </Menu>

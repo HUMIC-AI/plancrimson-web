@@ -24,5 +24,5 @@ export function DuplicateScheduleButton({ scheduleId }: { scheduleId: string; })
     }
   }, [dispatch, schedule]);
 
-  return <MenuButton onClick={handleDuplicate} Icon={FaClone} title="Duplicate" />
+  return <MenuButton onClick={handleDuplicate} Icon={FaClone} title="Duplicate" />;
 }

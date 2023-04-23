@@ -4,23 +4,20 @@ import { findConflicts, allTruthy } from 'plancrimson-utils';
 import { useAppSelector, useElapsed } from '@/src/utils/hooks';
 import { Requirement } from '@/src/requirements/util';
 import {
-  ClassCache, Planner, Profile, Schedules,
+  ClassCache, Profile, Schedules,
 } from '@/src/features';
-import { Schedule } from '@/src/types';
 import AddCoursesButton from '@/components/AddCoursesButton';
-import CourseCard, { DragStatus } from '../../Course/CourseCard';
+import CourseCard from '../../Course/CourseCard';
 
 type Props = {
   scheduleId: string;
   highlightedRequirement: Requirement | undefined;
-  setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>;
 };
 
-export function CoursesSection({ scheduleId, highlightedRequirement, setDragStatus }: Props) {
+export function CoursesSection({ scheduleId, highlightedRequirement }: Props) {
   const schedule = useAppSelector(Schedules.selectSchedule(scheduleId));
   const profile = useAppSelector(Profile.selectUserProfile);
   const classCache = useAppSelector(ClassCache.selectClassCache);
-  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const conflicts = useMemo(
     () => schedule && findConflicts(allTruthy(schedule.classes.map(({ classId }) => classCache[classId]))),
     [schedule, classCache],
@@ -57,7 +54,6 @@ export function CoursesSection({ scheduleId, highlightedRequirement, setDragStat
             course={classCache[id]}
             highlight={doHighlight(id)}
             chosenScheduleId={schedule.id}
-            setDragStatus={semesterFormat === 'sample' ? undefined : setDragStatus}
             inSearchContext={false}
             warnings={warnings(id)}
           />

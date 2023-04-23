@@ -16,6 +16,7 @@ module.exports = {
       orange: colors.orange[300],
       pink: colors.rose[300],
       accent: colors.cyan[300],
+      green: colors.green[300],
       blue: {
         light: colors.sky[200],
       },

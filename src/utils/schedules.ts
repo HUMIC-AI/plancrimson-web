@@ -61,3 +61,11 @@ export function sortSchedulesBySemester(schedules: ScheduleMap) {
 export function getAllClassIds(schedules: Schedule[]): string[] {
   return schedules.flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
 }
+
+export function getSemesterBeforeEarliest(schedules: ScheduleMap): Semester {
+  const earliest = sortSchedulesBySemester(schedules)[0];
+  const [season, year] = earliest.season === 'Spring'
+    ? ['Fall' as const, earliest.year - 1]
+    : ['Spring' as const, earliest.year];
+  return { season, year };
+}

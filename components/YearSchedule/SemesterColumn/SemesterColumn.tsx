@@ -1,26 +1,24 @@
-import React, {
-  useMemo,
-} from 'react';
+import React from 'react';
 import {
+  Season,
   Semester,
 } from 'plancrimson-utils';
-import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
+import { useAppSelector } from '@/src/utils/hooks';
 import { Requirement } from '@/src/requirements/util';
 import {
-  ClassCache, Planner, Profile, Schedules,
+  Planner, Schedules,
 } from '@/src/features';
-import { checkViable } from '@/src/searchSchedule';
 import { Viability, Schedule } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
-import { DragStatus } from '../../Course/CourseCard';
 import HeaderSection from './SemesterColumnHeader';
 import { CoursesSection } from './CoursesSection';
+import { useDragAndDropContext } from './DragAndDrop';
 
 const VIABILITY_COLORS: Record<Viability, string> = {
-  Yes: 'bg-green-300',
+  Yes: 'bg-green',
   Likely: 'bg-blue-light',
-  Unlikely: 'bg-yellow-200',
-  No: 'bg-red-300',
+  Unlikely: 'bg-yellow',
+  No: 'bg-red',
 };
 
 export interface SemesterDisplayProps {
@@ -30,8 +28,6 @@ export interface SemesterDisplayProps {
 
 interface SemesterComponentProps extends SemesterDisplayProps {
   highlightedRequirement: Requirement | undefined;
-  dragStatus: DragStatus;
-  setDragStatus: React.Dispatch<React.SetStateAction<DragStatus>>;
   colWidth: number;
 }
 
@@ -48,16 +44,13 @@ export default function SemesterColumn({
   semester,
   chosenScheduleId,
   highlightedRequirement,
-  dragStatus,
-  setDragStatus,
   colWidth,
 }: SemesterComponentProps) {
-  const dispatch = useAppDispatch();
-  const profile = useAppSelector(Profile.selectUserProfile);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
   const schedules = useAppSelector(Schedules.selectSchedules);
-  const classCache = useAppSelector(ClassCache.selectClassCache);
+  const colorStyles = useStyles(semester.season, chosenScheduleId);
+  const drag = useDragAndDropContext();
 
   // the schedules for this semester to show
   let chosenSchedule: Schedule | null = null;
@@ -67,65 +60,25 @@ export default function SemesterColumn({
     chosenSchedule = schedules[chosenScheduleId] ?? null;
   }
 
-  const draggedClass = dragStatus.dragging && classCache[dragStatus.data.classId];
-
-  const viableDrop = useMemo(
-    () => (profile.classYear && draggedClass && chosenSchedule
-      ? checkViable({
-        cls: draggedClass,
-        schedule: chosenSchedule,
-        classYear: profile.classYear,
-        classCache,
-      })
-      : null),
-    [classCache, profile, draggedClass, chosenSchedule],
-  );
-
-  function handleDrop(ev: React.DragEvent<HTMLDivElement>) {
-    ev.preventDefault();
-
-    setDragStatus({ dragging: false });
-
-    if (!dragStatus.dragging || !chosenScheduleId || !viableDrop) return;
-
-    if (viableDrop.viability === 'No') {
-      alert(viableDrop.reason);
-    } else if (chosenScheduleId !== dragStatus.data.originScheduleId) {
-      const doAdd = viableDrop.viability !== 'Unlikely' || confirm(`${viableDrop.reason} Continue anyways?`);
-      if (doAdd) {
-        const { classId, originScheduleId } = dragStatus.data;
-        dispatch(Schedules.addCourses({ scheduleId: chosenScheduleId, courses: [{ classId }] }));
-        dispatch(Schedules.removeCourses({ scheduleId: originScheduleId, courseIds: [classId] }));
-      }
-    }
-  }
-
-  const backgroundColor = semester.season === 'Fall'
-    ? 'bg-season-fall'
-    : semester.season === 'Spring'
-      ? 'bg-season-spring' : 'bg-gray-light';
-
   return (
     <div
       className={classNames(
         'relative md:h-full overflow-hidden transition-colors duration-300',
-        dragStatus.dragging
-          ? dragStatus.data.originScheduleId === chosenScheduleId
-            || !viableDrop
-            ? 'bg-gray-light cursor-not-allowed'
-            : VIABILITY_COLORS[viableDrop?.viability]
-          : backgroundColor,
+        colorStyles,
       )}
       style={{ width: `${colWidth}px` }}
     >
       <div
         className="flex flex-col md:h-full"
-        onDragOver={(ev) => {
+        onDragOver={drag.enabled ? (ev) => {
           ev.preventDefault();
           // eslint-disable-next-line no-param-reassign
           ev.dataTransfer.dropEffect = 'move';
-        }}
-        onDrop={handleDrop}
+        } : undefined}
+        onDrop={drag.enabled && chosenScheduleId ? (ev) => {
+          ev.preventDefault();
+          drag.handleDrop(chosenScheduleId);
+        } : undefined}
       >
         <HeaderSection semester={`${semester.year}${semester.season}`} />
 
@@ -141,11 +94,10 @@ export default function SemesterColumn({
         </p>
         )} */}
 
-        {chosenSchedule && (
+        {chosenScheduleId && (
         <CoursesSection
           scheduleId={chosenScheduleId}
           highlightedRequirement={highlightedRequirement}
-          setDragStatus={setDragStatus}
         />
         )}
       </div>
@@ -154,3 +106,24 @@ export default function SemesterColumn({
 }
 
 
+function useStyles(season: Season, scheduleId: string | null) {
+  const drag = useDragAndDropContext();
+
+  const backgroundColor = season === 'Fall'
+    ? 'bg-season-fall'
+    : season === 'Spring'
+      ? 'bg-season-spring'
+      : 'bg-gray-light';
+
+  if (!drag.enabled || !drag.dragStatus.dragging || !scheduleId) {
+    return backgroundColor;
+  }
+
+  const validDrop = drag.dragStatus.data.originScheduleId !== scheduleId && drag.checkViableDrop(scheduleId);
+
+  if (!validDrop) {
+    return 'bg-gray-light cursor-not-allowed';
+  }
+
+  return VIABILITY_COLORS[validDrop.viability];
+}

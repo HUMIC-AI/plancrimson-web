@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import React, { useMemo } from 'react';
+import React, { DragEventHandler, useMemo } from 'react';
 import {
   FaTimes, FaPlus, FaExclamationTriangle,
 } from 'react-icons/fa';
@@ -23,20 +23,9 @@ import {
   Location,
 } from './CourseComponents';
 import { ClassSizeRating, HoursRating, StarRating } from './RatingIndicators';
+import { useDragAndDropContext } from '../YearSchedule/SemesterColumn/DragAndDrop';
 
 type Department = keyof typeof departmentImages;
-
-export type DragStatus =
-  | {
-    dragging: false;
-  }
-  | {
-    dragging: true;
-    data: {
-      classId: string;
-      originScheduleId: string;
-    };
-  };
 
 function ToggleButton({ chosenScheduleId, course } : { chosenScheduleId: string; course: ExtendedClass; }) {
   const dispatch = useAppDispatch();
@@ -110,7 +99,6 @@ type CourseCardProps = {
   chosenScheduleId?: string | null;
   highlight?: boolean;
   inSearchContext?: boolean;
-  setDragStatus?: React.Dispatch<React.SetStateAction<DragStatus>>;
   warnings?: string;
   hideTerm?: boolean;
   hideRatings?: boolean;
@@ -121,14 +109,12 @@ type CourseCardProps = {
  * @param course the course to summarize in this card
  * @param chosenScheduleId the current chosen schedule. Used for various button interactions.
  * @param highlight whether to highlight this class. default false
- * @param setDragStatus a callback when this card starts to be dragged
  * @param warnings an optional list of warnings, eg time collisions with other classes
  */
 export default function CourseCard({
   course,
   chosenScheduleId = null,
   highlight = false,
-  setDragStatus,
   inSearchContext = true,
   warnings,
   hideTerm = false,
@@ -137,8 +123,8 @@ export default function CourseCard({
   const cardExpandStyle = useAppSelector(Planner.selectExpandCards);
   const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
   const { showCourse } = useModal();
+  const drag = useDragAndDropContext();
 
-  const draggable = typeof setDragStatus !== 'undefined';
   const [semester, department] = useMemo(
     () => [
       getSemester(course),
@@ -147,14 +133,13 @@ export default function CourseCard({
     [course],
   );
 
-  const handleDragStart: React.DragEventHandler<HTMLDivElement> = (ev) => {
-    // eslint-disable-next-line no-param-reassign
+  const onDragStart: DragEventHandler<unknown> | undefined = drag.enabled ? (ev) => {
     ev.dataTransfer.dropEffect = 'move';
-    // eslint-disable-next-line no-alert
+
     if (!chosenSchedule?.title) {
       alertUnexpectedError(new Error('Selected schedule has no ID'));
     } else {
-      setDragStatus!({
+      drag.setDragStatus({
         dragging: true,
         data: {
           classId: getClassId(course),
@@ -162,20 +147,19 @@ export default function CourseCard({
         },
       });
     }
-  };
+  } : undefined;
 
   if (cardExpandStyle === 'text') {
     return (
-      <span onDragStart={draggable ? handleDragStart : undefined}>
-        <button
-          type="button"
-          draggable={draggable}
-          onClick={() => showCourse(course)}
-          className="transition-opacity hover:opacity-50"
-        >
-          {course.SUBJECT + course.CATALOG_NBR}
-        </button>
-      </span>
+      <button
+        type="button"
+        onClick={() => showCourse(course)}
+        className="transition-opacity hover:opacity-50"
+        draggable={drag.enabled}
+        onDragStart={onDragStart}
+      >
+        {course.SUBJECT + course.CATALOG_NBR}
+      </button>
     );
   }
 
@@ -190,15 +174,15 @@ export default function CourseCard({
           isExpanded || 'bg-gradient-to-br',
           isExpanded || (highlight ? 'to-blue-light' : 'to-primary-dark'),
         )}
-        draggable={draggable}
-        onDragStart={draggable ? handleDragStart : undefined}
+        draggable={drag.enabled}
+        onDragStart={onDragStart}
       >
         {/* header component */}
         <div
           className={classNames(
             'p-2 text-white from-black via-black bg-gradient-to-br',
             isExpanded && (highlight ? 'to-blue-light' : 'to-primary-dark'),
-            draggable && 'cursor-move',
+            drag.enabled && 'cursor-move',
             isExpanded && 'relative',
           )}
         >

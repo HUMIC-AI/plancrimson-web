@@ -5,8 +5,7 @@ import { StyledOption } from './StyledOption';
 
 export function ChooserOption({ scheduleId }: { scheduleId: string; }) {
   const schedule = useAppSelector(Schedules.selectSchedule(scheduleId));
-  if (!schedule)
-    return null;
+  if (!schedule) return null;
   return (
     <StyledOption
       key={scheduleId}
