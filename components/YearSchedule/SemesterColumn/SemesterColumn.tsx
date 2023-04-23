@@ -3,11 +3,7 @@ import {
   Season,
   Semester,
 } from 'plancrimson-utils';
-import { useAppSelector } from '@/src/utils/hooks';
 import { Requirement } from '@/src/requirements/util';
-import {
-  Planner, Schedules,
-} from '@/src/features';
 import { Viability, Schedule } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
 import HeaderSection from './SemesterColumnHeader';
@@ -46,19 +42,8 @@ export default function SemesterColumn({
   highlightedRequirement,
   colWidth,
 }: SemesterComponentProps) {
-  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
-  const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
-  const schedules = useAppSelector(Schedules.selectSchedules);
   const colorStyles = useStyles(semester.season, chosenScheduleId);
   const drag = useDragAndDropContext();
-
-  // the schedules for this semester to show
-  let chosenSchedule: Schedule | null = null;
-  if (semesterFormat === 'sample') {
-    chosenSchedule = sampleSchedule!.schedules.find((schedule) => schedule.id === chosenScheduleId)!;
-  } else if (chosenScheduleId) {
-    chosenSchedule = schedules[chosenScheduleId] ?? null;
-  }
 
   return (
     <div
@@ -105,6 +90,14 @@ export default function SemesterColumn({
   );
 }
 
+
+// // the schedules for this semester to show
+// let chosenSchedule: Schedule | null = null;
+// if (semesterFormat === 'sample') {
+//   chosenSchedule = sampleSchedule!.schedules.find((schedule) => schedule.id === chosenScheduleId)!;
+// } else if (chosenScheduleId) {
+//   chosenSchedule = schedules[chosenScheduleId] ?? null;
+// }
 
 function useStyles(season: Season, scheduleId: string | null) {
   const drag = useDragAndDropContext();

@@ -5,8 +5,6 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { useDragAndDropContext } from './DragAndDrop';
 
 export function useObserver(resizeRef: MutableRefObject<HTMLDivElement>) {
-  const drag = useDragAndDropContext();
-
   const leftScrollRef = useRef<HTMLDivElement>(null!);
   const rightScrollRef = useRef<HTMLDivElement>(null!);
 

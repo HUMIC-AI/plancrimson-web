@@ -35,7 +35,7 @@ export default function HeaderSection({
     <Menu as="div" className="relative flex flex-col items-center px-2">
       {({ open }) => (
         <>
-          <div className="relative mx-4 p-2">
+          <div className="group relative mx-4 p-2">
             {editing ? (
               <EditNameForm
                 title={schedule.title}
@@ -51,14 +51,14 @@ export default function HeaderSection({
             )}
             <Menu.Button className={classNames(
               'absolute left-full top-1/2 -translate-y-1/2 transition-opacity',
-              open ? false : 'opacity-0 group-hover:opacity-100',
+              !open && 'opacity-0 group-hover:opacity-100',
             )}
             >
               <FaCog />
             </Menu.Button>
           </div>
           <FadeTransition>
-            <Menu.Items className="absolute top-full z-10 rounded bg-white p-1 text-gray-dark">
+            <Menu.Items className="absolute top-full z-10 rounded bg-white p-1 text-gray-dark shadow-md focus:outline-none">
               <MenuButton href={`/schedule/${chosenScheduleId}`} Icon={FaCalendar} title="Calendar" />
               {semesterFormat !== 'sample' && (
               <MenuButton onClick={() => { setEditing(true); }} Icon={FaEdit} title="Rename" />
