@@ -4,7 +4,7 @@ import useChosenScheduleContext from '@/src/context/selectedSchedule';
 import { useAppSelector } from '@/src/utils/hooks';
 import { sortSchedulesBySemester } from '@/src/utils/schedules';
 import { Schedules } from '@/src/features';
-import type { SearchBoxProvided } from 'react-instantsearch-core';
+import type { SearchBoxExposed, SearchBoxProvided } from 'react-instantsearch-core';
 import ScheduleChooser from '../../ScheduleChooser/ScheduleChooser';
 import { alertSignIn } from './searchUtils';
 import { SearchBar } from './SearchBar';
@@ -52,11 +52,13 @@ function SearchBoxComponent({
 }
 
 
-export default function () {
+// eslint-disable-next-line react/no-unused-prop-types
+export default function (props: SearchBoxExposed & { scheduleChooser?: boolean }) {
   return (
     <ClientOrDemo
       connector={connectSearchBox<SearchBoxProps>}
       component={SearchBoxComponent}
+      extraProps={props}
     />
   );
 }

@@ -1,7 +1,6 @@
-import { InstantSearch, Configure, connectInfiniteHits } from 'react-instantsearch-dom';
+import { connectInfiniteHits } from 'react-instantsearch-dom';
 import type { ExtendedClass } from 'plancrimson-utils';
 import { sampleCourses } from 'plancrimson-utils';
-import useSearchState from '@/src/context/searchState';
 import { useElapsed } from '@/src/utils/hooks';
 import { MeiliContext } from '@/src/context/meili';
 import { Auth } from '@/src/features';
@@ -10,6 +9,7 @@ import { ErrorMessage } from '@/components/Layout/ErrorPage';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import AttributeMenu from '@/components/SearchComponents/AttributeMenu/AttributeMenu';
 import ChartComponent from '@/components/Chart/ChartComponent';
+import { AuthRequiredInstantSearchProvider } from '@/pages/AuthRequiredInstantSearchProvider';
 
 const Chart = connectInfiniteHits(ChartComponent);
 
@@ -57,31 +57,16 @@ export default function ExplorePage() {
             );
           }
 
-          return <ExplorePageInner client={client} />;
+          return (
+            <AuthRequiredInstantSearchProvider hitsPerPage={50}>
+              <div className="flex flex-col space-x-2 md:absolute md:inset-2 md:flex-row">
+                <AttributeMenu showSubjectColor />
+                <Chart demo={false} client={client} />
+              </div>
+            </AuthRequiredInstantSearchProvider>
+          );
         }}
       </MeiliContext.Consumer>
     </Layout>
-  );
-}
-
-function ExplorePageInner({ client }: { client: InstantSearch }) {
-  const { searchState, setSearchState } = useSearchState();
-
-  return (
-    <InstantSearch
-      indexName="courses"
-      searchClient={client}
-      searchState={searchState}
-      onSearchStateChange={(newState) => {
-        setSearchState({ ...searchState, ...newState });
-      }}
-      stalledSearchDelay={500}
-    >
-      <Configure hitsPerPage={50} />
-      <div className="flex flex-col space-x-2 md:absolute md:inset-2 md:flex-row">
-        <AttributeMenu showSubjectColor />
-        <Chart demo={false} client={client} />
-      </div>
-    </InstantSearch>
   );
 }

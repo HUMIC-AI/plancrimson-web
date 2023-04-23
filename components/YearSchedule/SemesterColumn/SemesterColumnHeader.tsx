@@ -34,7 +34,7 @@ export default function HeaderSection({
     <Menu as="div" className="relative flex flex-col items-center px-2">
       {({ open }) => (
         <>
-          <div className="group relative p-2">
+          <div className="mx-4 relative p-2">
             {editing ? (
               <EditNameForm
                 title={schedule.title}
@@ -44,12 +44,12 @@ export default function HeaderSection({
                   : Promise.reject(new Error('Invalid title')))}
               />
             ) : (
-              <h3>
+              <h3 className="text-center">
                 {schedule.title}
               </h3>
             )}
             <Menu.Button className={classNames(
-              'absolute left-full top-1/2 ml-1 -translate-y-1/2 transition-opacity',
+              'absolute left-full top-1/2 -translate-y-1/2 transition-opacity',
               open ? false : 'opacity-0 group-hover:opacity-100',
             )}
             >

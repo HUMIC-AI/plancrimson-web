@@ -43,7 +43,9 @@ export const setAuthInfo = (payload: AuthInfo | null) => (dispatch: AppDispatch)
   dispatch(authSlice.actions.setAuthInfo(payload));
 };
 
-export const useAuthProperty = (prop: keyof AuthInfo) => useAppSelector((state: RootState) => (state.auth.userInfo ? state.auth.userInfo[prop] : state.auth.userInfo));
+export const useAuthProperty = (prop: keyof AuthInfo) => useAppSelector((state: RootState) => (
+  state.auth.userInfo ? state.auth.userInfo[prop] : state.auth.userInfo
+));
 export const selectSnapshotError = (state: RootState) => state.auth.snapshotError;
 
 export function useSignedInOrDemo<T>(values: T, defaults: T) {
