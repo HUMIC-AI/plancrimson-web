@@ -2,11 +2,12 @@ import { getApps, initializeApp } from 'firebase/app';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
 
+const authDomain = process.env.NODE_ENV === 'production' ? 'plancrimson.io' : 'harvard-concentration-planner.web.app';
+
 const firebaseConfig = {
   apiKey: 'AIzaSyAtHudtGRcdGwEuXPnfb8Q4JjcUOYVVcEg',
-  // authDomain: 'plancrimson.com',
-  authDomain: 'harvard-concentration-planner.web.app',
   projectId: 'harvard-concentration-planner',
+  authDomain,
   storageBucket: 'harvard-concentration-planner.appspot.com',
   messagingSenderId: '770496895607',
   appId: '1:770496895607:web:d277088377adf666664472',

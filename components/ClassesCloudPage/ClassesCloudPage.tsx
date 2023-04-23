@@ -3,13 +3,13 @@ import {
 } from 'react';
 import Layout from '@/components/Layout/Layout';
 import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
-import {
-  createScene, createPoints, createControls, createMouseTracker, createRaycaster, syncWindow,
-} from './createScene';
 import { useModal } from '@/src/context/modal';
 import type { Subject } from 'plancrimson-utils';
 import { useAppSelector } from '@/src/utils/hooks';
 import { ClassCache } from '@/src/features';
+import {
+  createScene, createPoints, createControls, createMouseTracker, createRaycaster, syncWindow,
+} from './createScene';
 
 const sensitivity = 20;
 
@@ -45,7 +45,7 @@ export default function ClassesCloud({
 
     const { scene, camera, renderer } = createScene(canvasRef.current!);
 
-    const points = createPoints(courses.map(([id, subject]) => subject), positions);
+    const points = createPoints(courses.map(([_, subject]) => subject), positions);
     scene.add(points);
 
     const orbitControls = controls === 'orbit' ? createControls(camera, renderer, autoRotate) : null;
@@ -90,17 +90,21 @@ export default function ClassesCloud({
   return (
     <Layout className="relative flex flex-1 items-center justify-center bg-black p-8" title="Plan" transparentHeader>
       <div className={classNames(
-        "absolute inset-0 overflow-hidden",
+        'absolute inset-0 overflow-hidden',
         'transition-opacity ease-in duration-[2000ms]',
-        (positions && courses) ? 'opacity-100' : 'opacity-0')}
+        (positions && courses) ? 'opacity-100' : 'opacity-0',
+      )}
       >
-        <canvas ref={canvasRef} onClick={() => {
-          const idx = currentHoverRef.current;
-          if (idx !== null && courses) {
-            const courseId = courses[idx][0];
-            showCourse(classCache[courseId]);
-          }
-        }} />
+        <canvas
+          ref={canvasRef}
+          onClick={() => {
+            const idx = currentHoverRef.current;
+            if (idx !== null && courses) {
+              const courseId = courses[idx][0];
+              showCourse(classCache[courseId]);
+            }
+          }}
+        />
       </div>
       {children}
     </Layout>

@@ -12,7 +12,7 @@ type RGB = readonly [number, number, number];
 function updateElement(buffer: THREE.BufferAttribute | THREE.InterleavedBufferAttribute, index: number, value: RGB) {
   const array = buffer.array as number[];
   for (let i = 0; i < 3; i += 1) {
-    array[index*3 + i] = value[i];
+    array[index * 3 + i] = value[i];
   }
 }
 

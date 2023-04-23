@@ -5,7 +5,9 @@ import { Auth } from '@/src/features';
 
 export default function ExplorePage() {
   const uid = Auth.useAuthProperty('uid');
-  return uid ? <ClassesCloudPage controls="orbit" interactive /> : <ErrorPage>
-    {errorMessages.unauthorized}
-  </ErrorPage>;
+  return uid ? <ClassesCloudPage controls="orbit" interactive /> : (
+    <ErrorPage>
+      {errorMessages.unauthorized}
+    </ErrorPage>
+  );
 }
