@@ -1,54 +1,18 @@
 // import '../src/wdyr';
-import '../src/index.css';
+import '@/src/index.css';
+import './initFirebase';
 import type { AppProps } from 'next/app';
-import { getApps, initializeApp } from 'firebase/app';
-import {
-  connectFirestoreEmulator, getDocFromServer, getFirestore, onSnapshot,
-} from 'firebase/firestore';
 import { Provider } from 'react-redux';
-import React, { useEffect } from 'react';
-import { connectAuthEmulator, getAuth, onAuthStateChanged } from 'firebase/auth';
+import React from 'react';
 import { SearchStateProvider } from '@/src/context/searchState';
 import store from '@/src/store';
-import { useAppDispatch } from '@/src/hooks';
-import { ModalProvider, useModal } from '@/src/context/modal';
+import { ModalProvider } from '@/src/context/modal';
 import { SelectedScheduleProvider } from '@/src/context/selectedSchedule';
-import {
-  Auth, Profile, Schedules, Settings,
-} from '@/src/features';
-import Firestore from '@/src/schema';
-import { getInitialSettings } from '@/src/utils';
-import GraduationYearDialog from '@/components/Layout/GraduationYearDialog';
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: 'AIzaSyAtHudtGRcdGwEuXPnfb8Q4JjcUOYVVcEg',
-  // authDomain: 'plancrimson.com',
-  authDomain: 'harvard-concentration-planner.web.app',
-  projectId: 'harvard-concentration-planner',
-  storageBucket: 'harvard-concentration-planner.appspot.com',
-  messagingSenderId: '770496895607',
-  appId: '1:770496895607:web:d277088377adf666664472',
-  measurementId: 'G-F4RKHQJFH3',
-};
-
-if (getApps().length === 0) {
-  initializeApp(firebaseConfig);
-
-  // connect to emulators in development mode
-  // check /firebase.json for port numbers
-  if (process.env.NODE_ENV === 'development') {
-    const auth = getAuth();
-    const db = getFirestore();
-    connectAuthEmulator(auth, 'http://127.0.0.1:9099');
-    connectFirestoreEmulator(db, '127.0.0.1', 8080);
-  }
-}
+import { useSyncAuth, useSyncUserSettings } from '@/components/Layout/useSyncAuth';
 
 function MyApp({ Component, pageProps }: AppProps) {
   useSyncAuth();
-  useSyncProfileToRedux();
+  useSyncUserSettings();
 
   return (
     <SearchStateProvider>
@@ -68,97 +32,4 @@ export default function Wrapper(props: AppProps) {
       </ModalProvider>
     </Provider>
   );
-}
-
-/**
- * Sync the firebase auth state with Redux.
- */
-function useSyncAuth() {
-  const auth = getAuth();
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(
-      auth,
-      (u) => {
-        if (u) {
-          dispatch(Auth.setAuthInfo({
-            uid: u.uid,
-            email: u.email!,
-          }));
-          dispatch(Profile.setPhotoUrl(u.photoURL));
-        } else { // just signed out
-          console.log('signed out');
-          dispatch(Auth.setAuthInfo(null));
-          dispatch(Settings.overwriteSettings(getInitialSettings()));
-          dispatch(Profile.signOut());
-          dispatch(Schedules.overwriteSchedules([]));
-        }
-      },
-      (err) => {
-        console.error('error listening for auth state change:', err);
-        dispatch(Auth.setSignInError(err));
-      },
-    );
-
-    return unsub;
-  }, []);
-}
-
-function useSyncProfileToRedux() {
-  const dispatch = useAppDispatch();
-  const uid = Auth.useAuthProperty('uid');
-  const { showContents } = useModal();
-
-  // run whenever the uid changes
-  useEffect(() => {
-    if (!uid) return;
-
-    // check if the Firebase document for the user's profile exists.
-    // if so, sync it to Redux. Force using latest version
-    (async () => {
-      console.info(`fetching profile for ${uid}`);
-      const profile = await getDocFromServer(Firestore.profile(uid));
-
-      if (!profile.exists()) return;
-      const data = profile.data()!;
-      if (data.username) {
-        dispatch(Profile.setUsername(data.username));
-      }
-
-      // show the graduation dialog if they haven't filled it in yet
-      if (!data.classYear) {
-        const now = new Date();
-        showContents({
-          title: 'Set graduation year',
-          content: <GraduationYearDialog
-            defaultYear={now.getFullYear() + (now.getMonth() > 5 ? 4 : 3)}
-            uid={uid}
-          />,
-          noExit: true,
-        });
-      } else {
-        dispatch(Profile.setClassYear(data.classYear));
-      }
-    })().catch((err) => {
-      console.error(`error fetching profile for ${uid}:`, err);
-    });
-
-    // keep the Redux state for the user settings in sync with Firestore
-    const userDataRef = Firestore.user(uid);
-    const unsubUserData = onSnapshot(userDataRef, (snap) => {
-      if (!snap.exists()) return;
-
-      const data = snap.data()!;
-      dispatch(Settings.overwriteSettings({
-        customTimes: data.customTimes || {},
-        chosenSchedules: data.chosenSchedules || {},
-        waivedRequirements: data.waivedRequirements || {},
-      }));
-    }, (err) => {
-      console.error(`error listening to ${userDataRef.path}:`, err);
-    });
-
-    return unsubUserData;
-  }, [uid]);
 }

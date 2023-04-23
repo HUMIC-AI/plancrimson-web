@@ -8,7 +8,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { Auth } from '@/src/features';
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 import FadeTransition from '../Utils/FadeTransition';
 
 export function SuggestionForm() {

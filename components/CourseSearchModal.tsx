@@ -5,7 +5,7 @@ import useSearchState, { SearchStateProvider } from '@/src/context/searchState';
 import { ChosenScheduleContext } from '@/src/context/selectedSchedule';
 import { Auth } from '@/src/features';
 import { TERM_TO_SEASON } from 'plancrimson-utils';
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 import { Schedule } from '@/src/types';
 import { InstantMeiliSearchInstance, useMeiliClient } from '@/src/context/meili';
 import { errorMessages } from './Layout/Layout';

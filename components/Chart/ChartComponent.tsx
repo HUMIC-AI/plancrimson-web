@@ -11,10 +11,11 @@ import {
   ExtendedClass, sampleCourses, getSubjectColor,
 } from 'plancrimson-utils';
 import { useModal } from '@/src/context/modal';
-import { useAppDispatch, useElapsed } from '@/src/hooks';
+import { useAppDispatch, useElapsed } from '@/src/utils/hooks';
 import { Auth, ClassCache } from '@/src/features';
 import Firestore from '@/src/schema';
-import { getAllClassIds, classNames } from '@/src/utils';
+import { getAllClassIds } from '@/src/utils/utils';
+import { classNames } from '@/src/utils/styles';
 import Tooltip from '@/components/Utils/Tooltip';
 import FadeTransition from '@/components/Utils/FadeTransition';
 import {

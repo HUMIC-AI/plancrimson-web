@@ -1,7 +1,7 @@
 import React, { PropsWithChildren, useEffect } from 'react';
 import { Configure, InstantSearch } from 'react-instantsearch-dom';
 import qs from 'qs';
-import { useAppSelector, useElapsed } from '@/src/hooks';
+import { useAppSelector, useElapsed } from '@/src/utils/hooks';
 
 // components
 import useSearchState from '@/src/context/searchState';

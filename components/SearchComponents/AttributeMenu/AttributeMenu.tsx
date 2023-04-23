@@ -1,8 +1,8 @@
 import { meiliAttributes, adjustAttr } from 'plancrimson-utils';
 import { FaChevronLeft } from 'react-icons/fa';
-import { useAppDispatch, useBreakpoint } from '@/src/hooks';
+import { useAppDispatch } from '@/src/utils/hooks';
 import { Planner } from '@/src/features';
-import { breakpoints, classNames } from '@/src/utils';
+import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
 import Attribute from './Attribute';
 
 interface Props {

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { FaUser } from 'react-icons/fa';
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 
 
 export function UserLink({ uid }: { uid: string }) {

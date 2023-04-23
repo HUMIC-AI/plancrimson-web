@@ -3,8 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { courses, subjectNames, tsne3d } from 'plancrimson-utils';
 import { createRef, PropsWithChildren, useEffect } from 'react';
 import Layout from '@/components/Layout/Layout';
-import { useBreakpoint } from '@/src/hooks';
-import { breakpoints } from '@/src/utils';
+import { breakpoints, useBreakpoint } from '@/src/utils/styles';
 
 const PARTICLE_SIZE = 0.5;
 const sensitivity = 20;
@@ -26,10 +25,10 @@ export function ClassesCloud({
   interactive?: boolean;
 }>) {
   const canvas = createRef<HTMLCanvasElement>();
-  const isSm = useBreakpoint(breakpoints.sm);
+  const gtSm = useBreakpoint(breakpoints.sm);
 
   // if on mobile, use orbit controls instead of track controls
-  const controls = rawControls === 'track' && isSm ? 'orbit' : rawControls;
+  const controls = rawControls === 'track' && !gtSm ? 'orbit' : rawControls;
 
   useEffect(() => {
     const { scene, camera, renderer } = createScene(canvas.current!);

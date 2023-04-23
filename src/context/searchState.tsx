@@ -1,7 +1,7 @@
 import React, {
   createContext, useContext, useMemo, useState,
 } from 'react';
-import { throwMissingContext } from '../utils';
+import { throwMissingContext } from '../utils/utils';
 
 interface SearchStateContextType {
   searchState: any;

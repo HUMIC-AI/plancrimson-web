@@ -5,14 +5,14 @@ import { FaPlus } from 'react-icons/fa';
 import {
   Semester, findConflicts, allTruthy,
 } from 'plancrimson-utils';
-import { useAppDispatch, useAppSelector, useElapsed } from '@/src/hooks';
+import { useAppDispatch, useAppSelector, useElapsed } from '@/src/utils/hooks';
 import { Requirement } from '@/src/requirements/util';
 import {
   ClassCache, Planner, Profile, Schedules,
 } from '@/src/features';
 import { checkViable } from '@/src/searchSchedule';
 import { Viability, Schedule } from '@/src/types';
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 import CourseCard, { DragStatus } from '../../Course/CourseCard';
 import AddCoursesButton from '../../CourseSearchModal';
 import { HeaderSection } from './SemesterColumnHeader';

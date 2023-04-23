@@ -9,11 +9,12 @@ import {
 } from 'react-icons/fa';
 import { ExtendedClass, getClassId } from 'plancrimson-utils';
 import { ClassCache, Profile, Schedules } from '@/src/features';
-import { useAppSelector, useAppDispatch } from '@/src/hooks';
+import { useAppSelector, useAppDispatch } from '@/src/utils/hooks';
 import Tooltip from '@/components/Utils/Tooltip';
 import { checkViable } from '@/src/searchSchedule';
 import { Schedule } from '@/src/types';
-import { sortSchedules, classNames } from '@/src/utils';
+import { sortSchedules } from '@/src/utils/utils';
+import { classNames } from '@/src/utils/styles';
 
 /**
  * The planning panel in the course modal. Returns a Tab.Panel.

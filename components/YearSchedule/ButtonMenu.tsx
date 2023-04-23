@@ -10,7 +10,7 @@ import {
 import type { IconType } from 'react-icons/lib';
 import { v4 as uuidv4 } from 'uuid';
 import { Schedules } from '@/src/features';
-import { useAppDispatch, useAppSelector } from '@/src/hooks';
+import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import Tooltip from '../Utils/Tooltip';
 
 

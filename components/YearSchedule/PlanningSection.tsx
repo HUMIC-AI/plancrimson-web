@@ -13,10 +13,10 @@ import {
   Planner, Profile, Schedules,
 } from '@/src/features';
 import {
-  handleError, useAppDispatch, useAppSelector,
-} from '@/src/hooks';
+  alertUnexpectedError, useAppDispatch, useAppSelector,
+} from '@/src/utils/hooks';
 import { Requirement } from '@/src/requirements/util';
-import { sortSchedules } from '@/src/utils';
+import { sortSchedules } from '@/src/utils/utils';
 import type { DragStatus } from '../Course/CourseCard';
 import SemesterColumn, { SemesterDisplayProps } from './SemesterColumn/SemesterColumn';
 
@@ -52,7 +52,7 @@ export function SemestersList({
       ? ['Fall' as Season, earliest.year - 1]
       : ['Spring' as Season, earliest.year];
     dispatch(Schedules.createDefaultSchedule({ season, year }, userId))
-      .catch(handleError);
+      .catch(alertUnexpectedError);
   }
 
   const showColumns = columns

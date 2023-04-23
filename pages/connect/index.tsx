@@ -6,7 +6,7 @@ import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { ErrorPage } from '@/components/Layout/ErrorPage';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { Auth } from '@/src/features';
-import { useElapsed } from '@/src/hooks';
+import { useElapsed } from '@/src/utils/hooks';
 import ConnectLayout from '@/components/ConnectPageComponents/ConnectLayout';
 import PublicSchedules from '@/components/ConnectPageComponents/PublicSchedules';
 import FriendRequests from '@/components/ConnectPageComponents/FriendRequests';

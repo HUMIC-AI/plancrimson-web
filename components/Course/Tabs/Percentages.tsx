@@ -1,5 +1,5 @@
 import React from 'react';
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 
 const colors = [
   'bg-percents-1',

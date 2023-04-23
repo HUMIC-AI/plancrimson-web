@@ -9,8 +9,8 @@ import {
   Auth, ClassCache, Planner, Profile, Schedules, Settings,
 } from '@/src/features';
 import {
-  handleError, signInUser, useAppSelector, useBreakpoint,
-} from '@/src/hooks';
+  alertUnexpectedError, useAppSelector,
+} from '@/src/utils/hooks';
 import validateSchedules from '@/src/requirements';
 import collegeRequirements from '@/src/requirements/college';
 import {
@@ -19,7 +19,7 @@ import {
   RequirementGroup,
 } from '@/src/requirements/util';
 import { SemesterDisplayProps } from '@/components/YearSchedule/SemesterColumn/SemesterColumn';
-import { breakpoints, classNames } from '@/src/utils';
+import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
 import Layout from '@/components/Layout/Layout';
 import { Footer } from '@/components/Layout/Footer';
 import Navbar from '@/components/Layout/Navbar';
@@ -28,6 +28,7 @@ import HiddenSchedules from '@/components/YearSchedule/HiddenSchedules';
 import HeaderSection from '@/components/YearSchedule/HeaderSection';
 import RequirementsSection from '@/components/YearSchedule/RequirementsSection';
 import { ClassesCloud } from '@/components/ClassesCloud';
+import { signInUser } from '@/components/Layout/useSyncAuth';
 
 export default function PlanPage() {
   const userId = Auth.useAuthProperty('uid');
@@ -72,7 +73,7 @@ export default function PlanPage() {
         <button
           type="button"
           className="relative text-3xl font-black text-white drop-shadow-lg transition-opacity hover:opacity-80 sm:text-6xl"
-          onClick={() => signInUser().catch(handleError)}
+          onClick={() => signInUser().catch(alertUnexpectedError)}
         >
           Sign in to get started!
         </button>

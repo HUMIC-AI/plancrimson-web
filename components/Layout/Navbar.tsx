@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import {
   FaTimes, FaBars, FaCalendarCheck,
 } from 'react-icons/fa';
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 import { UserMenu } from './UserMenu';
 
 

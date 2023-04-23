@@ -3,10 +3,11 @@ import { signOut, getAuth } from 'firebase/auth';
 import Link from 'next/link';
 import { Auth, Profile } from '@/src/features';
 import {
-  handleError, signInUser, useAppDispatch, useAppSelector,
-} from '@/src/hooks';
-import { classNames } from '@/src/utils';
+  alertUnexpectedError, useAppDispatch, useAppSelector,
+} from '@/src/utils/hooks';
+import { classNames } from '@/src/utils/styles';
 import { ImageWrapper } from '../Utils/UserLink';
+import { signInUser } from './useSyncAuth';
 
 // Profile dropdown
 export function UserMenu() {
@@ -75,7 +76,7 @@ export function UserMenu() {
                       await signInUser();
                     }
                   } catch (err) {
-                    handleError(err);
+                    alertUnexpectedError(err);
                   }
                 }}
               >

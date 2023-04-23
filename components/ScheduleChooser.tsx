@@ -4,8 +4,8 @@ import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { FaAngleDown, FaCheckSquare, FaSquare } from 'react-icons/fa';
 import { Auth, Schedules, Settings } from '@/src/features';
-import { useAppDispatch, useAppSelector } from '@/src/hooks';
-import { classNames } from '@/src/utils';
+import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
+import { classNames } from '@/src/utils/styles';
 import { titleContainsTerm, Season } from 'plancrimson-utils';
 import FadeTransition from './Utils/FadeTransition';
 

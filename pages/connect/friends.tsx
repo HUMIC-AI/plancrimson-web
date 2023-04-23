@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import {
   useElapsed, useFriends,
-} from '@/src/hooks';
+} from '@/src/utils/hooks';
 import { Auth } from '@/src/features';
 import ProfileList from '@/components/ConnectPageComponents/ProfileList';
 import ConnectLayout from '@/components/ConnectPageComponents/ConnectLayout';

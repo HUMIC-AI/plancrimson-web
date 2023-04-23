@@ -1,6 +1,6 @@
 import React from 'react';
 import { Planner } from '@/src/features';
-import { useAppDispatch } from '@/src/hooks';
+import { useAppDispatch } from '@/src/utils/hooks';
 import { FaExpandArrowsAlt } from 'react-icons/fa';
 
 export default function CardExpandToggler() {

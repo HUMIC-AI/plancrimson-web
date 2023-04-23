@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { FirestoreError } from 'firebase/firestore';
-import { useAppSelector } from '../hooks';
+import { useAppSelector } from '../utils/hooks';
 import type { AppDispatch, RootState } from '../store';
 
 // authentication info, not from Firestore

@@ -7,7 +7,7 @@ import {
   Requirement,
   RequirementGroup,
 } from '@/src/requirements/util';
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 import FadeTransition from '../Utils/FadeTransition';
 
 interface HighlightedState {

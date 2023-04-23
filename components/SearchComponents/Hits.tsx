@@ -8,7 +8,7 @@ import {
 import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
 import useChosenScheduleContext from '@/src/context/selectedSchedule';
 import useSearchState from '@/src/context/searchState';
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 import { alertSignIn } from './SearchBox/searchUtils';
 import CourseCard from '../Course/CourseCard';
 import ClientOrDemo from './ClientOrDemo';

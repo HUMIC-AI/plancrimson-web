@@ -1,9 +1,10 @@
 import { FaAngleDoubleRight } from 'react-icons/fa';
 import React from 'react';
 import useChosenScheduleContext from '@/src/context/selectedSchedule';
-import { useAppDispatch, useAppSelector, useBreakpoint } from '@/src/hooks';
+import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { Planner, Schedules } from '@/src/features';
-import { sortSchedules, classNames, breakpoints } from '@/src/utils';
+import { sortSchedules } from '@/src/utils/utils';
+import { classNames, breakpoints, useBreakpoint } from '@/src/utils/styles';
 import type { SearchBoxProvided } from 'react-instantsearch-core';
 import ScheduleChooser from '../../ScheduleChooser';
 import Stats from '../Stats';

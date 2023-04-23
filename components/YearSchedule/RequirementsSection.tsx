@@ -12,12 +12,12 @@ import {
   SampleSchedule,
 } from '@/src/requirements/util';
 import { allRequirements } from '@/src/requirements';
-import { handleError, useAppDispatch, useAppSelector } from '@/src/hooks';
+import { alertUnexpectedError, useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import {
   Planner, Schedules, Settings,
 } from '@/src/features';
 import { selectShowReqs } from '@/src/features/semesterFormat';
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 import { Schedule } from '@/src/types';
 import RequirementGroupComponent from './RequirementsDisplay';
 import FadeTransition from '../Utils/FadeTransition';
@@ -231,7 +231,7 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
       });
       alert('Cloned successfully!');
     } catch (err) {
-      handleError(err);
+      alertUnexpectedError(err);
     }
   }
 

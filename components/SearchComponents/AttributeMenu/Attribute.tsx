@@ -1,7 +1,7 @@
 import { Disclosure } from '@headlessui/react';
 import React, { useState } from 'react';
 import { compareItems, compareWeekdays } from 'plancrimson-utils';
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 import RefinementList from '../RefinementList';
 
 interface AttributeProps {

@@ -3,7 +3,7 @@ import { getAuth } from 'firebase/auth';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { ImageWrapper } from '@/components/Utils/UserLink';
-import { useProfiles, useElapsed } from '@/src/hooks';
+import { useProfiles, useElapsed } from '@/src/utils/hooks';
 
 export default function FindClassmates() {
   const { profiles: suggestedProfiles, error } = useSuggestedProfiles();

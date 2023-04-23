@@ -1,11 +1,11 @@
-// separate file for useSchedules hook to avoid circular dependency
-
 import { onSnapshot, query, QueryConstraint } from 'firebase/firestore';
 import { useEffect } from 'react';
-import { ClassCache, Schedules } from './features';
+import { compareSemesters, Semester } from 'plancrimson-utils';
+import { ClassCache, Schedules } from '../features';
 import { useAppDispatch } from './hooks';
-import { useMeiliClient } from './context/meili';
-import Firestore from './schema';
+import { useMeiliClient } from '../context/meili';
+import Firestore from '../schema';
+import { Schedule, ScheduleMap } from '../types';
 
 /**
  * Listen to all schedules on Firestore that meet the given constraints.
@@ -42,3 +42,19 @@ export default function useSchedules(constraints: QueryConstraint[]) {
   }, [constraints, client]);
 }
 
+export function getSchedulesBySemester(
+  schedules: ScheduleMap,
+  semester: Semester,
+) {
+  return sortSchedules(schedules).filter(
+    ({ year, season }) => year === semester.year && season === semester.season,
+  );
+}
+
+export function sortSchedules(schedules: ScheduleMap) {
+  return Object.values(schedules).sort(compareSemesters);
+}
+
+export function getAllClassIds(schedules: Schedule[]): string[] {
+  return schedules.flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
+}

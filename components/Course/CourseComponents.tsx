@@ -3,7 +3,7 @@ import {
   FaUser, FaMapMarkerAlt, FaCalendarDay, FaClock,
 } from 'react-icons/fa';
 import { ExtendedClass, DAYS_OF_WEEK } from 'plancrimson-utils';
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 import Highlight from '../SearchComponents/Highlight';
 
 type CourseProps = {

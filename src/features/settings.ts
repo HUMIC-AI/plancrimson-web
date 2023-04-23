@@ -4,7 +4,7 @@ import type { Term } from 'plancrimson-utils';
 import Schema from '../schema';
 import type { AppDispatch, RootState } from '../store';
 import { CustomTimeRecord, UserSettings } from '../types';
-import { getInitialSettings } from '../utils';
+import { getInitialSettings } from '../utils/utils';
 
 type CustomTimePayload = CustomTimeRecord & {
   classId: string;

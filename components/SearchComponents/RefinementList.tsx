@@ -4,7 +4,7 @@ import { connectRefinementList } from 'react-instantsearch-dom';
 import {
   getSubjectColor, Subject, subjects, TERM_TO_SEASON,
 } from 'plancrimson-utils';
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 import { alertSignIn } from './SearchBox/searchUtils';
 import ClientOrDemo from './ClientOrDemo';
 

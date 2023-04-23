@@ -1,4 +1,4 @@
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 import { Tab } from '@headlessui/react';
 import { ExtendedClass, allTruthy } from 'plancrimson-utils';
 import React from 'react';

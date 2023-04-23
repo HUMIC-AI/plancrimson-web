@@ -1,5 +1,6 @@
 /* eslint-disable no-param-reassign */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Concentration } from 'plancrimson-utils';
 import type { RootState } from '../store';
 import type { UserProfile } from '../types';
 
@@ -19,23 +20,28 @@ export const userProfileSlice = createSlice({
   name: 'userData',
   initialState,
   reducers: {
-    setPhotoUrl(state, action: PayloadAction<string | null>) {
-      state.photoUrl = action.payload;
-    },
     setUsername(state, action: PayloadAction<string>) {
       state.username = action.payload;
     },
     setBio(state, action: PayloadAction<string>) {
       state.bio = action.payload;
     },
+    setDisplayName(state, action: PayloadAction<string>) {
+      state.displayName = action.payload;
+    },
+    setPhotoUrl(state, action: PayloadAction<string | null>) {
+      state.photoUrl = action.payload;
+    },
     setClassYear(state, action: PayloadAction<number>) {
       state.classYear = action.payload;
     },
+    setConcentrationRanking(state, action: PayloadAction<Concentration[]>) {
+      state.concentrationRanking = action.payload;
+    },
     signOut(state) {
-      Object.keys(state).forEach((k) => {
-        const key = k as keyof UserProfile;
-        delete state[key];
-        state[key] = null;
+      // set all the properties to null
+      Object.keys(state).forEach((key) => {
+        state[key as keyof UserProfile] = null;
       });
     },
   },

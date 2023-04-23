@@ -1,4 +1,4 @@
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 import React, { useMemo } from 'react';
 import {
   FaHourglassHalf, FaStar, FaStarHalfAlt, FaUserFriends,

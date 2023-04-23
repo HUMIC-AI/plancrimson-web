@@ -1,4 +1,4 @@
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 import React from 'react';
 
 type Props = {

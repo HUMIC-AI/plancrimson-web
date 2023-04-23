@@ -9,8 +9,9 @@ import ScheduleSection from '@/components/SemesterSchedule/ScheduleList';
 import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
 import { Auth, Schedules } from '@/src/features';
 import {
-  sendFriendRequest, unfriend, useAppSelector, useElapsed,
-} from '@/src/hooks';
+  useAppSelector, useElapsed,
+} from '@/src/utils/hooks';
+import { sendFriendRequest, unfriend } from '@/components/ConnectPageComponents/friendUtils';
 import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { ErrorPage } from '@/components/Layout/ErrorPage';
 import { LoadingBars } from '@/components/Layout/LoadingPage';

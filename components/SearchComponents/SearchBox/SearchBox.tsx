@@ -1,9 +1,9 @@
 import React from 'react';
 import { connectSearchBox } from 'react-instantsearch-dom';
 import useChosenScheduleContext from '@/src/context/selectedSchedule';
-import { useAppSelector } from '@/src/hooks';
+import { useAppSelector } from '@/src/utils/hooks';
 import { Schedules } from '@/src/features';
-import { sortSchedules } from '@/src/utils';
+import { sortSchedules } from '@/src/utils/utils';
 import type { SearchBoxProvided } from 'react-instantsearch-core';
 import ScheduleChooser from '../../ScheduleChooser';
 import { alertSignIn } from './searchUtils';

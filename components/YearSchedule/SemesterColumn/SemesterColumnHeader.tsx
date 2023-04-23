@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { FaCheck } from 'react-icons/fa';
 import { compareSemesters, Semester } from 'plancrimson-utils';
-import { useAppDispatch, useAppSelector } from '@/src/hooks';
+import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { Planner, Schedules, Settings } from '@/src/features';
-import { getSchedulesBySemester } from '@/src/utils';
+import { getSchedulesBySemester } from '@/src/utils/schedules';
 import ScheduleChooser from '../../ScheduleChooser';
 import FadeTransition from '../../Utils/FadeTransition';
 import ButtonMenu from '../ButtonMenu';

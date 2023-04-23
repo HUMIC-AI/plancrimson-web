@@ -1,6 +1,6 @@
 import { updateDoc, deleteDoc } from 'firebase/firestore';
 import { Auth } from '@/src/features';
-import { useElapsed, useFriends } from '@/src/hooks';
+import { useElapsed, useFriends } from '@/src/utils/hooks';
 import Firestore from '@/src/schema';
 import { UserProfile, WithId } from '@/src/types';
 import ProfileList from './ProfileList';

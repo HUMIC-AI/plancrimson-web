@@ -2,7 +2,7 @@ import { InstantSearch, Configure, connectInfiniteHits } from 'react-instantsear
 import type { ExtendedClass } from 'plancrimson-utils';
 import { sampleCourses } from 'plancrimson-utils';
 import useSearchState from '@/src/context/searchState';
-import { useElapsed } from '@/src/hooks';
+import { useElapsed } from '@/src/utils/hooks';
 import { MeiliContext } from '@/src/context/meili';
 import { Auth } from '@/src/features';
 import Layout, { errorMessages } from '@/components/Layout/Layout';

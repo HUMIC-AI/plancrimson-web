@@ -1,57 +1,27 @@
-import { updateDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
-import { useAppDispatch } from '@/src/hooks';
 import { useModal } from '@/src/context/modal';
-import { Schedules, Settings } from '@/src/features';
-import Firestore from '@/src/schema';
-import { getUniqueSemesters } from 'plancrimson-utils';
 
 /**
- * Rendered in {@link _app.tsx} once user first logs in.
+ * Rendered in _app.tsx once user first logs in and they don't have a profile created yet
  * Ask the user for their graduation year.
- * On submission, create default schedules for the default years.
+ * On submission, create their profile and default schedules for the default years.
  */
-export default function GraduationYearDialog({ defaultYear, uid }: { defaultYear: number; uid: string; }) {
-  const dispatch = useAppDispatch();
+export default function GraduationYearDialog({ defaultYear, handleSubmit }: {
+  defaultYear: number;
+  handleSubmit: (classYear: number) => Promise<void>;
+}) {
   const { setOpen } = useModal();
   const [classYear, setYear] = useState(defaultYear);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    const defaultSemesters = getUniqueSemesters(classYear);
-    const promises = defaultSemesters.map(async ({ year, season }) => {
-      const { payload: schedule } = await dispatch(
-        Schedules.createDefaultSchedule({ year, season }, uid),
-      );
-      await dispatch(
-        Settings.chooseSchedule({
-          term: `${schedule.year}${schedule.season}`,
-          scheduleId: schedule.id,
-        }),
-      );
-    });
-    const settled = await Promise.allSettled(promises);
-
-    const errors = settled.filter((result) => result.status === 'rejected');
-    if (errors.length > 0) {
-      console.error('error creating default schedules', errors);
-      alert('Error creating default schedules. Please try again later.');
-      return;
-    }
-
-    try {
-      await updateDoc(Firestore.profile(uid), 'classYear', classYear);
-    } catch (err) {
-      console.error(`error updating class year for ${uid}`, err);
-    }
-
+    await handleSubmit(classYear);
     setOpen(false);
   }
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={onSubmit}
       className="bg-white p-4"
     >
       <div className="mx-auto flex max-w-xs flex-col items-center space-y-4">

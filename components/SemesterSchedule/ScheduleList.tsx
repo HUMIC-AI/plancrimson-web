@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { ImageWrapper } from '@/components/Utils/UserLink';
 import CourseCard from '@/components/Course/CourseCard';
 import { ClassCache, Planner } from '@/src/features';
-import { useAppSelector, useProfiles } from '@/src/hooks';
+import { useAppSelector, useProfiles } from '@/src/utils/hooks';
 
 export type ScheduleListProps = {
   schedule: Schedule;

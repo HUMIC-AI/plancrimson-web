@@ -9,11 +9,11 @@ import {
 } from 'plancrimson-utils';
 import { checkViable } from '@/src/searchSchedule';
 import { useModal } from '@/src/context/modal';
-import { handleError, useAppDispatch, useAppSelector } from '@/src/hooks';
+import { alertUnexpectedError, useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import {
   ClassCache, Planner, Profile, Schedules,
 } from '@/src/features';
-import { classNames } from '@/src/utils';
+import { classNames } from '@/src/utils/styles';
 import Tooltip from '../Utils/Tooltip';
 import {
   ClassTime,
@@ -152,7 +152,7 @@ export default function CourseCard({
     ev.dataTransfer.dropEffect = 'move';
     // eslint-disable-next-line no-alert
     if (!chosenSchedule?.title) {
-      handleError(new Error('Selected schedule has no ID'));
+      alertUnexpectedError(new Error('Selected schedule has no ID'));
     } else {
       setDragStatus!({
         dragging: true,
