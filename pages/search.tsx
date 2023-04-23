@@ -11,7 +11,7 @@ import Hits from '@/components/SearchComponents/Hits';
 import CurrentRefinements from '@/components/SearchComponents/CurrentRefinements';
 import SortBy from '@/components/SearchComponents/SortBy';
 import AttributeMenu from '@/components/SearchComponents/AttributeMenu/AttributeMenu';
-import { AuthRequiredInstantSearchProvider } from './AuthRequiredInstantSearchProvider';
+import { AuthRequiredInstantSearchProvider } from '../components/AuthRequiredInstantSearchProvider';
 
 // we show a demo if the user is not logged in,
 // but do not allow them to send requests to the database

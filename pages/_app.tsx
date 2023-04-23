@@ -1,6 +1,6 @@
 // import '../src/wdyr';
 import '@/src/index.css';
-import './initFirebase';
+import '@/src/initFirebase';
 import type { AppProps } from 'next/app';
 import { Provider } from 'react-redux';
 import React from 'react';
@@ -17,7 +17,6 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <SearchStateProvider>
       <SelectedScheduleProvider>
-        {/* @ts-ignore */}
         <Component {...pageProps} />
       </SelectedScheduleProvider>
     </SearchStateProvider>

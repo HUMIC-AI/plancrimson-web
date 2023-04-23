@@ -26,7 +26,7 @@ import { SemestersList } from '@/components/YearSchedule/PlanningSection';
 import HiddenSchedules from '@/components/YearSchedule/HiddenSchedules';
 import HeaderSection from '@/components/YearSchedule/HeaderSection';
 import RequirementsSection from '@/components/YearSchedule/RequirementsSection';
-import { ClassesCloud } from '@/components/ClassesCloudPage/ClassesCloudPage';
+import ClassesCloud from '@/components/ClassesCloudPage/ClassesCloudPage';
 import { signInUser } from '@/components/Layout/useSyncAuth';
 import useSyncSchedulesMatchingContraints from '@/src/utils/schedules';
 import { where } from 'firebase/firestore';

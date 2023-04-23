@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { SearchStateProvider } from '@/src/context/searchState';
 import { ChosenScheduleContext } from '@/src/context/selectedSchedule';
-import { AuthRequiredInstantSearchProvider } from '@/pages/AuthRequiredInstantSearchProvider';
+import { AuthRequiredInstantSearchProvider } from '@/components/AuthRequiredInstantSearchProvider';
 import { ToggleRefinement } from 'react-instantsearch-dom';
 import SearchBox from './SearchComponents/SearchBox/SearchBox';
 import Hits from './SearchComponents/Hits';

@@ -1,15 +1,14 @@
 import { getDoc, deleteDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import {
-  useElapsed, useFriends,
-} from '@/src/utils/hooks';
+import { useElapsed } from '@/src/utils/hooks';
 import { Auth } from '@/src/features';
 import ProfileList from '@/components/ConnectPageComponents/ProfileList';
 import ConnectLayout from '@/components/ConnectPageComponents/ConnectLayout';
 import FindClassmates from '@/components/ConnectPageComponents/FindClassmates';
 import Firestore from '@/src/schema';
 import { UserProfile, WithId } from '@/src/types';
+import { useFriends } from '@/components/ConnectPageComponents/friendUtils';
 
 export default function FriendsPage() {
   const userId = Auth.useAuthProperty('uid');

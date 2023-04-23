@@ -21,4 +21,6 @@ function Highlight({ highlight, attribute, hit }: HighlightProps) {
   );
 }
 
-export default <ClientOrDemo connector={connectHighlight} component={Highlight} />;
+export default function (props: Pick<HighlightProps, 'hit' | 'attribute'>) {
+  return <ClientOrDemo connector={connectHighlight} component={Highlight} extraProps={props} />;
+}

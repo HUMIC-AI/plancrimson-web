@@ -1,4 +1,4 @@
-import TAGS, { Class, allTruthy } from 'plancrimson-utils';
+import { csTags, Class, allTruthy } from 'plancrimson-utils';
 import { Requirement } from '../util';
 
 export function hasTag(cls: Class, tag: CSCourseTag) {
@@ -7,7 +7,7 @@ export function hasTag(cls: Class, tag: CSCourseTag) {
     cls.HU_ALIAS_CATNBR_NL,
     cls.HU_ALIAS_CATNBR_NS,
   ]).join('|');
-  const courseData = TAGS.find(({ courseNumber }) => new RegExp(possibleNames, 'i').test(courseNumber));
+  const courseData = csTags.find(({ courseNumber }) => new RegExp(possibleNames, 'i').test(courseNumber));
   if (!courseData) return false;
   return courseData.tags.includes(tag);
 }

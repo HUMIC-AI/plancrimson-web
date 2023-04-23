@@ -4,7 +4,7 @@ import {
   Semester,
 } from 'plancrimson-utils';
 import { Requirement } from '@/src/requirements/util';
-import { Viability, Schedule } from '@/src/types';
+import { Viability } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
 import HeaderSection from './SemesterColumnHeader';
 import { CoursesSection } from './CoursesSection';

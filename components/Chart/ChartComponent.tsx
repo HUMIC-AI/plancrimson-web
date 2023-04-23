@@ -14,10 +14,10 @@ import { useModal } from '@/src/context/modal';
 import { useAppDispatch, useElapsed } from '@/src/utils/hooks';
 import { Auth, ClassCache } from '@/src/features';
 import Firestore from '@/src/schema';
-import { getAllClassIds } from '@/src/utils/utils';
 import { classNames } from '@/src/utils/styles';
 import Tooltip from '@/components/Utils/Tooltip';
 import FadeTransition from '@/components/Utils/FadeTransition';
+import { getAllClassIds } from '@/src/utils/schedules';
 import {
   initChart, metrics, Embedding, makeData, metricNames,
 } from './chartHelpers';

@@ -1,7 +1,4 @@
-import type {
-  ExtendedClass,
-  Schedule, UserProfile,
-} from 'plancrimson-utils';
+import type { ExtendedClass } from 'plancrimson-utils';
 import { allTruthy, getClassId } from 'plancrimson-utils';
 import type { ClassCache } from '../features/classCache';
 import collegeRequirements from './college';
@@ -15,6 +12,7 @@ import {
   Requirement,
   RequirementGroup,
 } from './util';
+import type { Schedule, UserProfile } from '../types';
 
 // want to query for all people planning to take this class at a certain time
 

@@ -1,10 +1,6 @@
 import React from 'react';
-import { Class } from 'plancrimson-utils';
-import type {
-  Semester,
-} from 'plancrimson-utils';
-import { UserProfile } from 'firebase/auth';
-import { Schedule } from '../types';
+import type { Class, Semester } from 'plancrimson-utils';
+import type { Schedule, UserProfile } from '../types';
 
 /**
  * Only works for users on a typical four-year schedule.

@@ -9,7 +9,7 @@ import { ErrorMessage } from '@/components/Layout/ErrorPage';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import AttributeMenu from '@/components/SearchComponents/AttributeMenu/AttributeMenu';
 import ChartComponent from '@/components/Chart/ChartComponent';
-import { AuthRequiredInstantSearchProvider } from '@/pages/AuthRequiredInstantSearchProvider';
+import { AuthRequiredInstantSearchProvider } from '@/components/AuthRequiredInstantSearchProvider';
 
 const Chart = connectInfiniteHits(ChartComponent);
 

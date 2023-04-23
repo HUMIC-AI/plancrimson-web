@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { courses, subjectNames, tsne3d } from 'plancrimson-utils';
-import { PARTICLE_SIZE } from './ClassesCloudPage';
+
+const PARTICLE_SIZE = 0.5;
 
 /**
  * TypeScript workaround for updating a buffer attribute.
@@ -16,6 +17,7 @@ export function createScene(canvas: HTMLCanvasElement) {
 
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
   camera.position.z = 30;
+  camera.lookAt(scene.position);
 
   const renderer = new THREE.WebGLRenderer({ canvas });
   renderer.setPixelRatio(window.devicePixelRatio);
@@ -23,6 +25,7 @@ export function createScene(canvas: HTMLCanvasElement) {
 
   return { scene, camera, renderer };
 }
+
 function getSubjectColors() {
   const color = new THREE.Color();
   const subjectColors = Object.fromEntries(subjectNames.map((subject, i) => {
@@ -69,7 +72,7 @@ export function createPoints() {
 
 export function createRaycaster(points: THREE.Points) {
   const raycaster = new THREE.Raycaster();
-  raycaster.params.Points!.threshold = PARTICLE_SIZE / 2;
+  raycaster.params.Points!.threshold = PARTICLE_SIZE / 3; // arbitrary value
   let currentIntersect: number | null = null;
   let originalColor: readonly [number, number, number] | null = null;
   const colorBuffer = points.geometry.attributes.color;
@@ -77,39 +80,40 @@ export function createRaycaster(points: THREE.Points) {
   function update(mouse: THREE.Vector2, camera: THREE.Camera) {
     raycaster.setFromCamera(mouse, camera);
 
-    const intersects = raycaster.intersectObjects([points], false);
+    const intersects = raycaster.intersectObject(points, false);
+    console.log(intersects.length);
 
     if (intersects.length > 0) {
       const topIntersect = intersects[0].index!;
       if (currentIntersect !== topIntersect) {
-        // if (currentIntersect !== null) {
-        //   // Reset the previous point's color.
-        //   for (let i = 0; i < 3; i += 1) {
-        //     updateElement(colorBuffer, currentIntersect * 3 + i, originalColor![i]);
-        //   }
-        // }
+        if (currentIntersect !== null) {
+          // Reset the previous point's color.
+          for (let i = 0; i < 3; i += 1) {
+            updateElement(colorBuffer, currentIntersect * 3 + i, originalColor![i]);
+          }
+        }
         currentIntersect = topIntersect;
         originalColor = [colorBuffer.getX(currentIntersect), colorBuffer.getY(currentIntersect), colorBuffer.getZ(currentIntersect)] as const;
 
         // take the RGB color, turn it into HSL, and then set the lightness to 0.5
-        // const color = new THREE.Color();
-        // color.setRGB(...originalColor!);
-        // const hsl = color.getHSL({ h: 0, s: 0, l: 0 });
-        // color.setHSL(hsl.h, hsl.s, 0.8);
-        // const rgb = color.toArray();
+        const color = new THREE.Color();
+        color.setRGB(...originalColor!);
+        const hsl = color.getHSL({ h: 0, s: 0, l: 0 });
+        color.setHSL(hsl.h, hsl.s, 0.8);
+        const rgb = color.toArray();
 
         for (let i = 0; i < 3; i += 1) {
-          updateElement(colorBuffer, currentIntersect * 3 + i, 1);
+          updateElement(colorBuffer, currentIntersect * 3 + i, rgb[i]);
         }
         colorBuffer.needsUpdate = true;
       }
     } else if (currentIntersect !== null) {
-      // for (let i = 0; i < 3; i += 1) {
-      //   updateElement(colorBuffer, currentIntersect * 3 + i, originalColor![i]);
-      // }
-      // colorBuffer.needsUpdate = true;
-      // currentIntersect = null;
-      // originalColor = null;
+      for (let i = 0; i < 3; i += 1) {
+        updateElement(colorBuffer, currentIntersect * 3 + i, originalColor![i]);
+      }
+      colorBuffer.needsUpdate = true;
+      currentIntersect = null;
+      originalColor = null;
     }
   }
 

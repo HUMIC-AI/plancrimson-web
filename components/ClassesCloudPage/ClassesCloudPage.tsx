@@ -1,5 +1,5 @@
 import {
-  createRef, PropsWithChildren, useEffect, useState,
+  PropsWithChildren, useEffect, useRef,
 } from 'react';
 import Layout from '@/components/Layout/Layout';
 import { breakpoints, useBreakpoint } from '@/src/utils/styles';
@@ -7,7 +7,6 @@ import {
   createScene, createPoints, createControls, createMouseTracker, createRaycaster, syncWindow,
 } from './createScene';
 
-export const PARTICLE_SIZE = 0.5;
 const sensitivity = 20;
 
 /**
@@ -16,7 +15,7 @@ const sensitivity = 20;
  * Set to a number to control the speed.
  * @param interactive Whether to highlight points on hover.
  */
-export function ClassesCloud({
+export default function ClassesCloud({
   controls: rawControls = 'none',
   autoRotate = 0,
   interactive = false,
@@ -26,15 +25,16 @@ export function ClassesCloud({
   autoRotate?: number;
   interactive?: boolean;
 }>) {
-  const canvas = createRef<HTMLCanvasElement>();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const gtSm = useBreakpoint(breakpoints.sm);
 
   // if on mobile, use orbit controls instead of track controls
   const controls = rawControls === 'track' && !gtSm ? 'orbit' : rawControls;
-  const [currentHover, setCurrentHover] = useState<number | null>(null);
+  const currentHoverRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const { scene, camera, renderer } = createScene(canvas.current!);
+    console.info('initializing scene');
+    const { scene, camera, renderer } = createScene(canvasRef.current!);
 
     const points = createPoints();
     scene.add(points);
@@ -50,8 +50,6 @@ export function ClassesCloud({
     function animate() {
       requestAnimationFrame(animate);
 
-      camera.lookAt(scene.position);
-
       if (orbitControls) orbitControls.update();
 
       if (controls === 'track') {
@@ -61,32 +59,31 @@ export function ClassesCloud({
 
       if (raycaster) {
         raycaster.update(mouseTracker!.mouse, camera);
-        if (raycaster.currentIntersect !== currentHover) {
-          console.log(raycaster.currentIntersect);
-          setCurrentHover(raycaster.currentIntersect);
+        if (raycaster.currentIntersect !== currentHoverRef.current) {
+          currentHoverRef.current = raycaster.currentIntersect;
         }
       }
 
       renderer.render(scene, camera);
     }
-    animate();
+
+    requestAnimationFrame(animate);
 
     return () => {
+      scene.children.forEach((child) => scene.remove(child));
       if (orbitControls) orbitControls.dispose();
       if (mouseTracker) mouseTracker.dispose();
       renderer.dispose();
       disposeResizeListener();
     };
-  }, [canvas, autoRotate, controls, interactive]);
+  }, []);
 
   return (
     <Layout className="relative flex flex-1 items-center justify-center bg-black p-8" title="Plan" transparentHeader>
       <div className="absolute inset-0 overflow-hidden">
-        <canvas ref={canvas} />
+        <canvas ref={canvasRef} />
       </div>
       {children}
     </Layout>
   );
 }
-
-

@@ -4,6 +4,7 @@ import { ImageWrapper } from '@/components/Utils/UserLink';
 import CourseCard from '@/components/Course/CourseCard';
 import { ClassCache, Planner } from '@/src/features';
 import { useAppSelector, useProfiles } from '@/src/utils/hooks';
+import type { Schedule } from '@/src/types';
 
 export type ScheduleListProps = {
   schedule: Schedule;

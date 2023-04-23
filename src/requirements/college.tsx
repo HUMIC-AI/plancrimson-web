@@ -1,7 +1,7 @@
 import { Class, FAILING_GRADES, getClassId } from 'plancrimson-utils';
-import type { Grade } from 'plancrimson-utils';
 import ExternalLink from '@/components/Utils/ExternalLink';
 import { Requirement, RequirementGroup } from './util';
+import { Grade } from '../types';
 
 const genedRequirement = (
   targetType: NonNullable<Class['IS_SCL_DESCR100_HU_SCL_ATTR_GE']>,
