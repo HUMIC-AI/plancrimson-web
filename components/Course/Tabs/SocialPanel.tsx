@@ -12,13 +12,13 @@ import { LoadingBars } from '@/components/Layout/LoadingPage';
 type Props = { course: ExtendedClass };
 
 export default function SocialOuter({ course }: Props) {
-  const userId = Auth.useAuthProperty('uid')
+  const userId = Auth.useAuthProperty('uid');
 
   if (!userId) {
     return <LoadingBars />;
   }
 
-  return <SocialPanel course={course} userId={userId} />
+  return <SocialPanel course={course} userId={userId} />;
 }
 
 function SocialPanel({ course, userId }: Props & { userId: string }) {
@@ -35,23 +35,23 @@ function SocialPanel({ course, userId }: Props & { userId: string }) {
       where('classes', 'array-contains', course.id),
     ));
 
-    friends?.forEach(friend => {
+    friends?.forEach((friend) => {
       collections.push(query(
         collection(getFirestore(), 'schedules'),
         where('ownerUid', '==', friend.id),
         where('classes', 'array-contains', course.id),
       ));
-    })
+    });
 
-    const dispose = collections.map(collection => {
+    const dispose = collections.map((collection) => {
       const listener = onSnapshot(collection, (snap) => {
         const entries = snap.docs.map((doc) => [doc.id, doc.data()] as [string, Schedule]);
-        setPublicSchedules(schedules => ({...schedules, ...Object.fromEntries(entries) }));
+        setPublicSchedules((schedules) => ({ ...schedules, ...Object.fromEntries(entries) }));
       }, (err) => console.error(err));
       return listener;
     });
 
-    return () => dispose.forEach(unsub => unsub());
+    return () => dispose.forEach((unsub) => unsub());
   }, [course.id, friends]);
 
   const schedules = Object.values(otherUserSchedules);
@@ -60,16 +60,16 @@ function SocialPanel({ course, userId }: Props & { userId: string }) {
     <Tab.Panel>
       <h2>Others taking this class</h2>
       {schedules.length === 0
-      ? 'None'
-      : (
-        <ul>
-          {schedules.map((schedule) => (
-            <li key={schedule.id}>
-              {`${schedule.ownerUid} is considering this in ${schedule.season} ${schedule.year}`}
-            </li>
-          ))}
-        </ul>
-      )}
+        ? 'None'
+        : (
+          <ul>
+            {schedules.map((schedule) => (
+              <li key={schedule.id}>
+                {`${schedule.ownerUid} is considering this in ${schedule.season} ${schedule.year}`}
+              </li>
+            ))}
+          </ul>
+        )}
     </Tab.Panel>
   );
 }

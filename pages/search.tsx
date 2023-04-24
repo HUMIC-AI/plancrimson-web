@@ -11,9 +11,9 @@ import Hits from '@/components/SearchComponents/Hits';
 import CurrentRefinements from '@/components/SearchComponents/CurrentRefinements';
 import SortBy from '@/components/SearchComponents/SortBy';
 import AttributeMenu from '@/components/SearchComponents/AttributeMenu/AttributeMenu';
-import { AuthRequiredInstantSearchProvider } from '../components/AuthRequiredInstantSearchProvider';
 import useSyncSchedulesMatchingContraints from '@/src/utils/schedules';
 import { where } from 'firebase/firestore';
+import { AuthRequiredInstantSearchProvider } from '../components/AuthRequiredInstantSearchProvider';
 
 // we show a demo if the user is not logged in,
 // but do not allow them to send requests to the database
@@ -21,7 +21,7 @@ export default function SearchPage() {
   const { setSearchState } = useSearchState();
   const showAttributes = useAppSelector(Planner.selectShowAttributes);
   const userId = Auth.useAuthProperty('uid');
-  const constraints = useMemo(() => userId ? [where('ownerUid', '==', userId)] : null, [userId])
+  const constraints = useMemo(() => (userId ? [where('ownerUid', '==', userId)] : null), [userId]);
   useSyncSchedulesMatchingContraints(constraints);
 
   // on the initial page load, we want to populate the search state from the query string

@@ -1,8 +1,10 @@
-import { onSnapshot, query, QueryConstraint } from 'firebase/firestore';
-import { useEffect } from 'react';
+import {
+  getDocs, onSnapshot, query, QueryConstraint, QuerySnapshot,
+} from 'firebase/firestore';
+import { useCallback, useEffect } from 'react';
 import { compareSemesters, Semester } from 'plancrimson-utils';
 import { ClassCache, Schedules } from '../features';
-import { useAppDispatch } from './hooks';
+import { alertUnexpectedError, useAppDispatch } from './hooks';
 import { useMeiliClient } from '../context/meili';
 import Firestore from '../schema';
 import { Schedule, ScheduleMap } from '../types';
@@ -16,23 +18,25 @@ export default function useSyncSchedulesMatchingContraints(constraints: QueryCon
   const dispatch = useAppDispatch();
   const { client } = useMeiliClient();
 
+  const updateSchedules = useCallback((snap: QuerySnapshot<Schedule>) => {
+    const scheduleEntries = snap.docs.map((doc) => doc.data());
+    const classIds = scheduleEntries.flatMap((schedule) => schedule.classes.map(({ classId }) => classId));
+
+    console.debug('[useSchedules] Reloaded schedules');
+
+    // load all of the classes into the class cache
+    if (client) {
+      dispatch(ClassCache.loadCourses(client, classIds));
+    }
+
+    dispatch(Schedules.overwriteSchedules(scheduleEntries));
+  }, [client]);
+
   useEffect(() => {
     if (constraints === null) return;
-
     const q = query(Firestore.Collection.schedules(), ...constraints);
-    const unsubSchedules = onSnapshot(q, (snap) => {
-      const scheduleEntries = snap.docs.map((doc) => doc.data());
-      const classIds = scheduleEntries.flatMap((schedule) => schedule.classes.map(({ classId }) => classId));
-
-      console.debug('[useSchedules] Reloaded schedules');
-
-      // load all of the classes into the class cache
-      if (client) {
-        dispatch(ClassCache.loadCourses(client, classIds));
-      }
-
-      dispatch(Schedules.overwriteSchedules(scheduleEntries));
-    }, (err) => {
+    getDocs(q).then(updateSchedules).catch(alertUnexpectedError);
+    const unsubSchedules = onSnapshot(q, updateSchedules, (err) => {
       console.error('[useSchedules] error listening for schedules (in the layout):', err);
     });
 

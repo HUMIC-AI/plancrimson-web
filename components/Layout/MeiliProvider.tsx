@@ -20,7 +20,7 @@ export function MeiliProvider({ children }: PropsWithChildren<{}>) {
     setClient(null);
 
     if (!uid) {
-      console.error('tried to instantiate MeiliSearch client without being signed in');
+      console.info('tried to instantiate MeiliSearch client without being signed in');
       setError('Not signed in');
       return;
     }

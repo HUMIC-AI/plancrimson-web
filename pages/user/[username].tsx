@@ -1,10 +1,8 @@
 import {
-  DocumentReference,
-  getDoc,
-  onSnapshot, query, where,
+  where,
 } from 'firebase/firestore';
 import { useRouter } from 'next/router';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import ScheduleSection from '@/components/SemesterSchedule/ScheduleList';
 import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
 import { Auth, Schedules } from '@/src/features';
@@ -16,12 +14,10 @@ import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { ErrorPage } from '@/components/Layout/ErrorPage';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { ImageWrapper } from '@/components/Utils/UserLink';
-import Schema from '@/src/schema';
-import { FriendRequest, UserProfile, WithId } from '@/src/types';
-import useSyncSchedulesMatchingContraints from '@/src/utils/schedules';
-import { EditBioForm } from '../../components/ConnectPageComponents/EditBioForm';
-
-type FriendStatus = 'loading' | 'self' | 'none' | 'friends' | 'pending';
+import { UserProfile, WithId } from '@/src/types';
+import useSyncSchedulesMatchingContraints, { sortSchedulesBySemester } from '@/src/utils/schedules';
+import { EditBioForm } from '@/components/ConnectPageComponents/EditBioForm';
+import { useProfile, useFriendStatus, FriendStatus } from '@/components/ConnectPageComponents/useProfile';
 
 const statusMessage: Record<FriendStatus, string> = {
   loading: 'Loading...',
@@ -31,40 +27,12 @@ const statusMessage: Record<FriendStatus, string> = {
   pending: 'Cancel request',
 };
 
-export default function UserPage() {
+export default function () {
   const router = useRouter();
   const username = router.query.username as string;
-  const uid = Auth.useAuthProperty('uid');
-  const scheduleMap = useAppSelector(Schedules.selectSchedules);
-  const elapsed = useElapsed(5000, [username]);
-  const [refresh, setRefresh] = useState(true);
-
   const [pageProfile, error] = useProfile(username);
-  const friendStatus = useFriendStatus(uid, pageProfile?.id, refresh);
-
-  const queryConstraints = useMemo(() => {
-    if (!uid || !pageProfile) return null;
-
-    if (friendStatus === 'friends' || friendStatus === 'self') {
-      return [where('ownerUid', '==', pageProfile.id)];
-    }
-
-    return [where('ownerUid', '==', pageProfile.id), where('public', '==', true)];
-  }, [uid, pageProfile, friendStatus]);
-
-  useSyncSchedulesMatchingContraints(queryConstraints);
-
-  if (uid === null) {
-    return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
-  }
-
-  if (typeof uid === 'undefined') {
-    return (
-      <Layout>
-        {elapsed && <LoadingBars />}
-      </Layout>
-    );
-  }
+  const uid = Auth.useAuthProperty('uid');
+  const elapsed = useElapsed(5000, [username]);
 
   if (error) {
     return <ErrorPage>{error.message}</ErrorPage>;
@@ -78,20 +46,55 @@ export default function UserPage() {
     );
   }
 
-  const schedules = Object.values(scheduleMap);
+  if (uid === null) {
+    return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
+  }
 
+  if (typeof uid === 'undefined') {
+    return (
+      <Layout>
+        {elapsed && <LoadingBars />}
+      </Layout>
+    );
+  }
+
+  // need to put UserPage inside layout to access MeiliSearch context provider
   return (
     <Layout title={pageProfile.username ?? 'User'} className="mx-auto w-full max-w-screen-md flex-1 p-8">
-      <div className="flex flex-col space-y-8">
-        <div>
-          {/* top region with image and name */}
-          <div className="flex items-center">
-            <ImageWrapper url={pageProfile.photoUrl} size="md" alt="User profile" />
+      <UserPage username={username} pageProfile={pageProfile} uid={uid} />
+    </Layout>
+  );
+}
 
-            <div className="ml-8">
-              <h1 className="text-3xl">{pageProfile.username}</h1>
+function UserPage({ username, pageProfile, uid }: { uid: string, username: string, pageProfile: WithId<UserProfile> }) {
+  const scheduleMap = useAppSelector(Schedules.selectSchedules);
+  const [refresh, setRefresh] = useState(true);
 
-              {friendStatus !== 'self' && (
+  const friendStatus = useFriendStatus(uid, pageProfile.id, refresh);
+
+  const queryConstraints = useMemo(() => {
+    if (friendStatus === 'friends' || friendStatus === 'self') {
+      return [where('ownerUid', '==', pageProfile.id)];
+    }
+
+    return [where('ownerUid', '==', pageProfile.id), where('public', '==', true)];
+  }, [uid, pageProfile, friendStatus]);
+
+  useSyncSchedulesMatchingContraints(queryConstraints);
+
+  const schedules = sortSchedulesBySemester(scheduleMap);
+
+  return (
+    <div className="flex flex-col space-y-8">
+      <div>
+        {/* top region with image and name */}
+        <div className="flex items-center">
+          <ImageWrapper url={pageProfile.photoUrl} size="md" alt="User profile" />
+
+          <div className="ml-8">
+            <h1 className="text-3xl">{pageProfile.username}</h1>
+
+            {friendStatus !== 'self' && (
               <button
                 type="button"
                 onClick={() => {
@@ -107,130 +110,47 @@ export default function UserPage() {
               >
                 {statusMessage[friendStatus]}
               </button>
-              )}
-            </div>
+            )}
           </div>
-
-          {/* bio */}
-          <p className="mt-4">
-            Class of
-            {' '}
-            {pageProfile.classYear}
-          </p>
-
-          <h3 className="mt-4 text-xl font-medium">Bio</h3>
-          {/* show an editable textarea for own page, otherwise other's bio */}
-          {pageProfile.id === uid ? (
-            <EditBioForm uid={uid} />
-          ) : (
-            <p className="mt-2">{pageProfile.bio}</p>
-          )}
         </div>
 
-        {/* schedules */}
-        <section>
-          <div className="mb-4 flex items-center justify-between border-b-2">
-            <h2 className="text-xl font-medium">
-              Schedules
-            </h2>
-            <CardExpandToggler />
-          </div>
+        {/* bio */}
+        <p className="mt-4">
+          Class of
+          {' '}
+          {pageProfile.classYear}
+        </p>
 
-          {schedules.length > 0 ? (
-            <ul className="space-y-2">
-              {schedules.map((schedule) => (
-                <li key={schedule.id}>
-                  <ScheduleSection schedule={schedule} hideAuthor />
-                </li>
-              ))}
-            </ul>
-          ) : <p>No schedules yet</p>}
-        </section>
+        <h3 className="mt-4 text-xl font-medium">Bio</h3>
+        {/* show an editable textarea for own page, otherwise other's bio */}
+        {pageProfile.id === uid ? (
+          <EditBioForm uid={uid} />
+        ) : (
+          <p className="mt-2">{pageProfile.bio}</p>
+        )}
       </div>
-    </Layout>
+
+      {/* schedules */}
+      <section>
+        <div className="mb-4 flex items-center justify-between border-b-2">
+          <h2 className="text-xl font-medium">
+            Schedules
+          </h2>
+          <CardExpandToggler />
+        </div>
+
+        {schedules.length > 0 ? (
+          <ul className="space-y-2">
+            {schedules.map((schedule) => (
+              <li key={schedule.id}>
+                <ScheduleSection schedule={schedule} hideAuthor />
+              </li>
+            ))}
+          </ul>
+        ) : <p>No schedules yet</p>}
+      </section>
+    </div>
   );
-}
-
-// get the profile of the user with the given username
-function useProfile(username: string) {
-  const userId = Auth.useAuthProperty('uid');
-  const [profile, setProfile] = useState<WithId<UserProfile> | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    if (!username || !userId) return;
-
-    const unsubscribe = onSnapshot(
-      query(Schema.Collection.profiles(), where('username', '==', username)),
-      (snap) => {
-        if (snap.empty) {
-          throw new Error('No users found with that username.');
-        } else if (snap.size > 1) {
-          throw new Error('Multiple users found with that username. This should not occur');
-        } else {
-          const [doc] = snap.docs;
-          setProfile({ ...doc.data(), id: doc.id });
-        }
-      },
-      (err) => {
-        setError(err);
-      },
-    );
-
-    return () => unsubscribe();
-  }, [username, userId]);
-
-  return [profile, error] as const;
-}
-
-// this is a little jank but should be fine.
-// check if user1 and user2 (ids) are friends.
-function useFriendStatus(user1: string | null | undefined, user2: string | null | undefined, refresh: boolean): FriendStatus {
-  const [status, setStatus] = useState<FriendStatus>('loading');
-  const [ref, setRef] = useState<DocumentReference<FriendRequest> | null>();
-
-  // at most one of the two below will exist
-  useEffect(() => {
-    if (!user1 || !user2) return;
-    if (user1 === user2) setStatus('self');
-    else {
-      (async () => {
-        let snap = await getDoc(Schema.friendRequest(user1, user2));
-        if (snap.exists()) {
-          setRef(snap.ref);
-          return;
-        }
-        snap = await getDoc(Schema.friendRequest(user2, user1));
-        if (snap.exists()) {
-          setRef(snap.ref);
-        } else {
-          setStatus('none');
-        }
-      })();
-    }
-  }, [user1, user2, refresh]);
-
-  // once an existing friend request is found, we listen to it
-  useEffect(() => {
-    if (!ref) return;
-
-    const unsub = onSnapshot(
-      ref,
-      (snap) => {
-        const data = snap.data();
-        if (!data) setStatus('none');
-        else if (data.accepted) setStatus('friends');
-        else setStatus('pending');
-      },
-      (err) => {
-        console.error('error fetching friend request document', ref.path, err);
-      },
-    );
-
-    return unsub;
-  }, [ref]);
-
-  return status;
 }
 
 

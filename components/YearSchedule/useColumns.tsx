@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { getUniqueSemesters, compareSemesters } from 'plancrimson-utils';
-import { Planner, Profile, Schedules, Settings } from '@/src/features';
+import {
+  Planner, Profile, Schedules, Settings,
+} from '@/src/features';
 import { useAppSelector } from '@/src/utils/hooks';
 import { SemesterDisplayProps } from '@/components/YearSchedule/SemesterColumn/SemesterColumn';
 
@@ -17,8 +19,7 @@ export function useColumns() {
   const columns: SemesterDisplayProps[] = useMemo(() => {
     switch (semesterFormat) {
       case 'sample':
-        if (!sampleSchedule)
-          return [];
+        if (!sampleSchedule) return [];
         return sampleSchedule.schedules.map(({ year, season, id }) => ({
           semester: { year, season },
           chosenScheduleId: id,
@@ -26,11 +27,10 @@ export function useColumns() {
         }));
 
       case 'selected':
-        if (!classYear)
-          return [];
+        if (!classYear) return [];
         return getUniqueSemesters(
           classYear,
-          ...Object.values(userSchedules)
+          ...Object.values(userSchedules),
         ).map(({ year, season }) => ({
           key: `${year}${season}`,
           semester: { year, season },
