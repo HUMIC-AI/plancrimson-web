@@ -72,29 +72,30 @@ export function useSyncAuth() {
         dispatch(Profile.setPhotoUrl(user.photoURL));
 
         const profileRef = Firestore.profile(uid);
-
-        // make sure we have live data from Firestore
         const profile = await getDoc(profileRef);
+
+        dispatch(Profile.setUsername(extractUsername(email)));
 
         // if the user doesn't have a profile,
         // prompt them for their graduation year and create one
-        if (!profile.exists()) {
+        if (profile.exists()) {
+          // if the user does have a profile, sync it with Redux
+          const userProfile = profile.data()!;
+          dispatch(Profile.setClassYear(userProfile.classYear!));
+        } else {
           const now = new Date();
           showContents({
             title: 'Set graduation year',
             content: <GraduationYearDialog
               defaultYear={now.getFullYear() + (now.getMonth() > 5 ? 4 : 3)}
-              handleSubmit={(classYear) => handleSubmit(user, classYear)}
+              handleSubmit={async (classYear) => {
+                dispatch(Profile.setClassYear(classYear));
+                await handleSubmit(user, classYear);
+              }}
             />,
             noExit: true,
           });
-          return;
         }
-
-        // if the user does have a profile, sync it with Redux
-        const userProfile = profile.data()!;
-        dispatch(Profile.setUsername(userProfile.username!));
-        dispatch(Profile.setClassYear(userProfile.classYear!));
       },
       (err) => {
         console.error('error listening for auth state change:', err);
@@ -124,6 +125,7 @@ export function useSyncUserSettings() {
 
     // keep the Redux state for the user settings in sync with Firestore
     const unsubUserData = onSnapshot(userDataRef, (snap) => {
+      console.log("Updating", snap.data())
       if (!snap.exists()) return;
 
       const userData = snap.data()!;

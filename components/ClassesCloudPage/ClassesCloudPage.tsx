@@ -107,7 +107,7 @@ function ClassesCloud({
   return (
     <div className={classNames(
       'absolute inset-0 overflow-hidden',
-      'transition-opacity ease-in duration-[2000ms]',
+      'transition-opacity ease-in duration-1000',
       (positions && courses) ? 'opacity-100' : 'opacity-0',
     )}
     >
