@@ -2,8 +2,6 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { subjectNames } from 'plancrimson-utils';
 
-const PARTICLE_SIZE = 0.5;
-
 type RGB = readonly [number, number, number];
 
 /**
@@ -51,11 +49,11 @@ export function createControls(camera: THREE.PerspectiveCamera, renderer: THREE.
   return controls;
 }
 
-export function createPoints(subjects: string[], positions: [number, number, number][]) {
+export function createPoints(subjects: string[], positions: [number, number, number][], size: number) {
   const sprite = new THREE.TextureLoader().load('disc.png');
   const geometry = new THREE.BufferGeometry();
   const material = new THREE.PointsMaterial({
-    size: PARTICLE_SIZE,
+    size,
     sizeAttenuation: true,
     map: sprite,
     alphaTest: 0.5,
@@ -69,14 +67,14 @@ export function createPoints(subjects: string[], positions: [number, number, num
   const colors = subjects.flatMap((subject) => subjectColors[subject] ?? [0.5, 0.5, 0.5]);
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
-  // geometry.setAttribute('size', new THREE.Float32BufferAttribute(courses.map(() => PARTICLE_SIZE), 1));
   const points = new THREE.Points(geometry, material);
   return points;
 }
 
-export function createRaycaster(points: THREE.Points) {
+export function createRaycaster(points: THREE.Points, threshold: number) {
   const raycaster = new THREE.Raycaster();
-  raycaster.params.Points!.threshold = PARTICLE_SIZE / 3; // arbitrary value
+  raycaster.params.Points!.threshold = threshold;
+
   let currentIntersect: number | null = null;
   let originalColor: RGB | null = null;
   const colorBuffer = points.geometry.attributes.color;

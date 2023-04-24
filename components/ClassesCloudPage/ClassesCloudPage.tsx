@@ -19,6 +19,7 @@ type Props = {
   controls?: 'track' | 'orbit' | 'none';
   autoRotate?: number;
   interactive?: boolean;
+  particleSize?: number;
 };
 
 export default function ClassesCloudPage({ children, ...props }: PropsWithChildren<Props>) {
@@ -40,6 +41,7 @@ function ClassesCloud({
   controls: rawControls = 'none',
   autoRotate = 0,
   interactive = false,
+  particleSize = 1,
 }: Props) {
   const dispatch = useAppDispatch();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -60,14 +62,14 @@ function ClassesCloud({
 
     const { scene, camera, renderer } = createScene(canvasRef.current!);
 
-    const points = createPoints(courses.map((courseData) => courseData[1]), positions);
+    const points = createPoints(courses.map((courseData) => courseData[1]), positions, particleSize);
     scene.add(points);
 
     const orbitControls = controls === 'orbit' ? createControls(camera, renderer, autoRotate) : null;
 
     const mouseTracker = (controls === 'track' || interactive) ? createMouseTracker() : null;
 
-    const raycaster = interactive ? createRaycaster(points) : null;
+    const raycaster = interactive ? createRaycaster(points, particleSize/3) : null;
 
     const disposeResizeListener = syncWindow(camera, renderer);
 

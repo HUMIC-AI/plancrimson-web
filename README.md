@@ -7,7 +7,13 @@ The frontend for the Plan Crimson project!
 - Compare multiple schedules side-by-side
 - Check for conflicting courses
 
-See the [About](pages/about.tsx) page for the tech stack. See [TODO](./TODO.md) for planned features.
+See [TODO](./TODO.md) for planned features.
+
+## Getting started
+
+See the [About](pages/about.tsx) page for the tech stack.
+
+Make sure to run Firebase Emulators in parallel with Next.js.
 
 ## Notes
 
