@@ -167,7 +167,7 @@ export default function CourseCard({
 
   return (
     // move the shadow outside to avoid it getting hidden
-    <div className="overflow-hidden rounded-xl shadow-xl">
+    <div className="overflow-hidden rounded-xl shadow-xl border border-gray-light">
       <div
         className={classNames(
           'relative from-black text-left h-full',
@@ -242,9 +242,9 @@ export default function CourseCard({
 
             {!hideRatings && (
             <>
-              {typeof course.meanRating !== 'undefined' && <StarRating rating={course.meanRating} />}
-              {typeof course.meanClassSize !== 'undefined' && <ClassSizeRating population={course.meanClassSize} />}
-              {typeof course.meanHours !== 'undefined' && <HoursRating hours={course.meanHours} />}
+              {typeof course.meanRating === 'number' && <StarRating rating={course.meanRating} />}
+              {typeof course.meanClassSize === 'number' && <ClassSizeRating population={course.meanClassSize} />}
+              {typeof course.meanHours === 'number' && <HoursRating hours={course.meanHours} />}
             </>
             )}
           </div>

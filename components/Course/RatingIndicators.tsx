@@ -44,7 +44,7 @@ export function ClassSizeRating({ population }: { population: number }) {
           <FaUserFriends
           // eslint-disable-next-line react/no-array-index-key
             key={i}
-            className="text-sm text-orange"
+            className="text-sm text-blue-light"
           />
         )
         : (
@@ -53,7 +53,7 @@ export function ClassSizeRating({ population }: { population: number }) {
             key={i}
             className={classNames(
               'text-sm',
-              star === 'full' ? 'text-blue-light' : 'text-gray-light',
+              star === 'full' ? 'text-green' : 'text-gray-light',
             )}
           />
         )))}

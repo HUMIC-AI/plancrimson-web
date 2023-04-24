@@ -4,7 +4,7 @@ import {
 import Layout from '@/components/Layout/Layout';
 import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
 import { useModal } from '@/src/context/modal';
-import type { Subject } from 'plancrimson-utils';
+import { Subject, stringToHex } from 'plancrimson-utils';
 import { useAppSelector } from '@/src/utils/hooks';
 import { ClassCache } from '@/src/features';
 import {
@@ -100,7 +100,8 @@ export default function ClassesCloud({
           onClick={() => {
             const idx = currentHoverRef.current;
             if (idx !== null && courses) {
-              const courseId = courses[idx][0];
+              const courseKey = courses[idx][0];
+              const courseId = stringToHex(courseKey);
               showCourse(classCache[courseId]);
             }
           }}

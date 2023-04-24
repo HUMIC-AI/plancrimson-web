@@ -95,7 +95,7 @@ const WeekDisplay: React.FC<{ pattern: string; index?: number }> = function ({
       {pattern === 'TBA' ? (
         <span>TBA</span>
       ) : (
-        <div className="inline-grid w-max grid-cols-5 overflow-hidden rounded border-2 border-black">
+        <div className="inline-grid w-max grid-cols-5 overflow-hidden rounded shadow">
           {DAYS_OF_WEEK.slice(0, 5)
             .map((val) => val.slice(0, 2))
             .map((abbrev, j) => (
@@ -104,8 +104,8 @@ const WeekDisplay: React.FC<{ pattern: string; index?: number }> = function ({
                 className={classNames(
                   daysInSchedule.includes(abbrev)
                     ? 'bg-white'
-                    : 'text-gray-light bg-gray-light',
-                  'text-center font-semibold font-mono text-sm px-2',
+                    : 'text-transparent bg-gray-light',
+                  'text-center font-medium font-mono text-sm w-4',
                 )}
               >
                 {dayLetters[j]}
