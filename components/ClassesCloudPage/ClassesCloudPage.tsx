@@ -69,7 +69,7 @@ function ClassesCloud({
 
     const mouseTracker = (controls === 'track' || interactive) ? createMouseTracker() : null;
 
-    const raycaster = interactive ? createRaycaster(points, particleSize/3) : null;
+    const raycaster = interactive ? createRaycaster(points, particleSize / 3) : null;
 
     const disposeResizeListener = syncWindow(camera, renderer);
 

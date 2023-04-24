@@ -42,9 +42,8 @@ export default function UserPage() {
   const [pageProfile, error] = useProfile(username);
   const friendStatus = useFriendStatus(uid, pageProfile?.id, refresh);
 
-
   const queryConstraints = useMemo(() => {
-    if (!uid || !pageProfile) return [];
+    if (!uid || !pageProfile) return null;
 
     if (friendStatus === 'friends' || friendStatus === 'self') {
       return [where('ownerUid', '==', pageProfile.id)];
@@ -154,11 +153,13 @@ export default function UserPage() {
 
 // get the profile of the user with the given username
 function useProfile(username: string) {
+  const userId = Auth.useAuthProperty('uid');
   const [profile, setProfile] = useState<WithId<UserProfile> | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!username) return;
+    if (!username || !userId) return;
+
     const unsubscribe = onSnapshot(
       query(Schema.Collection.profiles(), where('username', '==', username)),
       (snap) => {
@@ -175,8 +176,9 @@ function useProfile(username: string) {
         setError(err);
       },
     );
+
     return () => unsubscribe();
-  }, [username]);
+  }, [username, userId]);
 
   return [profile, error] as const;
 }

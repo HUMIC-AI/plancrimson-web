@@ -2,7 +2,7 @@ import {
   useState, useEffect, useMemo, useRef,
 } from 'react';
 import {
-  allTruthy, getUniqueSemesters, compareSemesters,
+  allTruthy,
 } from 'plancrimson-utils';
 import {
   Auth, ClassCache, Planner, Profile, Schedules, Settings,
@@ -30,6 +30,7 @@ import ClassesCloud from '@/components/ClassesCloudPage/ClassesCloudPage';
 import { signInUser } from '@/components/Layout/useSyncAuth';
 import useSyncSchedulesMatchingContraints from '@/src/utils/schedules';
 import { where } from 'firebase/firestore';
+import { useColumns } from '../components/YearSchedule/useColumns';
 
 export default function PlanPage() {
   const userId = Auth.useAuthProperty('uid');
@@ -167,55 +168,6 @@ function BodySection({
       <HiddenSchedules />
     </div>
   );
-}
-
-/**
- * Gets the list of semesters to display in the planner
- */
-function useColumns() {
-  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
-  const userSchedules = useAppSelector(Schedules.selectSchedules);
-  const classYear = useAppSelector(Profile.selectClassYear);
-  const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
-  const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
-
-  const columns: SemesterDisplayProps[] = useMemo(() => {
-    switch (semesterFormat) {
-      case 'sample':
-        if (!sampleSchedule) return [];
-        return sampleSchedule.schedules.map(({ year, season, id }) => ({
-          semester: { year, season },
-          chosenScheduleId: id,
-          key: id,
-        }));
-
-      case 'selected':
-        if (!classYear) return [];
-        return getUniqueSemesters(
-          classYear,
-          ...Object.values(userSchedules),
-        ).map(({ year, season }) => ({
-          key: `${year}${season}`,
-          semester: { year, season },
-          chosenScheduleId: chosenSchedules[`${year}${season}`] || null,
-        }));
-
-      case 'all':
-        return Object.values(userSchedules)
-          .sort(compareSemesters)
-          .map(({ year, season, id }) => ({
-            key: id,
-            semester: { year, season },
-            chosenScheduleId: id,
-            highlight: chosenSchedules[`${year}${season}`] || undefined,
-          }));
-
-      default:
-        return [];
-    }
-  }, [semesterFormat, sampleSchedule, classYear, userSchedules, chosenSchedules]);
-
-  return columns;
 }
 
 function ScheduleSyncer({ userId }: { userId: string; }) {

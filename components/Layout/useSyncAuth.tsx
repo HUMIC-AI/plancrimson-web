@@ -125,7 +125,6 @@ export function useSyncUserSettings() {
 
     // keep the Redux state for the user settings in sync with Firestore
     const unsubUserData = onSnapshot(userDataRef, (snap) => {
-      console.log("Updating", snap.data())
       if (!snap.exists()) return;
 
       const userData = snap.data()!;
