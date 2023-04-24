@@ -4,7 +4,7 @@ import {
 import Layout from '@/components/Layout/Layout';
 import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
 import { useModal } from '@/src/context/modal';
-import { Subject, stringToHex } from 'plancrimson-utils';
+import { Subject, getClassId } from 'plancrimson-utils';
 import { alertUnexpectedError, useAppDispatch } from '@/src/utils/hooks';
 import { ClassCache } from '@/src/features';
 import { useMeiliClient } from '@/src/context/meili';
@@ -125,8 +125,8 @@ function ClassesCloud({
           if (isClick.current) {
             const idx = currentHoverRef.current;
             if (idx !== null && courses) {
-              const courseKey = courses[idx][0];
-              const courseId = stringToHex(courseKey);
+              const key = courses[idx][0];
+              const courseId = getClassId(key);
               dispatch(ClassCache.loadCourses(client, [courseId])).then(([course]) => {
                 showCourse(course);
               }).catch(alertUnexpectedError);
