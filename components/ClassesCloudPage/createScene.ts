@@ -85,7 +85,6 @@ export function createRaycaster(points: THREE.Points) {
     raycaster.setFromCamera(mouse, camera);
 
     const intersects = raycaster.intersectObject(points, false);
-    console.log(intersects.length);
 
     if (intersects.length > 0) {
       const topIntersect = intersects[0].index!;

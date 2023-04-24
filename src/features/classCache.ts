@@ -56,17 +56,20 @@ export function loadCourses(
     const cache = selectClassCache(state);
 
     const classes = await Promise.allSettled(classIds.map(async (classId) => {
+      // if the class is already in the cache, return it
       if (classId in cache) {
         return cache[classId];
       }
+
       const apiKey = await getMeiliApiKey();
 
-      // get the specified document from the Meilisearch index
+      // manually fetch the specified document from the Meilisearch index
       const response = await axios.get<ExtendedClass>(`${getMeiliHost()}/indexes/courses/documents/${classId}`, {
         headers: {
           authorization: `Bearer ${apiKey}`,
         },
       });
+
       return response.data;
     }));
 
@@ -77,7 +80,9 @@ export function loadCourses(
       console.error(result.reason);
       return null;
     }));
+
     dispatch(classCacheSlice.actions.loadClasses(fetchedClasses));
+
     return fetchedClasses;
   };
 }

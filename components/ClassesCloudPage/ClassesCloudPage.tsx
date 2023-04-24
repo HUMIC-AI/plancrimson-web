@@ -5,13 +5,30 @@ import Layout from '@/components/Layout/Layout';
 import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
 import { useModal } from '@/src/context/modal';
 import { Subject, stringToHex } from 'plancrimson-utils';
-import { useAppSelector } from '@/src/utils/hooks';
+import { alertUnexpectedError, useAppDispatch } from '@/src/utils/hooks';
 import { ClassCache } from '@/src/features';
+import { useMeiliClient } from '@/src/context/meili';
 import {
   createScene, createPoints, createControls, createMouseTracker, createRaycaster, syncWindow,
 } from './createScene';
 
 const sensitivity = 20;
+const CLICK_DELAY = 200; // only register a click if the amount of time is less than this
+
+type Props = {
+  controls?: 'track' | 'orbit' | 'none';
+  autoRotate?: number;
+  interactive?: boolean;
+};
+
+export default function ClassesCloudPage({ children, ...props }: PropsWithChildren<Props>) {
+  return (
+    <Layout className="relative flex flex-1 items-center justify-center bg-black p-8" title="Plan" transparentHeader>
+      <ClassesCloud {...props} />
+      {children}
+    </Layout>
+  );
+}
 
 /**
  * @param withControls Whether to add orbit controls.
@@ -19,21 +36,19 @@ const sensitivity = 20;
  * Set to a number to control the speed.
  * @param interactive Whether to highlight points on hover.
  */
-export default function ClassesCloud({
+function ClassesCloud({
   controls: rawControls = 'none',
   autoRotate = 0,
   interactive = false,
-  children,
-}: PropsWithChildren<{
-  controls?: 'track' | 'orbit' | 'none';
-  autoRotate?: number;
-  interactive?: boolean;
-}>) {
+}: Props) {
+  const dispatch = useAppDispatch();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isClick = useRef(false);
+  const clickTimeout = useRef<ReturnType<typeof setTimeout>>();
   const gtSm = useBreakpoint(breakpoints.sm);
   const { showCourse } = useModal();
-  const classCache = useAppSelector(ClassCache.selectClassCache);
   const { positions, courses } = useData();
+  const { client } = useMeiliClient();
 
   // if on mobile, use orbit controls instead of track controls
   const controls = rawControls === 'track' && !gtSm ? 'orbit' : rawControls;
@@ -45,7 +60,7 @@ export default function ClassesCloud({
 
     const { scene, camera, renderer } = createScene(canvasRef.current!);
 
-    const points = createPoints(courses.map(([_, subject]) => subject), positions);
+    const points = createPoints(courses.map((courseData) => courseData[1]), positions);
     scene.add(points);
 
     const orbitControls = controls === 'orbit' ? createControls(camera, renderer, autoRotate) : null;
@@ -88,27 +103,38 @@ export default function ClassesCloud({
   }, [positions, courses]);
 
   return (
-    <Layout className="relative flex flex-1 items-center justify-center bg-black p-8" title="Plan" transparentHeader>
-      <div className={classNames(
-        'absolute inset-0 overflow-hidden',
-        'transition-opacity ease-in duration-[2000ms]',
-        (positions && courses) ? 'opacity-100' : 'opacity-0',
-      )}
-      >
-        <canvas
-          ref={canvasRef}
-          onClick={() => {
+    <div className={classNames(
+      'absolute inset-0 overflow-hidden',
+      'transition-opacity ease-in duration-[2000ms]',
+      (positions && courses) ? 'opacity-100' : 'opacity-0',
+    )}
+    >
+      <canvas
+        ref={canvasRef}
+        onMouseDown={() => {
+          isClick.current = true;
+          clickTimeout.current = setTimeout(() => {
+            isClick.current = false;
+          }, CLICK_DELAY);
+        }}
+        onMouseUp={() => {
+          clearTimeout(clickTimeout.current);
+
+          if (isClick.current) {
             const idx = currentHoverRef.current;
             if (idx !== null && courses) {
               const courseKey = courses[idx][0];
               const courseId = stringToHex(courseKey);
-              showCourse(classCache[courseId]);
+              dispatch(ClassCache.loadCourses(client, [courseId])).then(([course]) => {
+                showCourse(course);
+              }).catch(alertUnexpectedError);
             }
-          }}
-        />
-      </div>
-      {children}
-    </Layout>
+          }
+
+          isClick.current = false;
+        }}
+      />
+    </div>
   );
 }
 

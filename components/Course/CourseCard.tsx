@@ -167,7 +167,7 @@ export default function CourseCard({
 
   return (
     // move the shadow outside to avoid it getting hidden
-    <div className="overflow-hidden rounded-xl shadow-xl border border-gray-light">
+    <div className="overflow-hidden rounded-xl border border-gray-light shadow-xl">
       <div
         className={classNames(
           'relative from-black text-left h-full',
