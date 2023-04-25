@@ -40,7 +40,7 @@ const AboutPage: React.FC = function () {
           About
         </h1>
         <p>
-          Thanks for using Plan Crimson! Reach out with any feedback, questions,
+          Thanks for using PlanCrimson! Reach out with any feedback, questions,
           bug reports, requests, etc. at alexcai [at] college [dot] harvard
           [dot] edu.
         </p>
@@ -69,7 +69,7 @@ function Resources() {
         Other Resources
       </h2>
       <p>
-        The data for Plan Crimson is taken from the
+        The data for PlanCrimson is taken from the
         {' '}
         <ExternalLink href="https://my.harvard.edu/">my.harvard</ExternalLink>
         {' '}

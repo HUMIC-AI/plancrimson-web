@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { getAuth } from 'firebase/auth';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
@@ -86,8 +85,11 @@ function useSuggestedProfiles() {
         return;
       }
       user.getIdToken(true)
-        .then((token) => axios({ url: '/api/suggestProfiles', headers: { Authorization: `Bearer ${token}` } }))
-        .then(({ data }) => {
+        .then((token) => fetch('/api/suggestProfiles', {
+          headers: { Authorization: `Bearer ${token}` },
+        }))
+        .then((response) => response.json())
+        .then((data) => {
           sessionStorage.setItem('suggestProfiles/lastUpdated', Date.now().toString());
           sessionStorage.setItem('suggestProfiles/profiles', JSON.stringify(data));
           setProfiles(data);

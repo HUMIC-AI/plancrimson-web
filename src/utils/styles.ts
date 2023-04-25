@@ -35,7 +35,6 @@ export function useBreakpoint(breakpoint: number) {
 
     window.addEventListener('resize', handleResize);
 
-    // eslint-disable-next-line consistent-return
     return () => window.removeEventListener('resize', handleResize);
   }, [breakpoint]);
 

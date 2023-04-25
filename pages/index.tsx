@@ -13,7 +13,7 @@ import {
   RequirementGroup,
 } from '@/src/requirements/util';
 import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
-import Layout from '@/components/Layout/Layout';
+import Layout, { HeadMeta, description } from '@/components/Layout/Layout';
 import { Footer } from '@/components/Layout/Footer';
 import Navbar from '@/components/Layout/Navbar';
 import { SemestersList } from '@/components/YearSchedule/PlanningSection';
@@ -23,6 +23,8 @@ import RequirementsSection from '@/components/YearSchedule/RequirementsSection';
 import ClassesCloud from '@/components/ClassesCloudPage/ClassesCloudPage';
 import { signInUser } from '@/components/Layout/useSyncAuth';
 import type { ListOfScheduleIdOrSemester } from '@/src/types';
+import CustomModal from '@/components/CustomModal';
+import { WithMeili } from '@/components/Layout/WithMeili';
 import { useColumns } from '../components/YearSchedule/useColumns';
 import { ScheduleSyncer } from '../components/ScheduleSyncer';
 import { useValidateSchedule } from '../components/YearSchedule/useValidateSchedule';
@@ -61,9 +63,12 @@ export default function PlanPage() {
   };
 
   if (!md) {
+    // custom layout for mobile
     return (
-      <Layout title="Plan" custom>
+      <WithMeili enabled>
+        <HeadMeta pageTitle="Plan" description={description} />
         <ScheduleSyncer userId={userId} />
+
         <div className="flex min-h-screen flex-col">
           <Navbar />
 
@@ -77,12 +82,14 @@ export default function PlanPage() {
         {showReqs && <RequirementsSection {...requirementsSectionProps} />}
 
         <Footer />
-      </Layout>
+
+        <CustomModal />
+      </WithMeili>
     );
   }
 
   return (
-    <Layout title="Plan" className="flex flex-1 flex-row-reverse">
+    <Layout title="Plan" className="flex flex-1 flex-row-reverse" withMeili>
       <ScheduleSyncer userId={userId} />
       <BodySection
         columns={columns}

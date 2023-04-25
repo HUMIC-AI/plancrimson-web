@@ -1,9 +1,7 @@
-/* eslint-disable no-param-reassign */
-import { InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
+import type { InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
 import {
   createSlice, PayloadAction,
 } from '@reduxjs/toolkit';
-import axios from 'axios';
 import type { ExtendedClass } from '@/src/lib';
 import { allTruthy } from '@/src/lib';
 import { getMeiliApiKey, getMeiliHost } from '@/src/context/meili';
@@ -45,7 +43,7 @@ export const selectClassCache: (state: RootState) => ClassCache = (state: RootSt
  * @param classIds the IDs of the classes to add to the Redux class cache
  *
  * Note that the latest Meilisearch client does not support the `getDocument` method.
- * We use axios to get the document directly from the Meilisearch API.
+ * We fetch the document directly from the Meilisearch API.
  */
 export function loadCourses(
   index: InstantMeiliSearchInstance,
@@ -64,18 +62,20 @@ export function loadCourses(
       const apiKey = await getMeiliApiKey();
 
       // manually fetch the specified document from the Meilisearch index
-      const response = await axios.get<ExtendedClass>(`${getMeiliHost()}/indexes/courses/documents/${classId}`, {
+      const response = await fetch(`${getMeiliHost()}/indexes/courses/documents/${classId}`, {
+        method: 'GET',
         headers: {
           authorization: `Bearer ${apiKey}`,
         },
       });
 
-      return response.data;
+      const data: ExtendedClass = await response.json();
+      return data;
     }));
 
     const fetchedClasses = allTruthy(classes.map((result) => {
       if (result.status === 'fulfilled') {
-        return result.value as ExtendedClass;
+        return result.value;
       }
       console.error(result.reason);
       return null;

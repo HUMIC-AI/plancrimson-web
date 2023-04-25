@@ -2,10 +2,9 @@ import React from 'react';
 
 export function LoadingBars() {
   return (
-    <ul className="space-y-4">
+    <ul className="w-full space-y-4">
       {new Array(5).fill(null).map((_, i) => (
         <li
-            // eslint-disable-next-line react/no-array-index-key
           key={i}
           className="animate-pulse rounded bg-blue-light"
           style={{ animationDelay: `${i * 250}ms` }}

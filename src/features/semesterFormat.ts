@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Term } from '@/src/lib';
 import type { SampleSchedule } from '../requirements/util';

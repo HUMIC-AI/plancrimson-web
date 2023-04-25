@@ -37,7 +37,6 @@ export function ToggleButton({ chosenScheduleId, course }: { chosenScheduleId: s
     }
 
     if (viability.viability === 'Unlikely') {
-      // eslint-disable-next-line no-restricted-globals
       const yn = confirm(`${viability.reason} Continue anyways?`);
       if (!yn) return;
     }

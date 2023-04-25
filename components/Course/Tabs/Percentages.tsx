@@ -25,7 +25,6 @@ export default function Percentages({ categories: allCategories }: Props) {
       {allCategories.map(
         (rec, i) => rec > 0 && (
         <div
-              // eslint-disable-next-line react/no-array-index-key
           key={i}
           className="group/percents relative h-full min-w-max flex-initial text-center first:rounded-l-lg last:rounded-r-lg"
           style={{ flexBasis: `${(rec / total) * 100}%` }}

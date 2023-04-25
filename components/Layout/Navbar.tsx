@@ -61,7 +61,7 @@ export default function Navbar({
                     {/* this on >=lg */}
                     <div className="hidden items-center gap-4 lg:flex">
                       <FaCalendarCheck className="h-8 w-auto" />
-                      <h2>Plan Crimson</h2>
+                      <h2>PlanCrimson</h2>
                     </div>
                   </Link>
                 </div>

@@ -1,4 +1,3 @@
-/* eslint-disable react/no-array-index-key */
 import { connectHighlight } from 'react-instantsearch-dom';
 import type { HighlightProps } from 'react-instantsearch-core';
 import ClientOrDemo from './ClientOrDemo';

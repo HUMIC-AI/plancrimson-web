@@ -1,6 +1,6 @@
-import { instantMeiliSearch, InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
+import { instantMeiliSearch, type InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
 import {
-  useState, useEffect, PropsWithChildren, useMemo,
+  useState, useEffect, type PropsWithChildren, useMemo,
 } from 'react';
 import { getMeiliApiKey, getMeiliHost, MeiliContext } from '@/src/context/meili';
 import { Auth } from '@/src/features';
@@ -9,8 +9,9 @@ import { Auth } from '@/src/features';
 /**
  * Provides the React context for the MeiliSearch client.
  * Sets the client to be null if the user is not logged in.
+ * To minimize bundle size, instead use the WithMeili component.
  */
-export function MeiliProvider({ children }: PropsWithChildren<{}>) {
+export default function MeiliProvider({ children }: PropsWithChildren<{}>) {
   const uid = Auth.useAuthProperty('uid');
   const [client, setClient] = useState<InstantMeiliSearchInstance | null>(null);
   const [error, setError] = useState<string | null>(null);

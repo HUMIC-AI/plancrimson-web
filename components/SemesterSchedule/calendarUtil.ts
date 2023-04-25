@@ -1,5 +1,8 @@
-import { EventAttributes } from 'ics';
+import { DateArray, EventAttributes } from 'ics';
 import { Class, ExtendedClass, DayOfWeek } from '@/src/lib';
+
+export const dayStartTime = 8; // time to start the calendar at
+export const dayEndTime = 20;
 
 function getUid(cls: ExtendedClass) {
   return `${(cls.id + cls.IS_SCL_MEETING_PAT + cls.IS_SCL_STRT_TM_DEC + cls.IS_SCL_END_TM_DEC).replace(/[^a-zA-Z0-9]/g, '-')}@plancrimson.xyz`;
@@ -50,7 +53,28 @@ export function strToDec(str: string) {
   return h + m / 60;
 }
 
-// eslint-disable-next-line import/prefer-default-export
+export function getOverlap(events: EventAttributes[], i: number) {
+  const [start1, end1] = [events[i].start, (events[i] as any).end].map(
+    dateArrayToDec,
+  );
+  return events.filter((ev) => {
+    const [start, end] = [ev.start, (ev as any).end].map(dateArrayToDec);
+    if (start > end1 || end < start1) return false;
+    return true;
+  });
+}
+export function dateArrayToDec(arr: DateArray) {
+  return arr[3]! + arr[4]! / 60;
+}
+
+export function toPercent(arr: DateArray) {
+  return (
+    ((dateArrayToDec(arr) - (dayStartTime - 1))
+      / (dayEndTime - (dayStartTime - 1)))
+    * 100
+  );
+}
+
 export function getEvents(cls: ExtendedClass): EventAttributes[] {
   if (typeof cls.IS_SCL_MEETING_PAT === 'string') {
     if (cls.IS_SCL_MEETING_PAT === 'TBA') {

@@ -15,14 +15,12 @@ export function StarRating({ rating }: { rating: number; }) {
       {stars.map((star, i) => (star === 'half'
         ? (
           <FaStarHalfAlt
-            // eslint-disable-next-line react/no-array-index-key
             key={i}
             className="text-sm text-orange"
           />
         )
         : (
           <FaStar
-            // eslint-disable-next-line react/no-array-index-key
             key={i}
             className={classNames('text-sm', star === 'full' ? 'text-yellow' : 'text-gray-dark')}
           />
@@ -42,14 +40,12 @@ export function ClassSizeRating({ population }: { population: number }) {
       {stars.map((star, i) => (star === 'half'
         ? (
           <FaUserFriends
-          // eslint-disable-next-line react/no-array-index-key
             key={i}
             className="text-sm text-blue-light"
           />
         )
         : (
           <FaUserFriends
-            // eslint-disable-next-line react/no-array-index-key
             key={i}
             className={classNames(
               'text-sm',
@@ -73,14 +69,12 @@ export function HoursRating({ hours }: { hours: number }) {
       {stars.map((star, i) => (star === 'half'
         ? (
           <FaHourglassHalf
-          // eslint-disable-next-line react/no-array-index-key
             key={i}
             className="text-sm text-orange"
           />
         )
         : (
           <FaHourglassHalf
-            // eslint-disable-next-line react/no-array-index-key
             key={i}
             className={classNames('text-sm', star === 'full' ? 'text-pink' : 'text-gray-dark')}
           />

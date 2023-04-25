@@ -17,7 +17,6 @@ import {
   requirements,
 } from './util';
 
-// eslint-disable-next-line import/prefer-default-export
 export const mathematicalPreparation: RequirementGroup = {
   groupId: 'Mathematical preparation',
   subheading:

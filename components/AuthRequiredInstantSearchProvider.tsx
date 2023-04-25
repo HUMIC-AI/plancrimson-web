@@ -37,9 +37,8 @@ export function AuthRequiredInstantSearchProvider({
   }
 
   if (!client) {
-    if (elapsed) { return <LoadingBars />; }
     // to avoid flickering, we only show the loading bars after 3 seconds
-    return null;
+    return elapsed ? <LoadingBars /> : null;
   }
 
   return (

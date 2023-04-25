@@ -12,8 +12,6 @@ import AttributeMenu from '@/components/SearchComponents/AttributeMenu/Attribute
 import { ScheduleSyncer } from '@/components/ScheduleSyncer';
 import { AuthRequiredInstantSearchProvider } from '../components/AuthRequiredInstantSearchProvider';
 
-// we show a demo if the user is not logged in,
-// but do not allow them to send requests to the database
 export default function SearchPage() {
   const { setSearchState } = useSearchState();
   const showAttributes = useAppSelector(Planner.selectShowAttributes);
@@ -27,8 +25,9 @@ export default function SearchPage() {
   }, []);
 
   return (
-    <Layout className="mx-auto flex w-screen max-w-5xl flex-1 justify-center sm:p-8">
+    <Layout className="mx-auto flex w-screen max-w-5xl flex-1 justify-center sm:p-8" withMeili>
       {userId && <ScheduleSyncer userId={userId} />}
+
       <AuthRequiredInstantSearchProvider>
         <div className={showAttributes ? 'mr-8' : 'hidden'}>
           <AttributeMenu withWrapper lgOnly />

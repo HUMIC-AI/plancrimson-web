@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
 import { Listbox } from '@headlessui/react';
 import Link from 'next/link';
 import React from 'react';

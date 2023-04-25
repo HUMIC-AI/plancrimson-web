@@ -1,5 +1,5 @@
 import {
-  PropsWithChildren, useEffect, useRef,
+  PropsWithChildren, useEffect, useRef, useState,
 } from 'react';
 import Layout from '@/components/Layout/Layout';
 import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
@@ -9,9 +9,6 @@ import { alertUnexpectedError, useAppDispatch } from '@/src/utils/hooks';
 import { ClassCache } from '@/src/features';
 import { useMeiliClient } from '@/src/context/meili';
 import type { CourseLevel } from '@/src/types';
-import {
-  createScene, createPoints, createControls, createMouseTracker, createRaycaster, syncWindow,
-} from './createScene';
 import { useData } from './useData';
 
 const sensitivity = 20;
@@ -56,6 +53,7 @@ function ClassesCloud({
   const { showCourse } = useModal();
   const { positions, courses } = useData(level, filterSubjects);
   const { client } = useMeiliClient();
+  const [sceneUtils, setSceneUtils] = useState<typeof import('./createScene')>();
 
   // if on mobile, use orbit controls instead of track controls
   const controls = rawControls === 'track' && !gtSm ? 'orbit' : rawControls;
@@ -66,19 +64,28 @@ function ClassesCloud({
   const sceneRef = useRef<THREE.Scene>();
   const pointsRef = useRef<THREE.Points>();
 
+  // dynamically import createScene to minimize bundle size
   useEffect(() => {
+    import('./createScene')
+      .then((mod) => setSceneUtils(mod))
+      .catch(alertUnexpectedError);
+  }, []);
+
+  useEffect(() => {
+    if (!sceneUtils || !canvasRef.current) return;
+
     console.info('initializing scene');
 
-    const { scene, camera, renderer } = createScene(canvasRef.current!);
+    const { scene, camera, renderer } = sceneUtils.createScene(canvasRef.current!);
     sceneRef.current = scene;
 
-    const orbitControls = controls === 'orbit' ? createControls(camera, renderer, autoRotate) : null;
+    const orbitControls = controls === 'orbit' ? sceneUtils.createControls(camera, renderer, autoRotate) : null;
 
-    const mouseTracker = (controls === 'track' || interactive) ? createMouseTracker() : null;
+    const mouseTracker = (controls === 'track' || interactive) ? sceneUtils.createMouseTracker() : null;
 
-    const raycaster = interactive ? createRaycaster(particleSize / 3) : null;
+    const raycaster = interactive ? sceneUtils.createRaycaster(particleSize / 3) : null;
 
-    const disposeResizeListener = syncWindow(camera, renderer);
+    const disposeResizeListener = sceneUtils.syncWindow(camera, renderer);
 
     function animate() {
       requestAnimationFrame(animate);
@@ -112,14 +119,14 @@ function ClassesCloud({
       renderer.dispose();
       disposeResizeListener();
     };
-  }, []);
+  }, [sceneUtils]);
 
   useEffect(() => {
-    if (!positions || !courses) return;
+    if (!sceneUtils || !positions || !courses) return;
     if (pointsRef.current) sceneRef.current!.remove(pointsRef.current);
-    pointsRef.current = createPoints(courses.map((courseData) => courseData[1]), positions, particleSize);
+    pointsRef.current = sceneUtils.createPoints(courses.map((courseData) => courseData[1]), positions, particleSize);
     sceneRef.current!.add(pointsRef.current);
-  }, [positions, courses]);
+  }, [sceneUtils, positions, courses]);
 
   return (
     <div className={classNames(

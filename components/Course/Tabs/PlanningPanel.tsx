@@ -102,8 +102,7 @@ function ScheduleRow({ schedule, course }: { schedule: Schedule; course: Extende
         {/* Code from https://headlessui.dev/react/switch */}
         <Switch
           checked={enabled}
-          // eslint-disable-next-line react/jsx-no-bind
-          onChange={handleSwitch}
+          onChange={(checked) => handleSwitch(checked)}
           className={classNames(
             enabled ? 'bg-teal-600' : 'bg-teal-900',
             'relative inline-flex items-center h-[28px] w-[64px]',

@@ -33,6 +33,7 @@
         ]
       }
     ],
+    "react/no-array-index-key": "off",
     "no-multiple-empty-lines": [
       "error",
       {
@@ -41,7 +42,7 @@
     ],
     "no-nested-ternary": "off",
     "import/extensions": "off",
-    "no-param-reassign": "off",
+    "no-param-reassign": "warn",
     "no-restricted-globals": "off",
     "no-restricted-syntax": "off",
     "react/jsx-props-no-spreading": "off",

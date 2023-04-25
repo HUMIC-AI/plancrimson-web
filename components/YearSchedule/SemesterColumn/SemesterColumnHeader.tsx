@@ -10,6 +10,7 @@ import { useCallback, useState } from 'react';
 import { FaCalendar, FaCog, FaEdit } from 'react-icons/fa';
 import FadeTransition from '@/components/Utils/FadeTransition';
 import { ScheduleId, ScheduleIdOrSemester } from '@/src/types';
+import { getSchedulesBySemester } from '@/src/utils/schedules';
 import { DeleteScheduleButton } from './DeleteScheduleButton';
 import { DuplicateScheduleButton } from './DuplicateScheduleButton';
 import { MenuButton } from './MenuButton';
@@ -17,7 +18,6 @@ import { EditNameForm } from './EditNameForm';
 import { HideScheduleButton } from './HideScheduleButton';
 import { PublishScheduleButton } from './PublishScheduleButton';
 import { useScheduleFromScheduleIdOrSemester } from './useScheduleFromScheduleIdOrSemester';
-import { getSchedulesBySemester } from '@/src/utils/schedules';
 
 export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
   const dispatch = useAppDispatch();

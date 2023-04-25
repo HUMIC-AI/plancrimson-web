@@ -19,7 +19,6 @@ type ViabilityResponse = {
  * @param classCache A map from class uids to objects.
  * @returns a tuple containing the viability and the reason.
  */
-// eslint-disable-next-line import/prefer-default-export
 export function checkViable({
   cls, schedule, classYear, classCache,
 }: {

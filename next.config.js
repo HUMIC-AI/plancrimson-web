@@ -1,5 +1,9 @@
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 /** @type {import('next').NextConfig} */
-module.exports = {
+module.exports = withBundleAnalyzer({
   // turn off strict mode when running the three.js pages in development
   // since it causes the raycaster to misbehave
   reactStrictMode: true,
@@ -9,4 +13,4 @@ module.exports = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-};
+});

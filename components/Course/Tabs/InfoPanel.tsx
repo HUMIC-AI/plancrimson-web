@@ -65,7 +65,6 @@ const InfoPanel: React.FC<{ course: ExtendedClass }> = function ({ course }) {
             )
           ) : (
             course.ACAD_ORG.map((org, i) => (
-              // eslint-disable-next-line react/no-array-index-key
               <Fragment key={i}>
                 {i > 0 && ', '}
                 {org in departments ? (

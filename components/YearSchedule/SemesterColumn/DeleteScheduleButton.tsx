@@ -4,8 +4,8 @@ import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { useCallback } from 'react';
 import { FaTrash } from 'react-icons/fa';
 import { semesterToTerm } from '@/src/lib';
-import { MenuButton } from './MenuButton';
 import { getPreviousSchedule } from '@/src/utils/schedules';
+import { MenuButton } from './MenuButton';
 
 export function DeleteScheduleButton({ scheduleId }: { scheduleId: string; }) {
   const dispatch = useAppDispatch();

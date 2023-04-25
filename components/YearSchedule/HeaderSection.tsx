@@ -125,8 +125,8 @@ function OptionsMenu({ columns }: { columns: ListOfScheduleIdOrSemester }) {
             className="transition-opacity hover:opacity-50"
             onClick={() => downloadJson(
               semesterFormat === 'sample'
-                ? `Sample ${sampleSchedule?.id} - Plan Crimson`
-                : 'Selected schedules - Plan Crimson',
+                ? `Sample ${sampleSchedule?.id} - PlanCrimson`
+                : 'Selected schedules - PlanCrimson',
               downloadData,
             )}
           >

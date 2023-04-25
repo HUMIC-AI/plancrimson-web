@@ -8,7 +8,7 @@ const PrivacyPage = function () {
       <div className="mx-auto max-w-lg space-y-4">
         <h1>Privacy</h1>
         <p>
-          Plan Crimson processes user course selections to provide its service.
+          PlanCrimson processes user course selections to provide its service.
           Users&apos; course selections are stored in Firebase, which is owned
           by Google. You can view their privacy information
           {' '}
@@ -18,7 +18,7 @@ const PrivacyPage = function () {
           .
         </p>
         <p>
-          Plan Crimson requires users to be signed in through their official
+          PlanCrimson requires users to be signed in through their official
           Harvard College Gmail account in order to restrict access to current
           Harvard College students and uniquely identify users. No other user
           information is collected.
