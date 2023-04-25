@@ -10,8 +10,6 @@ import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { ErrorPage } from '@/components/Layout/ErrorPage';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import Calendar from '@/components/SemesterSchedule/Calendar';
-import FadeTransition from '@/components/Utils/FadeTransition';
-
 
 export default function SchedulePage() {
   const userId = Auth.useAuthProperty('uid');

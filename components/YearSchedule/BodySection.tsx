@@ -86,7 +86,7 @@ function BodySection({
   return (
     <div className={classNames(
       'flex-1 flex flex-col relative bg-black md:p-4',
-      showReqs && 'md:rounded-lg md:shadow-lg'
+      showReqs && 'md:rounded-lg md:shadow-lg',
     )}
     >
       <HeaderSection resizeRef={resizeRef} columns={columns} />
@@ -94,7 +94,8 @@ function BodySection({
       <SemestersList
         highlightedRequirement={highlightedRequirement}
         resizeRef={resizeRef}
-        columns={columns} />
+        columns={columns}
+      />
 
       <HiddenSchedules />
     </div>

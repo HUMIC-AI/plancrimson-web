@@ -12,6 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(401).send('Unauthenticated');
     return;
   }
+
   let uid: string;
   try {
     const token = await admin.auth().verifyIdToken(auth.slice('Bearer '.length));
@@ -30,6 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ...outgoingFriends.docs.map((doc) => doc.data().from),
   ];
 
+  // TODO this is really expensive. we should cache this somehow
   const schedules = await admin.firestore().collection('schedules').get();
   const mapProfileToClasses: Record<string, string[]> = { [uid]: [] };
   schedules.docs.forEach((schedule) => {

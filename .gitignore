@@ -41,7 +41,7 @@ firestore-debug.log
 .env.development.local
 .env.test.local
 .env.production.local
-serviceAccountKey.json
+service-key.json
 
 # vercel
 .vercel
