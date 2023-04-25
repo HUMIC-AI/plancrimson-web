@@ -28,11 +28,11 @@ module.exports = {
       black: colors.stone[900],
       white: colors.stone[50],
       percents: {
-        1: colors.sky[200],
-        2: colors.yellow[300],
-        3: colors.green[300],
-        4: colors.stone[200],
-        5: colors.red[300],
+        1: colors.sky[300],
+        2: colors.emerald[300],
+        3: colors.amber[300],
+        4: colors.orange[300],
+        5: colors.rose[300],
       },
       season: {
         spring: colors.teal[50],

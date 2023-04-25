@@ -1,7 +1,7 @@
 import { Disclosure } from '@headlessui/react';
 import React, { useMemo } from 'react';
 import { FaChevronDown, FaExternalLinkAlt } from 'react-icons/fa';
-import {
+import type {
   Evaluation, EvaluationStatistics, HoursStats,
 } from '@/src/lib';
 import { classNames } from '@/src/utils/styles';
@@ -13,7 +13,7 @@ import Percentages from './Percentages';
 function Section({ title, children }: React.PropsWithChildren<{ title: string }>) {
   return (
     <div className="space-y-2">
-      <h4 className="text-base font-bold">{title}</h4>
+      <h3>{title}</h3>
       {children}
     </div>
   );
@@ -33,9 +33,7 @@ function GridHeading({ title, data } : GridProps) {
         <p>{title}</p>
         <p className="text-sm text-gray-dark">
           {data.courseMean?.toFixed(2) || 'NA'}
-          {' '}
-          /
-          {' '}
+          {' // '}
           <Tooltip text="FAS mean" direction="bottom">
             {data.fasMean?.toFixed(2) || 'NA'}
           </Tooltip>
@@ -62,22 +60,20 @@ function DisclosureComponent({
   children,
 }: React.PropsWithChildren<DisclosureComponentProps>) {
   return (
-    <Disclosure as="div" className="rounded-lg border-2 border-gray-dark">
+    <Disclosure as="div" className="rounded-lg">
       {({ open }) => (
         <>
           <Disclosure.Button
             name={heading}
-            className="flex w-full items-center space-x-2 bg-gray-dark px-4 py-1 text-left text-white"
+            className="flex w-full items-center rounded space-x-2 px-2 py-1 text-left hover:bg-gray-light transition-colors"
           >
-            <h4 className="flex-1 text-base font-bold">{heading}</h4>
+            <h4 className="flex-1">{heading}</h4>
             {visibleStats && (
               <span className="flex items-center space-x-4">
                 <span className="whitespace-nowrap">
                   (
                   {visibleStats.courseMean?.toFixed(2) || 'NA'}
-                  {' '}
-                  /
-                  {' '}
+                  {' // '}
                   <Tooltip text="FAS mean" direction="bottom">
                     {visibleStats.fasMean?.toFixed(2) || 'NA'}
                   </Tooltip>
@@ -87,16 +83,18 @@ function DisclosureComponent({
               </span>
             )}
           </Disclosure.Button>
+
           <div
             className={classNames(
-              'rounded-b flex flex-col space-y-4',
-              (visibleStats || open) && 'border-2 p-2',
+              'rounded flex flex-col space-y-4 p-2',
             )}
           >
             {visibleStats && (
               <Percentages categories={visibleStats.votes || null} />
             )}
-            <Disclosure.Panel>{children}</Disclosure.Panel>
+            <Disclosure.Panel>
+              {children}
+            </Disclosure.Panel>
           </div>
         </>
       )}
@@ -207,6 +205,7 @@ export default function EvaluationComponent({ report }: { report: Evaluation | E
           />
 
           <FadeTransition>
+          <Disclosure.Panel as="div" className="space-y-4 p-4">
             <EvaluationBody
               courseEvaluation={courseEvaluation}
               overall={overall}
@@ -215,6 +214,7 @@ export default function EvaluationComponent({ report }: { report: Evaluation | E
               report={Array.isArray(report) ? report : [report]}
               hoursData={hoursData}
             />
+            </Disclosure.Panel>
           </FadeTransition>
         </>
       )}
@@ -237,7 +237,7 @@ function EvaluationBody({
   hoursData: HoursStats | undefined
 }) {
   return (
-    <Disclosure.Panel className="space-y-4 p-4">
+    <>
       <p>
         {courseEvaluation['Course Response Rate']?.invited
         || 'Unknown'}
@@ -306,7 +306,7 @@ function EvaluationBody({
         ) : (
           <p>No comments found</p>
         )}
-    </Disclosure.Panel>
+        </>
   );
 }
 
@@ -328,8 +328,9 @@ function OpenCloseButton({
     >
       <h3 className="font-bold">{buttonTitle}</h3>
       <span className="flex items-center space-x-4">
-        <ExternalLink href={url}>
-          <FaExternalLinkAlt title="open report page" />
+        <ExternalLink href={url} className='hover:bg-gray-light rounded hover:text-gray-dark p-2 transition-colors'>
+          <span className="sr-only">Open report page</span>
+          <FaExternalLinkAlt title="Open report page" />
         </ExternalLink>
         <div
           className={classNames(

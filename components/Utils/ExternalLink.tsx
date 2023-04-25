@@ -1,23 +1,21 @@
-import React from 'react';
+import { PropsWithChildren } from 'react';
 
 type Props = {
   href: string;
+  className?: string;
 };
 
-const ExternalLink: React.FC<React.PropsWithChildren<Props>> = function ({ href, children }) {
+export default function ExternalLink ({ href, children, className = "interactive font-bold" }: PropsWithChildren<Props>) {
   const isMail = href.startsWith('mailto');
   return (
-    // eslint-disable-next-line react/jsx-no-target-blank
     <a
       href={href}
       target={isMail ? undefined : '_blank'}
       rel={isMail ? undefined : 'noreferrer'}
-      className="interactive font-bold"
+      className={className}
       onClick={(ev) => ev.stopPropagation()}
     >
       {children}
     </a>
   );
 };
-
-export default ExternalLink;

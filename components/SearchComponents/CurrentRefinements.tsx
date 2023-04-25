@@ -28,7 +28,7 @@ function CurrentRefinementsComponent({
 
   const refinementElements = getUniqueRefinements(refinements).map(([id, items]) => (
     <Fragment key={id}>
-      <h4 className="w-min font-medium md:min-w-max">
+      <h4 className="w-min md:min-w-max">
         {adjustAttr(id)}
         :
       </h4>
