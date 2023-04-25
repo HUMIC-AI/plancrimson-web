@@ -6,7 +6,7 @@ import { FaAngleDown } from 'react-icons/fa';
 import { Auth, Schedules, Settings } from '@/src/features';
 import { useAppDispatch } from '@/src/utils/hooks';
 import { classNames } from '@/src/utils/styles';
-import { Season } from 'plancrimson-utils';
+import { Season } from '@/src/lib';
 import FadeTransition from '../Utils/FadeTransition';
 import { ButtonTitle } from './ButtonTitle';
 import { StyledOption } from './StyledOption';

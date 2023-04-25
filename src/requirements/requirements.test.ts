@@ -2,7 +2,7 @@ import { getSchoolYear } from './util';
 // import HONORS_SAMPLES from './cs/sample/honors.json';
 // import validateSchedules from '.';
 // import honorsRequirements from './cs/honors';
-// import { Schedule, Schedules, UserData } from 'plancrimson-utils';
+// import { Schedule, Schedules, UserData } from '@/src/lib'
 
 describe('getSchoolYear', () => {
   it('works on a fall semester', () => {

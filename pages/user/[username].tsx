@@ -61,12 +61,12 @@ export default function () {
   // need to put UserPage inside layout to access MeiliSearch context provider
   return (
     <Layout title={pageProfile.username ?? 'User'} className="mx-auto w-full max-w-screen-md flex-1 p-8">
-      <UserPage username={username} pageProfile={pageProfile} uid={uid} />
+      <UserPage pageProfile={pageProfile} uid={uid} />
     </Layout>
   );
 }
 
-function UserPage({ username, pageProfile, uid }: { uid: string, username: string, pageProfile: WithId<UserProfile> }) {
+function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserProfile> }) {
   const scheduleMap = useAppSelector(Schedules.selectSchedules);
   const [refresh, setRefresh] = useState(true);
 

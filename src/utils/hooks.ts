@@ -5,7 +5,7 @@ import {
   getDoc, getDocFromCache,
 } from 'firebase/firestore';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import { allTruthy } from 'plancrimson-utils';
+import { allTruthy } from '@/src/lib';
 import type { AppDispatch, RootState } from '../store';
 import Firestore from '../schema';
 import { UserProfile, WithId } from '../types';

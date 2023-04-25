@@ -2,7 +2,7 @@ import React from 'react';
 import {
   Season,
   Semester,
-} from 'plancrimson-utils';
+} from '@/src/lib';
 import { Requirement } from '@/src/requirements/util';
 import { Viability } from '@/src/types';
 import { classNames } from '@/src/utils/styles';

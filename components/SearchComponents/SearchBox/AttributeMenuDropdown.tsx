@@ -1,8 +1,8 @@
 import { Disclosure } from '@headlessui/react';
 import { FaTimes, FaBars } from 'react-icons/fa';
 import React, { Fragment } from 'react';
-import { ATTRIBUTE_DESCRIPTIONS, meiliAttributes } from 'plancrimson-utils';
-import type { Class } from 'plancrimson-utils';
+import { ATTRIBUTE_DESCRIPTIONS, meiliAttributes } from '@/src/lib';
+import type { Class } from '@/src/lib';
 import { classNames } from '@/src/utils/styles';
 import Attribute from '../AttributeMenu/Attribute';
 

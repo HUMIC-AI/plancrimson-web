@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { getUniqueSemesters, compareSemesters } from 'plancrimson-utils';
+import { getUniqueSemesters, compareSemesters } from '@/src/lib';
 import {
   Planner, Profile, Schedules, Settings,
 } from '@/src/features';

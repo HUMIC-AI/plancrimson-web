@@ -3,7 +3,7 @@ import { selectSchedules } from '@/src/features/schedules';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { classNames } from '@/src/utils/styles';
 import { Menu } from '@headlessui/react';
-import type { Term } from 'plancrimson-utils';
+import type { Term } from '@/src/lib';
 import { useState } from 'react';
 import { FaCalendar, FaCog, FaEdit } from 'react-icons/fa';
 import FadeTransition from '@/components/Utils/FadeTransition';

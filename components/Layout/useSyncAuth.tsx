@@ -13,7 +13,7 @@ import {
 import Firestore from '@/src/schema';
 import { extractUsername, getInitialSettings } from '@/src/utils/utils';
 import GraduationYearDialog from '@/components/Layout/GraduationYearDialog';
-import { getUniqueSemesters } from 'plancrimson-utils';
+import { getUniqueSemesters } from '@/src/lib';
 
 
 export async function signInUser() {

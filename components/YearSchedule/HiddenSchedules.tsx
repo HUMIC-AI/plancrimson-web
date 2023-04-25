@@ -1,5 +1,5 @@
 import React from 'react';
-import { Term, termToSemester } from 'plancrimson-utils';
+import { Term, termToSemester } from '@/src/lib';
 import { Planner, Schedules } from '@/src/features';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 

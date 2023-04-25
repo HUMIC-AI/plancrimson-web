@@ -3,7 +3,7 @@ import type { RefinementListExposed, RefinementListProvided } from 'react-instan
 import { connectRefinementList } from 'react-instantsearch-dom';
 import {
   getSubjectColor, Subject, subjects, TERM_TO_SEASON,
-} from 'plancrimson-utils';
+} from '@/src/lib';
 import { classNames } from '@/src/utils/styles';
 import { alertSignIn } from './SearchBox/searchUtils';
 import ClientOrDemo from './ClientOrDemo';

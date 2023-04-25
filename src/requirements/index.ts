@@ -1,5 +1,5 @@
-import type { ExtendedClass } from 'plancrimson-utils';
-import { allTruthy, getClassId } from 'plancrimson-utils';
+import type { ExtendedClass } from '@/src/lib';
+import { allTruthy, getClassId } from '@/src/lib';
 import type { ClassCache } from '../features/classCache';
 import collegeRequirements from './college';
 import basicRequirements from './cs/basic';

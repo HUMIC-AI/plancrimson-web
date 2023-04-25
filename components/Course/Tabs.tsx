@@ -1,6 +1,6 @@
 import { classNames } from '@/src/utils/styles';
 import { Tab } from '@headlessui/react';
-import { ExtendedClass, allTruthy } from 'plancrimson-utils';
+import { ExtendedClass, allTruthy } from '@/src/lib';
 import React from 'react';
 import EvaluationsPanel from './Tabs/EvaluationsPanel';
 import InfoPanel from './Tabs/InfoPanel';

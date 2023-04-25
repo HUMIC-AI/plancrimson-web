@@ -6,7 +6,7 @@ import {
 import {
   ExtendedClass,
   getClassId, departmentImages, getSemester,
-} from 'plancrimson-utils';
+} from '@/src/lib';
 import { checkViable } from '@/src/searchSchedule';
 import { useModal } from '@/src/context/modal';
 import { alertUnexpectedError, useAppDispatch, useAppSelector } from '@/src/utils/hooks';

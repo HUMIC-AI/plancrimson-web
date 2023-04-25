@@ -1,6 +1,6 @@
 import React from 'react';
 import { useModal } from '@/src/context/modal';
-import { TERM_TO_SEASON } from 'plancrimson-utils';
+import { TERM_TO_SEASON } from '@/src/lib';
 import { classNames } from '@/src/utils/styles';
 import { Schedule } from '@/src/types';
 import { ModalWrapper } from './CourseSearchModal';

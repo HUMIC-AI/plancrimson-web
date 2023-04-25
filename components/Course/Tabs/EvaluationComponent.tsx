@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { FaChevronDown, FaExternalLinkAlt } from 'react-icons/fa';
 import {
   Evaluation, EvaluationStatistics, HoursStats,
-} from 'plancrimson-utils';
+} from '@/src/lib';
 import { classNames } from '@/src/utils/styles';
 import ExternalLink from '../../Utils/ExternalLink';
 import FadeTransition from '../../Utils/FadeTransition';

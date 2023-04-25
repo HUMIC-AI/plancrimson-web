@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React from 'react';
-import { unsplashParams } from 'plancrimson-utils';
+import { unsplashParams } from '@/src/lib';
 import ExternalLink from '../Utils/ExternalLink';
 
 

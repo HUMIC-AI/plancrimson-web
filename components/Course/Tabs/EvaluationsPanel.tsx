@@ -7,7 +7,7 @@ import {
   ExtendedClass, Evaluation, Season,
   compareSemesters,
   getEvaluationId,
-} from 'plancrimson-utils';
+} from '@/src/lib';
 import EvaluationComponent from './EvaluationComponent';
 
 /**

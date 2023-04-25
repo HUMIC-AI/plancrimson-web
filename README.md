@@ -39,6 +39,12 @@ for easily sending requests to the database.
 - Make sure the right dependencies are being passed!
 - [React strict mode will cause certain effects to be run twice in development mode.](https://react.dev/learn/you-might-not-need-an-effect) To fix this, go to [./next.config.js](./next.config.js) and set `reactStrictMode` to `false`.
 
+## Deployment
+
+Since I'm unwilling to pay for an npm account to use private npm packages (namely for [plancrimson-utils](https://github.com/HUMIC-AI/plancrimson-utils)), at the moment I'm just copying the `/lib` directory there directly into `/src` and ignoring it from [.gitignore](./.gitignore).
+
+Previously [package.json](./package.json) contained the dependency `"plancrimson-utils": "link:../plancrimson-utils"`.
+
 ## Contributing
 
 Contributions are welcome! Fork this repository and make a PR. Below are some details for parts of the tech stack.

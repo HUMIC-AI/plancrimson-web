@@ -2,7 +2,7 @@ import type {
   Concentration,
   DayOfWeek,
   FAILING_GRADES, PASSING_GRADES, Semester, Term,
-} from 'plancrimson-utils';
+} from '@/src/lib';
 
 // ============================== /metadata/metadata ==============================
 

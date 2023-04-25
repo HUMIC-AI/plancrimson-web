@@ -1,4 +1,4 @@
-import { Class, FAILING_GRADES, getClassId } from 'plancrimson-utils';
+import { Class, FAILING_GRADES, getClassId } from '@/src/lib';
 import ExternalLink from '@/components/Utils/ExternalLink';
 import { Requirement, RequirementGroup } from './util';
 import { Grade } from '../types';

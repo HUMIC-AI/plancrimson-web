@@ -1,4 +1,4 @@
-import { csTags, Class, allTruthy } from 'plancrimson-utils';
+import { csTags, Class, allTruthy } from '@/src/lib';
 import { Requirement } from '../util';
 
 export function hasTag(cls: Class, tag: CSCourseTag) {

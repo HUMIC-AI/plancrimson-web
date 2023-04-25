@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { FaPlus } from 'react-icons/fa';
-import { findConflicts, allTruthy } from 'plancrimson-utils';
+import { findConflicts, allTruthy } from '@/src/lib';
 import { useAppSelector, useElapsed } from '@/src/utils/hooks';
 import { Requirement } from '@/src/requirements/util';
 import {

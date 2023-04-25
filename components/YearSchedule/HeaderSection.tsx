@@ -5,7 +5,7 @@ import {
   FaArrowsAltH,
   FaCog,
 } from 'react-icons/fa';
-import { allTruthy } from 'plancrimson-utils';
+import { allTruthy } from '@/src/lib';
 import { useModal } from '@/src/context/modal';
 import { Planner, Schedules, Settings } from '@/src/features';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';

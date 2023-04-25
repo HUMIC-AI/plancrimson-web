@@ -1,4 +1,4 @@
-import { departmentImages, unsplashParams } from 'plancrimson-utils';
+import { departmentImages, unsplashParams } from '@/src/lib';
 import ExternalLink from '@/components/Utils/ExternalLink';
 import Layout from '@/components/Layout/Layout';
 

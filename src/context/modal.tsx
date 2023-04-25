@@ -3,8 +3,8 @@ import {
   createContext, Dispatch, PropsWithChildren, ReactNode, SetStateAction, useContext, useMemo, useState,
 } from 'react';
 import qs from 'qs';
-import type { ExtendedClass } from 'plancrimson-utils';
-import { getSemester } from 'plancrimson-utils';
+import type { ExtendedClass } from '@/src/lib';
+import { getSemester } from '@/src/lib';
 import CourseTabs from '@/components/Course/Tabs';
 import ExternalLink from '@/components/Utils/ExternalLink';
 

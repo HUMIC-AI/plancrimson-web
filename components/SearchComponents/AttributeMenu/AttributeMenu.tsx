@@ -1,4 +1,4 @@
-import { meiliAttributes, adjustAttr } from 'plancrimson-utils';
+import { meiliAttributes, adjustAttr } from '@/src/lib';
 import { FaChevronLeft } from 'react-icons/fa';
 import { useAppDispatch } from '@/src/utils/hooks';
 import { Planner } from '@/src/features';

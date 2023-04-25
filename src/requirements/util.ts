@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Class, Semester } from 'plancrimson-utils';
+import type { Class, Semester } from '@/src/lib';
 import type { Schedule, UserProfile } from '../types';
 
 /**

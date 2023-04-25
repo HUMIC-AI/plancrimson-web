@@ -4,7 +4,7 @@ import React, {
 import {
   FaPlus,
 } from 'react-icons/fa';
-import type { Term } from 'plancrimson-utils';
+import type { Term } from '@/src/lib';
 import {
   Auth, Planner, Profile, Schedules,
 } from '@/src/features';

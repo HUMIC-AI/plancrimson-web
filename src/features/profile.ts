@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Concentration } from 'plancrimson-utils';
+import { Concentration } from '@/src/lib';
 import type { RootState } from '../store';
 import type { UserProfile } from '../types';
 

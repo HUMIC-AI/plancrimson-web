@@ -1,5 +1,5 @@
 import { EventAttributes } from 'ics';
-import { Class, ExtendedClass, DayOfWeek } from 'plancrimson-utils';
+import { Class, ExtendedClass, DayOfWeek } from '@/src/lib';
 
 function getUid(cls: ExtendedClass) {
   return `${(cls.id + cls.IS_SCL_MEETING_PAT + cls.IS_SCL_STRT_TM_DEC + cls.IS_SCL_END_TM_DEC).replace(/[^a-zA-Z0-9]/g, '-')}@plancrimson.xyz`;

@@ -1,6 +1,6 @@
 import {
   Class, getSemester, findConflicts, allTruthy, getClassId, seasPlan,
-} from 'plancrimson-utils';
+} from '@/src/lib';
 import { ClassCache } from './features/classCache';
 import { getSchoolYear } from './requirements/util';
 import { Schedule, Viability } from './types';

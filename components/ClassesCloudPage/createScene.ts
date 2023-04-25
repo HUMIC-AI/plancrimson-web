@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { subjectNames } from 'plancrimson-utils';
+import { subjectNames } from '@/src/lib';
 
 type RGB = readonly [number, number, number];
 

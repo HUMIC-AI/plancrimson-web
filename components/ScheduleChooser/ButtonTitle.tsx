@@ -3,7 +3,7 @@ import { FaCheckSquare, FaSquare } from 'react-icons/fa';
 import { Schedules, Settings } from '@/src/features';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { classNames } from '@/src/utils/styles';
-import { titleContainsTerm } from 'plancrimson-utils';
+import { titleContainsTerm } from '@/src/lib';
 
 interface ButtonTitleProps {
   showTerm: 'on' | 'off' | 'auto';

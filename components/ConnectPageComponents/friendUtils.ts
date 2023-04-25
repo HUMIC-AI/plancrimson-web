@@ -1,7 +1,7 @@
 import {
   setDoc, deleteDoc, onSnapshot, query, where,
 } from 'firebase/firestore';
-import { allTruthy } from 'plancrimson-utils';
+import { allTruthy } from '@/src/lib';
 import { WithId, FriendRequest } from '@/src/types';
 import { useProfiles } from '@/src/utils/hooks';
 import { useState, useEffect, useMemo } from 'react';

@@ -2,7 +2,7 @@ import {
   getDocs, onSnapshot, query, QueryConstraint, QuerySnapshot,
 } from 'firebase/firestore';
 import { useCallback, useEffect } from 'react';
-import { compareSemesters, Semester } from 'plancrimson-utils';
+import { compareSemesters, Semester } from '@/src/lib';
 import { ClassCache, Schedules } from '../features';
 import { alertUnexpectedError, useAppDispatch } from './hooks';
 import { useMeiliClient } from '../context/meili';

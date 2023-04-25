@@ -3,7 +3,7 @@ import {
   collection, getFirestore, onSnapshot, query, where,
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import type { ExtendedClass } from 'plancrimson-utils';
+import type { ExtendedClass } from '@/src/lib';
 import type { Schedule } from '@/src/types';
 import { useFriends } from '@/components/ConnectPageComponents/friendUtils';
 import { Auth } from '@/src/features';
@@ -43,8 +43,8 @@ function SocialPanel({ course, userId }: Props & { userId: string }) {
       ));
     });
 
-    const dispose = collections.map((collection) => {
-      const listener = onSnapshot(collection, (snap) => {
+    const dispose = collections.map((c) => {
+      const listener = onSnapshot(c, (snap) => {
         const entries = snap.docs.map((doc) => [doc.id, doc.data()] as [string, Schedule]);
         setPublicSchedules((schedules) => ({ ...schedules, ...Object.fromEntries(entries) }));
       }, (err) => console.error(err));

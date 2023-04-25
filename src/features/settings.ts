@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { deleteField, updateDoc } from 'firebase/firestore';
-import type { Term } from 'plancrimson-utils';
+import type { Term } from '@/src/lib';
 import Schema from '../schema';
 import type { AppDispatch, RootState } from '../store';
 import { CustomTimeRecord, UserSettings } from '../types';

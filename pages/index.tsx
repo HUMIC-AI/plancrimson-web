@@ -3,7 +3,7 @@ import {
 } from 'react';
 import {
   allTruthy,
-} from 'plancrimson-utils';
+} from '@/src/lib';
 import {
   Auth, ClassCache, Planner, Profile, Schedules, Settings,
 } from '@/src/features';

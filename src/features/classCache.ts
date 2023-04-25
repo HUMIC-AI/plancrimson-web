@@ -4,8 +4,8 @@ import {
   createSlice, PayloadAction,
 } from '@reduxjs/toolkit';
 import axios from 'axios';
-import type { ExtendedClass } from 'plancrimson-utils';
-import { allTruthy } from 'plancrimson-utils';
+import type { ExtendedClass } from '@/src/lib';
+import { allTruthy } from '@/src/lib';
 import { getMeiliApiKey, getMeiliHost } from '@/src/context/meili';
 import type { AppDispatch, RootState } from '../store';
 

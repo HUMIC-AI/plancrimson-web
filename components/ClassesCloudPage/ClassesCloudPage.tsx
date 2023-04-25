@@ -4,7 +4,7 @@ import {
 import Layout from '@/components/Layout/Layout';
 import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
 import { useModal } from '@/src/context/modal';
-import { Subject, getClassId } from 'plancrimson-utils';
+import { Subject, getClassId } from '@/src/lib';
 import { alertUnexpectedError, useAppDispatch } from '@/src/utils/hooks';
 import { ClassCache } from '@/src/features';
 import { useMeiliClient } from '@/src/context/meili';

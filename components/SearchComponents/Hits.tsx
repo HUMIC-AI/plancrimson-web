@@ -4,7 +4,7 @@ import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import {
   sampleCourses, ExtendedClass, DAY_SHORT, getClassId,
-} from 'plancrimson-utils';
+} from '@/src/lib';
 import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
 import useChosenScheduleContext from '@/src/context/selectedSchedule';
 import useSearchState from '@/src/context/searchState';

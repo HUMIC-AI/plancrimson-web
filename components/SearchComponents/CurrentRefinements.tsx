@@ -7,7 +7,7 @@ import {
   adjustAttr,
   compareItems,
   compareWeekdays,
-} from 'plancrimson-utils';
+} from '@/src/lib';
 import { classNames } from '@/src/utils/styles';
 import { alertSignIn } from './SearchBox/searchUtils';
 import ClientOrDemo from './ClientOrDemo';

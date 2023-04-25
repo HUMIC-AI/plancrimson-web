@@ -13,7 +13,7 @@ import {
   FaHourglassEnd,
   FaExchangeAlt,
 } from 'react-icons/fa';
-import { departments, ExtendedClass } from 'plancrimson-utils';
+import { departments, ExtendedClass } from '@/src/lib';
 import {
   Instructors,
   DaysOfWeek,

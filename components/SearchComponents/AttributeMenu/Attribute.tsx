@@ -1,6 +1,6 @@
 import { Disclosure } from '@headlessui/react';
 import React, { useState } from 'react';
-import { compareItems, compareWeekdays } from 'plancrimson-utils';
+import { compareItems, compareWeekdays } from '@/src/lib';
 import { classNames } from '@/src/utils/styles';
 import RefinementList from '../RefinementList';
 

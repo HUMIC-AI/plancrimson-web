@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
   deleteDoc, getDoc, setDoc, updateDoc,
 } from 'firebase/firestore';
-import { Semester } from 'plancrimson-utils';
+import { Semester } from '@/src/lib';
 import { v4 as uuidv4 } from 'uuid';
 import Firestore from '../schema';
 import type { AppDispatch, RootState } from '../store';

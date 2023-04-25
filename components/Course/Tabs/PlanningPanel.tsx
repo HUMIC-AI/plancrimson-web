@@ -7,7 +7,7 @@ import {
   FaExclamationCircle,
   FaSmile,
 } from 'react-icons/fa';
-import { ExtendedClass, getClassId } from 'plancrimson-utils';
+import { ExtendedClass, getClassId } from '@/src/lib';
 import { ClassCache, Profile, Schedules } from '@/src/features';
 import { useAppSelector, useAppDispatch } from '@/src/utils/hooks';
 import Tooltip from '@/components/Utils/Tooltip';
