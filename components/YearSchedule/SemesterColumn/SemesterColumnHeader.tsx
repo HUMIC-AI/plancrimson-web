@@ -116,7 +116,7 @@ function TitleComponent({ scheduleId: id, term, setEditing }: Props) {
 
   // don't show the dropdown if all schedules are being shown
   if (semesterFormat === 'all') {
-    return <p className="text-center text-lg font-medium">{title}</p>
+    return <p className="text-center text-lg font-medium">{title}</p>;
   }
 
   return (

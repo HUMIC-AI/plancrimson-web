@@ -11,10 +11,10 @@ import { Planner, Schedules, Settings } from '@/src/features';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { downloadJson } from '@/src/utils/utils';
 import type { DownloadPlan, ListOfScheduleIdOrSemester } from '@/src/types';
+import { isListOfScheduleIds } from '@/src/utils/schedules';
 import UploadForm from '../UploadForm';
 import CardExpandToggler from './CardExpandToggler';
 import { WithResizeRef } from './PlanningSection';
-import { isListOfScheduleIds } from '@/src/utils/schedules';
 
 /**
  * The header section of the planning page.
@@ -94,7 +94,7 @@ function OptionsMenu({ columns }: { columns: ListOfScheduleIdOrSemester }) {
   const scheduleForSemester = (semester: Semester) => {
     const id = chosenSchedules[semesterToTerm(semester)];
     return id ? userSchedules[id] ?? null : null;
-  }
+  };
 
   const downloadData: DownloadPlan = {
     id: semesterFormat === 'sample'

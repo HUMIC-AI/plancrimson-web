@@ -34,7 +34,7 @@ const defaultItems = [
  * E.g. for the "SUBJECT" attribute, this will render a list containing
  * "AFRAMER (88), AFRIKAAN (2), etc" with a checkbox beside each one.
  */
-export function RefinementListComponent({
+function RefinementListComponent({
   items = defaultItems,
   refine = alertSignIn,
   showSubjectColor = false,

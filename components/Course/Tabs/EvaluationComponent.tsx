@@ -61,43 +61,39 @@ function DisclosureComponent({
 }: React.PropsWithChildren<DisclosureComponentProps>) {
   return (
     <Disclosure as="div" className="rounded-lg">
-      {({ open }) => (
-        <>
-          <Disclosure.Button
-            name={heading}
-            className="flex w-full items-center space-x-2 rounded px-2 py-1 text-left transition-colors hover:bg-gray-light"
-          >
-            <h4 className="flex-1">{heading}</h4>
-            {visibleStats && (
-              <span className="flex items-center space-x-4">
-                <span className="whitespace-nowrap">
-                  (
-                  {visibleStats.courseMean?.toFixed(2) || 'NA'}
-                  {' // '}
-                  <Tooltip text="FAS mean" direction="bottom">
-                    {visibleStats.fasMean?.toFixed(2) || 'NA'}
-                  </Tooltip>
-                  )
-                </span>
-                <FaChevronDown />
-              </span>
-            )}
-          </Disclosure.Button>
+      <Disclosure.Button
+        name={heading}
+        className="flex w-full items-center space-x-2 rounded px-2 py-1 text-left transition-colors hover:bg-gray-light"
+      >
+        <h4 className="flex-1">{heading}</h4>
+        {visibleStats && (
+          <span className="flex items-center space-x-4">
+            <span className="whitespace-nowrap">
+              (
+              {visibleStats.courseMean?.toFixed(2) || 'NA'}
+              {' // '}
+              <Tooltip text="FAS mean" direction="bottom">
+                {visibleStats.fasMean?.toFixed(2) || 'NA'}
+              </Tooltip>
+              )
+            </span>
+            <FaChevronDown />
+          </span>
+        )}
+      </Disclosure.Button>
 
-          <div
-            className={classNames(
-              'rounded flex flex-col space-y-4 p-2',
-            )}
-          >
-            {visibleStats && (
-              <Percentages categories={visibleStats.votes || null} />
-            )}
-            <Disclosure.Panel>
-              {children}
-            </Disclosure.Panel>
-          </div>
-        </>
-      )}
+      <div
+        className={classNames(
+          'rounded flex flex-col space-y-4 p-2',
+        )}
+      >
+        {visibleStats && (
+          <Percentages categories={visibleStats.votes || null} />
+        )}
+        <Disclosure.Panel>
+          {children}
+        </Disclosure.Panel>
+      </div>
     </Disclosure>
   );
 }
