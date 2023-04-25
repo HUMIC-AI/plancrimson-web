@@ -113,3 +113,5 @@ export type ScheduleId = string;
 export type ScheduleIdOrSemester = Semester | ScheduleId;
 
 export type ListOfScheduleIdOrSemester = ScheduleId[] | Semester[];
+
+export type CourseLevel = 'all' | 'undergrad' | 'grad';

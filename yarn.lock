@@ -4992,7 +4992,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-import@npm:^2.26.0":
+"eslint-plugin-import@npm:^2.26.0, eslint-plugin-import@npm:^2.27.5":
   version: 2.27.5
   resolution: "eslint-plugin-import@npm:2.27.5"
   dependencies:
@@ -5017,7 +5017,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-jsx-a11y@npm:^6.5.1":
+"eslint-plugin-jsx-a11y@npm:^6.5.1, eslint-plugin-jsx-a11y@npm:^6.7.1":
   version: 6.7.1
   resolution: "eslint-plugin-jsx-a11y@npm:6.7.1"
   dependencies:
@@ -5043,7 +5043,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-react-hooks@npm:^4.5.0":
+"eslint-plugin-react-hooks@npm:^4.5.0, eslint-plugin-react-hooks@npm:^4.6.0":
   version: 4.6.0
   resolution: "eslint-plugin-react-hooks@npm:4.6.0"
   peerDependencies:
@@ -5052,7 +5052,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-react@npm:^7.31.7":
+"eslint-plugin-react@npm:^7.31.7, eslint-plugin-react@npm:^7.32.2":
   version: 7.32.2
   resolution: "eslint-plugin-react@npm:7.32.2"
   dependencies:
@@ -9048,12 +9048,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"plancrimson-utils@portal:../plancrimson-utils::locator=plancrimson-web%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "plancrimson-utils@portal:../plancrimson-utils::locator=plancrimson-web%40workspace%3A."
-  languageName: node
-  linkType: soft
-
 "plancrimson-web@workspace:.":
   version: 0.0.0-use.local
   resolution: "plancrimson-web@workspace:."
@@ -9088,6 +9082,10 @@ __metadata:
     eslint-config-airbnb: ^19.0.4
     eslint-config-airbnb-typescript: ^17.0.0
     eslint-config-next: ^13.3.1
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-jsx-a11y: ^6.7.1
+    eslint-plugin-react: ^7.32.2
+    eslint-plugin-react-hooks: ^4.6.0
     eslint-plugin-tailwindcss: ^3.11.0
     firebase: ^9.20.0
     firebase-admin: ^11.7.0
@@ -9095,7 +9093,6 @@ __metadata:
     ics: ^3.1.0
     meilisearch: ^0.32.3
     next: ^13.3.1
-    plancrimson-utils: "portal:../plancrimson-utils"
     postcss: ^8.4.23
     qs: ^6.11.1
     react: ^18.2.0

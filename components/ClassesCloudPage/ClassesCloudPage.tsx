@@ -8,6 +8,7 @@ import { Subject, getClassId } from '@/src/lib';
 import { alertUnexpectedError, useAppDispatch } from '@/src/utils/hooks';
 import { ClassCache } from '@/src/features';
 import { useMeiliClient } from '@/src/context/meili';
+import type { CourseLevel } from '@/src/types';
 import {
   createScene, createPoints, createControls, createMouseTracker, createRaycaster, syncWindow,
 } from './createScene';
@@ -20,6 +21,7 @@ type Props = {
   autoRotate?: number;
   interactive?: boolean;
   particleSize?: number;
+  level?: CourseLevel;
 };
 
 export default function ClassesCloudPage({ children, ...props }: PropsWithChildren<Props>) {
@@ -42,6 +44,7 @@ function ClassesCloud({
   autoRotate = 0,
   interactive = false,
   particleSize = 1,
+  level = 'all',
 }: Props) {
   const dispatch = useAppDispatch();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -49,7 +52,7 @@ function ClassesCloud({
   const clickTimeout = useRef<ReturnType<typeof setTimeout>>();
   const gtSm = useBreakpoint(breakpoints.sm);
   const { showCourse } = useModal();
-  const { positions, courses } = useData();
+  const { positions, courses } = useData(level);
   const { client } = useMeiliClient();
 
   // if on mobile, use orbit controls instead of track controls
@@ -140,25 +143,32 @@ function ClassesCloud({
   );
 }
 
-function useData() {
+const DATA_PATHS: Record<CourseLevel, [string, string]> = {
+  undergrad: ['/tsne-undergrad.json', '/courses-undergrad.json'],
+  all: ['/tsne.json', '/courses.json'],
+  grad: ['/tsne-grad.json', '/courses-grad.json'],
+};
+
+function useData(level: CourseLevel) {
   const [positions, setPositions] = useState<[number, number, number][] | null>(null);
   const [courses, setCourses] = useState<[string, Subject][] | null>(null);
 
   useEffect(() => {
     console.info('fetching data');
+    const [tsnePath, coursesPath] = DATA_PATHS[level];
 
-    fetch('/tsne.json')
+    fetch(tsnePath)
       .then((res) => res.json())
       .then((data) => {
         setPositions(data);
       });
 
-    fetch('/courses.json')
+    fetch(coursesPath)
       .then((res) => res.json())
       .then((data) => {
         setCourses(data);
       });
-  }, []);
+  }, [level]);
 
   return { positions, courses };
 }
