@@ -27,7 +27,7 @@ export default function Percentages({ categories: allCategories }: Props) {
         <div
               // eslint-disable-next-line react/no-array-index-key
           key={i}
-          className="group relative h-full min-w-max flex-initial text-center first:rounded-l-lg last:rounded-r-lg"
+          className="group/percents relative h-full min-w-max flex-initial text-center first:rounded-l-lg last:rounded-r-lg"
           style={{ flexBasis: `${(rec / total) * 100}%` }}
         >
           <span
@@ -40,7 +40,7 @@ export default function Percentages({ categories: allCategories }: Props) {
           >
             {rec}
           </span>
-          <span className="absolute bottom-full left-1/2 mb-2 hidden w-28 -translate-x-1/2 rounded-md bg-black px-2 py-1 text-white group-hover:block">
+          <span className="absolute bottom-full left-1/2 mb-2 hidden w-28 -translate-x-1/2 rounded-md bg-black px-2 py-1 text-white group-hover/percents:block">
             {`${rec} students voted ${allCategories.length - i}/${allCategories.length}`}
           </span>
         </div>

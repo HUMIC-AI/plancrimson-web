@@ -98,10 +98,10 @@ export function SuggestionForm() {
         />
         <button
           type="submit"
-          className="group relative ml-2 rounded bg-black/30 p-2 transition-colors hover:bg-black/50"
+          className="group/email relative ml-2 rounded bg-black/30 p-2 transition-colors hover:bg-black/50"
         >
           <FaEnvelope />
-          <span className="absolute right-0 top-full z-10 mt-2 hidden w-32 rounded bg-black/80 p-2 text-sm text-white group-hover:block">
+          <span className="absolute right-0 top-full z-10 mt-2 hidden w-32 rounded bg-black/80 p-2 text-sm text-white group-hover/email:block">
             Your email will be recorded when making a suggestion.
           </span>
         </button>

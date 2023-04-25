@@ -29,7 +29,7 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
     <Menu as="div" className="relative flex flex-col items-center px-2">
       {({ open }) => (
         <>
-          <div className="group relative mx-4 p-2">
+          <div className="group/column relative mx-4 p-2">
             {(schedule && editing) ? (
               <EditNameForm
                 title={schedule.title}
@@ -48,7 +48,7 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
 
             <Menu.Button className={classNames(
               'absolute left-full top-1/2 -translate-y-1/2 transition',
-              !open && 'opacity-0 group-hover:opacity-100 hover:text-accent',
+              !open && 'opacity-0 group-hover/column:opacity-100 hover:text-accent',
             )}
             >
               <FaCog />
