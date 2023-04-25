@@ -28,7 +28,7 @@
   }
 
   .menu-button {
-    @apply flex w-full items-center rounded px-1 transition hover:bg-gray-dark/50;
+    @apply flex w-full items-center px-1 transition hover:bg-gray-dark/50;
   }
 
   .menu-dropdown {

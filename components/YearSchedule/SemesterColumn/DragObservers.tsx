@@ -2,6 +2,7 @@ import {
   MutableRefObject, useRef, useState, useEffect,
 } from 'react';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import FadeTransition from '@/components/Utils/FadeTransition';
 import { useDragAndDropContext } from './DragAndDrop';
 
 export function useObserver(resizeRef: MutableRefObject<HTMLDivElement>) {
@@ -72,7 +73,7 @@ export function DragObservers({
 
   return (
     <>
-      {!leftIntersecting && (
+      <FadeTransition show={!leftIntersecting}>
         <div
           className="absolute inset-y-0 left-0 z-10 flex w-1/6 justify-center bg-black/30 pt-4 text-4xl text-white"
           onDragOver={() => {
@@ -81,9 +82,9 @@ export function DragObservers({
         >
           <FaChevronLeft />
         </div>
-      )}
+      </FadeTransition>
 
-      {!rightIntersecting && (
+      <FadeTransition show={!rightIntersecting}>
         <div
           className="absolute inset-y-0 right-0 z-10 flex w-1/6 justify-center bg-black/30 pt-4 text-4xl text-white"
           onDragOver={() => {
@@ -92,7 +93,7 @@ export function DragObservers({
         >
           <FaChevronRight />
         </div>
-      )}
+      </FadeTransition>
     </>
   );
 }

@@ -34,7 +34,7 @@ function Wrapper({
       {onClick ? (
         <button
           type="button"
-          className="menu-button"
+          className="menu-button rounded"
           onClick={onClick}
         >
           {children}
@@ -42,7 +42,7 @@ function Wrapper({
       ) : (
         <Link
           href={href}
-          className="menu-button"
+          className="menu-button rounded"
         >
           {children}
         </Link>

@@ -121,13 +121,13 @@ function TitleComponent({ scheduleId: id, term, setEditing }: Props) {
         {(id && id in schedules) ? schedules[id].title : 'None'}
       </Listbox.Button>
       <FadeTransition>
-        <Listbox.Options className="menu-dropdown absolute inset-x-0 top-full z-10 mt-2">
+        <Listbox.Options className="menu-dropdown absolute top-full z-10 mt-2 w-max divide-y">
           {termSchedules.map((schedule) => schedule.id !== justCreated && (
-            <Listbox.Option key={schedule.id} value={schedule.id} className="menu-button select-none">
+            <Listbox.Option key={schedule.id} value={schedule.id} className="menu-button select-none first:rounded-t">
               {schedule.title}
             </Listbox.Option>
           ))}
-          <Listbox.Option value={null} className="menu-button select-none">
+          <Listbox.Option value={null} className="menu-button select-none rounded-b">
             Create new
           </Listbox.Option>
         </Listbox.Options>
