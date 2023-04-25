@@ -5,6 +5,7 @@ import React, { useEffect } from 'react';
 import {
   GoogleAuthProvider, User, getAuth, onAuthStateChanged, signInWithCredential, signInWithPopup,
 } from 'firebase/auth';
+import { getAnalytics, setUserId } from 'firebase/analytics';
 import { useAppDispatch } from '@/src/utils/hooks';
 import { useModal } from '@/src/context/modal';
 import {
@@ -14,7 +15,6 @@ import Firestore from '@/src/schema';
 import { extractUsername, getInitialSettings } from '@/src/utils/utils';
 import GraduationYearDialog from '@/components/Layout/GraduationYearDialog';
 import { getUniqueSemesters } from '@/src/lib';
-import { getDefaultSchedule } from '@/src/utils/schedules';
 
 
 export async function signInUser() {
@@ -52,10 +52,13 @@ export function useSyncAuth() {
   const { showContents } = useModal();
 
   // create the listener for the authentication state change
+  // updates all of the relevant redux state when the user logs in or out
   useEffect(() => {
     const unsub = onAuthStateChanged(
       auth,
       async (user) => {
+        const analytics = getAnalytics();
+
         if (user === null) {
           console.info('signed out');
           // reset all of the local state
@@ -63,6 +66,7 @@ export function useSyncAuth() {
           dispatch(Settings.overwriteSettings(getInitialSettings()));
           dispatch(Profile.signOut());
           dispatch(Schedules.overwriteSchedules([]));
+          setUserId(analytics, null);
           return;
         }
 
@@ -71,11 +75,11 @@ export function useSyncAuth() {
 
         dispatch(Auth.setAuthInfo({ uid, email }));
         dispatch(Profile.setPhotoUrl(user.photoURL));
+        dispatch(Profile.setUsername(extractUsername(email)));
+        setUserId(analytics, uid);
 
         const profileRef = Firestore.profile(uid);
         const profile = await getDoc(profileRef);
-
-        dispatch(Profile.setUsername(extractUsername(email)));
 
         // if the user doesn't have a profile,
         // prompt them for their graduation year and create one
@@ -169,7 +173,7 @@ async function handleSubmit(user: User, classYear: number) {
   // create the default schedules and choose them for each semester
   const defaultSemesters = getUniqueSemesters(classYear);
   const promises = defaultSemesters.map(async ({ year, season }) => {
-    const schedule = getDefaultSchedule({ year, season }, user.uid);
+    const schedule = Schedules.getDefaultSchedule({ year, season }, user.uid);
     await setDoc(Firestore.schedule(schedule.id), schedule);
     return schedule;
   });

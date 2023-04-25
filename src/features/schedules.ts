@@ -1,15 +1,14 @@
-/* eslint-disable no-param-reassign */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
   deleteDoc, getDoc, setDoc, updateDoc,
 } from 'firebase/firestore';
 import { Semester } from '@/src/lib';
+import { v4 as uuidv4 } from 'uuid';
 import Firestore from '../schema';
 import type { AppDispatch, RootState } from '../store';
 import type {
   ScheduleMap, UserClassData, Schedule, ScheduleId,
 } from '../types';
-import { getDefaultSchedule } from '../utils/schedules';
 
 const initialState: ScheduleMap = {};
 
@@ -123,3 +122,13 @@ export const addCourses = ({ scheduleId, courses }: CoursesPayload) => async (di
   await updateDoc(snap.ref, { classes });
   return dispatch(schedulesSlice.actions.setCourses({ scheduleId, courses: classes }));
 };
+
+export const getDefaultSchedule = ({ season, year }: Semester, uid: string) => ({
+  id: uuidv4(),
+  title: `My ${season} ${year}`,
+  season,
+  year,
+  classes: [],
+  ownerUid: uid,
+  public: true,
+});

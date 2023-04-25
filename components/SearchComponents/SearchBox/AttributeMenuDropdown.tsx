@@ -23,7 +23,7 @@ export function AttributeMenuDropdown() {
               unmount={false}
               className={classNames(
                 'absolute z-20 mt-2 right-0 w-48 p-2 dark-gradient rounded-md',
-                'flex flex-col space-y-2',
+                'flex flex-col space-y-2 text-white',
               )}
             >
               {meiliAttributes.filterableAttributes.map((attr) => (

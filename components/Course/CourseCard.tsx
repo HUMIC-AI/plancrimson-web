@@ -1,17 +1,16 @@
 import Image from 'next/image';
 import React, { DragEventHandler, useMemo } from 'react';
 import {
-  FaTimes, FaPlus, FaExclamationTriangle,
+  FaExclamationTriangle,
 } from 'react-icons/fa';
 import {
   ExtendedClass,
-  getClassId, departmentImages, getSemester,
+  getClassId, departmentImages, getSemester, semesterToTerm,
 } from '@/src/lib';
-import { checkViable } from '@/src/searchSchedule';
 import { useModal } from '@/src/context/modal';
-import { alertUnexpectedError, useAppDispatch, useAppSelector } from '@/src/utils/hooks';
+import { alertUnexpectedError, useAppSelector } from '@/src/utils/hooks';
 import {
-  ClassCache, Planner, Profile, Schedules,
+  Planner, Schedules,
 } from '@/src/features';
 import { classNames } from '@/src/utils/styles';
 import Tooltip from '../Utils/Tooltip';
@@ -24,74 +23,9 @@ import {
 } from './CourseComponents';
 import { ClassSizeRating, HoursRating, StarRating } from './RatingIndicators';
 import { useDragAndDropContext } from '../YearSchedule/SemesterColumn/DragAndDrop';
+import { ToggleButton } from './ToggleButton';
 
 type Department = keyof typeof departmentImages;
-
-function ToggleButton({ chosenScheduleId, course } : { chosenScheduleId: string; course: ExtendedClass; }) {
-  const dispatch = useAppDispatch();
-  const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
-  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
-  const classYear = useAppSelector(Profile.selectClassYear);
-  const classCache = useAppSelector(ClassCache.selectClassCache);
-
-  // adds a class to the selected schedule.
-  // linked to plus button in top right corner.
-  function addClass() {
-    if (!chosenSchedule || !classYear) return;
-
-    const viability = checkViable({
-      cls: course,
-      schedule: chosenSchedule,
-      classCache,
-      classYear,
-    });
-    if (viability.viability === 'No') {
-      alert(viability.reason);
-      return;
-    }
-    if (viability.viability === 'Unlikely') {
-      // eslint-disable-next-line no-restricted-globals
-      const yn = confirm(`${viability.reason} Continue anyways?`);
-      if (!yn) return;
-    }
-
-    dispatch(Schedules.addCourses({
-      courses: [{ classId: getClassId(course) }],
-      scheduleId: chosenSchedule.id,
-    }));
-  }
-
-  if (!chosenSchedule) return null;
-
-  const inSchedule = chosenSchedule?.classes.find(({ classId }) => course.id === classId);
-
-  if (semesterFormat === 'sample' || !inSchedule) {
-    return (
-      <button
-        type="button"
-        name="Add class to schedule"
-        onClick={addClass}
-        className="transition-opacity hover:opacity-50"
-      >
-        <FaPlus color="white" />
-      </button>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      name="Remove class from schedule"
-      onClick={() => dispatch(Schedules.removeCourses({
-        courseIds: [getClassId(course)],
-        scheduleId: chosenSchedule.id,
-      }))}
-      className="transition-opacity hover:opacity-50"
-    >
-      <FaTimes className="text-yellow" />
-    </button>
-  );
-}
 
 // see below
 type CourseCardProps = {
@@ -144,6 +78,7 @@ export default function CourseCard({
         data: {
           classId: getClassId(course),
           originScheduleId: chosenSchedule.id,
+          originTerm: semesterToTerm(semester),
         },
       });
     }

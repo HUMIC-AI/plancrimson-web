@@ -10,7 +10,6 @@ import Firestore from '../schema';
 import type {
   ListOfScheduleIdOrSemester, Schedule, ScheduleId, ScheduleIdOrSemester, ScheduleMap,
 } from '../types';
-import { v4 as uuidv4 } from 'uuid';
 
 export function isScheduleId(s: ScheduleIdOrSemester): s is ScheduleId {
   return typeof s === 'string';
@@ -86,13 +85,3 @@ export function getSemesterBeforeEarliest(schedules: ScheduleMap): Semester {
     : ['Spring' as const, earliest.year];
   return { season, year };
 }
-
-export const getDefaultSchedule = ({ season, year }: Semester, uid: string) => ({
-  id: uuidv4(),
-  title: `My ${season} ${year}`,
-  season,
-  year,
-  classes: [],
-  ownerUid: uid,
-  public: true,
-});

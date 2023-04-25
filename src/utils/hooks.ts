@@ -6,6 +6,7 @@ import {
 } from 'firebase/firestore';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { allTruthy } from '@/src/lib';
+import { getAnalytics, logEvent } from 'firebase/analytics';
 import type { AppDispatch, RootState } from '../store';
 import Firestore from '../schema';
 import { UserProfile, WithId } from '../types';
@@ -63,6 +64,7 @@ export function useProfiles(ids: string[] | undefined) {
 export function alertUnexpectedError(err: unknown) {
   alert('An unexpected error occurred! Please try again later.');
   console.error(err);
+  logEvent(getAnalytics(), 'exception', { description: (err as { message: string }).message });
 }
 
 export function useAppDispatch() { return useDispatch<AppDispatch>(); }

@@ -144,9 +144,11 @@ function ClassesCloud({
             if (idx !== null && courses) {
               const key = courses[idx][0];
               const courseId = getClassId(key);
-              dispatch(ClassCache.loadCourses(client, [courseId])).then(([course]) => {
-                showCourse(course);
-              }).catch(alertUnexpectedError);
+              dispatch(ClassCache.loadCourses(client, [courseId]))
+                .then(([course]) => {
+                  showCourse(course);
+                })
+                .catch(alertUnexpectedError);
             }
           }
 

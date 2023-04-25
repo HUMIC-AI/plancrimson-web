@@ -1,6 +1,8 @@
 import { ClassCache, Profile, Schedules } from '@/src/features';
+import { Term } from '@/src/lib';
 import { checkViable } from '@/src/searchSchedule';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
+import { getAnalytics, logEvent } from 'firebase/analytics';
 import {
   PropsWithChildren, createContext, useCallback, useContext, useMemo, useState,
 } from 'react';
@@ -14,6 +16,7 @@ export type DragStatus =
     data: {
       classId: string;
       originScheduleId: string;
+      originTerm: Term;
     };
   };
 
@@ -24,7 +27,7 @@ export type DragContext = {
   dragStatus: DragStatus;
   setDragStatus: (status: DragStatus) => void;
   checkViableDrop: (scheduleId: string) => ReturnType<typeof checkViable> | null;
-  handleDrop: (scheduleId: string) => void;
+  handleDrop: (scheduleId: string, term: Term | null) => void;
 };
 
 const DragAndDropContext = createContext<DragContext>({
@@ -61,7 +64,7 @@ export function DragAndDropProvider({ children }: PropsWithChildren<{}>) {
   /**
    * @param scheduleId the schedule that the currently held course was dropped on
    */
-  const handleDrop = useCallback((scheduleId: string) => {
+  const handleDrop = useCallback((scheduleId: string, term: Term | null) => {
     setDragStatus({ dragging: false });
 
     const viableDrop = checkViableDrop(scheduleId);
@@ -73,12 +76,19 @@ export function DragAndDropProvider({ children }: PropsWithChildren<{}>) {
     } else if (scheduleId !== dragStatus.data.originScheduleId) {
       const doAdd = viableDrop.viability !== 'Unlikely' || confirm(`${viableDrop.reason} Continue anyways?`);
       if (doAdd) {
-        const { classId, originScheduleId } = dragStatus.data;
+        const { classId, originScheduleId, originTerm } = dragStatus.data;
+        const analytics = getAnalytics();
+        logEvent(analytics, 'move_course', {
+          subject: classCache[classId]?.SUBJECT,
+          catalogNumber: classCache[classId]?.CATALOG_NBR,
+          originTerm,
+          destinationTerm: term,
+        });
         dispatch(Schedules.addCourses({ scheduleId, courses: [{ classId }] }));
         dispatch(Schedules.removeCourses({ scheduleId: originScheduleId, courseIds: [classId] }));
       }
     }
-  }, [dragStatus]);
+  }, [dragStatus, classCache]);
 
   const value = useMemo(
     () => ({

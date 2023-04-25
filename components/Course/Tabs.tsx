@@ -1,12 +1,15 @@
 import { classNames } from '@/src/utils/styles';
 import { Tab } from '@headlessui/react';
-import { ExtendedClass, allTruthy } from '@/src/lib';
+import { ExtendedClass } from '@/src/lib';
 import React from 'react';
+import { getAnalytics, logEvent } from 'firebase/analytics';
 import EvaluationsPanel from './Tabs/EvaluationsPanel';
 import InfoPanel from './Tabs/InfoPanel';
 import PlanningPanel from './Tabs/PlanningPanel';
 import SocialPanel from './Tabs/SocialPanel';
 import { useEvaluations } from './Tabs/useEvaluations';
+
+const TABS = ['Description', 'Evaluations', 'Plan', 'Social'];
 
 /**
  * The tabs for the opened course modal.
@@ -16,9 +19,19 @@ export default function CourseTabs({ course }: { course: ExtendedClass }) {
   const [evaluations, error] = useEvaluations(course.SUBJECT + course.CATALOG_NBR);
 
   return (
-    <Tab.Group defaultIndex={0}>
+    <Tab.Group
+      defaultIndex={0}
+      onChange={(index) => {
+        const analytics = getAnalytics();
+        logEvent(analytics, 'course_tab_change', {
+          subject: course.SUBJECT,
+          catalogNumber: course.CATALOG_NBR,
+          tab: TABS[index],
+        });
+      }}
+    >
       <Tab.List className="flex overflow-auto bg-black">
-        {allTruthy(['Description', 'Evaluations', 'Plan', 'Social']).map(
+        {TABS.map(
           (tab) => {
             const disabled = tab === 'Evaluations' && evaluations ? evaluations.length === 0 : false;
 

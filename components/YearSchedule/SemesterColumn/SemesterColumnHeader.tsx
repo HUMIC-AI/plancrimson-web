@@ -10,7 +10,6 @@ import { useCallback, useState } from 'react';
 import { FaCalendar, FaCog, FaEdit } from 'react-icons/fa';
 import FadeTransition from '@/components/Utils/FadeTransition';
 import { ScheduleId, ScheduleIdOrSemester } from '@/src/types';
-import { getDefaultSchedule, getSchedulesBySemester } from '@/src/utils/schedules';
 import { DeleteScheduleButton } from './DeleteScheduleButton';
 import { DuplicateScheduleButton } from './DuplicateScheduleButton';
 import { MenuButton } from './MenuButton';
@@ -18,6 +17,7 @@ import { EditNameForm } from './EditNameForm';
 import { HideScheduleButton } from './HideScheduleButton';
 import { PublishScheduleButton } from './PublishScheduleButton';
 import { useScheduleFromScheduleIdOrSemester } from './useScheduleFromScheduleIdOrSemester';
+import { getSchedulesBySemester } from '@/src/utils/schedules';
 
 export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
   const dispatch = useAppDispatch();
@@ -98,7 +98,7 @@ function TitleComponent({ scheduleId: id, term, setEditing }: Props) {
 
     try {
       if (!userId) throw new Error('User is not logged in');
-      const newSchedule = getDefaultSchedule(termToSemester(term), userId);
+      const newSchedule = Schedules.getDefaultSchedule(termToSemester(term), userId);
       setJustCreated(newSchedule.id);
       await dispatch(Schedules.createSchedule(newSchedule));
       await dispatch(Settings.chooseSchedule({

@@ -2,7 +2,7 @@ import React from 'react';
 import { Requirement } from '@/src/requirements/util';
 import type { Schedule, ScheduleIdOrSemester, Viability } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
-import { Season } from '@/src/lib';
+import { Season, semesterToTerm } from '@/src/lib';
 import { isScheduleId } from '@/src/utils/schedules';
 import SemesterColumnHeader from './SemesterColumnHeader';
 import { CoursesSection } from './CoursesSection';
@@ -32,7 +32,7 @@ export default function SemesterColumn({
   colWidth,
 }: Props) {
   const drag = useDragAndDropContext();
-  const { schedule } = useScheduleFromScheduleIdOrSemester(s);
+  const { schedule, semester } = useScheduleFromScheduleIdOrSemester(s);
   const colorStyles = useStylesForSchedule(schedule, isScheduleId(s) ? (schedule ? schedule.season : null) : s.season);
 
   return (
@@ -51,7 +51,7 @@ export default function SemesterColumn({
         } : undefined}
         onDrop={drag.enabled && schedule ? (ev) => {
           ev.preventDefault();
-          drag.handleDrop(schedule.id);
+          drag.handleDrop(schedule.id, semester && semesterToTerm(semester));
         } : undefined}
       >
         <SemesterColumnHeader s={s} />

@@ -1,11 +1,11 @@
 import { Schedules, Settings } from '@/src/features';
 import { selectSchedules } from '@/src/features/schedules';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
-import { getPreviousSchedule } from '@/src/utils/schedules';
 import { useCallback } from 'react';
 import { FaTrash } from 'react-icons/fa';
 import { semesterToTerm } from '@/src/lib';
 import { MenuButton } from './MenuButton';
+import { getPreviousSchedule } from '@/src/utils/schedules';
 
 export function DeleteScheduleButton({ scheduleId }: { scheduleId: string; }) {
   const dispatch = useAppDispatch();

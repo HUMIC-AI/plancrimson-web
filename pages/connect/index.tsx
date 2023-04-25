@@ -19,17 +19,21 @@ export default function ConnectPage() {
   const userId = Auth.useAuthProperty('uid');
 
   // get public schedules from other users
-  const constraints = useMemo(() => [
+  const constraints = useMemo(() => (userId ? [
     where('public', '==', true),
     where('owner', '!=', userId),
     limit(20),
-  ], [userId]);
+  ] : null), [userId]);
   useSyncSchedulesMatchingContraints(constraints);
 
   const elapsed = useElapsed(2000, []);
 
   if (userId === null) {
-    return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
+    return (
+      <ErrorPage>
+        {errorMessages.unauthorized}
+      </ErrorPage>
+    );
   }
 
   if (typeof userId === 'undefined') {

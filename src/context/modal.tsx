@@ -7,6 +7,7 @@ import type { ExtendedClass } from '@/src/lib';
 import { getSemester } from '@/src/lib';
 import CourseTabs from '@/components/Course/Tabs';
 import ExternalLink from '@/components/Utils/ExternalLink';
+import { getAnalytics, logEvent } from 'firebase/analytics';
 
 interface CustomDialogProps {
   title: string;
@@ -72,6 +73,7 @@ export function ModalProvider({ children }: PropsWithChildren<{}>) {
 
   function showCourse(course: ExtendedClass) {
     const semester = course ? getSemester(course) : null;
+
     const title = course
       ? course.SUBJECT + course.CATALOG_NBR
       : 'An unexpected error occurred.';
@@ -93,7 +95,15 @@ export function ModalProvider({ children }: PropsWithChildren<{}>) {
         </p>
       </>
     );
+
+    const analytics = getAnalytics();
+    logEvent(analytics, 'view_course', {
+      subject: course.SUBJECT,
+      catalogNumber: course.CATALOG_NBR,
+    });
+
     const content = course && <CourseTabs course={course} />;
+
     showContents({
       title, headerContent, content,
     });

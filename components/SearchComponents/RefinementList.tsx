@@ -5,6 +5,7 @@ import {
   getSubjectColor, Subject, subjects, TERM_TO_SEASON,
 } from '@/src/lib';
 import { classNames } from '@/src/utils/styles';
+import { getAnalytics, logEvent } from 'firebase/analytics';
 import { alertSignIn } from './SearchBox/searchUtils';
 import ClientOrDemo from './ClientOrDemo';
 
@@ -53,6 +54,7 @@ function RefinementListComponent({
         placeholder="Filter"
         className="block w-full rounded-md border-gray-light py-1 pl-2 shadow-sm sm:text-sm"
       />
+
       <button
         type="button"
         onClick={() => refine([])}
@@ -60,6 +62,7 @@ function RefinementListComponent({
       >
         Clear all
       </button>
+
       <ul className="max-h-64 overflow-auto">
         {items
           .filter(({ label }) => re.test(label))
@@ -73,11 +76,20 @@ function RefinementListComponent({
                   name={label}
                   id={label}
                   checked={isRefined}
-                  onChange={() => refine(value)}
+                  onChange={() => {
+                    const analytics = getAnalytics();
+                    logEvent(analytics, 'search_filter', {
+                      filter: label,
+                      value: isRefined ? 'off' : 'on',
+                    });
+                    refine(value);
+                  }}
                 />
                 <span
                   className={classNames('ml-2', isRefined && 'font-semibold')}
-                  style={{ color: (showSubjectColor && label in subjects) ? getSubjectColor(label as Subject) : 'inherit' }}
+                  style={{
+                    color: (showSubjectColor && label in subjects) ? getSubjectColor(label as Subject) : 'inherit',
+                  }}
                 >
                   {label in TERM_TO_SEASON ? `${TERM_TO_SEASON[label].season} ${TERM_TO_SEASON[label].year}` : label}
                   {' '}
