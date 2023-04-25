@@ -26,7 +26,7 @@ type Props = {
 
 export default function ClassesCloudPage({ children, ...props }: PropsWithChildren<Props>) {
   return (
-    <Layout className="relative flex flex-1 items-center justify-center bg-black p-8" title="Plan" transparentHeader>
+    <Layout className="relative flex-1 bg-black" title="Plan" transparentHeader>
       <ClassesCloud {...props} />
       {children}
     </Layout>

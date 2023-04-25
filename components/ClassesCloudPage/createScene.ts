@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { subjectNames } from '@/src/lib';
+import { Subject, getSubjectColor } from '@/src/lib';
 
 type RGB = readonly [number, number, number];
 
@@ -29,15 +29,6 @@ export function createScene(canvas: HTMLCanvasElement) {
   return { scene, camera, renderer };
 }
 
-function getSubjectColors() {
-  const color = new THREE.Color();
-  const subjectColors = Object.fromEntries(subjectNames.map((subject, i) => {
-    color.setHSL(i / subjectNames.length, 1, 0.5);
-    return [subject, [color.r, color.g, color.b]] as const;
-  }));
-  return subjectColors;
-}
-
 export function createControls(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, autoRotate: number) {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.minDistance = 1;
@@ -49,8 +40,8 @@ export function createControls(camera: THREE.PerspectiveCamera, renderer: THREE.
   return controls;
 }
 
-export function createPoints(subjects: string[], positions: [number, number, number][], size: number) {
-  const sprite = new THREE.TextureLoader().load('disc.png');
+export function createPoints(subjects: Subject[], positions: [number, number, number][], size: number) {
+  const sprite = new THREE.TextureLoader().load('/disc.png');
   const geometry = new THREE.BufferGeometry();
   const material = new THREE.PointsMaterial({
     size,
@@ -63,8 +54,7 @@ export function createPoints(subjects: string[], positions: [number, number, num
 
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions.flat(), 3));
 
-  const subjectColors = getSubjectColors();
-  const colors = subjects.flatMap((subject) => subjectColors[subject] ?? [0.5, 0.5, 0.5]);
+  const colors = subjects.flatMap((subject) => new THREE.Color(getSubjectColor(subject)).toArray() ?? [0.5, 0.5, 0.5]);
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
   const points = new THREE.Points(geometry, material);
