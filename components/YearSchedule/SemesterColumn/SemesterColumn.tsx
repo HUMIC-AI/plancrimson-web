@@ -47,12 +47,11 @@ export default function SemesterColumn({
         className="flex flex-col md:h-full"
         onDragOver={drag.enabled ? (ev) => {
           ev.preventDefault();
-          // eslint-disable-next-line no-param-reassign
           ev.dataTransfer.dropEffect = 'move';
         } : undefined}
         onDrop={drag.enabled && schedule ? (ev) => {
           ev.preventDefault();
-          drag.handleDrop(schedule.season);
+          drag.handleDrop(schedule.id);
         } : undefined}
       >
         <SemesterColumnHeader s={s} />

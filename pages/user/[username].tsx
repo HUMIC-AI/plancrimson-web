@@ -78,7 +78,7 @@ function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserP
     }
 
     return [where('ownerUid', '==', pageProfile.id), where('public', '==', true)];
-  }, [uid, pageProfile, friendStatus]);
+  }, [pageProfile, friendStatus]);
 
   useSyncSchedulesMatchingContraints(queryConstraints);
 

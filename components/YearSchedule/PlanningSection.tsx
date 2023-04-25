@@ -56,13 +56,8 @@ export function SemestersList({
   return (
     <DragAndDropProvider>
       <div className="relative mt-4 flex-1">
-        <div className="absolute inset-0 overflow-scroll">
-          {/* on small screens, this extends as far as necessary */}
-          {/* on medium screens and larger, put this into its own box */}
-          <div
-            className="mx-auto flex h-full w-max overflow-hidden rounded-lg"
-            ref={semestersContainerRef}
-          >
+        <div className="absolute inset-0 overflow-scroll" ref={semestersContainerRef}>
+          <div className="mx-auto flex h-full w-max overflow-hidden rounded-lg">
             {/* when dragging a card, drag over this area to scroll left */}
             <div ref={leftScrollRef} />
 
@@ -91,13 +86,13 @@ export function SemestersList({
             {/* when dragging, drag over this area to scroll right */}
             <div ref={rightScrollRef} />
           </div>
-
-          <DragObservers
-            leftIntersecting={leftIntersecting}
-            rightIntersecting={rightIntersecting}
-            semestersContainerRef={semestersContainerRef}
-          />
         </div>
+
+        <DragObservers
+          leftIntersecting={leftIntersecting}
+          rightIntersecting={rightIntersecting}
+          semestersContainerRef={semestersContainerRef}
+        />
       </div>
     </DragAndDropProvider>
   );

@@ -54,14 +54,14 @@ export function DragAndDropProvider({ children }: PropsWithChildren<{}>) {
         classCache,
       })
       : null),
-    [classCache, profile, draggedClass],
+    [profile.classYear, draggedClass, schedules, classCache],
   );
 
 
   /**
    * @param scheduleId the schedule that the currently held course was dropped on
    */
-  function handleDrop(scheduleId: string) {
+  const handleDrop = useCallback((scheduleId: string) => {
     setDragStatus({ dragging: false });
 
     const viableDrop = checkViableDrop(scheduleId);
@@ -78,7 +78,7 @@ export function DragAndDropProvider({ children }: PropsWithChildren<{}>) {
         dispatch(Schedules.removeCourses({ scheduleId: originScheduleId, courseIds: [classId] }));
       }
     }
-  }
+  }, [dragStatus]);
 
   const value = useMemo(
     () => ({

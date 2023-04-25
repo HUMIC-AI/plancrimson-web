@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { getUniqueSemesters, compareSemesters } from '@/src/lib';
 import {
-  Planner, Profile, Schedules, Settings,
+  Planner, Profile, Schedules,
 } from '@/src/features';
 import { useAppSelector } from '@/src/utils/hooks';
 import { ListOfScheduleIdOrSemester } from '@/src/types';
@@ -14,7 +14,6 @@ export function useColumns() {
   const userSchedules = useAppSelector(Schedules.selectSchedules);
   const classYear = useAppSelector(Profile.selectClassYear);
   const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
-  const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
 
   const columns: ListOfScheduleIdOrSemester = useMemo(() => {
     switch (semesterFormat) {
@@ -38,7 +37,7 @@ export function useColumns() {
       default:
         return [];
     }
-  }, [semesterFormat, sampleSchedule, classYear, userSchedules, chosenSchedules]);
+  }, [semesterFormat, sampleSchedule, classYear, userSchedules]);
 
   return columns;
 }

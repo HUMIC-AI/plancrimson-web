@@ -22,7 +22,17 @@
     "max-len": "off",
     "no-alert": "off",
     "no-await-in-loop": "off",
-    "no-console": "off",
+    "no-console": [
+      "error",
+      {
+        "allow": [
+          "debug",
+          "info",
+          "warn",
+          "error"
+        ]
+      }
+    ],
     "no-multiple-empty-lines": [
       "error",
       {

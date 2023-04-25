@@ -79,7 +79,7 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
 
 type Props = { scheduleId: ScheduleId | null; term: Term; setEditing: (editing: boolean) => void; };
 
-function TitleComponent({ scheduleId, term, setEditing }: Props) {
+function TitleComponent({ scheduleId: id, term, setEditing }: Props) {
   const dispatch = useAppDispatch();
   const userId = Auth.useAuthProperty('uid');
   const schedules = useAppSelector(selectSchedules);
@@ -118,7 +118,7 @@ function TitleComponent({ scheduleId, term, setEditing }: Props) {
       onChange={chooseNewSchedule}
     >
       <Listbox.Button className="select-none rounded px-2 text-center text-lg font-medium transition-colors hover:bg-gray-light">
-        {(scheduleId && scheduleId in schedules) ? schedules[scheduleId].title : 'None'}
+        {(id && id in schedules) ? schedules[id].title : 'None'}
       </Listbox.Button>
       <FadeTransition>
         <Listbox.Options className="menu-dropdown absolute inset-x-0 top-full z-10 mt-2">

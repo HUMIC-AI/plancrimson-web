@@ -24,6 +24,7 @@ export function useObserver(resizeRef: MutableRefObject<HTMLDivElement>) {
       }
     });
     resizeObserver.observe(resizeRef.current);
+
     const leftScrollObserver = new IntersectionObserver((entries) => {
       const isIntersecting = entries?.[0]?.isIntersecting;
       if (typeof isIntersecting === 'boolean') {
@@ -31,6 +32,7 @@ export function useObserver(resizeRef: MutableRefObject<HTMLDivElement>) {
       }
     });
     leftScrollObserver.observe(leftScrollRef.current);
+
     const rightScrollObserver = new IntersectionObserver((entries) => {
       const isIntersecting = entries?.[0]?.isIntersecting;
       if (typeof isIntersecting === 'boolean') {
@@ -38,6 +40,7 @@ export function useObserver(resizeRef: MutableRefObject<HTMLDivElement>) {
       }
     });
     rightScrollObserver.observe(rightScrollRef.current);
+
     return () => {
       resizeObserver.disconnect();
       leftScrollObserver.disconnect();

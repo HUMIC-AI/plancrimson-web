@@ -18,8 +18,8 @@ export function DeleteScheduleButton({ scheduleId }: { scheduleId: string; }) {
     );
 
     if (confirmDelete) {
-      const previousSchedule = getPreviousSchedule(schedules, scheduleId);
-      dispatch(Schedules.deleteSchedule(scheduleId))
+      const previousSchedule = getPreviousSchedule(schedules, schedule.id);
+      dispatch(Schedules.deleteSchedule(schedule.id))
         .then(() => dispatch(Settings.chooseSchedule({
           term: semesterToTerm(schedule),
           scheduleId: previousSchedule ? previousSchedule.id : null,
@@ -31,7 +31,7 @@ export function DeleteScheduleButton({ scheduleId }: { scheduleId: string; }) {
           );
         });
     }
-  }, [dispatch, schedule.season, schedule.title, schedule.year, scheduleId, schedules]);
+  }, [dispatch, schedule, schedules]);
 
   return (
     <MenuButton onClick={deleteSchedule} Icon={FaTrash} title="Delete" />
