@@ -5,7 +5,7 @@ type Props = {
   className?: string;
 };
 
-export default function ExternalLink ({ href, children, className = "interactive font-bold" }: PropsWithChildren<Props>) {
+export default function ExternalLink({ href, children, className = 'interactive font-bold' }: PropsWithChildren<Props>) {
   const isMail = href.startsWith('mailto');
   return (
     <a
@@ -18,4 +18,4 @@ export default function ExternalLink ({ href, children, className = "interactive
       {children}
     </a>
   );
-};
+}

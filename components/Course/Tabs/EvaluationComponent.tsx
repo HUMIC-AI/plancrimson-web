@@ -65,7 +65,7 @@ function DisclosureComponent({
         <>
           <Disclosure.Button
             name={heading}
-            className="flex w-full items-center rounded space-x-2 px-2 py-1 text-left hover:bg-gray-light transition-colors"
+            className="flex w-full items-center space-x-2 rounded px-2 py-1 text-left transition-colors hover:bg-gray-light"
           >
             <h4 className="flex-1">{heading}</h4>
             {visibleStats && (
@@ -205,15 +205,15 @@ export default function EvaluationComponent({ report }: { report: Evaluation | E
           />
 
           <FadeTransition>
-          <Disclosure.Panel as="div" className="space-y-4 p-4">
-            <EvaluationBody
-              courseEvaluation={courseEvaluation}
-              overall={overall}
-              generalComponents={generalComponents}
-              multipleInstructors={multipleInstructors}
-              report={Array.isArray(report) ? report : [report]}
-              hoursData={hoursData}
-            />
+            <Disclosure.Panel as="div" className="space-y-4 p-4">
+              <EvaluationBody
+                courseEvaluation={courseEvaluation}
+                overall={overall}
+                generalComponents={generalComponents}
+                multipleInstructors={multipleInstructors}
+                report={Array.isArray(report) ? report : [report]}
+                hoursData={hoursData}
+              />
             </Disclosure.Panel>
           </FadeTransition>
         </>
@@ -306,7 +306,7 @@ function EvaluationBody({
         ) : (
           <p>No comments found</p>
         )}
-        </>
+    </>
   );
 }
 
@@ -328,7 +328,7 @@ function OpenCloseButton({
     >
       <h3 className="font-bold">{buttonTitle}</h3>
       <span className="flex items-center space-x-4">
-        <ExternalLink href={url} className='hover:bg-gray-light rounded hover:text-gray-dark p-2 transition-colors'>
+        <ExternalLink href={url} className="rounded p-2 transition-colors hover:bg-gray-light hover:text-gray-dark">
           <span className="sr-only">Open report page</span>
           <FaExternalLinkAlt title="Open report page" />
         </ExternalLink>
