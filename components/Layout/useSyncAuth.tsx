@@ -14,6 +14,7 @@ import Firestore from '@/src/schema';
 import { extractUsername, getInitialSettings } from '@/src/utils/utils';
 import GraduationYearDialog from '@/components/Layout/GraduationYearDialog';
 import { getUniqueSemesters } from '@/src/lib';
+import { getDefaultSchedule } from '@/src/utils/schedules';
 
 
 export async function signInUser() {
@@ -168,7 +169,7 @@ async function handleSubmit(user: User, classYear: number) {
   // create the default schedules and choose them for each semester
   const defaultSemesters = getUniqueSemesters(classYear);
   const promises = defaultSemesters.map(async ({ year, season }) => {
-    const schedule = Schedules.getDefaultSchedule({ year, season }, user.uid);
+    const schedule = getDefaultSchedule({ year, season }, user.uid);
     await setDoc(Firestore.schedule(schedule.id), schedule);
     return schedule;
   });

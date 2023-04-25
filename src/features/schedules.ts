@@ -4,12 +4,12 @@ import {
   deleteDoc, getDoc, setDoc, updateDoc,
 } from 'firebase/firestore';
 import { Semester } from '@/src/lib';
-import { v4 as uuidv4 } from 'uuid';
 import Firestore from '../schema';
 import type { AppDispatch, RootState } from '../store';
 import type {
   ScheduleMap, UserClassData, Schedule, ScheduleId,
 } from '../types';
+import { getDefaultSchedule } from '../utils/schedules';
 
 const initialState: ScheduleMap = {};
 
@@ -84,16 +84,6 @@ export const createSchedule = (schedule: Schedule) => async (dispatch: AppDispat
   await setDoc(Firestore.schedule(schedule.id), schedule);
   return dispatch(schedulesSlice.actions.create(schedule));
 };
-
-export const getDefaultSchedule = ({ season, year }: Semester, uid: string) => ({
-  id: uuidv4(),
-  title: `My ${season} ${year}`,
-  season,
-  year,
-  classes: [],
-  ownerUid: uid,
-  public: false,
-});
 
 export const createDefaultSchedule = ({ season, year }: Semester, uid: string) => createSchedule(getDefaultSchedule({ season, year }, uid));
 

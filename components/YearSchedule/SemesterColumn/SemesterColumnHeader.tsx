@@ -10,7 +10,7 @@ import { useCallback, useState } from 'react';
 import { FaCalendar, FaCog, FaEdit } from 'react-icons/fa';
 import FadeTransition from '@/components/Utils/FadeTransition';
 import { ScheduleId, ScheduleIdOrSemester } from '@/src/types';
-import { getSchedulesBySemester } from '@/src/utils/schedules';
+import { getDefaultSchedule, getSchedulesBySemester } from '@/src/utils/schedules';
 import { DeleteScheduleButton } from './DeleteScheduleButton';
 import { DuplicateScheduleButton } from './DuplicateScheduleButton';
 import { MenuButton } from './MenuButton';
@@ -98,7 +98,7 @@ function TitleComponent({ scheduleId: id, term, setEditing }: Props) {
 
     try {
       if (!userId) throw new Error('User is not logged in');
-      const newSchedule = Schedules.getDefaultSchedule(termToSemester(term), userId);
+      const newSchedule = getDefaultSchedule(termToSemester(term), userId);
       setJustCreated(newSchedule.id);
       await dispatch(Schedules.createSchedule(newSchedule));
       await dispatch(Settings.chooseSchedule({

@@ -167,7 +167,7 @@ const LargeOnly = {
           item.children ? (
             <div key={item.name} className="group/nav relative">
               <NavbarLink key={item.name} item={item} pathname={pathname} isParent />
-              <div className="absolute left-1/2 top-full z-10 hidden -translate-x-1/2 group-hover/nav:block">
+              <div className="absolute left-1/2 top-full z-10 hidden -translate-x-1/2 group-hover/nav:block bg-black/80 rounded">
                 {item.children.map((child) => (
                   <NavbarLink key={child.name} item={child} pathname={pathname} />
                 ))}
