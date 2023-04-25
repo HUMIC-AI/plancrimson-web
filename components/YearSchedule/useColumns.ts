@@ -4,7 +4,7 @@ import {
   Planner, Profile, Schedules, Settings,
 } from '@/src/features';
 import { useAppSelector } from '@/src/utils/hooks';
-import { SemesterDisplayProps } from '@/components/YearSchedule/SemesterColumn/SemesterColumn';
+import type { SemesterDisplayProps } from '@/components/YearSchedule/SemesterColumn/PlanningScheduleColumn';
 
 /**
  * Gets the list of semesters to display in the planner
@@ -27,6 +27,7 @@ export function useColumns() {
         }));
 
       case 'selected':
+        // TODO get semesters from class year and handle gappers
         if (!classYear) return [];
         return getUniqueSemesters(
           classYear,
@@ -34,7 +35,7 @@ export function useColumns() {
         ).map(({ year, season }) => ({
           key: `${year}${season}`,
           semester: { year, season },
-          chosenScheduleId: chosenSchedules[`${year}${season}`] || null,
+          chosenScheduleId: chosenSchedules[`${year}${season}`] ?? null,
         }));
 
       case 'all':
@@ -44,7 +45,7 @@ export function useColumns() {
             key: id,
             semester: { year, season },
             chosenScheduleId: id,
-            highlight: chosenSchedules[`${year}${season}`] || undefined,
+            highlight: chosenSchedules[`${year}${season}`] === id,
           }));
 
       default:
