@@ -81,6 +81,7 @@ type Props = { scheduleId: ScheduleId | null; term: Term; setEditing: (editing: 
 
 function TitleComponent({ scheduleId: id, term, setEditing }: Props) {
   const dispatch = useAppDispatch();
+  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const userId = Auth.useAuthProperty('uid');
   const schedules = useAppSelector(selectSchedules);
   const termSchedules = getSchedulesBySemester(schedules, termToSemester(term));
@@ -111,6 +112,13 @@ function TitleComponent({ scheduleId: id, term, setEditing }: Props) {
     }
   }, [term, userId]);
 
+  const title = (id && id in schedules) ? schedules[id].title : 'None';
+
+  // don't show the dropdown if all schedules are being shown
+  if (semesterFormat === 'all') {
+    return <p className="text-center text-lg font-medium">{title}</p>
+  }
+
   return (
     <Listbox
       as="div"
@@ -118,7 +126,7 @@ function TitleComponent({ scheduleId: id, term, setEditing }: Props) {
       onChange={chooseNewSchedule}
     >
       <Listbox.Button className="select-none rounded px-2 text-center text-lg font-medium transition-colors hover:bg-gray-light">
-        {(id && id in schedules) ? schedules[id].title : 'None'}
+        {title}
       </Listbox.Button>
       <FadeTransition>
         <Listbox.Options className="menu-dropdown absolute top-full z-10 mt-2 w-max divide-y">
