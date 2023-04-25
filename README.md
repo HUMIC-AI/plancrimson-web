@@ -43,8 +43,10 @@ for easily sending requests to the database.
 
 Since I'm unwilling to pay for an npm account to use private npm packages (namely for [plancrimson-utils](https://github.com/HUMIC-AI/plancrimson-utils)), at the moment I'm just copying the `/lib` directory there directly into `/src` and ignoring it from [.gitignore](./.gitignore).
 
-Previously [package.json](./package.json) contained the dependency `"plancrimson-utils": "link:../plancrimson-utils"`.
+Previously [package.json](./package.json) contained the dependency `"plancrimson-utils": "link:../plancrimson-utils"`. See more about [yarn protocols](https://yarnpkg.com/features/protocols).
 
 ## Contributing
 
 Contributions are welcome! Fork this repository and make a PR. Below are some details for parts of the tech stack.
+
+However, I won't be providing the public MeiliSearch API key for the database; you'll have to reverse-engineer that as an entry requirement `:)`.
