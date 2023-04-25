@@ -44,6 +44,12 @@ const AboutPage: React.FC = function () {
           bug reports, requests, etc. at alexcai [at] college [dot] harvard
           [dot] edu.
         </p>
+        <p>
+          Since March 2023, this project is affiliated with <ExternalLink href='https://www.harvardai.org/'>HUMIC</ExternalLink>,
+          the Harvard Undergraduate Machine Intelligence Community!
+          If you're a student interested in building these sorts of cool projects,
+          be sure to visit our website and join our programs!
+        </p>
         <Resources />
         <TechStack />
       </div>
@@ -96,6 +102,15 @@ function TechStack() {
       <h2>
         About this site
       </h2>
+      <p>
+        The source code for the <em>client</em> is open source on
+        {' '}
+        <ExternalLink href="https://github.com/HUMIC-AI/plancrimson">
+          GitHub
+        </ExternalLink>
+        !
+        Contributions are welcome and appreciated.
+      </p>
       <p>Here&apos;s some of the tech this site was built with:</p>
       <ul className="list-inside list-disc">
         {siteInfoLinks.map(([name, href]) => (

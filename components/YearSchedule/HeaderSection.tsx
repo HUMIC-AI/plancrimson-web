@@ -5,20 +5,21 @@ import {
   FaArrowsAltH,
   FaCog,
 } from 'react-icons/fa';
-import { allTruthy } from '@/src/lib';
+import { Semester, allTruthy, semesterToTerm } from '@/src/lib';
 import { useModal } from '@/src/context/modal';
 import { Planner, Schedules, Settings } from '@/src/features';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { downloadJson } from '@/src/utils/utils';
-import { DownloadPlan } from '@/src/types';
+import type { DownloadPlan, ListOfScheduleIdOrSemester } from '@/src/types';
 import UploadForm from '../UploadForm';
 import CardExpandToggler from './CardExpandToggler';
 import { WithResizeRef } from './PlanningSection';
+import { isListOfScheduleIds } from '@/src/utils/schedules';
 
 /**
  * The header section of the planning page.
  */
-export default function HeaderSection({ resizeRef, columns }: WithResizeRef & { columns: SemesterDisplayProps[] }) {
+export default function HeaderSection({ resizeRef, columns }: WithResizeRef & { columns: ListOfScheduleIdOrSemester }) {
   const dispatch = useAppDispatch();
   const showReqs = useAppSelector(Planner.selectShowReqs);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
@@ -73,7 +74,7 @@ export default function HeaderSection({ resizeRef, columns }: WithResizeRef & { 
   );
 }
 
-function OptionsMenu({ columns }: { columns: SemesterDisplayProps[] }) {
+function OptionsMenu({ columns }: { columns: ListOfScheduleIdOrSemester }) {
   const dispatch = useAppDispatch();
   const userSchedules = useAppSelector(Schedules.selectSchedules);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
@@ -90,15 +91,18 @@ function OptionsMenu({ columns }: { columns: SemesterDisplayProps[] }) {
     [userSchedules, chosenSchedules],
   );
 
+  const scheduleForSemester = (semester: Semester) => {
+    const id = chosenSchedules[semesterToTerm(semester)];
+    return id ? userSchedules[id] ?? null : null;
+  }
+
   const downloadData: DownloadPlan = {
     id: semesterFormat === 'sample'
       ? sampleSchedule!.id
       : Math.random().toString(16).slice(2, 18),
-    schedules: allTruthy(
-      columns.map(({ scheduleId: chosenScheduleId }) => (
-        chosenScheduleId ? userSchedules[chosenScheduleId] : null
-      )),
-    ),
+    schedules: allTruthy(isListOfScheduleIds(columns)
+      ? columns.map((id) => userSchedules[id] ?? null)
+      : columns.map(scheduleForSemester)),
   };
 
   return (

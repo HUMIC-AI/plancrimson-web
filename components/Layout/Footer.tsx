@@ -15,7 +15,7 @@ export function Footer() {
         <span>
           &#169; 2023 Alexander Cai | alexcai [at] college |
           {' '}
-          <ExternalLink href="https://account.venmo.com/u/Alexander-Cai-1">
+          <ExternalLink href="https://account.venmo.com/u/adzcai">
             Buy me a coffee
           </ExternalLink>
         </span>
@@ -25,15 +25,11 @@ export function Footer() {
           <ExternalLink href="https://fontawesome.com/license">
             &#169; 2018 FontAwesome
           </ExternalLink>
-          {' '}
-          | Images from
-          {' '}
+          {' | Images from '}
           <ExternalLink href={`https://unsplash.com/${unsplashParams}`}>
             Unsplash
           </ExternalLink>
-          {' '}
-          |
-          {' '}
+          {' | '}
           <Link
             href={{
               pathname: '/privacy',
@@ -68,6 +64,10 @@ export function Footer() {
           >
             Privacy
           </Link>
+          {' | '}
+          <ExternalLink href="https://github.com/HUMIC-AI/plancrimson">
+            GitHub
+          </ExternalLink>
         </span>
       </div>
     </footer>
