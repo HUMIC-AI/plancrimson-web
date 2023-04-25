@@ -2,8 +2,40 @@ import { onSnapshot, updateDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ErrorPage } from '@/components/Layout/ErrorPage';
 import Schema from '@/src/schema';
+import { FaEdit } from 'react-icons/fa';
+import type { UserProfile, WithId } from '@/src/types';
 
-export function EditBioForm({ uid }: { uid: string; }) {
+type Props = { uid: string; pageProfile: WithId<UserProfile>; };
+
+export function BioSection({ uid, pageProfile }: Props) {
+  const [editing, setEditing] = useState(false);
+
+  return (
+    <>
+      <h3 className="flex items-center">
+        Bio
+        {pageProfile.id === uid && (
+        <button
+          type="button"
+          onClick={() => setEditing(!editing)}
+          className="ml-2"
+        >
+          <FaEdit />
+        </button>
+        )}
+      </h3>
+
+      {/* show an editable textarea for own page, otherwise other's bio */}
+      {editing ? <EditBioForm uid={uid} /> : (
+        <p className="mt-2">
+          {pageProfile.bio}
+        </p>
+      )}
+    </>
+  );
+}
+
+function EditBioForm({ uid }: { uid: string; }) {
   const [bio, setBio] = useState('');
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(false);

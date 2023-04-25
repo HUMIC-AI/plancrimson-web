@@ -16,7 +16,7 @@ import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { ImageWrapper } from '@/components/Utils/UserLink';
 import { UserProfile, WithId } from '@/src/types';
 import useSyncSchedulesMatchingContraints, { sortSchedulesBySemester } from '@/src/utils/schedules';
-import { EditBioForm } from '@/components/ConnectPageComponents/EditBioForm';
+import { BioSection } from '@/components/ConnectPageComponents/EditBioForm';
 import { useProfile, useFriendStatus, FriendStatus } from '@/components/ConnectPageComponents/useProfile';
 
 const statusMessage: Record<FriendStatus, string> = {
@@ -88,7 +88,7 @@ function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserP
     <div className="flex flex-col space-y-8">
       <div>
         {/* top region with image and name */}
-        <div className="flex items-center">
+        <section className="flex items-center">
           <ImageWrapper url={pageProfile.photoUrl} size="md" alt="User profile" />
 
           <div className="ml-8">
@@ -112,7 +112,7 @@ function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserP
               </button>
             )}
           </div>
-        </div>
+        </section>
 
         {/* bio */}
         <p className="mt-4">
@@ -121,19 +121,15 @@ function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserP
           {pageProfile.classYear}
         </p>
 
-        <h3 className="mt-4 text-xl font-medium">Bio</h3>
-        {/* show an editable textarea for own page, otherwise other's bio */}
-        {pageProfile.id === uid ? (
-          <EditBioForm uid={uid} />
-        ) : (
-          <p className="mt-2">{pageProfile.bio}</p>
-        )}
+        <section className="mt-4">
+          <BioSection uid={uid} pageProfile={pageProfile} />
+        </section>
       </div>
 
       {/* schedules */}
       <section>
         <div className="mb-4 flex items-center justify-between border-b-2">
-          <h2 className="text-xl font-medium">
+          <h2>
             Schedules
           </h2>
           <CardExpandToggler />
