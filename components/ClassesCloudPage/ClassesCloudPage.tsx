@@ -1,5 +1,5 @@
 import {
-  PropsWithChildren, useEffect, useRef, useState,
+  PropsWithChildren, useEffect, useRef,
 } from 'react';
 import Layout from '@/components/Layout/Layout';
 import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
@@ -12,6 +12,7 @@ import type { CourseLevel } from '@/src/types';
 import {
   createScene, createPoints, createControls, createMouseTracker, createRaycaster, syncWindow,
 } from './createScene';
+import { useData } from './useData';
 
 const sensitivity = 20;
 const CLICK_DELAY = 200; // only register a click if the amount of time is less than this
@@ -22,11 +23,12 @@ type Props = {
   interactive?: boolean;
   particleSize?: number;
   level?: CourseLevel;
+  filterSubjects?: Subject[];
 };
 
 export default function ClassesCloudPage({ children, ...props }: PropsWithChildren<Props>) {
   return (
-    <Layout className="relative flex-1 bg-black" title="Plan" transparentHeader>
+    <Layout className="relative flex flex-1 items-center justify-center bg-black" title="Plan" transparentHeader>
       <ClassesCloud {...props} />
       {children}
     </Layout>
@@ -45,34 +47,36 @@ function ClassesCloud({
   interactive = false,
   particleSize = 1,
   level = 'all',
+  filterSubjects,
 }: Props) {
   const dispatch = useAppDispatch();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const isClick = useRef(false);
   const clickTimeout = useRef<ReturnType<typeof setTimeout>>();
   const gtSm = useBreakpoint(breakpoints.sm);
   const { showCourse } = useModal();
-  const { positions, courses } = useData(level);
+  const { positions, courses } = useData(level, filterSubjects);
   const { client } = useMeiliClient();
 
   // if on mobile, use orbit controls instead of track controls
   const controls = rawControls === 'track' && !gtSm ? 'orbit' : rawControls;
+
+  // refs
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const currentHoverRef = useRef<number | null>(null);
+  const sceneRef = useRef<THREE.Scene>();
+  const pointsRef = useRef<THREE.Points>();
 
   useEffect(() => {
     console.info('initializing scene');
-    if (!canvasRef.current || !positions || !courses) return;
 
     const { scene, camera, renderer } = createScene(canvasRef.current!);
-
-    const points = createPoints(courses.map((courseData) => courseData[1]), positions, particleSize);
-    scene.add(points);
+    sceneRef.current = scene;
 
     const orbitControls = controls === 'orbit' ? createControls(camera, renderer, autoRotate) : null;
 
     const mouseTracker = (controls === 'track' || interactive) ? createMouseTracker() : null;
 
-    const raycaster = interactive ? createRaycaster(points, particleSize / 3) : null;
+    const raycaster = interactive ? createRaycaster(particleSize / 3) : null;
 
     const disposeResizeListener = syncWindow(camera, renderer);
 
@@ -86,8 +90,8 @@ function ClassesCloud({
         camera.position.y += (mouseTracker!.mouse.y * sensitivity - camera.position.y) * 0.05;
       }
 
-      if (raycaster) {
-        raycaster.update(mouseTracker!.mouse, camera);
+      if (raycaster && pointsRef.current) {
+        raycaster.update(pointsRef.current, mouseTracker!.mouse, camera);
         if (raycaster.currentIntersect !== currentHoverRef.current) {
           currentHoverRef.current = raycaster.currentIntersect;
         }
@@ -100,11 +104,21 @@ function ClassesCloud({
 
     return () => {
       scene.children.forEach((child) => scene.remove(child));
+      sceneRef.current = undefined;
+      pointsRef.current = undefined;
+      currentHoverRef.current = null;
       if (orbitControls) orbitControls.dispose();
       if (mouseTracker) mouseTracker.dispose();
       renderer.dispose();
       disposeResizeListener();
     };
+  }, []);
+
+  useEffect(() => {
+    if (!positions || !courses) return;
+    if (pointsRef.current) sceneRef.current!.remove(pointsRef.current);
+    pointsRef.current = createPoints(courses.map((courseData) => courseData[1]), positions, particleSize);
+    sceneRef.current!.add(pointsRef.current);
   }, [positions, courses]);
 
   return (
@@ -143,32 +157,3 @@ function ClassesCloud({
   );
 }
 
-const DATA_PATHS: Record<CourseLevel, [string, string]> = {
-  undergrad: ['/tsne-undergrad.json', '/courses-undergrad.json'],
-  all: ['/tsne.json', '/courses.json'],
-  grad: ['/tsne-grad.json', '/courses-grad.json'],
-};
-
-function useData(level: CourseLevel) {
-  const [positions, setPositions] = useState<[number, number, number][] | null>(null);
-  const [courses, setCourses] = useState<[string, Subject][] | null>(null);
-
-  useEffect(() => {
-    console.info('fetching data');
-    const [tsnePath, coursesPath] = DATA_PATHS[level];
-
-    fetch(tsnePath)
-      .then((res) => res.json())
-      .then((data) => {
-        setPositions(data);
-      });
-
-    fetch(coursesPath)
-      .then((res) => res.json())
-      .then((data) => {
-        setCourses(data);
-      });
-  }, [level]);
-
-  return { positions, courses };
-}

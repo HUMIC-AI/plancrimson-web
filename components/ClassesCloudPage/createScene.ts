@@ -61,16 +61,17 @@ export function createPoints(subjects: Subject[], positions: [number, number, nu
   return points;
 }
 
-export function createRaycaster(points: THREE.Points, threshold: number) {
+export function createRaycaster(threshold: number) {
   const raycaster = new THREE.Raycaster();
   raycaster.params.Points!.threshold = threshold;
 
   let currentIntersect: number | null = null;
   let originalColor: RGB | null = null;
-  const colorBuffer = points.geometry.attributes.color;
 
-  function update(mouse: THREE.Vector2, camera: THREE.Camera) {
+  function update(points: THREE.Points, mouse: THREE.Vector2, camera: THREE.Camera) {
     raycaster.setFromCamera(mouse, camera);
+
+    const colorBuffer = points.geometry.attributes.color;
 
     const intersects = raycaster.intersectObject(points, false);
 
