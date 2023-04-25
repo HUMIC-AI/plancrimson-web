@@ -3,8 +3,9 @@ import { useModal } from '@/src/context/modal';
 import { TERM_TO_SEASON } from '@/src/lib';
 import { classNames } from '@/src/utils/styles';
 import { Schedule } from '@/src/types';
-import { ModalWrapper } from './CourseSearchModal';
+import dynamic from 'next/dynamic';
 
+const DynamicCourseSearchModal = dynamic(() => import('./CourseSearchModal'));
 
 export default function AddCoursesButton({
   schedule, className = '', children,
@@ -24,7 +25,7 @@ export default function AddCoursesButton({
         const term = terms.find((t) => TERM_TO_SEASON[t].season === schedule.season && TERM_TO_SEASON[t].year === schedule.year);
         showContents({
           title: 'Add a course',
-          content: <ModalWrapper selected={schedule.id} term={term} />,
+          content: <DynamicCourseSearchModal selected={schedule.id} term={term} />,
         });
       }}
     >

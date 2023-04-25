@@ -53,7 +53,7 @@ export default function Calendar({ schedule }: CalendarProps) {
   );
 
   return (
-    <div className="border-black shadow-lg sm:rounded-lg sm:border-4">
+    <>
       <HeaderSection events={events} schedule={schedule} />
 
       <div className="overflow-auto">
@@ -125,6 +125,6 @@ export default function Calendar({ schedule }: CalendarProps) {
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -7,7 +7,7 @@ import SearchBox from './SearchComponents/SearchBox/SearchBox';
 import Hits from './SearchComponents/Hits';
 
 
-export function ModalWrapper({ selected, term }: { selected: string, term: string | undefined }) {
+export default function CourseSearchModal({ selected, term }: { selected: string, term: string | undefined }) {
   const context = useMemo(() => ({ chosenScheduleId: selected, chooseSchedule() { } }), [selected]);
 
   return (

@@ -71,49 +71,11 @@ export function ModalProvider({ children }: PropsWithChildren<{}>) {
     setOpen(true);
   };
 
-  function showCourse(course: ExtendedClass) {
-    const semester = course ? getSemester(course) : null;
-
-    const title = course
-      ? course.SUBJECT + course.CATALOG_NBR
-      : 'An unexpected error occurred.';
-
-    const headerContent = course && (
-      <>
-        <p className="my-2 text-lg font-medium">{course.Title}</p>
-        {semester && (
-          <p className="text-sm">{`${semester.season} ${semester.year}`}</p>
-        )}
-        <p className="text-sm">
-          <ExternalLink href={getMyHarvardUrl(course)}>
-            my.harvard
-          </ExternalLink>
-          {'  '}
-          |
-          {'  '}
-          <ExternalLink href={course.URL_URLNAME}>Course Site</ExternalLink>
-        </p>
-      </>
-    );
-
-    const analytics = getAnalytics();
-    logEvent(analytics, 'view_course', {
-      subject: course.SUBJECT,
-      catalogNumber: course.CATALOG_NBR,
-    });
-
-    const content = course && <CourseTabs course={course} />;
-
-    showContents({
-      title, headerContent, content,
-    });
-  }
-
   const context = useMemo(() => ({
     open,
     data,
     setOpen,
-    showCourse,
+    showCourse: (course: ExtendedClass) => showContents(getCourseModalContent(course)),
     showContents,
   }), [open, data]);
 
@@ -125,3 +87,41 @@ export function ModalProvider({ children }: PropsWithChildren<{}>) {
 }
 
 export const useModal = () => useContext(ModalContext);
+
+export function getCourseModalContent(course: ExtendedClass) {
+  const semester = course ? getSemester(course) : null;
+
+  const title = course
+    ? course.SUBJECT + course.CATALOG_NBR
+    : 'An unexpected error occurred.';
+
+  const headerContent = course && (
+    <>
+      <p className="my-2 text-lg font-medium">{course.Title}</p>
+      {semester && (
+        <p className="text-sm">{`${semester.season} ${semester.year}`}</p>
+      )}
+      <p className="text-sm">
+        <ExternalLink href={getMyHarvardUrl(course)}>
+          my.harvard
+        </ExternalLink>
+        {'  '}
+        |
+        {'  '}
+        <ExternalLink href={course.URL_URLNAME}>Course Site</ExternalLink>
+      </p>
+    </>
+  );
+
+  const analytics = getAnalytics();
+  logEvent(analytics, 'view_course', {
+    subject: course.SUBJECT,
+    catalogNumber: course.CATALOG_NBR,
+  });
+
+  const content = course && <CourseTabs course={course} />;
+
+  return {
+    title, headerContent, content,
+  };
+}

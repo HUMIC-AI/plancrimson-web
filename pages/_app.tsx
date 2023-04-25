@@ -7,7 +7,7 @@ import React from 'react';
 import { SearchStateProvider } from '@/src/context/searchState';
 import store from '@/src/store';
 import { ModalProvider } from '@/src/context/modal';
-import { SelectedScheduleProvider } from '@/src/context/selectedSchedule';
+import { ChosenScheduleProvider } from '@/src/context/selectedSchedule';
 import { useSyncAuth, useSyncUserSettings } from '@/components/Layout/useSyncAuth';
 
 function MyApp({ Component, pageProps }: AppProps) {
@@ -16,9 +16,9 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <SearchStateProvider>
-      <SelectedScheduleProvider>
+      <ChosenScheduleProvider>
         <Component {...pageProps} />
-      </SelectedScheduleProvider>
+      </ChosenScheduleProvider>
     </SearchStateProvider>
   );
 }

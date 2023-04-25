@@ -10,6 +10,7 @@ import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { ErrorPage } from '@/components/Layout/ErrorPage';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import Calendar from '@/components/SemesterSchedule/Calendar';
+import FadeTransition from '@/components/Utils/FadeTransition';
 
 
 export default function SchedulePage() {
@@ -17,10 +18,18 @@ export default function SchedulePage() {
   const router = useRouter();
   const scheduleId = router.query.scheduleId as string;
 
-  const { schedule, error } = useSchedule(userId, scheduleId);
+  const { schedule, error } = useSchedule(scheduleId);
   const elapsed = useElapsed(5000, [scheduleId]);
 
-  if (typeof userId === 'undefined') {
+  if (error) {
+    return <ErrorPage>{error}</ErrorPage>;
+  }
+
+  if (userId === null) {
+    return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
+  }
+
+  if (typeof userId === 'undefined' || !schedule) {
     return (
       <Layout>
         {elapsed && <LoadingBars />}
@@ -28,30 +37,25 @@ export default function SchedulePage() {
     );
   }
 
-  if (userId === null) {
-    return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
-  }
-
-  if (!schedule || error) {
-    return <ErrorPage>Schedule with that id not found.</ErrorPage>;
-  }
-
-
   return (
     <Layout>
-      <Calendar schedule={schedule} />
+      <div className="border-black shadow-lg sm:rounded-lg sm:border-4">
+        <Calendar schedule={schedule} />
+      </div>
     </Layout>
   );
 }
 
 
-function useSchedule(userId: string | null | undefined, scheduleId: string) {
+function useSchedule(scheduleId: string) {
   const dispatch = useAppDispatch();
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { client } = useMeiliClient();
 
   useEffect(() => {
+    if (!scheduleId) return;
+
     const unsub = onSnapshot(Firestore.schedule(scheduleId), (snap) => {
       if (snap.exists()) {
         const scheduleData = snap.data()!;

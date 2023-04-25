@@ -1,46 +1,21 @@
 import {
-  useState, useRef,
-} from 'react';
-import {
-  Auth, Planner,
+  Auth,
 } from '@/src/features';
 import {
-  alertUnexpectedError, useAppSelector,
+  alertUnexpectedError,
 } from '@/src/utils/hooks';
-import collegeRequirements from '@/src/requirements/college';
-import {
-  Requirement,
-  RequirementGroup,
-} from '@/src/requirements/util';
-import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
-import Layout, { HeadMeta, description } from '@/components/Layout/Layout';
-import { Footer } from '@/components/Layout/Footer';
-import Navbar from '@/components/Layout/Navbar';
-import { SemestersList } from '@/components/YearSchedule/PlanningSection';
-import HiddenSchedules from '@/components/YearSchedule/HiddenSchedules';
-import HeaderSection from '@/components/YearSchedule/HeaderSection';
-import RequirementsSection from '@/components/YearSchedule/RequirementsSection';
 import ClassesCloud from '@/components/ClassesCloudPage/ClassesCloudPage';
 import { signInUser } from '@/components/Layout/useSyncAuth';
-import type { ListOfScheduleIdOrSemester } from '@/src/types';
-import CustomModal from '@/components/CustomModal';
-import { WithMeili } from '@/components/Layout/WithMeili';
-import { useColumns } from '../components/YearSchedule/useColumns';
-import { ScheduleSyncer } from '../components/ScheduleSyncer';
-import { useValidateSchedule } from '../components/YearSchedule/useValidateSchedule';
+import dynamic from 'next/dynamic';
+
+const DynamicBodySection = dynamic(() => import('@/components/YearSchedule/BodySection'));
 
 export default function PlanPage() {
   const userId = Auth.useAuthProperty('uid');
-  const showReqs = useAppSelector(Planner.selectShowReqs);
-  const md = useBreakpoint(breakpoints.md);
-  const columns = useColumns();
 
-  const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(collegeRequirements);
-  const [highlightedRequirement, setHighlightedRequirement] = useState<Requirement>();
+  if (typeof userId === 'undefined') return null;
 
-  const validationResults = useValidateSchedule(selectedRequirements);
-
-  if (!userId) {
+  if (userId === null) {
     return (
       <ClassesCloud controls="track">
         <button
@@ -54,80 +29,7 @@ export default function PlanPage() {
     );
   }
 
-  const requirementsSectionProps = {
-    selectedRequirements,
-    setSelectedRequirements,
-    highlightRequirement: setHighlightedRequirement,
-    highlightedRequirement,
-    validationResults,
-  };
-
-  if (!md) {
-    // custom layout for mobile
-    return (
-      <WithMeili enabled>
-        <HeadMeta pageTitle="Plan" description={description} />
-        <ScheduleSyncer userId={userId} />
-
-        <div className="flex min-h-screen flex-col">
-          <Navbar />
-
-          <BodySection
-            columns={columns}
-            showReqs={showReqs}
-            highlightedRequirement={highlightedRequirement}
-          />
-        </div>
-
-        {showReqs && <RequirementsSection {...requirementsSectionProps} />}
-
-        <Footer />
-
-        <CustomModal />
-      </WithMeili>
-    );
-  }
-
-  return (
-    <Layout title="Plan" className="flex flex-1 flex-row-reverse" withMeili>
-      <ScheduleSyncer userId={userId} />
-      <BodySection
-        columns={columns}
-        showReqs={showReqs}
-        highlightedRequirement={highlightedRequirement}
-      />
-
-      {showReqs && <RequirementsSection {...requirementsSectionProps} />}
-    </Layout>
-  );
-}
-
-type Props = {
-  showReqs: boolean;
-  columns: ListOfScheduleIdOrSemester;
-  highlightedRequirement?: Requirement
-};
-
-function BodySection({
-  showReqs, columns, highlightedRequirement,
-}: Props) {
-  const resizeRef = useRef<HTMLDivElement>(null!);
-
-  return (
-    <div className={classNames(
-      'flex-1 flex flex-col relative bg-black md:p-4',
-      showReqs && 'md:rounded-lg md:shadow-lg',
-    )}
-    >
-      <HeaderSection resizeRef={resizeRef} columns={columns} />
-      <SemestersList
-        highlightedRequirement={highlightedRequirement}
-        resizeRef={resizeRef}
-        columns={columns}
-      />
-      <HiddenSchedules />
-    </div>
-  );
+  return <DynamicBodySection userId={userId} />;
 }
 
 

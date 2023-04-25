@@ -16,7 +16,7 @@ export const ChosenScheduleContext = createContext<ChosenScheduleContextType>({
   chosenScheduleId: null,
 });
 
-export function SelectedScheduleProvider({ children }: PropsWithChildren<{}>) {
+export function ChosenScheduleProvider({ children }: PropsWithChildren<{}>) {
   const { query, pathname, replace } = useRouter();
   const { selected: chosenScheduleId } = query;
 
