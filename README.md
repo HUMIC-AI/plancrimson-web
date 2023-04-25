@@ -7,7 +7,7 @@ The frontend for the Plan Crimson project!
 - Compare multiple schedules side-by-side
 - Check for conflicting courses
 
-See [TODO](./TODO.md) for planned features.
+See [TODO](./TODO.md) for planned features. See the [parent repository](https://github.com/HUMIC-AI/plancrimson) for more details.
 
 ## Getting started
 

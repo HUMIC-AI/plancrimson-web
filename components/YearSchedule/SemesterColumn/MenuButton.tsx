@@ -34,7 +34,7 @@ function Wrapper({
       {onClick ? (
         <button
           type="button"
-          className="flex w-full items-center rounded px-1 transition hover:bg-gray-dark/50"
+          className="menu-button"
           onClick={onClick}
         >
           {children}
@@ -42,7 +42,7 @@ function Wrapper({
       ) : (
         <Link
           href={href}
-          className="flex w-full items-center rounded px-1 transition hover:bg-gray-dark/50"
+          className="menu-button"
         >
           {children}
         </Link>

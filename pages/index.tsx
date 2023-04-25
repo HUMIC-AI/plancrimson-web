@@ -1,5 +1,5 @@
 import {
-  useState, useEffect, useMemo, useRef,
+  useState, useEffect, useRef,
 } from 'react';
 import {
   allTruthy,
@@ -28,9 +28,8 @@ import HeaderSection from '@/components/YearSchedule/HeaderSection';
 import RequirementsSection from '@/components/YearSchedule/RequirementsSection';
 import ClassesCloud from '@/components/ClassesCloudPage/ClassesCloudPage';
 import { signInUser } from '@/components/Layout/useSyncAuth';
-import useSyncSchedulesMatchingContraints from '@/src/utils/schedules';
-import { where } from 'firebase/firestore';
 import { useColumns } from '../components/YearSchedule/useColumns';
+import { ScheduleSyncer } from '../components/ScheduleSyncer';
 
 export default function PlanPage() {
   const userId = Auth.useAuthProperty('uid');
@@ -146,11 +145,13 @@ function useValidateSchedule(selectedRequirements: RequirementGroup) {
   return validationResults;
 }
 
+type Props = {
+  showReqs: boolean, columns: SemesterDisplayProps[], highlightedRequirement?: Requirement
+};
+
 function BodySection({
   showReqs, columns, highlightedRequirement,
-}: {
-  showReqs: boolean, columns: SemesterDisplayProps[], highlightedRequirement?: Requirement
-}) {
+}: Props) {
   const resizeRef = useRef<HTMLDivElement>(null!);
 
   return (
@@ -170,8 +171,4 @@ function BodySection({
   );
 }
 
-function ScheduleSyncer({ userId }: { userId: string; }) {
-  const constraints = useMemo(() => [where('ownerUid', '==', userId)], [userId]);
-  useSyncSchedulesMatchingContraints(constraints);
-  return null;
-}
+

@@ -61,48 +61,50 @@ export function SemestersList({
 
   return (
     <DragAndDropProvider>
-      <div className="relative mt-4 flex-1 overflow-x-auto">
-        {/* on small screens, this extends as far as necessary */}
-        {/* on medium screens and larger, put this into its own box */}
-        <div
-          className="absolute inset-0 grid grid-flow-col overflow-auto rounded-lg"
-          ref={semestersContainerRef}
-        >
-          {/* when dragging a card, drag over this area to scroll left */}
-          <div ref={leftScrollRef} />
-
-          {/* add previous semester button */}
-          {semesterFormat === 'selected' && classYear && (
-          <button
-            type="button"
-            className="h-full grow-0 bg-blue-light px-4 transition hover:bg-accent"
-            onClick={addPrevSemester}
-            name="Add previous semester"
-            title="Add previous semester"
+      <div className="relative mt-4 flex-1">
+        <div className="absolute inset-0 overflow-scroll">
+          {/* on small screens, this extends as far as necessary */}
+          {/* on medium screens and larger, put this into its own box */}
+          <div
+            className="mx-auto flex h-full w-max overflow-hidden rounded-lg"
+            ref={semestersContainerRef}
           >
-            <FaPlus />
-          </button>
-          )}
+            {/* when dragging a card, drag over this area to scroll left */}
+            <div ref={leftScrollRef} />
 
-          {showColumns.map((column) => (
-            <SemesterColumn
-              {...{
-                ...column,
-                colWidth,
-                highlightedRequirement,
-              }}
-            />
-          ))}
+            {/* add previous semester button */}
+            {semesterFormat === 'selected' && classYear && (
+            <button
+              type="button"
+              className="h-full grow-0 bg-blue-light px-4 transition hover:bg-accent"
+              onClick={addPrevSemester}
+              name="Add previous semester"
+              title="Add previous semester"
+            >
+              <FaPlus />
+            </button>
+            )}
 
-          {/* when dragging, drag over this area to scroll right */}
-          <div ref={rightScrollRef} />
+            {showColumns.map((column) => (
+              <SemesterColumn
+                {...{
+                  ...column,
+                  colWidth,
+                  highlightedRequirement,
+                }}
+              />
+            ))}
+
+            {/* when dragging, drag over this area to scroll right */}
+            <div ref={rightScrollRef} />
+          </div>
+
+          <DragObservers
+            leftIntersecting={leftIntersecting}
+            rightIntersecting={rightIntersecting}
+            semestersContainerRef={semestersContainerRef}
+          />
         </div>
-
-        <DragObservers
-          leftIntersecting={leftIntersecting}
-          rightIntersecting={rightIntersecting}
-          semestersContainerRef={semestersContainerRef}
-        />
       </div>
     </DragAndDropProvider>
   );

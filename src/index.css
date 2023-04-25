@@ -26,4 +26,12 @@
   .interactive {
     @apply hover:opacity-50 transition-opacity;
   }
+
+  .menu-button {
+    @apply flex w-full items-center rounded px-1 transition hover:bg-gray-dark/50;
+  }
+
+  .menu-dropdown {
+    @apply rounded bg-white p-1 text-gray-dark shadow-md focus:outline-none;
+  }
 }
