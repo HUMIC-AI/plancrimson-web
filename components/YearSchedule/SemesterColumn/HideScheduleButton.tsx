@@ -1,27 +1,21 @@
 import { Planner } from '@/src/features';
 import { useAppDispatch } from '@/src/utils/hooks';
 import { FaEyeSlash } from 'react-icons/fa';
-import { Term } from '@/src/lib';
+import { isScheduleId } from '@/src/utils/schedules';
+import { semesterToTerm } from '@/src/lib';
+import type { ScheduleIdOrSemester } from '@/src/types';
 import { MenuButton } from './MenuButton';
 
-type Props = {
-  term?: never;
-  scheduleId: string;
-} | {
-  term: Term;
-  scheduleId?: never;
-};
-
-export function HideScheduleButton({ scheduleId, term }: Props) {
+export function HideScheduleButton({ s } : { s: ScheduleIdOrSemester }) {
   const dispatch = useAppDispatch();
 
   return (
     <MenuButton
       onClick={() => {
-        if (term) {
-          dispatch(Planner.setHiddenTerm({ term, hidden: true }));
+        if (isScheduleId(s)) {
+          dispatch(Planner.setHiddenId({ id: s, hidden: true }));
         } else {
-          dispatch(Planner.setHiddenId({ id: scheduleId, hidden: true }));
+          dispatch(Planner.setHiddenTerm({ term: semesterToTerm(s), hidden: true }));
         }
       }}
       Icon={FaEyeSlash}

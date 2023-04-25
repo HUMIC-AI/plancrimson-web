@@ -1,4 +1,4 @@
-import { UserSettings } from '../types';
+import type { UserSettings } from '../types';
 
 export function getInitialSettings(): UserSettings {
   return {

@@ -7,7 +7,9 @@ import { Semester } from '@/src/lib';
 import { v4 as uuidv4 } from 'uuid';
 import Firestore from '../schema';
 import type { AppDispatch, RootState } from '../store';
-import { ScheduleMap, UserClassData, Schedule } from '../types';
+import type {
+  ScheduleMap, UserClassData, Schedule, ScheduleId,
+} from '../types';
 
 const initialState: ScheduleMap = {};
 
@@ -58,10 +60,13 @@ export const schedulesSlice = createSlice({
 // ========================= SELECTORS =========================
 
 export const selectSchedules = (state: RootState) => state.schedules;
-export const selectSchedule = (scheduleId: string | null) => function ({ schedules }: RootState) {
-  if (scheduleId === null) return null;
-  return schedules[scheduleId];
-};
+
+export function selectSchedule(scheduleId: ScheduleId | null | undefined) {
+  return function ({ schedules }: RootState) {
+    if (!scheduleId) return null;
+    return schedules[scheduleId] ?? null;
+  };
+}
 
 // ========================= ACTION CREATORS =========================
 

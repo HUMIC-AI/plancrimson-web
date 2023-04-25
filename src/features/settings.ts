@@ -56,5 +56,6 @@ export const chooseSchedule = ({ scheduleId, term }: ChooseSchedulePayload) => a
 };
 
 export const selectChosenSchedules = (state: RootState) => state.settings.chosenSchedules;
+export const selectChosenScheduleId = (term: Term | null | undefined) => (state: RootState) => (term && state.settings.chosenSchedules[term]) ?? null;
 export const selectCustomTimes = (state: RootState) => state.settings.customTimes;
 export const selectCustomTime = (classId: string) => (state: RootState) => state.settings.customTimes[classId];

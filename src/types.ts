@@ -105,5 +105,11 @@ export interface DownloadPlan {
 
 // maps from ids to schedules
 export interface ScheduleMap {
-  [scheduleId: string]: Schedule;
+  [scheduleId: ScheduleId]: Schedule;
 }
+
+export type ScheduleId = string;
+
+export type ScheduleIdOrSemester = Semester | ScheduleId;
+
+export type ListOfScheduleIdOrSemester = ScheduleId[] | Semester[];

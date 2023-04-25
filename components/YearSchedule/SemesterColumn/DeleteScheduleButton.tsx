@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { getPreviousSchedule } from '@/src/utils/schedules';
 import { useCallback } from 'react';
 import { FaTrash } from 'react-icons/fa';
+import { semesterToTerm } from '@/src/lib';
 import { MenuButton } from './MenuButton';
 
 export function DeleteScheduleButton({ scheduleId }: { scheduleId: string; }) {
@@ -20,7 +21,7 @@ export function DeleteScheduleButton({ scheduleId }: { scheduleId: string; }) {
       const previousSchedule = getPreviousSchedule(schedules, scheduleId);
       dispatch(Schedules.deleteSchedule(scheduleId))
         .then(() => dispatch(Settings.chooseSchedule({
-          term: `${schedule.year}${schedule.season}`,
+          term: semesterToTerm(schedule),
           scheduleId: previousSchedule ? previousSchedule.id : null,
         })))
         .catch((err) => {

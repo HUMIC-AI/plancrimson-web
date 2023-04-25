@@ -4,7 +4,7 @@ import {
   Planner, Profile, Schedules, Settings,
 } from '@/src/features';
 import { useAppSelector } from '@/src/utils/hooks';
-import type { SemesterDisplayProps } from '@/components/YearSchedule/SemesterColumn/PlanningScheduleColumn';
+import { ListOfScheduleIdOrSemester } from '@/src/types';
 
 /**
  * Gets the list of semesters to display in the planner
@@ -16,15 +16,11 @@ export function useColumns() {
   const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
   const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
 
-  const columns: SemesterDisplayProps[] = useMemo(() => {
+  const columns: ListOfScheduleIdOrSemester = useMemo(() => {
     switch (semesterFormat) {
       case 'sample':
         if (!sampleSchedule) return [];
-        return sampleSchedule.schedules.map(({ year, season, id }) => ({
-          semester: { year, season },
-          chosenScheduleId: id,
-          key: id,
-        }));
+        return sampleSchedule.schedules.map(({ id }) => id);
 
       case 'selected':
         // TODO get semesters from class year and handle gappers
@@ -32,21 +28,12 @@ export function useColumns() {
         return getUniqueSemesters(
           classYear,
           ...Object.values(userSchedules),
-        ).map(({ year, season }) => ({
-          key: `${year}${season}`,
-          semester: { year, season },
-          chosenScheduleId: chosenSchedules[`${year}${season}`] ?? null,
-        }));
+        ).map(({ year, season }) => ({ year, season }));
 
       case 'all':
         return Object.values(userSchedules)
           .sort(compareSemesters)
-          .map(({ year, season, id }) => ({
-            key: id,
-            semester: { year, season },
-            chosenScheduleId: id,
-            highlight: chosenSchedules[`${year}${season}`] === id,
-          }));
+          .map(({ id }) => id);
 
       default:
         return [];

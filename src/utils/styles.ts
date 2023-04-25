@@ -18,11 +18,14 @@ export function classNames(...classes: (string | boolean)[]) {
 }
 
 
+/**
+ * @returns if the screen is past a breakpoint.
+ */
 export function useBreakpoint(breakpoint: number) {
   const [isPast, setIsPast] = useState(false);
 
   useEffect(() => {
-    if (!window) return; // ignore on server
+    if (!window) return; // ignore on server side
 
     function handleResize(this: Window) {
       setIsPast(this.innerWidth >= breakpoint);

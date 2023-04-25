@@ -6,7 +6,7 @@ import { FaAngleDown } from 'react-icons/fa';
 import { Auth, Schedules, Settings } from '@/src/features';
 import { useAppDispatch } from '@/src/utils/hooks';
 import { classNames } from '@/src/utils/styles';
-import { Season } from '@/src/lib';
+import { Season, semesterToTerm } from '@/src/lib';
 import FadeTransition from '../Utils/FadeTransition';
 import { ButtonTitle } from './ButtonTitle';
 import { StyledOption } from './StyledOption';
@@ -145,7 +145,7 @@ export default function ScheduleChooser({
                   const newSchedule = await dispatch(Schedules.createDefaultSchedule({ season, year }, userId));
                   try {
                     await dispatch(Settings.chooseSchedule({
-                      term: `${newSchedule.payload.year}${newSchedule.payload.season}`,
+                      term: semesterToTerm(newSchedule.payload),
                       scheduleId: newSchedule.payload.id,
                     }));
                   } catch (err) {

@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { FaClone } from 'react-icons/fa';
+import { semesterToTerm } from '@/src/lib';
 import { MenuButton } from './MenuButton';
 
 export function DuplicateScheduleButton({ scheduleId }: { scheduleId: string; }) {
@@ -15,7 +16,7 @@ export function DuplicateScheduleButton({ scheduleId }: { scheduleId: string; })
         ...schedule, id: uuidv4(), title: `${schedule.title} copy`,
       }));
       await dispatch(Settings.chooseSchedule({
-        term: `${schedule.year}${schedule.season}`,
+        term: semesterToTerm(newSchedule.payload),
         scheduleId: newSchedule.payload.id,
       }));
     } catch (err) {

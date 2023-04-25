@@ -14,7 +14,6 @@ import { DownloadPlan } from '@/src/types';
 import UploadForm from '../UploadForm';
 import CardExpandToggler from './CardExpandToggler';
 import { WithResizeRef } from './PlanningSection';
-import { SemesterDisplayProps } from './SemesterColumn/SemesterColumn';
 
 /**
  * The header section of the planning page.
@@ -96,7 +95,9 @@ function OptionsMenu({ columns }: { columns: SemesterDisplayProps[] }) {
       ? sampleSchedule!.id
       : Math.random().toString(16).slice(2, 18),
     schedules: allTruthy(
-      columns.map(({ chosenScheduleId }) => (chosenScheduleId ? userSchedules[chosenScheduleId] : null)),
+      columns.map(({ scheduleId: chosenScheduleId }) => (
+        chosenScheduleId ? userSchedules[chosenScheduleId] : null
+      )),
     ),
   };
 

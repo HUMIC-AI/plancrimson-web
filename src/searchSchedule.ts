@@ -59,7 +59,7 @@ export function checkViable({
   if (
     cls.SUBJECT === 'FRSEMR'
       && classYear
-      && getSchoolYear({ year: schedule.year, season: schedule.season }, classYear) > 1
+      && getSchoolYear(schedule, classYear) > 1
   ) {
     return {
       viability: 'No',

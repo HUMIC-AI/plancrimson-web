@@ -7,7 +7,17 @@ import { ClassCache, Schedules } from '../features';
 import { alertUnexpectedError, useAppDispatch } from './hooks';
 import { useMeiliClient } from '../context/meili';
 import Firestore from '../schema';
-import { Schedule, ScheduleMap } from '../types';
+import type {
+  ListOfScheduleIdOrSemester, Schedule, ScheduleId, ScheduleIdOrSemester, ScheduleMap,
+} from '../types';
+
+export function isScheduleId(s: ScheduleIdOrSemester): s is ScheduleId {
+  return typeof s === 'string';
+}
+
+export function isListOfScheduleIds(s: ListOfScheduleIdOrSemester): s is ScheduleId[] {
+  return (s as ScheduleIdOrSemester[]).every(isScheduleId);
+}
 
 /**
  * Listen to all schedules on Firestore that meet the given constraints.

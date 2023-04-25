@@ -1,23 +1,17 @@
 import {
-  useState, useEffect, useRef,
+  useState, useRef,
 } from 'react';
 import {
-  allTruthy,
-} from '@/src/lib';
-import {
-  Auth, ClassCache, Planner, Profile, Schedules, Settings,
+  Auth, Planner,
 } from '@/src/features';
 import {
   alertUnexpectedError, useAppSelector,
 } from '@/src/utils/hooks';
-import validateSchedules from '@/src/requirements';
 import collegeRequirements from '@/src/requirements/college';
 import {
-  GroupResult,
   Requirement,
   RequirementGroup,
 } from '@/src/requirements/util';
-import { SemesterDisplayProps } from '@/components/YearSchedule/SemesterColumn/SemesterColumn';
 import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
 import Layout from '@/components/Layout/Layout';
 import { Footer } from '@/components/Layout/Footer';
@@ -28,8 +22,10 @@ import HeaderSection from '@/components/YearSchedule/HeaderSection';
 import RequirementsSection from '@/components/YearSchedule/RequirementsSection';
 import ClassesCloud from '@/components/ClassesCloudPage/ClassesCloudPage';
 import { signInUser } from '@/components/Layout/useSyncAuth';
+import type { ListOfScheduleIdOrSemester } from '@/src/types';
 import { useColumns } from '../components/YearSchedule/useColumns';
 import { ScheduleSyncer } from '../components/ScheduleSyncer';
+import { useValidateSchedule } from '../components/YearSchedule/useValidateSchedule';
 
 export default function PlanPage() {
   const userId = Auth.useAuthProperty('uid');
@@ -56,11 +52,13 @@ export default function PlanPage() {
     );
   }
 
-
-  // className={classNames(
-  //   showReqs && 'md:p-8 md:grid-rows-1 md:grid-cols-[auto_1fr] items-stretch',
-  //   'w-full grid gap-4 min-h-screen',
-  // )}
+  const requirementsSectionProps = {
+    selectedRequirements,
+    setSelectedRequirements,
+    highlightRequirement: setHighlightedRequirement,
+    highlightedRequirement,
+    validationResults,
+  };
 
   if (!md) {
     return (
@@ -76,17 +74,7 @@ export default function PlanPage() {
           />
         </div>
 
-        {showReqs && (
-        <RequirementsSection
-          {...{
-            selectedRequirements,
-            setSelectedRequirements,
-            highlightRequirement: setHighlightedRequirement,
-            highlightedRequirement,
-            validationResults,
-          }}
-        />
-        )}
+        {showReqs && <RequirementsSection {...requirementsSectionProps} />}
 
         <Footer />
       </Layout>
@@ -102,51 +90,15 @@ export default function PlanPage() {
         highlightedRequirement={highlightedRequirement}
       />
 
-      {showReqs && (
-      <RequirementsSection
-        {...{
-          selectedRequirements,
-          setSelectedRequirements,
-          highlightRequirement: setHighlightedRequirement,
-          highlightedRequirement,
-          validationResults,
-        }}
-      />
-      )}
+      {showReqs && <RequirementsSection {...requirementsSectionProps} />}
     </Layout>
   );
 }
 
-function useValidateSchedule(selectedRequirements: RequirementGroup) {
-  const profile = useAppSelector(Profile.selectUserProfile);
-  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
-  const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
-  const chosenSchedules = useAppSelector(Settings.selectChosenSchedules);
-  const schedules = useAppSelector(Schedules.selectSchedules);
-  const classCache = useAppSelector(ClassCache.selectClassCache);
-
-  const [validationResults, setValidationResults] = useState<GroupResult | null>(null);
-
-  useEffect(() => {
-    const showSchedules = semesterFormat === 'sample'
-      ? sampleSchedule!.schedules
-      : allTruthy(
-        Object.values(chosenSchedules).map((id) => (id ? schedules[id] : null)),
-      );
-    const results = validateSchedules(
-      selectedRequirements,
-      showSchedules,
-      profile,
-      classCache,
-    );
-    setValidationResults(results);
-  }, [selectedRequirements, classCache, sampleSchedule, semesterFormat, profile, chosenSchedules, schedules]);
-
-  return validationResults;
-}
-
 type Props = {
-  showReqs: boolean, columns: SemesterDisplayProps[], highlightedRequirement?: Requirement
+  showReqs: boolean;
+  columns: ListOfScheduleIdOrSemester;
+  highlightedRequirement?: Requirement
 };
 
 function BodySection({

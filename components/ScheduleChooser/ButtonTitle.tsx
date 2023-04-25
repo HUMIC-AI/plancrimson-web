@@ -3,7 +3,7 @@ import { FaCheckSquare, FaSquare } from 'react-icons/fa';
 import { Schedules, Settings } from '@/src/features';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { classNames } from '@/src/utils/styles';
-import { titleContainsTerm } from '@/src/lib';
+import { semesterToTerm, titleContainsTerm } from '@/src/lib';
 
 interface ButtonTitleProps {
   showTerm: 'on' | 'off' | 'auto';
@@ -66,7 +66,7 @@ export function ButtonTitle({
             type="button"
             className="ml-2 w-4"
             onClick={() => dispatch(Settings.chooseSchedule({
-              term: `${schedule.year}${schedule.season}`,
+              term: semesterToTerm(schedule),
               scheduleId: schedule?.title || null,
             }))}
           >
