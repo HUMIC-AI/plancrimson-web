@@ -26,7 +26,7 @@ export function BioSection({ uid, pageProfile }: Props) {
       </h3>
 
       {/* show an editable textarea for own page, otherwise other's bio */}
-      {editing ? <EditBioForm uid={uid} /> : (
+      {editing ? <EditBioForm uid={uid} setEditing={setEditing} /> : (
         <p className="mt-2">
           {pageProfile.bio}
         </p>
@@ -35,7 +35,7 @@ export function BioSection({ uid, pageProfile }: Props) {
   );
 }
 
-function EditBioForm({ uid }: { uid: string; }) {
+function EditBioForm({ uid, setEditing }: { uid: string; setEditing: (b: boolean) => void; }) {
   const [bio, setBio] = useState('');
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(false);
@@ -63,11 +63,16 @@ function EditBioForm({ uid }: { uid: string; }) {
         e.preventDefault();
         setLoading(true);
         try {
-          await updateDoc(Schema.profile(uid), { bio });
+          const update = updateDoc(Schema.profile(uid), { bio });
+          const timer = new Promise((resolve) => {
+            setTimeout(resolve, 500);
+          });
+          await Promise.all([update, timer]);
         } catch (err) {
           setError(err as Error);
         }
-        setLoading(false);
+        setEditing(false);
+        // can ignore setLoading since component will unmount
       }}
     >
       <textarea

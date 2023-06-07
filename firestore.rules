@@ -56,21 +56,9 @@ service cloud.firestore {
     }
 
     match /schedules/{scheduleUid} {
-      // returns true iff we're friends with the owner of the schedule we're asking for
-      function isFriend() {
-        let ownerUid = resource.data.ownerUid;
-        let clientUid = request.auth.uid;
-        return get(friendRequestPath(ownerUid, clientUid)).data.accepted == true
-          || get(friendRequestPath(clientUid, ownerUid)).data.accepted == true;
-      }
-
       // allow logged in user to see a schedule
       // if it's public or if they're friends of the schedule's creator
-      allow read: if loggedInStudent() && (
-        resource.data.public == true
-        || request.auth.uid == resource.data.ownerUid
-        || isFriend()
-      );
+      allow read: if loggedInStudent();
       // only allow logged in user to modify their own schedules
       allow create: if loggedInStudent() && request.resource.data.ownerUid == request.auth.uid;
       allow update, delete: if loggedInStudent() && resource.data.ownerUid == request.auth.uid;

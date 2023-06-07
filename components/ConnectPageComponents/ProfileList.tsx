@@ -9,6 +9,7 @@ export default function ProfileList({ profiles, Button }: { profiles: Array<With
         <li key={profile.id} className="contents">
           <div className="flex items-center">
             <ImageWrapper url={profile.photoUrl} alt="User profile" />
+
             <Link href={`/user/${profile.username}`} className="ml-2 font-bold hover:opacity-50">
               {profile.username}
             </Link>

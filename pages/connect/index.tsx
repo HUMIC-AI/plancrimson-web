@@ -7,9 +7,7 @@ import { ErrorPage } from '@/components/Layout/ErrorPage';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { Auth } from '@/src/features';
 import { useElapsed } from '@/src/utils/hooks';
-import ConnectLayout from '@/components/ConnectPageComponents/ConnectLayout';
 import PublicSchedules from '@/components/ConnectPageComponents/PublicSchedules';
-import FriendRequests from '@/components/ConnectPageComponents/FriendRequests';
 import useSyncSchedulesMatchingContraints from '@/src/utils/schedules';
 
 /**
@@ -20,10 +18,10 @@ export default function ConnectPage() {
 
   // get public schedules from other users
   const constraints = useMemo(() => (userId ? [
-    where('public', '==', true),
-    where('owner', '!=', userId),
+    where('ownerUid', '!=', userId),
     limit(20),
   ] : null), [userId]);
+
   useSyncSchedulesMatchingContraints(constraints);
 
   const elapsed = useElapsed(2000, []);
@@ -45,9 +43,10 @@ export default function ConnectPage() {
   }
 
   return (
-    <ConnectLayout title="Connect">
-      <FriendRequests />
-      <PublicSchedules />
-    </ConnectLayout>
+    <Layout title="Connect">
+      <div className="mx-auto max-w-4xl">
+        <PublicSchedules />
+      </div>
+    </Layout>
   );
 }

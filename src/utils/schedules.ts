@@ -30,7 +30,9 @@ export default function useSyncSchedulesMatchingContraints(constraints: QueryCon
 
   const updateSchedules = useCallback((snap: QuerySnapshot<Schedule>) => {
     const scheduleEntries = snap.docs.map((doc) => doc.data());
-    const classIds = scheduleEntries.flatMap((schedule) => schedule.classes.map(({ classId }) => classId));
+    const classIds = scheduleEntries.flatMap(
+      (schedule) => schedule.classes.map(({ classId }) => classId),
+    );
 
     console.debug('[useSchedules] Reloaded schedules');
 
@@ -44,8 +46,11 @@ export default function useSyncSchedulesMatchingContraints(constraints: QueryCon
 
   useEffect(() => {
     if (constraints === null) return;
+
     const q = query(Firestore.Collection.schedules(), ...constraints);
+
     getDocs(q).then(updateSchedules).catch(alertUnexpectedError);
+
     const unsubSchedules = onSnapshot(q, updateSchedules, (err) => {
       console.error('[useSchedules] error listening for schedules (in the layout):', err);
     });

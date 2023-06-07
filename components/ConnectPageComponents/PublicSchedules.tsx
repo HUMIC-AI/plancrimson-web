@@ -11,7 +11,7 @@ export default function PublicSchedules() {
   }
 
   return (
-    <ul className="mt-6">
+    <ul className="mt-6 space-y-4">
       {Object.values(schedules).filter((schedule) => schedule.public).map((schedule) => (
         <li key={schedule.id}>
           <ScheduleSection schedule={schedule} />

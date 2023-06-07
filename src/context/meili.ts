@@ -7,6 +7,8 @@ import Firestore from '../schema';
 
 export type { InstantMeiliSearchInstance };
 
+// See the MeiliProvider component.
+
 /**
  * @returns The hostname of the Meilisearch instance, without a trailing slash.
  */

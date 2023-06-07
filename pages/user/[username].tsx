@@ -60,7 +60,7 @@ export default function () {
 
   // need to put UserPage inside layout to access MeiliSearch context provider
   return (
-    <Layout title={pageProfile.username ?? 'User'} className="mx-auto w-full max-w-screen-md flex-1 p-8">
+    <Layout title={pageProfile.username ?? 'User'} className="mx-auto w-full max-w-screen-md flex-1 p-8" withMeili>
       <UserPage pageProfile={pageProfile} uid={uid} />
     </Layout>
   );
@@ -72,13 +72,7 @@ function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserP
 
   const friendStatus = useFriendStatus(uid, pageProfile.id, refresh);
 
-  const queryConstraints = useMemo(() => {
-    if (friendStatus === 'friends' || friendStatus === 'self') {
-      return [where('ownerUid', '==', pageProfile.id)];
-    }
-
-    return [where('ownerUid', '==', pageProfile.id), where('public', '==', true)];
-  }, [pageProfile, friendStatus]);
+  const queryConstraints = useMemo(() => [where('ownerUid', '==', pageProfile.id)], [pageProfile]);
 
   useSyncSchedulesMatchingContraints(queryConstraints);
 

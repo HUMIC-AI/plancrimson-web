@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { ImageWrapper } from '@/components/Utils/UserLink';
 import { useProfiles, useElapsed } from '@/src/utils/hooks';
+import { UserProfile, WithId } from '@/src/types';
 
 export default function FindClassmates() {
   const { profiles: suggestedProfiles, error } = useSuggestedProfiles();
@@ -29,23 +30,29 @@ export default function FindClassmates() {
         const profile = profiles[profileId];
         return (
           <li key={profileId}>
-            <Link href={profile ? `/user/${profile.username}` : '#'} className="interactive m-2 block rounded-xl bg-gray-light px-4 py-2 shadow">
-              <div className="flex items-center space-x-4">
-                <ImageWrapper url={profile?.photoUrl} alt="User profile" />
-                <div>
-                  <span className="font-bold">{profile?.username || 'Loading...'}</span>
-                  <p>
-                    {numSharedCourses}
-                    {' '}
-                    courses in common
-                  </p>
-                </div>
-              </div>
-            </Link>
+            <ProfileCard profile={profile} numSharedCourses={numSharedCourses} />
           </li>
         );
       })}
     </ul>
+  );
+}
+
+function ProfileCard({ profile, numSharedCourses }: { profile: WithId<UserProfile>; numSharedCourses: number; }) {
+  return (
+    <Link href={profile ? `/user/${profile.username}` : '#'} className="interactive m-2 block rounded-xl px-4 py-2 shadow">
+      <div className="flex items-center space-x-4">
+        <ImageWrapper url={profile?.photoUrl} alt="User profile" />
+        <div>
+          <span className="font-bold">{profile?.username || 'Loading...'}</span>
+          <p>
+            {numSharedCourses}
+            {' '}
+            courses in common
+          </p>
+        </div>
+      </div>
+    </Link>
   );
 }
 
