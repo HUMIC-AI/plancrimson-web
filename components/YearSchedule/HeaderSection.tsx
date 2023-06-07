@@ -25,7 +25,7 @@ export default function HeaderSection({ resizeRef, columns }: WithResizeRef & { 
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
 
   return (
-    <div className="relative text-white">
+    <div className="relative">
       {!showReqs && (
         <button
           title="Show requirements panel"
@@ -54,7 +54,7 @@ export default function HeaderSection({ resizeRef, columns }: WithResizeRef & { 
                   dispatch(Planner.showAll());
                 }
               }}
-              className="interactive rounded bg-gray-dark px-2 py-1"
+              className="rounded px-2 py-1 hover:bg-gray-secondary"
             >
               {semesterFormat === 'all'
                 ? 'All schedules'

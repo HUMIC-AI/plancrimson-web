@@ -56,17 +56,19 @@ export function HeadMeta({
   );
 }
 
+const LAYOUT_CLASSES = 'mx-auto flex-1 container sm:p-8 bg-secondary';
+
 /**
  * Listen to the schedules given by the constraints.
  * Goes inside the meilisearch wrapper.
  */
 function Wrapper({
   children,
-  className = 'mx-auto flex-1 container sm:p-8',
+  className = LAYOUT_CLASSES,
   transparentHeader = false,
 }: PropsWithChildren<Pick<LayoutProps, 'className' | 'transparentHeader'>>) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-secondary text-primary">
       <Navbar transparent={transparentHeader} />
       <Alerts />
       <main className={className}>

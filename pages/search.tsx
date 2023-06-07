@@ -25,7 +25,11 @@ export default function SearchPage() {
   }, []);
 
   return (
-    <Layout className="mx-auto flex w-screen max-w-5xl flex-1 justify-center sm:p-8" withMeili>
+    <Layout
+      title="Search"
+      className="mx-auto flex w-screen max-w-5xl flex-1 justify-center sm:p-8"
+      withMeili
+    >
       {userId && <ScheduleSyncer userId={userId} />}
 
       <AuthRequiredInstantSearchProvider>

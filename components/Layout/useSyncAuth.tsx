@@ -3,7 +3,7 @@ import {
 } from 'firebase/firestore';
 import React, { useEffect } from 'react';
 import {
-  GoogleAuthProvider, User, getAuth, onAuthStateChanged, signInWithCredential, signInWithPopup,
+  GoogleAuthProvider, User, getAuth, onAuthStateChanged, signInWithCredential, signInWithPopup, signInWithRedirect,
 } from 'firebase/auth';
 import { getAnalytics, setUserId } from 'firebase/analytics';
 import { useAppDispatch } from '@/src/utils/hooks';
@@ -35,7 +35,7 @@ export async function signInUser() {
     provider.setCustomParameters({
       hd: 'college.harvard.edu',
     });
-    const newUser = await signInWithPopup(auth, provider);
+    const newUser = await signInWithRedirect(auth, provider);
     user = newUser.user;
   }
 

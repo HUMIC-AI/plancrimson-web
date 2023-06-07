@@ -34,7 +34,7 @@ function SortByComponent({
             <button
               type="button"
               className={classNames(
-                item.isRefined && 'font-bold bg-primary-dark',
+                item.isRefined && 'font-bold bg-blue-dark',
                 'shadow rounded py-1 px-2 hover-blue text-sm min-w-min',
               )}
               onClick={(event) => {

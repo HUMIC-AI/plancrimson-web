@@ -23,7 +23,7 @@ type Props = {
 };
 
 /**
- * A column in the {@link PlanningSection} that represents a semester.
+ * A column in the PlanningSection that represents a semester.
  * Renders a schedule chooser and the classes in the chosen schedule.
  */
 export default function SemesterColumn({

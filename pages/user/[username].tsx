@@ -106,7 +106,7 @@ function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserP
                     setRefresh(!refresh);
                   }
                 }}
-                className="interactive mt-2 rounded bg-primary-dark px-2 py-1 text-white"
+                className="interactive mt-2 rounded bg-blue-dark px-2 py-1 text-white"
               >
                 {statusMessage[friendStatus]}
               </button>

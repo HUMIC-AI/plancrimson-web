@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useModal } from '@/src/context/modal';
+import { FaSpinner } from 'react-icons/fa';
 
 /**
  * Rendered in _app.tsx once user first logs in and they don't have a profile created yet
@@ -12,10 +13,17 @@ export default function GraduationYearDialog({ defaultYear, handleSubmit }: {
 }) {
   const { setOpen } = useModal();
   const [classYear, setYear] = useState(defaultYear);
+  const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await handleSubmit(classYear);
+    setLoading(true);
+    const submission = handleSubmit(classYear);
+    const timer = new Promise((resolve) => {
+      setTimeout(resolve, 1000);
+    });
+    await Promise.all([submission, timer]);
+    setLoading(false);
     setOpen(false);
   }
 
@@ -26,6 +34,7 @@ export default function GraduationYearDialog({ defaultYear, handleSubmit }: {
     >
       <div className="mx-auto flex max-w-xs flex-col items-center space-y-4">
         <h2 className="text-xl font-semibold">What year are you graduating?</h2>
+
         <input
           type="number"
           name="graduationYear"
@@ -34,9 +43,19 @@ export default function GraduationYearDialog({ defaultYear, handleSubmit }: {
           onChange={(e) => setYear(parseInt(e.currentTarget.value, 10))}
           className="w-32 rounded-xl border-4 p-2 text-center text-3xl transition-colors hover:border-black"
         />
-        <button type="submit" className="interactive rounded-xl bg-black px-4 py-2 text-white">
-          Get started
-        </button>
+
+        <p className="text-center">Your activity on this site will be public to other users by default.</p>
+
+        <div className="relative">
+          <button type="submit" className="interactive rounded-xl bg-black px-4 py-2 text-white">
+            Get started
+          </button>
+          {loading && (
+            <div className="absolute inset-y-0 left-full ml-2 flex items-center justify-center">
+              <FaSpinner className="animate-spin" />
+            </div>
+          )}
+        </div>
       </div>
     </form>
   );

@@ -107,7 +107,7 @@ export default function CourseCard({
         className={classNames(
           'relative from-black text-left h-full',
           isExpanded || 'bg-gradient-to-br',
-          isExpanded || (highlight ? 'to-blue-light' : 'to-primary-dark'),
+          isExpanded || (highlight ? 'to-blue-light' : 'to-blue-dark'),
         )}
         draggable={drag.enabled}
         onDragStart={onDragStart}
@@ -116,7 +116,7 @@ export default function CourseCard({
         <div
           className={classNames(
             'p-2 text-white from-black via-black bg-gradient-to-br',
-            isExpanded && (highlight ? 'to-blue-light' : 'to-primary-dark'),
+            isExpanded && (highlight ? 'to-blue-light' : 'to-blue-dark'),
             drag.enabled && 'cursor-move',
             isExpanded && 'relative',
           )}

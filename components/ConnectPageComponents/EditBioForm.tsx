@@ -77,7 +77,7 @@ function EditBioForm({ uid }: { uid: string; }) {
       />
       <button
         type="submit"
-        className="interactive mt-2 rounded bg-primary-dark px-2 py-1 text-white"
+        className="interactive mt-2 rounded bg-blue-dark px-2 py-1 text-white"
         disabled={loading}
       >
         {loading ? 'Saving...' : 'Save'}

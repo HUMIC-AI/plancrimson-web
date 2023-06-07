@@ -47,7 +47,7 @@ function IncomingRequestButtons({ profile }: { profile: WithId<UserProfile> }) {
           updateDoc(ref, { accepted: true })
             .catch((err) => console.error('error accepting request', err));
         }}
-        className="interactive rounded bg-primary-dark px-2 py-1 text-white"
+        className="interactive rounded bg-blue-dark px-2 py-1 text-white"
       >
         Accept
       </button>
@@ -57,7 +57,7 @@ function IncomingRequestButtons({ profile }: { profile: WithId<UserProfile> }) {
           deleteDoc(ref)
             .catch((err) => console.error('error rejecting request', err));
         }}
-        className="interactive ml-2 rounded bg-primary-dark px-2 py-1 text-white"
+        className="interactive ml-2 rounded bg-blue-dark px-2 py-1 text-white"
       >
         Reject
       </button>

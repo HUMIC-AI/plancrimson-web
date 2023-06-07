@@ -44,7 +44,7 @@ export default function Navbar({
     <Menu
       as="nav"
       className={classNames(
-        transparent ? 'absolute inset-x-0 z-10' : 'bg-black',
+        transparent && 'absolute inset-x-0 z-10',
       )}
     >
       {({ open }) => (
@@ -53,8 +53,8 @@ export default function Navbar({
             <div className="relative flex h-16 items-center justify-between">
               <SmallComponents.MenuButton open={open} />
 
-              <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-                <div className="flex shrink-0 items-center text-white">
+              <div className="flex flex-1 items-center justify-center text-primary sm:items-stretch sm:justify-start">
+                <div className="flex shrink-0 items-center">
                   <Link href="/home">
                     {/* this on <lg */}
                     <FaCalendarCheck className="block h-8 w-auto lg:hidden" />
@@ -87,16 +87,20 @@ function NavbarLink({ item, pathname, isParent = false }: { item: Path, pathname
 
   const blockStyles = classNames(
     isCurrent
-      ? 'bg-gray-dark/70 text-white font-semibold'
-      : 'text-gray-light font-medium hover:text-white',
-    'block relative hover:bg-gray-dark px-3 py-2 rounded-md text-center transition-colors',
+      ? 'text-blue-primary font-semibold'
+      : 'text-gray-primary',
+    'block relative hover:bg-gray-secondary px-3 py-2 rounded-md text-center transition-colors',
     'sm:flex sm:items-center sm:text-sm',
   );
 
   return isParent ? (
     <div className={blockStyles}>
       <Link href={item.href} aria-current={isCurrent ? 'page' : 'false'}>{item.name}</Link>
-      <FaChevronDown className={classNames('absolute right-2 top-1/2 -translate-y-1/2', 'sm:ml-2 sm:static sm:translate-y-0')} />
+      <FaChevronDown className={classNames(
+        'absolute right-2 top-1/2 -translate-y-1/2',
+        'sm:ml-2 sm:static sm:translate-y-0',
+      )}
+      />
     </div>
   ) : (
     <Link
@@ -143,7 +147,7 @@ const SmallComponents = {
               aria-current={item.href === pathname ? 'page' : undefined}
             >
               {item.children ? (
-                <SubMenu item={item} />
+                <SmallComponents.SubMenu item={item} />
               ) : (
                 <NavbarLink item={item} pathname={pathname} />
               )}
@@ -151,6 +155,24 @@ const SmallComponents = {
           ))}
         </div>
       </Menu.Items>
+    );
+  },
+  SubMenu({ item }: { item: Path }) {
+    const { pathname } = useRouter();
+
+    return (
+      <Menu as="div">
+        <Menu.Button className="w-full">
+          <NavbarLink item={item} pathname={pathname} isParent />
+        </Menu.Button>
+        <Menu.Items className="rounded bg-black/40">
+          {item.children!.map((child) => (
+            <Menu.Item key={child.name}>
+              <NavbarLink item={child} pathname={pathname} />
+            </Menu.Item>
+          ))}
+        </Menu.Items>
+      </Menu>
     );
   },
 };
@@ -165,14 +187,7 @@ const LargeOnly = {
         {paths.map((item) => (
           // pass the query between pages to preserve the selected schedule
           item.children ? (
-            <div key={item.name} className="group/nav relative">
-              <NavbarLink key={item.name} item={item} pathname={pathname} isParent />
-              <div className="absolute left-1/2 top-full z-10 hidden -translate-x-1/2 rounded bg-black/80 group-hover/nav:block">
-                {item.children.map((child) => (
-                  <NavbarLink key={child.name} item={child} pathname={pathname} />
-                ))}
-              </div>
-            </div>
+            <LargeOnly.SubMenu item={item} />
           ) : (
             <NavbarLink key={item.name} item={item} pathname={pathname} />
           )
@@ -180,25 +195,20 @@ const LargeOnly = {
       </div>
     );
   },
+  SubMenu({ item }: { item: Path }) {
+    const { pathname } = useRouter();
+
+    return (
+      <div key={item.name} className="group/nav relative">
+        <NavbarLink key={item.name} item={item} pathname={pathname} isParent />
+
+        <div className="invisible absolute left-1/2 top-full z-10 -translate-x-1/2 rounded bg-secondary opacity-0 transition-opacity group-hover/nav:visible group-hover/nav:opacity-100">
+          {item.children!.map((child) => (
+            <NavbarLink key={child.name} item={child} pathname={pathname} />
+          ))}
+        </div>
+      </div>
+    );
+  },
 };
-
-
-function SubMenu({ item }: { item: Path }) {
-  const { pathname } = useRouter();
-
-  return (
-    <Menu as="div">
-      <Menu.Button className="w-full">
-        <NavbarLink item={item} pathname={pathname} isParent />
-      </Menu.Button>
-      <Menu.Items className="rounded bg-black/40">
-        {item.children!.map((child) => (
-          <Menu.Item key={child.name}>
-            <NavbarLink item={child} pathname={pathname} />
-          </Menu.Item>
-        ))}
-      </Menu.Items>
-    </Menu>
-  );
-}
 

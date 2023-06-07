@@ -3,6 +3,30 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-primary: 28 25 23;
+    --color-secondary: 250 250 249;
+    --color-gray-primary: 87 83 78;
+    --color-gray-secondary: 231 229 228;
+    --color-blue-primary: 30 58 138;
+    --color-blue-secondary: 186 230 253;
+    --color-season-spring: 247 254 231;
+    --color-season-fall: 255 241 242;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-primary: 203 213 225;
+      --color-secondary: 28 25 23;
+      --color-gray-primary: 231 229 228;
+      --color-gray-secondary: 87 83 78;
+      --color-blue-primary: 186 230 253;
+      --color-blue-secondary: 30 58 138;
+      --color-season-spring: 5 46 22;
+      --color-season-fall: 67 20 7;
+    }
+  }
+
   h1 {
     @apply text-4xl font-bold leading-loose;
   }
@@ -22,7 +46,7 @@
 
 @layer utilities {
   .dark-gradient {
-    @apply from-black to-primary-dark bg-gradient-to-br;
+    @apply from-black to-blue-dark bg-gradient-to-br;
   }
 }
 

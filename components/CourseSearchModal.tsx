@@ -7,6 +7,9 @@ import SearchBox from './SearchComponents/SearchBox/SearchBox';
 import Hits from './SearchComponents/Hits';
 
 
+/**
+ * Used in the main course planning page to search for courses to add to the schedule
+ */
 export default function CourseSearchModal({ selected, term }: { selected: string, term: string | undefined }) {
   const context = useMemo(() => ({ chosenScheduleId: selected, chooseSchedule() { } }), [selected]);
 

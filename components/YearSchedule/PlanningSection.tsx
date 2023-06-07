@@ -6,7 +6,7 @@ import {
 } from 'react-icons/fa';
 import { Semester, semesterToTerm } from '@/src/lib';
 import {
-  Auth, Planner, Profile, Schedules,
+  Auth, Planner, Profile, Schedules, Settings,
 } from '@/src/features';
 import {
   alertUnexpectedError, useAppDispatch, useAppSelector,
@@ -41,10 +41,17 @@ export function SemestersList({
   const semestersContainerRef = useRef<HTMLDivElement>(null!);
 
   // add a schedule whose semester is before the current earliest semester
-  function addPrevSemester() {
-    const semester = getSemesterBeforeEarliest(userSchedules);
-    dispatch(Schedules.createDefaultSchedule(semester, userId))
-      .catch(alertUnexpectedError);
+  async function addPrevSemester() {
+    try {
+      const semester = getSemesterBeforeEarliest(userSchedules);
+      const { payload } = await dispatch(Schedules.createDefaultSchedule(semester, userId));
+      await dispatch(Settings.chooseSchedule({
+        scheduleId: payload.id,
+        term: semesterToTerm(semester),
+      }));
+    } catch (e) {
+      alertUnexpectedError(e);
+    }
   }
 
   const isScheduleIds = isListOfScheduleIds(columns);
@@ -65,7 +72,7 @@ export function SemestersList({
             {!isScheduleIds && classYear && (
             <button
               type="button"
-              className="h-full grow-0 bg-blue-light px-4 transition hover:bg-accent"
+              className="h-full grow-0 bg-blue-secondary px-4 transition hover:bg-blue-primary"
               onClick={addPrevSemester}
               name="Add previous semester"
               title="Add previous semester"

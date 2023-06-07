@@ -11,7 +11,7 @@ import { useMeiliClient } from '@/src/context/meili';
 import type { CourseLevel } from '@/src/types';
 import { useData } from './useData';
 
-const sensitivity = 20;
+const sensitivity = 8;
 const CLICK_DELAY = 200; // only register a click if the amount of time is less than this
 
 type Props = {
@@ -131,7 +131,7 @@ function ClassesCloud({
   return (
     <div className={classNames(
       'absolute inset-0 overflow-hidden',
-      'transition-opacity ease-in duration-1000',
+      'transition-opacity ease-in duration-[1750ms]',
       (positions && courses) ? 'opacity-100' : 'opacity-0',
     )}
     >
