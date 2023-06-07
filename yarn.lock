@@ -2055,6 +2055,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/lunr@npm:^2.3.4":
+  version: 2.3.4
+  resolution: "@types/lunr@npm:2.3.4"
+  checksum: 251dfefec4a24831999b052968f93b0f2066992554a1ff5ea3c6f7a581691b26e03d9d892293d2042bbf48dd9885c8f706e52e63ec2258878547c86b7283618e
+  languageName: node
+  linkType: hard
+
 "@types/markdown-it@npm:^12.2.3":
   version: 12.2.3
   resolution: "@types/markdown-it@npm:12.2.3"
@@ -7966,6 +7973,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lunr@npm:^2.3.9":
+  version: 2.3.9
+  resolution: "lunr@npm:2.3.9"
+  checksum: 176719e24fcce7d3cf1baccce9dd5633cd8bdc1f41ebe6a180112e5ee99d80373fe2454f5d4624d437e5a8319698ca6837b9950566e15d2cae5f2a543a3db4b8
+  languageName: node
+  linkType: hard
+
 "make-dir@npm:^3.0.0":
   version: 3.1.0
   resolution: "make-dir@npm:3.1.0"
@@ -9092,6 +9106,7 @@ __metadata:
     "@reduxjs/toolkit": ^1.7.1
     "@rushstack/eslint-patch": ^1.2.0
     "@types/d3": ^7.4.0
+    "@types/lunr": ^2.3.4
     "@types/node": 18.11.17
     "@types/qs": ^6.9.7
     "@types/react": 18.0.26
@@ -9121,6 +9136,7 @@ __metadata:
     firebase-admin: ^11.7.0
     firebase-tools: ^11.28.0
     ics: ^3.1.0
+    lunr: ^2.3.9
     meilisearch: ^0.32.3
     next: ^13.3.1
     postcss: ^8.4.23

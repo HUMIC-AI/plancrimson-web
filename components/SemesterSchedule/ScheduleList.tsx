@@ -9,9 +9,10 @@ import type { Schedule } from '@/src/types';
 export type ScheduleListProps = {
   schedule: Schedule;
   hideAuthor?: boolean;
+  hideHeader?: boolean;
 };
 
-export default function ScheduleSection({ schedule, hideAuthor = false }: ScheduleListProps) {
+export default function ScheduleSection({ schedule, hideAuthor = false, hideHeader = false }: ScheduleListProps) {
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const cardExpand = useAppSelector(Planner.selectExpandCards);
 
@@ -22,6 +23,7 @@ export default function ScheduleSection({ schedule, hideAuthor = false }: Schedu
 
   return (
     <div className="dark-gradient rounded-xl p-4 text-gray-light shadow-xl">
+      {!hideHeader && (
       <div className="mb-2 flex items-center space-x-4">
         {!hideAuthor && <ImageWrapper url={profile?.photoUrl} alt="User profile" />}
         <div>
@@ -49,6 +51,7 @@ export default function ScheduleSection({ schedule, hideAuthor = false }: Schedu
           )}
         </div>
       </div>
+      )}
 
       {schedule.classes.length > 0 ? (
         <ul className={cardExpand === 'text' ? 'list-inside list-disc' : cardExpand === 'collapsed' ? 'flex space-x-2' : 'flex flex-wrap justify-between gap-2'}>

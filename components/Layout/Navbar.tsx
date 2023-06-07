@@ -205,8 +205,8 @@ const LargeOnly = {
     const { pathname } = useRouter();
 
     return (
-      <div key={item.name} className="group/nav relative">
-        <NavbarLink key={item.name} item={item} pathname={pathname} isParent />
+      <div className="group/nav relative">
+        <NavbarLink item={item} pathname={pathname} isParent />
 
         <div className="invisible absolute left-1/2 top-full z-10 -translate-x-1/2 rounded bg-secondary opacity-0 transition-opacity group-hover/nav:visible group-hover/nav:opacity-100">
           {item.children!.map((child) => (

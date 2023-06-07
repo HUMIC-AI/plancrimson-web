@@ -43,7 +43,7 @@ export default function PlanningPanel({ course }: { course: ExtendedClass }) {
       <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
         {sortSchedulesBySemester(schedules).map((schedule) => (
           <ScheduleRow
-            key={schedule.title}
+            key={schedule.id}
             course={course}
             schedule={schedule}
           />

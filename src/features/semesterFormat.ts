@@ -44,6 +44,9 @@ export const semesterFormatSlice = createSlice({
       // next card style in CARD_STYLES
       state.expandCards = CARD_STYLES[(CARD_STYLES.indexOf(state.expandCards) + 1) % CARD_STYLES.length];
     },
+    setExpand: (state, action: PayloadAction<typeof CARD_STYLES[number]>) => {
+      state.expandCards = action.payload;
+    },
     setShowAttributes: (state, action: PayloadAction<boolean>) => {
       state.showAttributes = action.payload;
     },
@@ -64,7 +67,7 @@ export const semesterFormatSlice = createSlice({
 });
 
 export const {
-  showAll, showSelected, showSample, toggleExpand, setShowAttributes, setShowReqs, setHiddenId, setHiddenTerm,
+  showAll, showSelected, showSample, toggleExpand, setExpand, setShowAttributes, setShowReqs, setHiddenId, setHiddenTerm,
 } = semesterFormatSlice.actions;
 
 // ========================= SELECTORS =========================
