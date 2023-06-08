@@ -60,7 +60,7 @@ function DisclosureChildren({
         </button>
       </div>
 
-      <FadeTransition>
+      <FadeTransition unmount={false}>
         <Disclosure.Panel unmount={false}>
           <div className="origin-top-right rounded-b-lg bg-gray-light p-2 text-black">
             <RefinementList

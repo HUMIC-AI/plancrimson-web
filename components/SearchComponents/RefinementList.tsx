@@ -105,6 +105,9 @@ function RefinementListComponent({
   );
 }
 
+/**
+ * There'll be one of these for each of the (MeiliSearch) attributes that you can filter by.
+ */
 // eslint-disable-next-line react/no-unused-prop-types
 export default function (props: RefinementListExposed & { showSubjectColor: boolean }) {
   return (
