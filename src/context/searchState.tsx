@@ -26,10 +26,15 @@ const SearchStateContext = createContext<SearchStateContextType>({
   onSearchStateChange: throwMissingContext,
 });
 
+const DEFAULT_SEARCH_STATE = {
+  // the current term
+  refinementList: { STRM: ['2238'] },
+};
+
 export function SearchStateProvider({ children, oneCol = false } : React.PropsWithChildren<{ oneCol?: boolean }>) {
   const router = useRouter();
   const search = useMemo(
-    () => router.asPath.split('?')[1] ?? '',
+    () => router.asPath.split('?')[1] ?? qs.stringify(DEFAULT_SEARCH_STATE),
     [router.asPath],
   );
 
