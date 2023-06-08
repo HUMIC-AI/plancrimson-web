@@ -102,12 +102,10 @@ export default function CourseCard({
 
   return (
     // move the shadow outside to avoid it getting hidden
-    <div className="overflow-hidden rounded-xl border border-gray-light shadow-xl">
+    <div className="overflow-hidden rounded-xl border border-gray-secondary shadow-xl">
       <div
         className={classNames(
-          'relative from-black text-left h-full',
-          isExpanded || 'bg-gradient-to-br',
-          isExpanded || (highlight ? 'to-blue-light' : 'to-blue-dark'),
+          'relative text-left h-full',
         )}
         draggable={drag.enabled}
         onDragStart={onDragStart}
@@ -115,8 +113,8 @@ export default function CourseCard({
         {/* header component */}
         <div
           className={classNames(
-            'p-2 text-white from-black via-black bg-gradient-to-br',
-            isExpanded && (highlight ? 'to-blue-light' : 'to-blue-dark'),
+            'p-2 from-gray-secondary via-secondary bg-gradient-to-br',
+            isExpanded && (highlight ? 'to-blue-primary' : 'to-blue-secondary'),
             drag.enabled && 'cursor-move',
             isExpanded && 'relative',
           )}
@@ -134,7 +132,7 @@ export default function CourseCard({
           {/* relative so it appears above the image */}
           <div className="relative space-y-1">
             <p className="flex items-center justify-between">
-              <button type="button" className="interactive border-b text-left font-bold text-blue-light" onClick={() => showCourse(course)}>
+              <button type="button" className="interactive border-b text-left font-bold text-blue-primary" onClick={() => showCourse(course)}>
                 <HighlightComponent
                   attribute="SUBJECT"
                   course={course}
@@ -159,7 +157,7 @@ export default function CourseCard({
               </span>
             </p>
 
-            <p className={classNames(isExpanded || 'text-sm')}>
+            <p className={classNames(isExpanded || 'text-sm', 'font-medium')}>
               <HighlightComponent
                 attribute="Title"
                 course={course}
@@ -168,7 +166,7 @@ export default function CourseCard({
             </p>
 
             {hideTerm || (
-            <p className="text-sm text-gray-light">
+            <p className="text-sm">
               {semester.season}
               {' '}
               {semester.year}

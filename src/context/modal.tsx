@@ -3,7 +3,7 @@ import {
   createContext, Dispatch, PropsWithChildren, ReactNode, SetStateAction, useContext, useMemo, useState,
 } from 'react';
 import qs from 'qs';
-import type { ExtendedClass } from '@/src/lib';
+import type { ExtendedClass, Semester } from '@/src/lib';
 import { getSemester } from '@/src/lib';
 import CourseTabs from '@/components/Course/Tabs';
 import ExternalLink from '@/components/Utils/ExternalLink';
@@ -95,23 +95,7 @@ export function getCourseModalContent(course: ExtendedClass) {
     ? course.SUBJECT + course.CATALOG_NBR
     : 'An unexpected error occurred.';
 
-  const headerContent = course && (
-    <>
-      <p className="my-2 text-lg font-medium">{course.Title}</p>
-      {semester && (
-        <p className="text-sm">{`${semester.season} ${semester.year}`}</p>
-      )}
-      <p className="text-sm">
-        <ExternalLink href={getMyHarvardUrl(course)}>
-          my.harvard
-        </ExternalLink>
-        {'  '}
-        |
-        {'  '}
-        <ExternalLink href={course.URL_URLNAME}>Course Site</ExternalLink>
-      </p>
-    </>
-  );
+  const headerContent = course && <CourseHeader course={course} semester={semester} />;
 
   const analytics = getAnalytics();
   logEvent(analytics, 'view_course', {
@@ -125,3 +109,27 @@ export function getCourseModalContent(course: ExtendedClass) {
     title, headerContent, content,
   };
 }
+
+function CourseHeader({ course, semester }: { course: ExtendedClass; semester: Semester | null; }) {
+  return (
+    <>
+      <h3 className="my-2">
+        {course.Title}
+      </h3>
+      {semester && (
+      <p className="text-sm">{`${semester.season} ${semester.year}`}</p>
+      )}
+
+      <p className="text-sm">
+        <ExternalLink href={getMyHarvardUrl(course)}>
+          my.harvard
+        </ExternalLink>
+        {'  '}
+        |
+        {'  '}
+        <ExternalLink href={course.URL_URLNAME}>Course Site</ExternalLink>
+      </p>
+    </>
+  );
+}
+

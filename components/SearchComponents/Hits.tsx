@@ -32,9 +32,9 @@ function CustomButton({
         disabled={!enabled}
         className={classNames(
           enabled
-            ? 'bg-black hover:opacity-50'
-            : 'bg-gray-light cursor-not-allowed',
-          'p-2 shadow w-24 sm:w-48 rounded text-white transition-opacity',
+            ? 'hover:opacity-50'
+            : 'cursor-not-allowed',
+          'p-2 bg-gray-secondary shadow w-24 sm:w-48 rounded transition-opacity',
           'flex justify-center',
         )}
       >

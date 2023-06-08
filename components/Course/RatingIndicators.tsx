@@ -16,13 +16,13 @@ export function StarRating({ rating }: { rating: number; }) {
         ? (
           <FaStarHalfAlt
             key={i}
-            className="text-sm text-orange"
+            className="text-sm text-yellow-dark"
           />
         )
         : (
           <FaStar
             key={i}
-            className={classNames('text-sm', star === 'full' ? 'text-yellow' : 'text-gray-dark')}
+            className={classNames('text-sm', star === 'full' ? 'text-orange dark:text-yellow' : 'text-gray-dark')}
           />
         )))}
       <span className="text-sm">

@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @layer base {
+  /* all colors taken from https://tailwindcss.com/docs/customizing-colors */
   :root {
     --color-primary: 28 25 23;
     --color-secondary: 250 250 249;
@@ -16,11 +17,11 @@
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --color-primary: 203 213 225;
+      --color-primary: 228 228 231;
       --color-secondary: 28 25 23;
       --color-gray-primary: 231 229 228;
       --color-gray-secondary: 30 41 59;
-      --color-blue-primary: 186 230 253;
+      --color-blue-primary: 96 165 250;
       --color-blue-secondary: 30 58 138;
       --color-season-spring: 5 46 22;
       --color-season-fall: 67 20 7;

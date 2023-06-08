@@ -9,7 +9,10 @@ module.exports = {
   theme: {
     colors: {
       transparent: 'transparent',
-      yellow: colors.yellow[200],
+      yellow: {
+        DEFAULT: colors.yellow[200],
+        dark: colors.amber[300],
+      },
       orange: colors.orange[300],
       pink: colors.rose[300],
       accent: colors.cyan[300],
