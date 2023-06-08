@@ -12,9 +12,12 @@ export type ScheduleListProps = {
   schedule: BaseSchedule;
   hideAuthor?: boolean;
   hideHeader?: boolean;
+  noPadding?: boolean;
 };
 
-export default function ScheduleSection({ schedule, hideAuthor = false, hideHeader = false }: ScheduleListProps) {
+export default function ScheduleSection({
+  schedule, hideAuthor = false, hideHeader = false, noPadding = false,
+}: ScheduleListProps) {
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const cardExpand = useAppSelector(Planner.selectExpandCards);
 
@@ -24,7 +27,11 @@ export default function ScheduleSection({ schedule, hideAuthor = false, hideHead
   const profile = profiles?.[schedule.ownerUid];
 
   return (
-    <div className="rounded-xl border-2 border-gray-secondary p-4">
+    <div className={classNames(
+      'rounded-xl border-2 border-gray-secondary',
+      !noPadding && 'p-4',
+    )}
+    >
       {!hideHeader && (
         <HeaderComponent
           hideAuthor={hideAuthor}

@@ -52,7 +52,8 @@ function FriendsPage() {
 
     const now = new Date();
     const year = now.getFullYear();
-    const season: Season = now.getMonth() < 6 ? 'Spring' : 'Fall';
+    // assume everything up to may is "spring semester"
+    const season: Season = now.getMonth() < 5 ? 'Spring' : 'Fall';
 
     const profilesPromise = getDocs(Schema.Collection.profiles()).then((snap) => snap.docs.map((doc) => ({
       ...doc.data(),
@@ -158,10 +159,21 @@ function FriendsPage() {
             <ul className="space-y-2">
               {profile.currentSchedules.map((schedule) => (
                 <li key={schedule.id}>
-                  <h4 className="mb-2 font-medium">
-                    {schedule.title}
-                  </h4>
-                  <ScheduleSection schedule={schedule} hideHeader />
+                  {profile.currentSchedules.length > 2 ? (
+                    <details>
+                      <summary className="mb-2 cursor-pointer font-medium">
+                        {schedule.title}
+                      </summary>
+                      <ScheduleSection schedule={schedule} hideHeader noPadding />
+                    </details>
+                  ) : (
+                    <>
+                      <h4 className="mb-2 font-medium">
+                        {schedule.title}
+                      </h4>
+                      <ScheduleSection schedule={schedule} hideHeader noPadding />
+                    </>
+                  )}
                 </li>
               ))}
             </ul>
