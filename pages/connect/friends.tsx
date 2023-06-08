@@ -4,7 +4,7 @@ import Layout from '@/components/Layout/Layout';
 import { useEffect, useState } from 'react';
 import Schema from '@/src/schema';
 import {
-  getDocs, query, where,
+  getDocs, orderBy, query, where,
 } from 'firebase/firestore';
 import {
   BaseSchedule,
@@ -61,6 +61,7 @@ function FriendsPage() {
 
     const q = query(
       Schema.Collection.schedules(),
+      where('classes', '!=', []),
       where('year', '==', year),
       where('season', '==', season),
     );
@@ -71,11 +72,13 @@ function FriendsPage() {
       .then(([allProfiles, allSchedules]) => {
         dispatch(ClassCache.loadCourses(client, getAllClassIds(allSchedules)));
 
-        const profilesAndCourses = allProfiles.map((profile) => ({
-          ...profile,
-          currentSchedules: allSchedules
-            .filter((schedule) => schedule.ownerUid === profile.id && schedule.classes.length > 0),
-        }));
+        const profilesAndCourses = allProfiles
+          .map((profile) => ({
+            ...profile,
+            currentSchedules: allSchedules
+              .filter((schedule) => schedule.ownerUid === profile.id && schedule.classes.length > 0),
+          }))
+          .filter((profile) => profile.currentSchedules.length > 0);
 
         setProfiles(profilesAndCourses);
       })
