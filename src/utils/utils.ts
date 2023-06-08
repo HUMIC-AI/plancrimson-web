@@ -5,6 +5,7 @@ export function getInitialSettings(): UserSettings {
     chosenSchedules: {},
     customTimes: {},
     waivedRequirements: {},
+    pairwiseRankings: [],
   };
 }
 

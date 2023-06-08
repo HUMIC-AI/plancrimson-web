@@ -133,6 +133,7 @@ export function useSyncUserSettings() {
         customTimes: userData.customTimes ?? {},
         chosenSchedules: userData.chosenSchedules ?? {},
         waivedRequirements: userData.waivedRequirements ?? {},
+        pairwiseRankings: userData.pairwiseRankings ?? {},
       }));
     }, (err) => {
       console.error(`error listening to ${userDataRef.path}:`, err);

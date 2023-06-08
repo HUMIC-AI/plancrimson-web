@@ -51,7 +51,7 @@ export default function Navbar({
     <Menu
       as="nav"
       className={classNames(
-        transparent && 'absolute inset-x-0 z-10',
+        transparent && 'absolute inset-x-0 z-10 bg-gray-secondary/40 hover:bg-gray-secondary/80 transition-colors',
       )}
     >
       {({ open }) => (
