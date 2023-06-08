@@ -11,7 +11,7 @@ export default function CardExpandToggler() {
     <button
       type="button"
       onClick={() => dispatch(Planner.toggleExpand())}
-      className="flex items-center justify-center transition-opacity duration-200 hover:opacity-50"
+      className="flex items-center justify-center text-blue-primary transition-opacity duration-200 hover:opacity-50"
     >
       {cardExpandStyle === 'text' && <FaExpand />}
       {cardExpandStyle === 'collapsed' && <FaExpandArrowsAlt />}

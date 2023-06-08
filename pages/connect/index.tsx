@@ -18,7 +18,7 @@ import { useMeiliClient } from '@/src/context/meili';
 import { getAllClassIds } from '@/src/utils/schedules';
 import { ScheduleList } from '@/components/SemesterSchedule/ScheduleList';
 
-export const PAGE_SIZE = 5;
+export const PAGE_SIZE = 20;
 
 export default function () {
   const userId = Auth.useAuthProperty('uid');

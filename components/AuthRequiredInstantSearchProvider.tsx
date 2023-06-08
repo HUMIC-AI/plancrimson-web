@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from 'react';
 import { Configure, InstantSearch } from 'react-instantsearch-dom';
 import { useElapsed } from '@/src/utils/hooks';
-import useSearchState from '@/src/context/searchState';
+import useSearchState, { createUrl } from '@/src/context/searchState';
 import { Auth } from '@/src/features';
 import { errorMessages } from '@/components/Layout/Layout';
 import { ErrorMessage } from '@/components/Layout/ErrorPage';
@@ -18,7 +18,7 @@ export function AuthRequiredInstantSearchProvider({
 }: PropsWithChildren<{
   hitsPerPage?: number;
 }>) {
-  const { setSearchState, searchState } = useSearchState();
+  const { searchState, onSearchStateChange } = useSearchState();
   const userId = Auth.useAuthProperty('uid');
   const { client, error } = useMeiliClient();
   const elapsed = useElapsed(3000, []);
@@ -46,10 +46,9 @@ export function AuthRequiredInstantSearchProvider({
       indexName="courses"
       searchClient={client}
       searchState={searchState}
-      onSearchStateChange={(newState) => {
-        setSearchState({ ...searchState, ...newState });
-      }}
+      onSearchStateChange={onSearchStateChange}
       stalledSearchDelay={500}
+      createURL={createUrl}
     >
       <Configure hitsPerPage={hitsPerPage} />
       {children}

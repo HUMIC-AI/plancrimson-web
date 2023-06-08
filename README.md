@@ -25,6 +25,8 @@ I've decided it's not worth the trouble upgrading to the new [react-instantsearc
 
 - `SearchComponents/` contains a number of widgets built using these interfaces.
 
+See also https://www.algolia.com/doc/guides/building-search-ui/going-further/routing-urls/react/
+
 ### Local Meilisearch
 
 You can run MeiliSearch locally. By default it will be on port `http://localhost:7700/`.
