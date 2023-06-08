@@ -1,20 +1,20 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
-  deleteDoc, getDoc, setDoc, updateDoc,
+  deleteDoc, getDoc, serverTimestamp, setDoc, updateDoc,
 } from 'firebase/firestore';
 import { Semester } from '@/src/lib';
 import { v4 as uuidv4 } from 'uuid';
 import Firestore from '../schema';
 import type { AppDispatch, RootState } from '../store';
 import type {
-  ScheduleMap, UserClassData, Schedule, ScheduleId,
+  ScheduleMap, ScheduleId, LocalSchedule, FirestoreSchedule, BaseSchedule,
 } from '../types';
 
 const initialState: ScheduleMap = {};
 
-type CoursesPayload = { courses: UserClassData[]; scheduleId: string };
+type CoursesPayload = { courses: string[]; scheduleId: string };
 
-function unionSchedulesSlice(state: any, action: PayloadAction<Schedule[]>) {
+function unionSchedulesSlice(state: any, action: PayloadAction<LocalSchedule[]>) {
   action.payload.forEach((schedule) => {
     state[schedule.id] = schedule;
   });
@@ -24,14 +24,14 @@ export const schedulesSlice = createSlice({
   name: 'schedules',
   initialState,
   reducers: {
-    overwriteSchedules(state, action: PayloadAction<Schedule[]>) {
+    overwriteSchedules(state, action: PayloadAction<LocalSchedule[]>) {
       Object.keys(state).forEach((key) => delete state[key]);
       unionSchedulesSlice(state, action);
     },
 
     unionSchedules: unionSchedulesSlice,
 
-    create(state, action: PayloadAction<Schedule>) {
+    create(state, action: PayloadAction<LocalSchedule>) {
       const { id, ...data } = action.payload;
       state[id] = { id, ...data };
     },
@@ -75,13 +75,16 @@ export const { overwriteSchedules, unionSchedules, clearSchedule } = schedulesSl
 // If it is, throw an error.
 // If it isn't, first wait to add it to Firestore.
 // Then, add it to the Redux store.
-export const createSchedule = (schedule: Schedule) => async (dispatch: AppDispatch, getState: () => RootState) => {
+// this should be the only point where schedules are created.
+export const createSchedule = (schedule: BaseSchedule) => async (dispatch: AppDispatch, getState: () => RootState) => {
   const state = getState();
   if (schedule.id in state.schedules) {
     throw new Error('schedule already exists');
   }
-  await setDoc(Firestore.schedule(schedule.id), schedule);
-  return dispatch(schedulesSlice.actions.create(schedule));
+  const ref = Firestore.schedule(schedule.id);
+  await setDoc(ref, { ...schedule, createdAt: serverTimestamp() });
+  const result = await getDoc(ref); // to load the createdAt field
+  return dispatch(schedulesSlice.actions.create(toLocalSchedule(result.data()!)));
 };
 
 export const createDefaultSchedule = ({ season, year }: Semester, uid: string) => createSchedule(getDefaultSchedule({ season, year }, uid));
@@ -90,7 +93,7 @@ export const removeCourses = (payload: { scheduleId: string, courseIds: string[]
   const { scheduleId, courseIds } = payload;
   const snap = await getDoc(Firestore.schedule(scheduleId));
   if (!snap.exists()) throw new Error('schedule does not exist');
-  const classes = snap.data()!.classes.filter(({ classId }) => !courseIds.includes(classId));
+  const classes = snap.data()!.classes.filter((classId) => !courseIds.includes(classId));
   await updateDoc(snap.ref, { classes });
   return dispatch(schedulesSlice.actions.setCourses({ scheduleId, courses: classes }));
 };
@@ -109,9 +112,9 @@ export const addCourses = ({ scheduleId, courses }: CoursesPayload) => async (di
   const snap = await getDoc(Firestore.schedule(scheduleId));
   if (!snap.exists) throw new Error('schedule not found');
   const { classes } = snap.data()!;
-  courses.forEach(({ classId }) => {
-    if (!classes.find(({ classId: id }) => id === classId)) {
-      classes.push({ classId });
+  courses.forEach((classId) => {
+    if (!classes.find((id) => id === classId)) {
+      classes.push(classId);
     }
   });
   await updateDoc(snap.ref, { classes });
@@ -127,3 +130,9 @@ export const getDefaultSchedule = ({ season, year }: Semester, uid: string) => (
   ownerUid: uid,
   public: true,
 });
+
+export const toLocalSchedule = (schedule: FirestoreSchedule): LocalSchedule => ({
+  ...schedule,
+  createdAt: schedule.createdAt?.toDate().toISOString() ?? '',
+});
+

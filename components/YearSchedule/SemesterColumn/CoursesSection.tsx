@@ -19,7 +19,7 @@ export function CoursesSection({ scheduleId, highlightedRequirement }: Props) {
   const profile = useAppSelector(Profile.selectUserProfile);
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const conflicts = useMemo(
-    () => schedule && findConflicts(allTruthy(schedule.classes.map(({ classId }) => classCache[classId]))),
+    () => schedule && findConflicts(allTruthy(schedule.classes.map((classId) => classCache[classId]))),
     [schedule, classCache],
   );
   const elapsed = useElapsed(3000, []);
@@ -48,7 +48,7 @@ export function CoursesSection({ scheduleId, highlightedRequirement }: Props) {
           Add courses
         </AddCoursesButton>
 
-        {schedule.classes.map(({ classId: id }) => (id && classCache[id] ? (
+        {schedule.classes.map((id) => (id && classCache[id] ? (
           <CourseCard
             key={id}
             course={classCache[id]}

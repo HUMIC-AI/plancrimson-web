@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   schedules.docs.forEach((schedule) => {
     const owner = schedule.data().ownerUid;
     if (!mapProfileToClasses[owner]) mapProfileToClasses[owner] = [];
-    schedule.data().classes.forEach(({ classId }: { classId: string }) => {
+    schedule.data().classes.forEach((classId: string) => {
       mapProfileToClasses[owner].push(classId);
     });
   });

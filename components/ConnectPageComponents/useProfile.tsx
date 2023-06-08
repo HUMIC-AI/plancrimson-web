@@ -23,9 +23,9 @@ export function useProfile(username: string) {
       query(Schema.Collection.profiles(), where('username', '==', username)),
       (snap) => {
         if (snap.empty) {
-          throw new Error('No users found with that username.');
+          setError(new Error('No users found with that username.'));
         } else if (snap.size > 1) {
-          throw new Error('Multiple users found with that username. This should not occur');
+          setError(new Error('Multiple users found with that username. This should not occur'));
         } else {
           const [doc] = snap.docs;
           setProfile({ ...doc.data(), id: doc.id });

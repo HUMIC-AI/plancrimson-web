@@ -5,11 +5,11 @@ import { ClassCache, Auth } from '@/src/features';
 import { useAppDispatch, useElapsed } from '@/src/utils/hooks';
 import { useMeiliClient } from '@/src/context/meili';
 import Firestore from '@/src/schema';
-import { Schedule } from '@/src/types';
 import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { ErrorPage } from '@/components/Layout/ErrorPage';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import Calendar from '@/components/SemesterSchedule/Calendar';
+import { BaseSchedule } from '@/src/types';
 
 export default function SchedulePage() {
   const userId = Auth.useAuthProperty('uid');
@@ -47,7 +47,7 @@ export default function SchedulePage() {
 
 function useSchedule(scheduleId: string) {
   const dispatch = useAppDispatch();
-  const [schedule, setSchedule] = useState<Schedule | null>(null);
+  const [schedule, setSchedule] = useState<BaseSchedule | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { client } = useMeiliClient();
 
@@ -58,8 +58,7 @@ function useSchedule(scheduleId: string) {
       if (snap.exists()) {
         const scheduleData = snap.data()!;
         setSchedule(scheduleData);
-        const classIds = scheduleData.classes.map(({ classId }) => classId);
-        if (client) dispatch(ClassCache.loadCourses(client, classIds));
+        if (client) dispatch(ClassCache.loadCourses(client, scheduleData.classes));
       }
     }, (err) => setError(err.message));
     return unsub;

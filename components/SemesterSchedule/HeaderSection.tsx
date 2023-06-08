@@ -1,10 +1,10 @@
 import React from 'react';
 import { createEvents, EventAttributes } from 'ics';
 import { downloadJson } from '@/src/utils/utils';
-import { Schedule } from '@/src/types';
+import { BaseSchedule } from '@/src/types';
 import AddCoursesButton from '../AddCoursesButton';
 
-export function HeaderSection({ events, schedule }: { events: EventAttributes[]; schedule: Schedule; }) {
+export function HeaderSection({ events, schedule }: { events: EventAttributes[]; schedule: BaseSchedule; }) {
   function handleExport() {
     const { error, value } = createEvents(events);
     if (error) {

@@ -5,7 +5,7 @@ import { allTruthy } from '@/src/lib';
 import { WithId, FriendRequest } from '@/src/types';
 import { useProfiles } from '@/src/utils/hooks';
 import { useState, useEffect, useMemo } from 'react';
-import Firestore from '@/src/schema';
+import Schema from '@/src/schema';
 
 /**
  * Send a friend request from one user to another
@@ -13,7 +13,7 @@ import Firestore from '@/src/schema';
  * @param to the uid of the user to send a friend request to
  */
 export function sendFriendRequest(from: string, to: string) {
-  return setDoc(Firestore.friendRequest(from, to), {
+  return setDoc(Schema.friendRequest(from, to), {
     from,
     to,
     accepted: false,
@@ -23,8 +23,8 @@ export function sendFriendRequest(from: string, to: string) {
 
 export function unfriend(from: string, to: string) {
   return Promise.allSettled([
-    deleteDoc(Firestore.friendRequest(from, to)),
-    deleteDoc(Firestore.friendRequest(to, from)),
+    deleteDoc(Schema.friendRequest(from, to)),
+    deleteDoc(Schema.friendRequest(to, from)),
   ]);
 }
 
@@ -36,8 +36,8 @@ export function useFriendRequests(uid: string | null | undefined) {
   useEffect(() => {
     if (!uid) return;
 
-    const incomingQ = query(Firestore.Collection.allFriends(), where('to', '==', uid));
-    const outgoingQ = query(Firestore.Collection.allFriends(), where('from', '==', uid));
+    const incomingQ = query(Schema.Collection.allFriends(), where('to', '==', uid));
+    const outgoingQ = query(Schema.Collection.allFriends(), where('from', '==', uid));
 
     const unsubIn = onSnapshot(incomingQ, (snap) => setIncoming(snap.docs.map((d) => ({ ...d.data(), id: d.id }))));
     const unsubOut = onSnapshot(outgoingQ, (snap) => setOutgoing(snap.docs.map((d) => ({ ...d.data(), id: d.id }))));

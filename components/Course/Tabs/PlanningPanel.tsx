@@ -12,7 +12,7 @@ import { ClassCache, Profile, Schedules } from '@/src/features';
 import { useAppSelector, useAppDispatch } from '@/src/utils/hooks';
 import Tooltip from '@/components/Utils/Tooltip';
 import { checkViable } from '@/src/searchSchedule';
-import { Schedule } from '@/src/types';
+import type { BaseSchedule } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
 import { sortSchedulesBySemester } from '@/src/utils/schedules';
 
@@ -59,13 +59,13 @@ export default function PlanningPanel({ course }: { course: ExtendedClass }) {
  * @param schedule The schedule
  * @param course The course currently open in a modal
  */
-function ScheduleRow({ schedule, course }: { schedule: Schedule; course: ExtendedClass }) {
+function ScheduleRow({ schedule, course }: { schedule: BaseSchedule; course: ExtendedClass }) {
   const dispatch = useAppDispatch();
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const classYear = useAppSelector(Profile.selectClassYear);
 
   const enabled = !!schedule.classes.find(
-    ({ classId }) => classId === getClassId(course),
+    (classId) => classId === getClassId(course),
   );
 
   const viabilityStatus = useMemo(() => (classYear ? checkViable({
@@ -80,7 +80,7 @@ function ScheduleRow({ schedule, course }: { schedule: Schedule; course: Extende
         alert('This course is not being offered in this semester!');
       } else {
         dispatch(Schedules.addCourses({
-          courses: [{ classId: getClassId(course) }],
+          courses: [getClassId(course)],
           scheduleId: schedule.id,
         }));
       }

@@ -12,7 +12,7 @@ import {
   Requirement,
   RequirementGroup,
 } from './util';
-import type { Schedule, UserProfile } from '../types';
+import type { BaseSchedule, UserProfile } from '../types';
 
 // want to query for all people planning to take this class at a certain time
 
@@ -36,12 +36,12 @@ export const allRequirements = [
 function validateSchedule<Accumulator>(
   initialValue: Accumulator,
   req: Requirement<Accumulator>,
-  schedule: Schedule,
+  schedule: BaseSchedule,
   userData: UserProfile,
   classCache: Readonly<ClassCache>,
 ) {
   const allClasses: ExtendedClass[] = allTruthy(
-    schedule.classes.map(({ classId }) => classCache[classId]),
+    schedule.classes.map((classId) => classCache[classId]),
   );
   const usedClasses: string[] = [];
   const validationResult = allClasses.reduce((acc, cls) => {
@@ -55,7 +55,7 @@ function validateSchedule<Accumulator>(
 
 function validateReq(
   req: Requirement,
-  schedules: Schedule[],
+  schedules: BaseSchedule[],
   userData: UserProfile,
   classCache: Readonly<ClassCache>,
 ): ReqResult {
@@ -89,7 +89,7 @@ function validateReq(
  */
 function validateSchedules(
   group: RequirementGroup,
-  schedules: Schedule[],
+  schedules: BaseSchedule[],
   userData: UserProfile,
   classCache: Readonly<ClassCache>,
 ): GroupResult {

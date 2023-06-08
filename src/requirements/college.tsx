@@ -1,4 +1,4 @@
-import { Class, FAILING_GRADES, getClassId } from '@/src/lib';
+import { Class, FAILING_GRADES } from '@/src/lib';
 import ExternalLink from '@/components/Utils/ExternalLink';
 import { Requirement, RequirementGroup } from './util';
 import { Grade } from '../types';
@@ -259,11 +259,13 @@ const exposRequirement: Requirement = {
     </div>
   ),
   validate: (count) => count >= 1,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   reducer: (prev, cls, schedule) => {
     if (cls.CRSE_ID === '116353') {
-      const grade = schedule.classes.find(
-        ({ classId }) => classId === getClassId(cls),
-      )?.grade;
+      // const grade = schedule.classes.find(
+      //   (classId) => classId === getClassId(cls),
+      // )?.grade;
+      const grade = null;
       if (!grade) return prev + 1; // expos course id
       if ((FAILING_GRADES as readonly Grade[]).includes(grade)) return null;
       return prev + 1;

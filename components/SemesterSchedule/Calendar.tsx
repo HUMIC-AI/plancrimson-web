@@ -5,7 +5,7 @@ import {
 } from '@/src/lib';
 import { useAppSelector } from '@/src/utils/hooks';
 import { ClassCache, Settings } from '@/src/features';
-import { Schedule } from '@/src/types';
+import { BaseSchedule } from '@/src/types';
 import {
   getEvents,
   doesRRuleHaveDay,
@@ -18,13 +18,13 @@ import { DayComponent } from './DayComponent';
 import { HeaderSection } from './HeaderSection';
 
 type CalendarProps = {
-  schedule: Schedule;
+  schedule: BaseSchedule;
 };
 
 
 export default function Calendar({ schedule }: CalendarProps) {
   const classCache = useAppSelector(ClassCache.selectClassCache);
-  const classes = allTruthy(schedule.classes.map(({ classId }) => classCache[classId]));
+  const classes = allTruthy(schedule.classes.map((classId) => classCache[classId]));
 
   const customTimes = useAppSelector(Settings.selectCustomTimes);
 

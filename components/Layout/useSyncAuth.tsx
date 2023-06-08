@@ -1,5 +1,5 @@
 import {
-  getDoc, onSnapshot, setDoc, updateDoc,
+  getDoc, onSnapshot, serverTimestamp, setDoc, updateDoc,
 } from 'firebase/firestore';
 import React, { useEffect } from 'react';
 import {
@@ -170,7 +170,7 @@ async function handleSubmit(user: User, classYear: number) {
   const defaultSemesters = getUniqueSemesters(classYear);
   const promises = defaultSemesters.map(async ({ year, season }) => {
     const schedule = Schedules.getDefaultSchedule({ year, season }, user.uid);
-    await setDoc(Firestore.schedule(schedule.id), schedule);
+    await setDoc(Firestore.schedule(schedule.id), { ...schedule, createdAt: serverTimestamp() });
     return schedule;
   });
 

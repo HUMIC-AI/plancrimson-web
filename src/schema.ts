@@ -2,7 +2,7 @@ import {
   getFirestore, doc, DocumentReference, collection, CollectionReference, collectionGroup, Query,
 } from 'firebase/firestore';
 import type {
-  UserProfile, UserSettings, Schedule, FriendRequest, Metadata, Alert,
+  UserProfile, UserSettings, FriendRequest, Metadata, Alert, FirestoreSchedule,
 } from './types';
 
 const db = getFirestore;
@@ -15,7 +15,7 @@ const Schema = {
     return doc(db(), 'users', uid) as DocumentReference<UserSettings>;
   },
   schedule(scheduleUid: string) {
-    return doc(db(), 'schedules', scheduleUid) as DocumentReference<Schedule>;
+    return doc(db(), 'schedules', scheduleUid) as DocumentReference<FirestoreSchedule>;
   },
   friendRequest(from: string, to: string) {
     return doc(db(), 'allFriends', from, 'friends', to) as DocumentReference<FriendRequest>;
@@ -28,7 +28,7 @@ const Schema = {
       return collection(db(), 'profiles') as CollectionReference<UserProfile>;
     },
     schedules() {
-      return collection(db(), 'schedules') as CollectionReference<Schedule>;
+      return collection(db(), 'schedules') as CollectionReference<FirestoreSchedule>;
     },
     allFriends() {
       return collectionGroup(db(), 'friends') as Query<FriendRequest>;

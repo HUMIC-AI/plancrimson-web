@@ -8,8 +8,11 @@ import { alertUnexpectedError, useAppDispatch } from './hooks';
 import { useMeiliClient } from '../context/meili';
 import Firestore from '../schema';
 import type {
-  ListOfScheduleIdOrSemester, Schedule, ScheduleId, ScheduleIdOrSemester, ScheduleMap,
+  BaseSchedule,
+  FirestoreSchedule,
+  ListOfScheduleIdOrSemester, ScheduleId, ScheduleIdOrSemester, ScheduleMap,
 } from '../types';
+import { toLocalSchedule } from '../features/schedules';
 
 export function isScheduleId(s: ScheduleIdOrSemester): s is ScheduleId {
   return typeof s === 'string';
@@ -28,25 +31,27 @@ export default function useSyncSchedulesMatchingContraints(constraints: QueryCon
   const dispatch = useAppDispatch();
   const { client } = useMeiliClient();
 
-  const updateSchedules = useCallback((snap: QuerySnapshot<Schedule>) => {
-    const schedules = snap.docs.map((doc) => doc.data());
+  const updateSchedules = useCallback(async (snap: QuerySnapshot<FirestoreSchedule>) => {
+    try {
+      const schedules = snap.docs.map((doc) => doc.data());
 
-    console.debug('[useSchedules] Reloaded schedules');
+      console.info('[useSchedules] Reloaded schedules');
 
-    // load all of the classes into the class cache
-    if (client) {
-      dispatch(ClassCache.loadCourses(client, getAllClassIds(schedules)));
+      // load all of the classes into the class cache
+      if (client) {
+        await dispatch(ClassCache.loadCourses(client, getAllClassIds(schedules)));
+      }
+
+      dispatch(Schedules.overwriteSchedules(schedules.map(toLocalSchedule)));
+    } catch (err) {
+      alertUnexpectedError(err);
     }
-
-    dispatch(Schedules.overwriteSchedules(schedules));
   }, [client]);
 
   useEffect(() => {
     if (constraints === null) return;
 
     const q = query(Firestore.Collection.schedules(), ...constraints);
-
-    getDocs(q).then(updateSchedules).catch(alertUnexpectedError);
 
     const unsubSchedules = onSnapshot(q, updateSchedules, (err) => {
       console.error('[useSchedules] error listening for schedules (in the layout):', err);
@@ -76,8 +81,8 @@ export function sortSchedulesBySemester(schedules: ScheduleMap) {
   return Object.values(schedules).sort(compareSemesters);
 }
 
-export function getAllClassIds(schedules: Schedule[]): string[] {
-  return schedules.flatMap((schedule) => schedule.classes.map((cls) => cls.classId));
+export function getAllClassIds(schedules: { classes: string[] }[]): string[] {
+  return schedules.flatMap((schedule) => schedule.classes);
 }
 
 export function getSemesterBeforeEarliest(schedules: ScheduleMap): Semester {

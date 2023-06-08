@@ -2,7 +2,7 @@ import {
   DocumentSnapshot,
   QueryConstraint,
   getDocs,
-  limit, orderBy, query, startAfter, where,
+  limit, orderBy, query, startAfter,
 } from 'firebase/firestore';
 import {
   useCallback, useEffect, useRef, useState,
@@ -13,7 +13,7 @@ import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { Auth, ClassCache, Planner } from '@/src/features';
 import { alertUnexpectedError, useAppDispatch, useElapsed } from '@/src/utils/hooks';
 import Schema from '@/src/schema';
-import { Schedule } from '@/src/types';
+import { BaseSchedule } from '@/src/types';
 import { useMeiliClient } from '@/src/context/meili';
 import { getAllClassIds } from '@/src/utils/schedules';
 import { ScheduleList } from '@/components/SemesterSchedule/ScheduleList';
@@ -52,7 +52,7 @@ export default function () {
   }
 
   return (
-    <Layout title="Connect" className="mx-auto mt-6 max-w-3xl px-4" withMeili>
+    <Layout title="Connect" className="mx-auto mt-6 w-full max-w-3xl px-4" withMeili>
       <ConnectPage userId={userId} />
     </Layout>
   );
@@ -63,8 +63,8 @@ function ConnectPage({ userId }: { userId: string }) {
   const dispatch = useAppDispatch();
   const targetRef = useRef<HTMLDivElement>(null);
 
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [finalPoint, setFinalPoint] = useState<DocumentSnapshot<Schedule> | null>(null);
+  const [schedules, setSchedules] = useState<BaseSchedule[]>([]);
+  const [finalPoint, setFinalPoint] = useState<DocumentSnapshot<BaseSchedule> | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -118,7 +118,7 @@ function ConnectPage({ userId }: { userId: string }) {
 
   return (
     <>
-      <ScheduleList schedules={schedules} className="grid grid-cols-1 sm:grid-cols-2" />
+      <ScheduleList schedules={schedules} className="grid grid-cols-1 gap-2 sm:grid-cols-2" />
       <div ref={targetRef} />
     </>
   );
@@ -129,8 +129,7 @@ function ConnectPage({ userId }: { userId: string }) {
  */
 function getSchedules(userId: string, finalPoint: DocumentSnapshot | null) {
   const constraints: QueryConstraint[] = [
-    where('ownerUid', '!=', userId),
-    orderBy('ownerUid'),
+    orderBy('createdAt'),
     limit(PAGE_SIZE),
   ];
 
@@ -143,9 +142,9 @@ function getSchedules(userId: string, finalPoint: DocumentSnapshot | null) {
   return getDocs(q);
 }
 
-async function scrollUntilSchedule(userId: string, initSchedule: DocumentSnapshot<Schedule> | null = null): Promise<{
-  schedules: Schedule[];
-  finalSchedule: DocumentSnapshot<Schedule> | null;
+async function scrollUntilSchedule(userId: string, initSchedule: DocumentSnapshot<BaseSchedule> | null = null): Promise<{
+  schedules: BaseSchedule[];
+  finalSchedule: DocumentSnapshot<BaseSchedule> | null;
   done: boolean;
 }> {
   const schedules = [];
@@ -162,7 +161,7 @@ async function scrollUntilSchedule(userId: string, initSchedule: DocumentSnapsho
 
     const nonEmpty = snap.docs
       .map((doc) => doc.data())
-      .filter((schedule) => schedule.classes.length > 0);
+      .filter((schedule) => schedule.classes.length > 0 && schedule.ownerUid !== userId);
 
     schedules.push(...nonEmpty);
 

@@ -48,14 +48,14 @@ export function ToggleButton({ chosenScheduleId, course }: { chosenScheduleId: s
     });
 
     return dispatch(Schedules.addCourses({
-      courses: [{ classId: getClassId(course) }],
+      courses: [getClassId(course)],
       scheduleId: chosenSchedule.id,
     }));
   }
 
   if (!chosenSchedule) return null;
 
-  const inSchedule = chosenSchedule?.classes.find(({ classId }) => course.id === classId);
+  const inSchedule = chosenSchedule.classes.find((classId) => course.id === classId);
 
   if (semesterFormat === 'sample' || !inSchedule) {
     return (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Requirement } from '@/src/requirements/util';
-import type { Schedule, ScheduleIdOrSemester, Viability } from '@/src/types';
+import type { BaseSchedule, ScheduleIdOrSemester, Viability } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
 import { Season, semesterToTerm } from '@/src/lib';
 import { isScheduleId } from '@/src/utils/schedules';
@@ -68,7 +68,7 @@ export default function SemesterColumn({
 }
 
 
-function useStylesForSchedule(schedule: Schedule | null, season: Season | null) {
+function useStylesForSchedule(schedule: BaseSchedule | null, season: Season | null) {
   const drag = useDragAndDropContext();
 
   if (drag.enabled && drag.dragStatus.dragging) {

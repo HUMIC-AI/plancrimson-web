@@ -3,6 +3,7 @@ import type {
   DayOfWeek,
   FAILING_GRADES, PASSING_GRADES, Semester, Term,
 } from '@/src/lib';
+import type { Timestamp } from 'firebase/firestore';
 
 // ============================== /metadata/metadata ==============================
 
@@ -75,17 +76,19 @@ export interface CustomTimeRecord {
 /**
  * The Firestore schema for the /schedules collection.
  */
-export interface Schedule extends Semester {
+export interface BaseSchedule extends Semester {
   id: string; // global unique id, a uuidv4 (NOT a firestore default assigned id)
   title: string;
   ownerUid: string; // uid of the user that created this schedule
-  classes: UserClassData[];
+  classes: string[];
 }
 
-// an entry in a schedule
-export interface UserClassData {
-  classId: string;
-  grade?: Grade;
+export interface FirestoreSchedule extends BaseSchedule {
+  createdAt: Timestamp;
+}
+
+export interface LocalSchedule extends BaseSchedule {
+  createdAt: string; // that encodes a date
 }
 
 export type Grade = typeof PASSING_GRADES[number] | typeof FAILING_GRADES[number];
@@ -105,12 +108,12 @@ export type Viability = 'Yes' | 'Likely' | 'Unlikely' | 'No';
 
 export interface DownloadPlan {
   id: string;
-  schedules: Schedule[];
+  schedules: LocalSchedule[];
 }
 
 // maps from ids to schedules
 export interface ScheduleMap {
-  [scheduleId: ScheduleId]: Schedule;
+  [scheduleId: ScheduleId]: LocalSchedule;
 }
 
 export type ScheduleId = string;

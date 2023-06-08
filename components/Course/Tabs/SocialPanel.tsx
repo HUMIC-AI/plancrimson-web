@@ -1,13 +1,15 @@
 import { Tab } from '@headlessui/react';
 import {
-  collection, getFirestore, onSnapshot, query, where,
+  getDoc,
+  onSnapshot, query, where,
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import type { ExtendedClass } from '@/src/lib';
-import type { Schedule } from '@/src/types';
-import { useFriends } from '@/components/ConnectPageComponents/friendUtils';
+import type { BaseSchedule } from '@/src/types';
 import { Auth } from '@/src/features';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
+import Schema from '@/src/schema';
+import Link from 'next/link';
 
 type Props = { course: ExtendedClass };
 
@@ -22,39 +24,52 @@ export default function SocialOuter({ course }: Props) {
 }
 
 function SocialPanel({ course, userId }: Props & { userId: string }) {
-  const [otherUserSchedules, setPublicSchedules] = useState<Record<string, Schedule>>({});
-  const { friends } = useFriends(userId);
+  const [allSchedules, setAllSchedules] = useState<Record<string, BaseSchedule>>({});
+  const [usernames, setUsernames] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const collections = [];
-
-    // get the public schedules
-    collections.push(query(
-      collection(getFirestore(), 'schedules'),
-      where('public', '==', true),
+    const q = query(
+      Schema.Collection.schedules(),
+      where('ownerUid', '!=', userId),
       where('classes', 'array-contains', course.id),
-    ));
+    );
 
-    friends?.forEach((friend) => {
-      collections.push(query(
-        collection(getFirestore(), 'schedules'),
-        where('ownerUid', '==', friend.id),
-        where('classes', 'array-contains', course.id),
-      ));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const entries = snap.docs.map((doc) => [doc.id, doc.data()] as [string, BaseSchedule]);
+      setAllSchedules((schedules) => ({ ...schedules, ...Object.fromEntries(entries) }));
+    }, (err) => console.error(err));
+
+    return unsubscribe;
+  }, [course.id, userId]);
+
+  // get the profiles of the users
+  useEffect(() => {
+    const uids = Object.values(allSchedules)
+      .map((schedule) => schedule.ownerUid)
+      .filter((uid) => !usernames[uid]);
+
+    if (uids.length === 0) {
+      return;
+    }
+
+    const promises: Promise<readonly [string, string]>[] = [];
+    new Set(uids).forEach((uid) => {
+      const promise = getDoc(Schema.profile(uid))
+        .then((doc) => {
+          const username = doc.data()?.displayName || doc.data()?.username || 'Anonymous';
+          return [uid, username] as const;
+        });
+      promises.push(promise);
     });
 
-    const dispose = collections.map((c) => {
-      const listener = onSnapshot(c, (snap) => {
-        const entries = snap.docs.map((doc) => [doc.id, doc.data()] as [string, Schedule]);
-        setPublicSchedules((schedules) => ({ ...schedules, ...Object.fromEntries(entries) }));
-      }, (err) => console.error(err));
-      return listener;
-    });
+    Promise.all(promises)
+      .then((entries) => {
+        setUsernames((names) => ({ ...names, ...Object.fromEntries(entries) }));
+      })
+      .catch((err) => console.error(err));
+  }, [allSchedules, usernames]);
 
-    return () => dispose.forEach((unsub) => unsub());
-  }, [course.id, friends]);
-
-  const schedules = Object.values(otherUserSchedules);
+  const schedules = Object.values(allSchedules);
 
   return (
     <Tab.Panel>
@@ -63,11 +78,18 @@ function SocialPanel({ course, userId }: Props & { userId: string }) {
         ? 'None'
         : (
           <ul>
-            {schedules.map((schedule) => (
-              <li key={schedule.id}>
-                {`${schedule.ownerUid} is considering this in ${schedule.season} ${schedule.year}`}
-              </li>
-            ))}
+            {schedules.map((schedule) => {
+              const username = usernames[schedule.ownerUid];
+
+              return (
+                <li key={schedule.id}>
+                  <Link href={`/user/${username}`} className="interactive">
+                    {username}
+                  </Link>
+                  {` is considering this in ${schedule.season} ${schedule.year}`}
+                </li>
+              );
+            })}
           </ul>
         )}
     </Tab.Panel>

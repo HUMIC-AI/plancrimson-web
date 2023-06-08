@@ -84,7 +84,7 @@ export function DragAndDropProvider({ children }: PropsWithChildren<{}>) {
           originTerm,
           destinationTerm: term,
         });
-        dispatch(Schedules.addCourses({ scheduleId, courses: [{ classId }] }));
+        dispatch(Schedules.addCourses({ scheduleId, courses: [classId] }));
         dispatch(Schedules.removeCourses({ scheduleId: originScheduleId, courseIds: [classId] }));
       }
     }

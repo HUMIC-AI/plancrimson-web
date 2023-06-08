@@ -2,14 +2,14 @@ import React from 'react';
 import { useModal } from '@/src/context/modal';
 import { TERM_TO_SEASON } from '@/src/lib';
 import { classNames } from '@/src/utils/styles';
-import { Schedule } from '@/src/types';
 import dynamic from 'next/dynamic';
+import type { BaseSchedule } from '@/src/types';
 
 const DynamicCourseSearchModal = dynamic(() => import('./CourseSearchModal'));
 
 export default function AddCoursesButton({
   schedule, className = '', children,
-}: React.PropsWithChildren<{ schedule: Schedule; className?: string; }>) {
+}: React.PropsWithChildren<{ schedule: BaseSchedule; className?: string; }>) {
   const { showContents } = useModal();
 
   return (

@@ -18,7 +18,7 @@ import {
 } from '@/src/features';
 import { selectShowReqs } from '@/src/features/semesterFormat';
 import { classNames } from '@/src/utils/styles';
-import { Schedule } from '@/src/types';
+import { BaseSchedule } from '@/src/types';
 import RequirementGroupComponent from './RequirementsDisplay';
 import FadeTransition from '../Utils/FadeTransition';
 import ExternalLink from '../Utils/ExternalLink';
@@ -223,7 +223,7 @@ function SampleScheduleEntry({ schedule }: SampleScheduleEntryProps) {
     try {
       dispatch(Planner.showSelected());
       schedules.forEach((s) => {
-        const { year, season, title: id } = s.payload as Schedule;
+        const { year, season, title: id } = s.payload as BaseSchedule;
         dispatch(Settings.chooseSchedule({
           term: `${year}${season}`,
           scheduleId: id,

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Class, Semester } from '@/src/lib';
-import type { Schedule, UserProfile } from '../types';
+import type { BaseSchedule, UserProfile } from '../types';
 
 /**
  * Only works for users on a typical four-year schedule.
@@ -30,7 +30,7 @@ export type Requirement<Accumulator = number> = {
   reducer: (
     prev: Accumulator,
     cls: Class,
-    schedule: Schedule,
+    schedule: BaseSchedule,
     userData: UserProfile,
   ) => Accumulator | null;
 };
@@ -63,5 +63,5 @@ export type SampleSchedule = {
   id: string;
   source: string;
   name: string;
-  schedules: Schedule[];
+  schedules: BaseSchedule[];
 };

@@ -7,7 +7,8 @@ import {
   getDocs, query, where,
 } from 'firebase/firestore';
 import {
-  Schedule, UserProfile, WithId,
+  BaseSchedule,
+  UserProfile, WithId,
 } from '@/src/types';
 import { alertUnexpectedError, useAppDispatch } from '@/src/utils/hooks';
 import { Season } from '@/src/lib';
@@ -16,6 +17,7 @@ import { setExpand } from '@/src/features/semesterFormat';
 import { useMeiliClient } from '@/src/context/meili';
 import Link from 'next/link';
 import lunr from 'lunr';
+import { getAllClassIds } from '@/src/utils/schedules';
 
 
 export default function () {
@@ -33,7 +35,7 @@ export default function () {
 }
 
 function FriendsPage() {
-  const [profiles, setProfiles] = useState<WithId<UserProfile & { currentSchedules: Schedule[] }>[]>([]);
+  const [profiles, setProfiles] = useState<WithId<UserProfile & { currentSchedules: BaseSchedule[] }>[]>([]);
   const [lunrIndex, setLunrIndex] = useState<lunr.Index | null>(null);
   const [matchIds, setMatchIds] = useState<null | string[]>(null); // ids of profiles that match the search query
   const { client } = useMeiliClient();
@@ -66,11 +68,12 @@ function FriendsPage() {
 
     Promise.all([profilesPromise, schedulesPromise])
       .then(([allProfiles, allSchedules]) => {
-        dispatch(ClassCache.loadCourses(client, allSchedules.flatMap((schedule) => schedule.classes.map((course) => course.classId))));
+        dispatch(ClassCache.loadCourses(client, getAllClassIds(allSchedules)));
 
         const profilesAndCourses = allProfiles.map((profile) => ({
           ...profile,
-          currentSchedules: allSchedules.filter((schedule) => schedule.ownerUid === profile.id && schedule.classes.length > 0),
+          currentSchedules: allSchedules
+            .filter((schedule) => schedule.ownerUid === profile.id && schedule.classes.length > 0),
         }));
 
         setProfiles(profilesAndCourses);

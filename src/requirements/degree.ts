@@ -12,11 +12,11 @@ const totalCredits: Requirement = {
   reducer: (prev, cls, schedule) => {
     // TODO handle advanced standing, etc
     const takenClass = schedule.classes.find(
-      (classTaken) => classTaken.classId === getClassId(cls),
+      (classId) => classId === getClassId(cls),
     );
     if (
       takenClass
-      && (FAILING_GRADES as readonly string[]).includes(takenClass.grade!)
+      // && (FAILING_GRADES as readonly string[]).includes(takenClass.grade!)
     ) {
       return null;
     }
@@ -30,10 +30,12 @@ const grades: Requirement = {
   Credits taken either by cross-registration or out of residence for degree credit will not be counted toward the letter-graded credit requirement unless they are applied toward concentration requirements or the requirements for the Undergraduate Teacher Education Program (UTEP)`,
   sourcePage: 9,
   validate: (count) => count >= 84,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   reducer: (prev, cls, schedule) => {
-    const grade = schedule.classes.find(
-      (userCls) => userCls.classId === getClassId(cls),
-    )?.grade;
+    // const grade = schedule.classes.find(
+    //   (userCls) => userCls.classId === getClassId(cls),
+    // )?.grade;
+    const grade = null;
 
     // if (cross-registration || out of residence) {
     // if (countsForConcentration || countsForUtep(cls))

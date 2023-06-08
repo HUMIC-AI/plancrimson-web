@@ -83,7 +83,7 @@ const honorsRequirements: RequirementGroup = {
     requirements.generalExamination,
     otherInformation,
   ],
-  sampleSchedules: sampleSchedules as SampleSchedule[],
+  sampleSchedules: sampleSchedules as unknown as SampleSchedule[],
 };
 
 export default honorsRequirements;
