@@ -67,9 +67,6 @@ export default function () {
 
 function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserProfile> }) {
   const scheduleMap = useAppSelector(Schedules.selectSchedules);
-  const [refresh, setRefresh] = useState(true);
-
-  const friendStatus = useFriendStatus(uid, pageProfile.id, refresh);
 
   const queryConstraints = useMemo(() => [where('ownerUid', '==', pageProfile.id)], [pageProfile]);
 
@@ -84,28 +81,9 @@ function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserP
         <section className="flex items-center">
           <ImageWrapper url={pageProfile.photoUrl} size="md" alt="User profile" />
 
-          <div className="ml-8">
-            <h1 className="text-3xl">{pageProfile.username}</h1>
-
-            {friendStatus !== 'self' && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (friendStatus === 'friends' || friendStatus === 'pending') {
-                    unfriend(uid, pageProfile.id);
-                    setRefresh(!refresh);
-                  } else if (friendStatus === 'none') {
-                    sendFriendRequest(uid, pageProfile.id);
-                    setRefresh(!refresh);
-                  }
-                }}
-                className="interactive mt-2 rounded bg-blue-dark px-2 py-1 text-white"
-              >
-                {statusMessage[friendStatus]}
-              </button>
-            )}
-          </div>
+          <h1 className="ml-8">{pageProfile.displayName || pageProfile.username || 'Anonymous'}</h1>
         </section>
+
 
         {/* bio */}
         <p className="mt-4">
@@ -125,4 +103,40 @@ function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserP
   );
 }
 
+
+/**
+ * @deprecated
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function AddFriendButton({
+  pageProfile, uid,
+}: {
+  pageProfile: WithId<UserProfile>, uid: string,
+}) {
+  const [refresh, setRefresh] = useState(true);
+
+  const friendStatus = useFriendStatus(uid, pageProfile.id, refresh);
+
+  if (friendStatus === 'self') {
+    return null;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (friendStatus === 'friends' || friendStatus === 'pending') {
+          unfriend(uid, pageProfile.id);
+          setRefresh(!refresh);
+        } else if (friendStatus === 'none') {
+          sendFriendRequest(uid, pageProfile.id);
+          setRefresh(!refresh);
+        }
+      }}
+      className="interactive mt-2 rounded bg-blue-dark px-2 py-1 text-white"
+    >
+      {statusMessage[friendStatus]}
+    </button>
+  );
+}
 

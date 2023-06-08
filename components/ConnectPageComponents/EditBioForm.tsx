@@ -28,7 +28,7 @@ export function BioSection({ uid, pageProfile }: Props) {
       {/* show an editable textarea for own page, otherwise other's bio */}
       {editing ? <EditBioForm uid={uid} setEditing={setEditing} /> : (
         <p className="mt-2">
-          {pageProfile.bio}
+          {pageProfile.bio || 'This user has not written a bio.'}
         </p>
       )}
     </>

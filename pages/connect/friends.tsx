@@ -10,7 +10,7 @@ import {
   BaseSchedule,
   UserProfile, WithId,
 } from '@/src/types';
-import { alertUnexpectedError, useAppDispatch } from '@/src/utils/hooks';
+import { alertUnexpectedError, useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { Season } from '@/src/lib';
 import ScheduleSection from '@/components/SemesterSchedule/ScheduleList';
 import { setExpand } from '@/src/features/semesterFormat';
@@ -39,6 +39,7 @@ function FriendsPage() {
   const [lunrIndex, setLunrIndex] = useState<lunr.Index | null>(null);
   const [matchIds, setMatchIds] = useState<null | string[]>(null); // ids of profiles that match the search query
   const { client } = useMeiliClient();
+  const classCache = useAppSelector(ClassCache.selectClassCache);
   const dispatch = useAppDispatch();
   useEffect(() => {
     // set expand to just text
@@ -77,30 +78,47 @@ function FriendsPage() {
         }));
 
         setProfiles(profilesAndCourses);
-
-        const idx = lunr(function () {
-          this.ref('id');
-          this.field('displayName');
-          this.field('username');
-          this.field('bio');
-          this.field('classYear');
-
-          profilesAndCourses.forEach((profile) => {
-            this.add(profile);
-          });
-        });
-
-        setLunrIndex(idx);
       })
       .catch((err) => {
         alertUnexpectedError(err);
       });
   }, [client]);
 
+  useEffect(() => {
+    const idx = lunr(function () {
+      this.ref('id');
+      this.field('displayName');
+      this.field('username');
+      this.field('bio');
+      this.field('classYear');
+      this.field('courseTitles');
+
+      profiles.forEach((profile) => {
+        const courseTitles = profile.currentSchedules.map((schedule) => schedule.classes.map((classId) => (
+          classId in classCache ? [
+            classCache[classId].Title,
+            classCache[classId].SUBJECT,
+            classCache[classId].CATALOG_NBR,
+            classCache[classId].IS_SCL_DESCR_IS_SCL_DESCRL,
+            classCache[classId].textDescription,
+          ] : null
+        ))).flat(4).filter(Boolean).join(' ');
+
+        this.add({ ...profile, courseTitles });
+      });
+    });
+
+    setLunrIndex(idx);
+  }, [profiles, classCache]);
+
   return (
     <div>
+      <p className="text-center">
+        Showing all schedules for Fall 2023.
+      </p>
+
       {/* search bar */}
-      <div className="flex items-center space-x-2">
+      <div className="mt-6 flex items-center space-x-2">
         <input
           type="text"
           placeholder="Search for a classmate"
@@ -123,7 +141,7 @@ function FriendsPage() {
           <li key={profile.id} className="space-y-4 rounded-lg bg-gray-secondary px-4 py-2">
             <Link href={`/user/${profile.username}`} className="interactive">
               <h3 title={profile.username!}>
-                {profile.displayName}
+                {profile.displayName || profile.username || 'Anonymous'}
                 {' '}
                 &middot;
                 {' '}

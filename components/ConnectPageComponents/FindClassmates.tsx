@@ -5,6 +5,9 @@ import { ImageWrapper } from '@/components/Utils/UserLink';
 import { useProfiles, useElapsed } from '@/src/utils/hooks';
 import { UserProfile, WithId } from '@/src/types';
 
+/**
+ * @deprecated
+ */
 export default function FindClassmates() {
   const { profiles: suggestedProfiles, error } = useSuggestedProfiles();
   const ids = useMemo(() => suggestedProfiles?.map(([id]) => id), [suggestedProfiles]);
