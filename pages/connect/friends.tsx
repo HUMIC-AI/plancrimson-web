@@ -4,7 +4,7 @@ import Layout from '@/components/Layout/Layout';
 import { useEffect, useState } from 'react';
 import Schema from '@/src/schema';
 import {
-  getDocs, orderBy, query, where,
+  getDocs, query, where,
 } from 'firebase/firestore';
 import {
   BaseSchedule,

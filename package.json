@@ -5,7 +5,7 @@
     "db": "firebase emulators:start --import ./emulators --export-on-exit",
     "use-emulators": "cross-env FIRESTORE_EMULATOR_HOST='localhost:8080' FIREBASE_AUTH_EMULATOR_HOST='127.0.0.1:9099'",
     "dev": "npm run use-emulators next dev",
-    "build": "next build",
+    "build": "echo 'make sure to copy plancrimson-utils/lib into src/lib' && next build",
     "start": "next start",
     "lint": "next lint --fix",
     "deploy": "firebase deploy && vercel --prod",
