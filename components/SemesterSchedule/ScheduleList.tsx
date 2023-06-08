@@ -5,6 +5,7 @@ import CourseCard from '@/components/Course/CourseCard';
 import { ClassCache, Planner } from '@/src/features';
 import { useAppSelector, useProfiles } from '@/src/utils/hooks';
 import type { Schedule } from '@/src/types';
+import CardExpandToggler from '../YearSchedule/CardExpandToggler';
 
 export type ScheduleListProps = {
   schedule: Schedule;
@@ -77,3 +78,32 @@ export default function ScheduleSection({ schedule, hideAuthor = false, hideHead
   );
 }
 
+export function ScheduleList({
+  title = 'Schedules', schedules, hideAuthor = false, className = 'space-y-2',
+}: {
+  title?: string;
+  schedules: Schedule[];
+  hideAuthor?: boolean;
+  className?: string;
+}) {
+  return (
+    <section>
+      <div className="mb-4 flex items-center justify-between border-b-2">
+        <h2>
+          {title}
+        </h2>
+        <CardExpandToggler />
+      </div>
+
+      {schedules.length > 0 ? (
+        <ul className={className}>
+          {schedules.map((schedule) => (
+            <li key={schedule.id}>
+              <ScheduleSection schedule={schedule} hideAuthor={hideAuthor} />
+            </li>
+          ))}
+        </ul>
+      ) : <p>No schedules yet</p>}
+    </section>
+  );
+}

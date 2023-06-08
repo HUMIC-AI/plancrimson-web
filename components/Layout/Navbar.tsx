@@ -22,7 +22,7 @@ const paths: Path[] = [
     children: [
       { href: '/explore/undergrad', name: 'Undergrad' },
       { href: '/explore/grad', name: 'Grad' },
-      { href: '/explore/surprise', name: 'Surprise' }
+      { href: '/explore/surprise', name: 'Surprise' },
     ],
   },
   {

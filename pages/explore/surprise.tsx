@@ -2,11 +2,11 @@ import CourseCard from '@/components/Course/CourseCard';
 import Layout from '@/components/Layout/Layout';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { getMeiliApiKey, getMeiliHost } from '@/src/context/meili';
-import { Auth } from '@/src/features';
+import { Auth, Planner } from '@/src/features';
 import { fetchAtOffset } from '@/src/features/classCache';
 import { ExtendedClass } from '@/src/lib';
 import Schema from '@/src/schema';
-import { alertUnexpectedError, useElapsed } from '@/src/utils/hooks';
+import { alertUnexpectedError, useAppDispatch, useElapsed } from '@/src/utils/hooks';
 import { arrayUnion, updateDoc } from 'firebase/firestore';
 import { useEffect, useRef, useState } from 'react';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
@@ -27,6 +27,7 @@ export default function () {
 }
 
 function SurprisePage({ userId }: { userId: string }) {
+  const dispatch = useAppDispatch();
   const [numDocuments, setNumDocuments] = useState<number | null>(null);
   const [course1, setCourse1] = useState<ExtendedClass | null>(null);
   const [course2, setCourse2] = useState<ExtendedClass | null>(null);
@@ -36,7 +37,7 @@ function SurprisePage({ userId }: { userId: string }) {
   const numDocsRef = useRef<number | null>(null);
   const courseRef = useRef<{ course1: string; course2: string } | null>(null);
 
-  const updateCourses = (total: number) => Promise.all([
+  const chooseRandomPair = (total: number) => Promise.all([
     getRandomCourse(total),
     getRandomCourse(total),
   ])
@@ -49,7 +50,21 @@ function SurprisePage({ userId }: { userId: string }) {
       alertUnexpectedError(err);
     });
 
+  async function chooseSide(class1: string, class2: string, choice: -1 | 0 | 1, total: number) {
+    await updateDoc(Schema.user(userId), {
+      pairwiseRankings: arrayUnion({
+        class1,
+        class2,
+        choice,
+      }),
+    });
+
+    await chooseRandomPair(total);
+  }
+
   useEffect(() => {
+    dispatch(Planner.setExpand('expanded'));
+
     getMeiliApiKey()
       .then((apiKey) => fetch(`${getMeiliHost()}/indexes/courses/stats`, {
         method: 'GET',
@@ -61,7 +76,7 @@ function SurprisePage({ userId }: { userId: string }) {
       .then(({ numberOfDocuments }) => {
         setNumDocuments(numberOfDocuments);
         numDocsRef.current = numberOfDocuments;
-        return updateCourses(numberOfDocuments);
+        return chooseRandomPair(numberOfDocuments);
       })
       .catch((err) => {
         alertUnexpectedError(err);
@@ -89,15 +104,12 @@ function SurprisePage({ userId }: { userId: string }) {
 
       event.preventDefault();
 
-      await updateDoc(Schema.user(userId), {
-        pairwiseRankings: arrayUnion({
-          class1: courseRef.current.course1,
-          class2: courseRef.current.course2,
-          choice,
-        }),
-      });
-
-      await updateCourses(numDocsRef.current);
+      await chooseSide(
+        courseRef.current.course1,
+        courseRef.current.course2,
+        choice,
+        numDocsRef.current,
+      );
     };
 
     document.addEventListener('keydown', handleKeyPress);
@@ -121,7 +133,7 @@ function SurprisePage({ userId }: { userId: string }) {
           type="button"
           className="rounded-md px-4 py-2 text-4xl font-semibold transition-colors hover:bg-gray-secondary"
           onClick={() => {
-            updateCourses(numDocuments);
+            chooseRandomPair(numDocuments);
           }}
         >
           Surprise me!
@@ -131,11 +143,15 @@ function SurprisePage({ userId }: { userId: string }) {
       {course1 && course2 ? (
         <div className="mx-auto flex max-w-4xl space-x-4">
           <div className="w-1/2 shrink-0">
-            <FaArrowLeft className="mr-auto text-4xl text-gray-secondary" />
+            <button type="button" className="mb-4 w-full rounded-lg p-4 text-4xl text-blue-primary hover:bg-gray-secondary">
+              <FaArrowLeft className="mr-auto" />
+            </button>
             <CourseCard course={course1} inSearchContext={false} />
           </div>
           <div className="w-1/2 shrink-0">
-            <FaArrowRight className="ml-auto text-4xl text-gray-secondary" />
+            <button type="button" className="mb-4 w-full rounded-lg p-4 text-4xl text-blue-primary hover:bg-gray-secondary">
+              <FaArrowRight className="ml-auto" />
+            </button>
             <CourseCard course={course2} inSearchContext={false} />
           </div>
         </div>

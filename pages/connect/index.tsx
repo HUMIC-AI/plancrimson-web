@@ -10,13 +10,13 @@ import {
 import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { ErrorPage } from '@/components/Layout/ErrorPage';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
-import { Auth, ClassCache } from '@/src/features';
+import { Auth, ClassCache, Planner } from '@/src/features';
 import { alertUnexpectedError, useAppDispatch, useElapsed } from '@/src/utils/hooks';
 import Schema from '@/src/schema';
 import { Schedule } from '@/src/types';
 import { useMeiliClient } from '@/src/context/meili';
 import { getAllClassIds } from '@/src/utils/schedules';
-import ScheduleSection from '@/components/SemesterSchedule/ScheduleList';
+import { ScheduleList } from '@/components/SemesterSchedule/ScheduleList';
 
 export const PAGE_SIZE = 5;
 
@@ -52,7 +52,7 @@ export default function () {
   }
 
   return (
-    <Layout title="Connect" withMeili>
+    <Layout title="Connect" className="mx-auto mt-6 max-w-3xl px-4" withMeili>
       <ConnectPage userId={userId} />
     </Layout>
   );
@@ -91,6 +91,7 @@ function ConnectPage({ userId }: { userId: string }) {
   useEffect(() => {
     if (client) {
       loadMore();
+      dispatch(Planner.setExpand('text'));
     }
   }, [client]);
 
@@ -116,14 +117,10 @@ function ConnectPage({ userId }: { userId: string }) {
   }
 
   return (
-    <ul className="mt-6 space-y-4">
-      {schedules.map((schedule) => (
-        <li key={schedule.id}>
-          <ScheduleSection schedule={schedule} />
-        </li>
-      ))}
+    <>
+      <ScheduleList schedules={schedules} className="grid grid-cols-1 sm:grid-cols-2" />
       <div ref={targetRef} />
-    </ul>
+    </>
   );
 }
 

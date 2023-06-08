@@ -3,8 +3,7 @@ import {
 } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useMemo, useState } from 'react';
-import ScheduleSection from '@/components/SemesterSchedule/ScheduleList';
-import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
+import { ScheduleList } from '@/components/SemesterSchedule/ScheduleList';
 import { Auth, Schedules } from '@/src/features';
 import {
   useAppSelector, useElapsed,
@@ -121,24 +120,7 @@ function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserP
       </div>
 
       {/* schedules */}
-      <section>
-        <div className="mb-4 flex items-center justify-between border-b-2">
-          <h2>
-            Schedules
-          </h2>
-          <CardExpandToggler />
-        </div>
-
-        {schedules.length > 0 ? (
-          <ul className="space-y-2">
-            {schedules.map((schedule) => (
-              <li key={schedule.id}>
-                <ScheduleSection schedule={schedule} hideAuthor />
-              </li>
-            ))}
-          </ul>
-        ) : <p>No schedules yet</p>}
-      </section>
+      <ScheduleList schedules={schedules} hideAuthor />
     </div>
   );
 }
