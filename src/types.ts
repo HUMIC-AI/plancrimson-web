@@ -54,6 +54,12 @@ export interface UserSettings {
       classes: string[];
     };
   };
+
+  pairwiseRankings: Array<{
+    class1: string;
+    class2: string;
+    choice: -1 | 0 | 1;
+  }>;
 }
 
 export interface CustomTimeRecord {

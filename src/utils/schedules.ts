@@ -29,19 +29,16 @@ export default function useSyncSchedulesMatchingContraints(constraints: QueryCon
   const { client } = useMeiliClient();
 
   const updateSchedules = useCallback((snap: QuerySnapshot<Schedule>) => {
-    const scheduleEntries = snap.docs.map((doc) => doc.data());
-    const classIds = scheduleEntries.flatMap(
-      (schedule) => schedule.classes.map(({ classId }) => classId),
-    );
+    const schedules = snap.docs.map((doc) => doc.data());
 
     console.debug('[useSchedules] Reloaded schedules');
 
     // load all of the classes into the class cache
     if (client) {
-      dispatch(ClassCache.loadCourses(client, classIds));
+      dispatch(ClassCache.loadCourses(client, getAllClassIds(schedules)));
     }
 
-    dispatch(Schedules.overwriteSchedules(scheduleEntries));
+    dispatch(Schedules.overwriteSchedules(schedules));
   }, [client]);
 
   useEffect(() => {

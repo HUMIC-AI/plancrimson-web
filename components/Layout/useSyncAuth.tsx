@@ -3,7 +3,7 @@ import {
 } from 'firebase/firestore';
 import React, { useEffect } from 'react';
 import {
-  GoogleAuthProvider, User, getAuth, onAuthStateChanged, signInWithCredential, signInWithPopup, signInWithRedirect,
+  GoogleAuthProvider, User, getAuth, onAuthStateChanged, signInWithCredential, signInWithRedirect,
 } from 'firebase/auth';
 import { getAnalytics, setUserId } from 'firebase/analytics';
 import { useAppDispatch } from '@/src/utils/hooks';
@@ -19,7 +19,6 @@ import { getUniqueSemesters } from '@/src/lib';
 
 export async function signInUser() {
   const auth = getAuth();
-  let user: User;
 
   if (process.env.NODE_ENV === 'development') {
     const email = prompt('In development mode. Enter email:')!;
@@ -27,19 +26,15 @@ export async function signInUser() {
     // encode for firebase auth
     const sub = Buffer.from(email).toString('base64');
     const credential = GoogleAuthProvider.credential(JSON.stringify({ sub, email }));
-    const newUser = await signInWithCredential(auth, credential);
-    user = newUser.user;
+    await signInWithCredential(auth, credential);
   } else {
     // we don't need any additional scopes
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({
       hd: 'college.harvard.edu',
     });
-    const newUser = await signInWithRedirect(auth, provider);
-    user = newUser.user;
+    await signInWithRedirect(auth, provider);
   }
-
-  return user;
 }
 
 /**

@@ -13,19 +13,23 @@ import type {
 const initialState: ScheduleMap = {};
 
 type CoursesPayload = { courses: UserClassData[]; scheduleId: string };
-type PublicPayload = { scheduleId: string, public: boolean };
+
+function unionSchedulesSlice(state: any, action: PayloadAction<Schedule[]>) {
+  action.payload.forEach((schedule) => {
+    state[schedule.id] = schedule;
+  });
+}
 
 export const schedulesSlice = createSlice({
   name: 'schedules',
   initialState,
   reducers: {
     overwriteSchedules(state, action: PayloadAction<Schedule[]>) {
-      // clear all current schedules
       Object.keys(state).forEach((key) => delete state[key]);
-      action.payload.forEach((schedule) => {
-        state[schedule.id] = schedule;
-      });
+      unionSchedulesSlice(state, action);
     },
+
+    unionSchedules: unionSchedulesSlice,
 
     create(state, action: PayloadAction<Schedule>) {
       const { id, ...data } = action.payload;
@@ -44,10 +48,6 @@ export const schedulesSlice = createSlice({
     rename(state, action: PayloadAction<{ scheduleId: string, title: string }>) {
       const { scheduleId, title } = action.payload;
       state[scheduleId].title = title;
-    },
-
-    setPublic(state, action: PayloadAction<PublicPayload>) {
-      state[action.payload.scheduleId].public = action.payload.public;
     },
 
     clearSchedule(state, action: PayloadAction<string>) {
@@ -69,7 +69,7 @@ export function selectSchedule(scheduleId: ScheduleId | null | undefined) {
 
 // ========================= ACTION CREATORS =========================
 
-export const { overwriteSchedules, clearSchedule } = schedulesSlice.actions;
+export const { overwriteSchedules, unionSchedules, clearSchedule } = schedulesSlice.actions;
 
 // Checks if the given schedule is in the Redux store.
 // If it is, throw an error.
@@ -98,11 +98,6 @@ export const removeCourses = (payload: { scheduleId: string, courseIds: string[]
 export const renameSchedule = ({ scheduleId, title }: { scheduleId: string, title: string }) => async (dispatch: AppDispatch) => {
   await updateDoc(Firestore.schedule(scheduleId), { title });
   return dispatch(schedulesSlice.actions.rename({ scheduleId, title }));
-};
-
-export const setPublic = (payload: PublicPayload) => async (dispatch: AppDispatch) => {
-  await updateDoc(Firestore.schedule(payload.scheduleId), { public: payload.public });
-  return dispatch(schedulesSlice.actions.setPublic(payload));
 };
 
 export const deleteSchedule = (id: string) => async (dispatch: AppDispatch) => {

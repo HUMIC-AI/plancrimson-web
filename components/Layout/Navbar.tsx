@@ -22,6 +22,7 @@ const paths: Path[] = [
     children: [
       { href: '/explore/undergrad', name: 'Undergrad' },
       { href: '/explore/grad', name: 'Grad' },
+      { href: '/explore/surprise', name: 'Surprise' }
     ],
   },
   {
@@ -173,7 +174,7 @@ const SmallComponents = {
         </Menu.Button>
         <Menu.Items className="rounded bg-black/40">
           {item.children!.map((child) => (
-            <Menu.Item key={child.name}>
+            <Menu.Item key={child.href}>
               <NavbarLink item={child} pathname={pathname} />
             </Menu.Item>
           ))}
@@ -193,9 +194,9 @@ const LargeOnly = {
         {paths.map((item) => (
           // pass the query between pages to preserve the selected schedule
           item.children ? (
-            <LargeOnly.SubMenu item={item} />
+            <LargeOnly.SubMenu item={item} key={item.href} />
           ) : (
-            <NavbarLink key={item.name} item={item} pathname={pathname} />
+            <NavbarLink key={item.href} item={item} pathname={pathname} />
           )
         ))}
       </div>

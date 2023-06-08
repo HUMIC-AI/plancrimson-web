@@ -37,6 +37,18 @@ export const classCacheSlice = createSlice({
 
 export const selectClassCache: (state: RootState) => ClassCache = (state: RootState) => state.classCache.cache;
 
+export async function fetchAtOffset(offset: number): Promise<ExtendedClass> {
+  const apiKey = await getMeiliApiKey();
+  const response = await fetch(`${getMeiliHost()}/indexes/courses/documents?limit=1&offset=${offset}`, {
+    method: 'GET',
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+    },
+  });
+  const data: { results: [ExtendedClass] } = await response.json();
+  return data.results[0];
+}
+
 /**
  * Load the given classes from the index into Redux.
  * @param index the Meilisearch index to get classes from

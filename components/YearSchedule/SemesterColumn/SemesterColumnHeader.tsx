@@ -16,7 +16,6 @@ import { DuplicateScheduleButton } from './DuplicateScheduleButton';
 import { MenuButton } from './MenuButton';
 import { EditNameForm } from './EditNameForm';
 import { HideScheduleButton } from './HideScheduleButton';
-import { PublishScheduleButton } from './PublishScheduleButton';
 import { useScheduleFromScheduleIdOrSemester } from './useScheduleFromScheduleIdOrSemester';
 
 export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
@@ -66,7 +65,6 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
               <>
                 <DeleteScheduleButton scheduleId={schedule.id} />
                 <DuplicateScheduleButton scheduleId={schedule.id} />
-                <PublishScheduleButton scheduleId={schedule.id} />
               </>
               )}
             </Menu.Items>
