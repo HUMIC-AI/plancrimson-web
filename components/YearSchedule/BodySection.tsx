@@ -85,7 +85,7 @@ function BodySection({
 
   return (
     <div className={classNames(
-      'flex-1 flex flex-col relative md:p-4',
+      'flex-1 flex flex-col relative md:p-4 bg-secondary text-primary',
       showReqs && 'md:rounded-lg md:shadow-lg',
     )}
     >

@@ -51,7 +51,9 @@ export default function Navbar({
     <Menu
       as="nav"
       className={classNames(
-        transparent && 'absolute inset-x-0 z-10 bg-gray-secondary/40 hover:bg-gray-secondary/80 transition-colors',
+        transparent
+          ? 'absolute inset-x-0 z-10 bg-gray-secondary/40 hover:bg-gray-secondary/80 transition-colors'
+          : 'bg-secondary',
       )}
     >
       {({ open }) => (
@@ -128,8 +130,8 @@ const SmallComponents = {
           name="Open main menu"
           className={classNames(
             'inline-flex items-center justify-center rounded-md p-2',
-            'text-gray-light hover:bg-black hover:text-white',
-            'focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white',
+            'text-primary hover:bg-gray-primary transition-colors',
+            'focus:outline-none focus:ring-2 focus:ring-inset focus:ring-secondary',
           )}
         >
           <span className="sr-only">Open main menu</span>

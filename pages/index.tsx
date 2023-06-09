@@ -17,6 +17,7 @@ export default function PlanPage() {
       <ClassesCloud controls="track">
         <button
           type="button"
+          title="Make sure you have popups disabled."
           className="relative text-3xl font-black text-white drop-shadow-lg transition-all hover:opacity-80 sm:text-6xl sm:hover:text-[4rem]"
           onClick={() => signInUser().catch((err) => {
             alert("Couldn't sign in. You may need to disable any popup blockers.");

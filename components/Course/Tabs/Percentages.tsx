@@ -21,7 +21,7 @@ export default function Percentages({ categories: allCategories }: Props) {
   const total = allCategories.reduce((acc, val) => acc + val, 0);
 
   return (
-    <div className="flex h-6 rounded shadow-md">
+    <div className="flex h-6 rounded text-black shadow-md">
       {allCategories.map(
         (rec, i) => rec > 0 && (
         <div

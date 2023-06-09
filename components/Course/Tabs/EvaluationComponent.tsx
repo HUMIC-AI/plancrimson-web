@@ -31,7 +31,7 @@ function GridHeading({ title, data } : GridProps) {
     <>
       <div className="text-center">
         <p>{title}</p>
-        <p className="text-sm text-gray-dark">
+        <p className="text-sm text-gray-primary">
           {data.courseMean?.toFixed(2) || 'NA'}
           {' // '}
           <Tooltip text="FAS mean" direction="bottom">
@@ -63,7 +63,7 @@ function DisclosureComponent({
     <Disclosure as="div" className="rounded-lg">
       <Disclosure.Button
         name={heading}
-        className="flex w-full items-center space-x-2 rounded px-2 py-1 text-left transition-colors hover:bg-gray-light"
+        className="flex w-full items-center space-x-2 rounded px-2 py-1 text-left transition-colors hover:bg-gray-primary"
       >
         <h4 className="flex-1">{heading}</h4>
         {visibleStats && (
@@ -324,7 +324,7 @@ function OpenCloseButton({
     >
       <h3 className="font-bold">{buttonTitle}</h3>
       <span className="flex items-center space-x-4">
-        <ExternalLink href={url} className="rounded p-2 transition-colors hover:bg-gray-light hover:text-gray-dark">
+        <ExternalLink href={url} className="rounded p-2 transition-colors hover:bg-gray-secondary hover:text-gray-primary">
           <span className="sr-only">Open report page</span>
           <FaExternalLinkAlt title="Open report page" />
         </ExternalLink>
