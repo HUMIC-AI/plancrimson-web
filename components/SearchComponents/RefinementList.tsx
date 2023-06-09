@@ -52,13 +52,13 @@ function RefinementListComponent({
         value={miniSearch}
         onChange={({ currentTarget }) => setMiniSearch(currentTarget.value)}
         placeholder="Filter"
-        className="block w-full rounded-md border-gray-light py-1 pl-2 shadow-sm sm:text-sm"
+        className="block w-full rounded-md border-gray-primary bg-secondary py-1 pl-2 shadow-sm sm:text-sm"
       />
 
       <button
         type="button"
         onClick={() => refine([])}
-        className="mb-2 ml-1 text-xs leading-none text-gray-dark underline transition-colors hover:opacity-50"
+        className="mb-2 ml-1 text-xs leading-none underline transition-colors hover:opacity-50"
       >
         Clear all
       </button>
@@ -85,8 +85,9 @@ function RefinementListComponent({
                     refine(value);
                   }}
                 />
+
                 <span
-                  className={classNames('ml-2', isRefined && 'font-semibold')}
+                  className={classNames('ml-2', isRefined ? 'font-semibold' : 'font-light')}
                   style={{
                     color: (showSubjectColor && label in subjects) ? getSubjectColor(label as Subject) : 'inherit',
                   }}

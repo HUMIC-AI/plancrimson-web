@@ -35,12 +35,12 @@ function DisclosureChildren({
 
   return (
     <>
-      <div className="flex items-stretch border-b border-gray-light">
+      <div className="flex items-stretch border-b border-gray-primary">
         <Disclosure.Button
           className={classNames(
             'flex-1 py-2 px-3 rounded-tl-lg',
             'text-sm text-left font-medium cursor-pointer',
-            'hover:bg-gray-dark/50 transition-colors',
+            'hover:bg-gray-secondary/50 transition-colors',
           )}
           as="h3"
         >
@@ -53,16 +53,18 @@ function DisclosureChildren({
             setOperator(operator === 'and' ? 'or' : 'and');
           }}
           className={classNames(
-            'w-10 rounded-tr-lg opacity-50 transition-colors hover:bg-gray-dark/50',
+            'w-10 rounded-tr-lg transition-colors hover:bg-gray-secondary/50',
           )}
         >
-          {operator}
+          <span className="opacity-50">
+            {operator}
+          </span>
         </button>
       </div>
 
       <FadeTransition unmount={false}>
         <Disclosure.Panel unmount={false}>
-          <div className="origin-top-right rounded-b-lg bg-gray-light p-2 text-black">
+          <div className="origin-top-right rounded-b-lg border-x border-b border-gray-primary p-2">
             <RefinementList
               attribute={attribute}
               operator={operator}

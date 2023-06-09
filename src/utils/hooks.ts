@@ -63,7 +63,7 @@ export function useProfiles(ids: string[] | undefined) {
 
 export function alertUnexpectedError(err: unknown) {
   alert('An unexpected error occurred! Please try again later.');
-  console.error(err);
+  console.error(window.location.pathname, err);
   logEvent(getAnalytics(), 'exception', { description: (err as { message: string }).message });
 }
 

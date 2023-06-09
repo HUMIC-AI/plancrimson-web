@@ -37,7 +37,10 @@ export const classCacheSlice = createSlice({
 
 export const selectClassCache: (state: RootState) => ClassCache = (state: RootState) => state.classCache.cache;
 
-export async function fetchAtOffset(offset: number): Promise<ExtendedClass> {
+export async function fetchAtOffset(offset: number): Promise<{
+  results: [ExtendedClass];
+  total: number;
+}> {
   const apiKey = await getMeiliApiKey();
   const response = await fetch(`${getMeiliHost()}/indexes/courses/documents?limit=1&offset=${offset}`, {
     method: 'GET',
@@ -45,8 +48,8 @@ export async function fetchAtOffset(offset: number): Promise<ExtendedClass> {
       authorization: `Bearer ${apiKey}`,
     },
   });
-  const data: { results: [ExtendedClass] } = await response.json();
-  return data.results[0];
+  const data = await response.json();
+  return data;
 }
 
 /**

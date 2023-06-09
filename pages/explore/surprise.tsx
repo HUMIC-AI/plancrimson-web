@@ -1,7 +1,7 @@
 import CourseCard from '@/components/Course/CourseCard';
-import Layout from '@/components/Layout/Layout';
+import { ErrorPage } from '@/components/Layout/ErrorPage';
+import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
-import { getMeiliApiKey, getMeiliHost } from '@/src/context/meili';
 import { Auth, Planner } from '@/src/features';
 import { fetchAtOffset } from '@/src/features/classCache';
 import { ExtendedClass } from '@/src/lib';
@@ -17,7 +17,15 @@ import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 export default function () {
   const userId = Auth.useAuthProperty('uid');
 
-  if (!userId) return <Layout title="Friends" />;
+  if (userId === null) return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
+
+  if (typeof userId === 'undefined') {
+    return (
+      <Layout title="Friends">
+        <LoadingBars />
+      </Layout>
+    );
+  }
 
   return (
     <Layout title="Friends" withMeili>
@@ -65,18 +73,11 @@ function SurprisePage({ userId }: { userId: string }) {
   useEffect(() => {
     dispatch(Planner.setExpand('expanded'));
 
-    getMeiliApiKey()
-      .then((apiKey) => fetch(`${getMeiliHost()}/indexes/courses/stats`, {
-        method: 'GET',
-        headers: {
-          authorization: `Bearer ${apiKey}`,
-        },
-      }))
-      .then((response) => response.json())
-      .then(({ numberOfDocuments }) => {
-        setNumDocuments(numberOfDocuments);
-        numDocsRef.current = numberOfDocuments;
-        return chooseRandomPair(numberOfDocuments);
+    fetchAtOffset(0)
+      .then(({ total }) => {
+        setNumDocuments(total);
+        numDocsRef.current = total;
+        return chooseRandomPair(total);
       })
       .catch((err) => {
         alertUnexpectedError(err);
@@ -160,7 +161,8 @@ function SurprisePage({ userId }: { userId: string }) {
   );
 }
 
-function getRandomCourse(total: number) {
+async function getRandomCourse(total: number) {
   const offset1 = Math.floor(Math.random() * total);
-  return fetchAtOffset(offset1);
+  const data = await fetchAtOffset(offset1);
+  return data.results[0];
 }

@@ -110,7 +110,7 @@ export default function ScheduleChooser({
           <FadeTransition>
             <Listbox.Options
               className={classNames(
-                'absolute mt-2 shadow-md rounded-lg overflow-hidden border-2 z-30',
+                'absolute mt-2 rounded-lg overflow-hidden border-2 border-gray-primary z-30',
                 direction === 'left' && 'right-0',
                 direction === 'center'
                     && 'left-1/2 transform -translate-x-1/2',
