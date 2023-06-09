@@ -3,7 +3,7 @@ import {
 } from 'firebase/firestore';
 import React, { useEffect } from 'react';
 import {
-  GoogleAuthProvider, User, getAuth, onAuthStateChanged, signInWithCredential, signInWithRedirect,
+  GoogleAuthProvider, User, getAuth, onAuthStateChanged, signInWithCredential, signInWithPopup,
 } from 'firebase/auth';
 import { getAnalytics, setUserId } from 'firebase/analytics';
 import { useAppDispatch } from '@/src/utils/hooks';
@@ -33,7 +33,10 @@ export async function signInUser() {
     provider.setCustomParameters({
       hd: 'college.harvard.edu',
     });
-    await signInWithRedirect(auth, provider);
+    // so both methods have issues on certain setups
+    // but I'd prefer restricting to HarvardKey login so the easiest way is still to go through Firebase Auth
+    // await signInWithRedirect(auth, provider);
+    await signInWithPopup(auth, provider);
   }
 }
 

@@ -23,7 +23,7 @@ export default function CourseSearchModal({ selected, term }: { selected: string
           </div>
           )}
           <div className="flex space-x-4">
-            <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-light bg-white p-6 shadow-lg">
+            <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-secondary p-6 shadow-lg">
               <SearchBox scheduleChooser={false} />
               <Hits />
             </div>

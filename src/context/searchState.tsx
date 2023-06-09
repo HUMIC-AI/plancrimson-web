@@ -27,7 +27,7 @@ const SearchStateContext = createContext<SearchStateContextType>({
 });
 
 const DEFAULT_SEARCH_STATE = {
-  // the current term
+  // TODO the current term (Fall 2023) (make sure to update every semester)
   refinementList: { STRM: ['2238'] },
 };
 
@@ -54,7 +54,7 @@ export function SearchStateProvider({ children, oneCol = false } : React.PropsWi
       debouncedSetStateRef.current = setTimeout(() => {
         router.replace({
           query: qs.stringify(mergedState),
-        });
+        }, undefined, { scroll: false, shallow: true });
       }, DEBOUNCE_TIME);
 
       setSearchState(mergedState);

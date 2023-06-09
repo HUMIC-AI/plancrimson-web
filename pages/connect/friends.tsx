@@ -1,6 +1,6 @@
 /* eslint-disable react/no-this-in-sfc */
 import { Auth, ClassCache } from '@/src/features';
-import Layout from '@/components/Layout/Layout';
+import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { useEffect, useState } from 'react';
 import Schema from '@/src/schema';
 import {
@@ -10,7 +10,9 @@ import {
   BaseSchedule,
   UserProfile, WithId,
 } from '@/src/types';
-import { alertUnexpectedError, useAppDispatch, useAppSelector } from '@/src/utils/hooks';
+import {
+  alertUnexpectedError, useAppDispatch, useAppSelector, useElapsed,
+} from '@/src/utils/hooks';
 import { Season } from '@/src/lib';
 import ScheduleSection from '@/components/SemesterSchedule/ScheduleList';
 import { setExpand } from '@/src/features/semesterFormat';
@@ -18,12 +20,25 @@ import { useMeiliClient } from '@/src/context/meili';
 import Link from 'next/link';
 import lunr from 'lunr';
 import { getAllClassIds } from '@/src/utils/schedules';
+import { LoadingBars } from '@/components/Layout/LoadingPage';
+import { ErrorPage } from '@/components/Layout/ErrorPage';
 
 
 export default function () {
   const userId = Auth.useAuthProperty('uid');
+  const elapsed = useElapsed(1000, []);
 
-  if (!userId) return <Layout title="Friends" />;
+  if (userId === null) {
+    return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
+  }
+
+  if (typeof userId === 'undefined') {
+    return (
+      <Layout title="Friends">
+        {elapsed && <LoadingBars />}
+      </Layout>
+    );
+  }
 
   return (
     <Layout title="Friends" withMeili>

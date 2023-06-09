@@ -62,6 +62,9 @@ const ModalContext = createContext<ModalContextType>({
   showCourse: () => {},
 });
 
+/**
+ * See also CustomModal
+ */
 export function ModalProvider({ children }: PropsWithChildren<{}>) {
   const [open, setOpen] = useState<boolean>(false);
   const [data, setContents] = useState<CustomDialogProps | null>(null);

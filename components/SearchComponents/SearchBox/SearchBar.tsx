@@ -48,7 +48,7 @@ export function SearchBar({
           maxLength={512}
           required
           className={classNames(
-            'flex-1 appearance-none border border-gray rounded w-full py-2 px-3 bg-gray-secondary',
+            'flex-1 appearance-none border border-gray-primary rounded w-full py-2 px-3 bg-secondary',
             'focus:outline-none focus:shadow-lg shadow transition-shadow',
           )}
         />

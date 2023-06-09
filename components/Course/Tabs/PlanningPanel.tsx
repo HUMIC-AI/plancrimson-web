@@ -97,26 +97,27 @@ function ScheduleRow({ schedule, course }: { schedule: BaseSchedule; course: Ext
       <span className="max-w-[12rem] overflow-hidden text-ellipsis font-semibold sm:max-w-[24rem]">
         {schedule.title}
       </span>
-      <span className="text-gray-dark">{`${schedule.season} ${schedule.year}`}</span>
+      <span className="text-gray-primary">{`${schedule.season} ${schedule.year}`}</span>
       <div className="relative flex flex-row-reverse">
         {/* Code from https://headlessui.dev/react/switch */}
         <Switch
           checked={enabled}
           onChange={(checked) => handleSwitch(checked)}
           className={classNames(
-            enabled ? 'bg-teal-600' : 'bg-teal-900',
+            enabled ? 'bg-blue-primary' : 'bg-blue-secondary',
             'relative inline-flex items-center h-[28px] w-[64px]',
             'border-2 border-transparent rounded-full cursor-pointer',
-            'transition-colors ease-in-out duration-100',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-70',
+            'transition-colors ease-in-out duration-500',
+            'focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/80',
           )}
         >
+          {/* the actual circle part */}
           <span
             aria-hidden="true"
             className={classNames(
-              enabled ? 'translate-x-9' : 'translate-x-0',
+              enabled ? 'translate-x-9 bg-gray-secondary' : 'translate-x-0 bg-gray-primary',
               'pointer-events-none h-[24px] w-[24px] rounded-full',
-              'bg-white shadow-lg transform ring-0',
+              'shadow-lg transform ring-0',
               'transition ease-in-out duration-200',
             )}
           />

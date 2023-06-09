@@ -102,7 +102,7 @@ export default function ScheduleChooser({
             : (
               <Listbox.Button
                 name="Select schedule"
-                className="interactive w-full rounded-xl border px-2 py-1 text-center"
+                className="interactive w-full rounded-xl border border-gray-primary px-2 py-1 text-center"
               >
                 Select a schedule
               </Listbox.Button>

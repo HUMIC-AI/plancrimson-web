@@ -47,8 +47,8 @@ export default function CustomModal() {
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <div className="my-8 inline-block w-full max-w-lg overflow-hidden rounded-2xl bg-black text-left align-middle shadow-xl transition-all">
-              <div className="border-none p-6 text-white">
+            <div className="my-8 inline-block w-full max-w-lg overflow-hidden rounded-2xl bg-secondary text-left align-middle text-primary shadow-xl transition-all sm:my-16">
+              <div className="border-none p-6 text-primary">
                 <Dialog.Title as="h3" className="text-xl font-bold">
                   {data?.title}
                 </Dialog.Title>
@@ -63,7 +63,7 @@ export default function CustomModal() {
                 type="button"
                 name="Close dialog"
                 onClick={() => setOpen(false)}
-                className="interactive absolute right-5 top-5 rounded-full bg-white p-2 text-black"
+                className="interactive absolute right-5 top-5 rounded-full bg-gray-primary p-2 text-primary"
               >
                 <FaTimes />
               </button>

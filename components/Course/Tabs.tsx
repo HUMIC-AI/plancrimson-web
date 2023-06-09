@@ -30,7 +30,7 @@ export default function CourseTabs({ course }: { course: ExtendedClass }) {
         });
       }}
     >
-      <Tab.List className="flex overflow-auto bg-black">
+      <Tab.List className="flex overflow-auto">
         {TABS.map(
           (tab) => {
             const disabled = tab === 'Evaluations' && evaluations ? evaluations.length === 0 : false;
@@ -40,10 +40,10 @@ export default function CourseTabs({ course }: { course: ExtendedClass }) {
                 key={tab}
                 disabled={disabled}
                 className={({ selected }) => classNames(
-                  selected ? 'bg-white text-black' : (
+                  selected ? 'bg-gray-secondary' : (
                     disabled
-                      ? 'text-gray-dark cursor-not-allowed'
-                      : 'text-white hover:bg-gray-dark transition-colors'
+                      ? 'opacity-50 cursor-not-allowed'
+                      : 'hover:bg-gray-primary transition-colors'
                   ),
                   'flex-1 text-sm py-2 px-4 rounded-t-xl font-medium whitespace-nowrap',
                 )}
@@ -56,7 +56,7 @@ export default function CourseTabs({ course }: { course: ExtendedClass }) {
         )}
       </Tab.List>
 
-      <Tab.Panels className="bg-white p-6">
+      <Tab.Panels className="bg-gray-secondary p-6">
         <InfoPanel course={course} />
         {error ? (
           error.code === 'permission-denied' ? (
