@@ -2,10 +2,11 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import { ImageWrapper } from '@/components/Utils/UserLink';
 import CourseCard from '@/components/Course/CourseCard';
-import { ClassCache, Planner } from '@/src/features';
+import { ClassCache } from '@/src/features';
 import { useAppSelector, useProfiles } from '@/src/utils/hooks';
 import type { BaseSchedule, UserProfile, WithId } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
+import { useExpandCards } from '@/src/context/expandCards';
 import CardExpandToggler from '../YearSchedule/CardExpandToggler';
 
 export type ScheduleListProps = {
@@ -20,7 +21,7 @@ export default function ScheduleSection({
 }: ScheduleListProps) {
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const initialized = useAppSelector(ClassCache.selectInitialized);
-  const cardExpand = useAppSelector(Planner.selectExpandCards);
+  const { expandCards } = useExpandCards();
 
   // make a singleton list of the owner's uid so that we can use it as a dependency
   const ownerUid = useMemo(() => [schedule.ownerUid], [schedule.ownerUid]);
@@ -43,8 +44,9 @@ export default function ScheduleSection({
 
       {initialized ? (schedule.classes.length > 0 ? (
         <ul className={classNames(
-          cardExpand === 'text' ? 'list-inside list-disc' : 'flex flex-wrap',
-          cardExpand === 'collapsed' ? 'gap-2' : 'justify-between gap-2',
+          expandCards === 'text' && 'list-inside list-disc',
+          expandCards === 'collapsed' && 'flex flex-wrap gap-2',
+          expandCards === 'expanded' && 'flex flex-wrap justify-between gap-2',
         )}
         >
           {schedule.classes.map((classId) => (classId in classCache ? (

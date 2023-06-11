@@ -1,8 +1,8 @@
 import {
-  getFirestore, doc, DocumentReference, collection, CollectionReference, collectionGroup, Query, query, where, DocumentSnapshot, QueryConstraint, limit, startAfter, getDocs,
+  getFirestore, doc, DocumentReference, collection, CollectionReference, collectionGroup, Query, query, where, DocumentSnapshot, QueryConstraint, limit, startAfter, getDocs, QuerySnapshot,
 } from 'firebase/firestore';
 import type {
-  UserProfile, UserSettings, FriendRequest, Metadata, Alert, FirestoreSchedule,
+  UserProfile, UserSettings, FriendRequest, Metadata, Alert, FirestoreSchedule, WithId,
 } from './types';
 import { Season } from './lib';
 
@@ -92,9 +92,15 @@ const Schema = {
 
 export default Schema;
 
-export async function queryWithId<T>(c: CollectionReference<T>, config?: QueryConfig) {
+// function signature based on getSnap
+export function queryWithId<T>(c: CollectionReference<T>, config?: QueryConfig, getSnap?: false): Promise<WithId<T>[]>;
+export function queryWithId<T>(c: CollectionReference<T>, config?: QueryConfig, getSnap?: true): Promise<QuerySnapshot<T>>;
+export async function queryWithId<T>(c: CollectionReference<T>, config?: QueryConfig, getSnap = false) {
   const q = config ? query(c, ...getConstraints(config)) : c;
   const snap = await getDocs(q);
+
+  if (getSnap) return snap;
+
   return snap.docs.map((d) => ({
     ...d.data(),
     id: d.id,

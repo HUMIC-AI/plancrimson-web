@@ -10,6 +10,7 @@ import { ModalProvider } from '@/src/context/modal';
 import { ChosenScheduleProvider } from '@/src/context/selectedSchedule';
 import { useSyncAuth, useSyncUserSettings } from '@/components/Layout/useSyncAuth';
 import { getCurrentSemester } from '@/src/lib';
+import ExpandCardsProvider from '@/src/context/expandCards';
 
 function MyApp({ Component, pageProps }: AppProps) {
   useSyncAuth();
@@ -17,9 +18,11 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <SearchStateProvider defaultState={getDefaultSearchStateForSemester(getCurrentSemester())}>
-      <ChosenScheduleProvider>
-        <Component {...pageProps} />
-      </ChosenScheduleProvider>
+      <ExpandCardsProvider sticky>
+        <ChosenScheduleProvider>
+          <Component {...pageProps} />
+        </ChosenScheduleProvider>
+      </ExpandCardsProvider>
     </SearchStateProvider>
   );
 }

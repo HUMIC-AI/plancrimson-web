@@ -1,6 +1,5 @@
 import {
   DocumentSnapshot,
-  getDocs,
 } from 'firebase/firestore';
 import {
   useCallback, useEffect, useRef, useState,
@@ -8,9 +7,9 @@ import {
 import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { ErrorPage } from '@/components/Layout/ErrorPage';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
-import { Auth, ClassCache, Planner } from '@/src/features';
+import { Auth, ClassCache } from '@/src/features';
 import { alertUnexpectedError, useAppDispatch, useElapsed } from '@/src/utils/hooks';
-import Schema from '@/src/schema';
+import Schema, { queryWithId } from '@/src/schema';
 import { BaseSchedule } from '@/src/types';
 import { useMeiliClient } from '@/src/context/meili';
 import { getAllClassIds } from '@/src/utils/schedules';
@@ -87,9 +86,8 @@ function ConnectPage({ userId }: { userId: string }) {
   useEffect(() => {
     if (client) {
       loadMore();
-      dispatch(Planner.setExpand('text'));
     }
-  }, [client]);
+  }, [client, loadMore]);
 
 
   useEffect(() => {
@@ -130,12 +128,12 @@ async function scrollUntilSchedule(userId: string, initSchedule?: DocumentSnapsh
   let done = false;
 
   while (schedules.length === 0) {
-    const snap = await getDocs(Schema.Collection.schedules({
+    const snap = await queryWithId(Schema.Collection.schedules(), {
       ignoreUser: userId,
       pageSize: 20,
       startAfter: finalSchedule,
       publicOnly: true,
-    }));
+    }, true);
 
     if (snap.docs.length === 0) {
       done = true;

@@ -1,21 +1,19 @@
 import React from 'react';
-import { Planner } from '@/src/features';
-import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { FaExpand, FaExpandAlt, FaExpandArrowsAlt } from 'react-icons/fa';
+import { useExpandCards } from '@/src/context/expandCards';
 
 export default function CardExpandToggler() {
-  const dispatch = useAppDispatch();
-  const cardExpandStyle = useAppSelector(Planner.selectExpandCards);
+  const { expandCards, toggleExpand } = useExpandCards();
 
   return (
     <button
       type="button"
-      onClick={() => dispatch(Planner.toggleExpand())}
+      onClick={toggleExpand}
       className="flex items-center justify-center text-blue-primary transition-opacity duration-200 hover:opacity-50"
     >
-      {cardExpandStyle === 'text' && <FaExpand />}
-      {cardExpandStyle === 'collapsed' && <FaExpandArrowsAlt />}
-      {cardExpandStyle === 'expanded' && <FaExpandAlt />}
+      {expandCards === 'text' && <FaExpand />}
+      {expandCards === 'collapsed' && <FaExpandArrowsAlt />}
+      {expandCards === 'expanded' && <FaExpandAlt />}
     </button>
   );
 }

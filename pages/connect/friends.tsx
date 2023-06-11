@@ -17,7 +17,6 @@ import {
   Term, getCurrentDefaultClassYear, getCurrentSemester, getDefaultSemesters, semesterToTerm, termToSemester,
 } from '@/src/lib';
 import ScheduleSection from '@/components/SemesterSchedule/ScheduleList';
-import { setExpand } from '@/src/features/semesterFormat';
 import { useMeiliClient } from '@/src/context/meili';
 import Link from 'next/link';
 import lunr from 'lunr';
@@ -30,6 +29,7 @@ import { classNames } from '@/src/utils/styles';
 import { useFriends } from '@/components/ConnectPageComponents/friendUtils';
 import { IncomingRequestList } from '@/components/ConnectPageComponents/FriendRequests';
 import { getDisplayName } from '@/src/utils/utils';
+import ExpandCardsProvider from '@/src/context/expandCards';
 
 
 export default function () {
@@ -50,9 +50,11 @@ export default function () {
 
   return (
     <Layout title="Friends" withMeili>
-      <div className="mx-auto max-w-xl">
-        <FriendsPage userId={userId} />
-      </div>
+      <ExpandCardsProvider defaultStyle="text" readonly>
+        <div className="mx-auto max-w-xl">
+          <FriendsPage userId={userId} />
+        </div>
+      </ExpandCardsProvider>
     </Layout>
   );
 }
@@ -73,8 +75,6 @@ function FriendsPage({
 
   // set expand to just text
   useEffect(() => {
-    dispatch(setExpand('text'));
-
     queryWithId(Schema.Collection.profiles())
       .then(setAllProfiles)
       .catch(alertUnexpectedError);

@@ -3,12 +3,9 @@ import type { Term } from '@/src/lib';
 import type { SampleSchedule } from '../requirements/util';
 import type { RootState } from '../store';
 
-const CARD_STYLES = ['text', 'collapsed', 'expanded'] as const;
-
 interface SemesterFormat {
   format: 'all' | 'selected' | 'sample' | null;
   sampleSchedule: SampleSchedule | null;
-  expandCards: typeof CARD_STYLES[number];
   showAttributes: boolean;
   showRequirements: boolean;
   hiddenIds: Record<string, boolean>;
@@ -18,7 +15,6 @@ interface SemesterFormat {
 const initialState: SemesterFormat = {
   format: 'selected',
   sampleSchedule: null,
-  expandCards: 'expanded',
   showAttributes: true,
   showRequirements: false,
   hiddenIds: {},
@@ -40,13 +36,6 @@ export const semesterFormatSlice = createSlice({
       state.format = 'sample';
       state.sampleSchedule = action.payload;
     },
-    toggleExpand: (state) => {
-      // next card style in CARD_STYLES
-      state.expandCards = CARD_STYLES[(CARD_STYLES.indexOf(state.expandCards) + 1) % CARD_STYLES.length];
-    },
-    setExpand: (state, action: PayloadAction<typeof CARD_STYLES[number]>) => {
-      state.expandCards = action.payload;
-    },
     setShowAttributes: (state, action: PayloadAction<boolean>) => {
       state.showAttributes = action.payload;
     },
@@ -67,14 +56,13 @@ export const semesterFormatSlice = createSlice({
 });
 
 export const {
-  showAll, showSelected, showSample, toggleExpand, setExpand, setShowAttributes, setShowReqs, setHiddenId, setHiddenTerm,
+  showAll, showSelected, showSample, setShowAttributes, setShowReqs, setHiddenId, setHiddenTerm,
 } = semesterFormatSlice.actions;
 
 // ========================= SELECTORS =========================
 
 export const selectSemesterFormat = (state: RootState) => state.semesterFormat.format;
 export const selectSampleSchedule = (state: RootState) => state.semesterFormat.sampleSchedule;
-export const selectExpandCards = (state: RootState) => state.semesterFormat.expandCards;
 export const selectShowAttributes = (state: RootState) => state.semesterFormat.showAttributes;
 export const selectShowReqs = (state: RootState) => state.semesterFormat.showRequirements;
 export const selectHiddenIds = (state: RootState) => state.semesterFormat.hiddenIds;

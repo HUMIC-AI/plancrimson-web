@@ -10,9 +10,10 @@ import {
 import { useModal } from '@/src/context/modal';
 import { alertUnexpectedError, useAppSelector } from '@/src/utils/hooks';
 import {
-  Planner, Schedules,
+  Schedules,
 } from '@/src/features';
 import { classNames } from '@/src/utils/styles';
+import { useExpandCards } from '@/src/context/expandCards';
 import Tooltip from '../Utils/Tooltip';
 import {
   ClassTime,
@@ -54,7 +55,7 @@ export default function CourseCard({
   hideTerm = false,
   hideRatings = false,
 }: CourseCardProps) {
-  const cardExpandStyle = useAppSelector(Planner.selectExpandCards);
+  const { expandCards } = useExpandCards();
   const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
   const { showCourse } = useModal();
   const drag = useDragAndDropContext();
@@ -84,7 +85,7 @@ export default function CourseCard({
     }
   } : undefined;
 
-  if (cardExpandStyle === 'text') {
+  if (expandCards === 'text') {
     return (
       <button
         type="button"
@@ -98,7 +99,7 @@ export default function CourseCard({
     );
   }
 
-  const isExpanded = cardExpandStyle === 'expanded';
+  const isExpanded = expandCards === 'expanded';
 
   return (
     // move the shadow outside to avoid it getting hidden

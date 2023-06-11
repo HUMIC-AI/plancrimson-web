@@ -2,13 +2,16 @@ import CourseCard from '@/components/Course/CourseCard';
 import { ErrorPage } from '@/components/Layout/ErrorPage';
 import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
-import { Auth, Planner } from '@/src/features';
+import ExpandCardsProvider from '@/src/context/expandCards';
+import { Auth } from '@/src/features';
 import { fetchAtOffset } from '@/src/features/classCache';
 import { ExtendedClass } from '@/src/lib';
 import Schema from '@/src/schema';
-import { alertUnexpectedError, useAppDispatch, useElapsed } from '@/src/utils/hooks';
+import { alertUnexpectedError, useElapsed } from '@/src/utils/hooks';
 import { arrayUnion, updateDoc } from 'firebase/firestore';
-import { useEffect, useRef, useState } from 'react';
+import {
+  useCallback, useEffect, useRef, useState,
+} from 'react';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 
 /**
@@ -29,13 +32,14 @@ export default function () {
 
   return (
     <Layout title="Friends" withMeili>
-      <SurprisePage userId={userId} />
+      <ExpandCardsProvider defaultStyle="expanded" readonly>
+        <SurprisePage userId={userId} />
+      </ExpandCardsProvider>
     </Layout>
   );
 }
 
 function SurprisePage({ userId }: { userId: string }) {
-  const dispatch = useAppDispatch();
   const [numDocuments, setNumDocuments] = useState<number | null>(null);
   const [course1, setCourse1] = useState<ExtendedClass | null>(null);
   const [course2, setCourse2] = useState<ExtendedClass | null>(null);
@@ -58,7 +62,7 @@ function SurprisePage({ userId }: { userId: string }) {
       alertUnexpectedError(err);
     });
 
-  async function chooseSide(class1: string, class2: string, choice: -1 | 0 | 1, total: number) {
+  const chooseSide = useCallback(async (class1: string, class2: string, choice: -1 | 0 | 1, total: number) => {
     await updateDoc(Schema.user(userId), {
       pairwiseRankings: arrayUnion({
         class1,
@@ -68,11 +72,9 @@ function SurprisePage({ userId }: { userId: string }) {
     });
 
     await chooseRandomPair(total);
-  }
+  }, [userId]);
 
   useEffect(() => {
-    dispatch(Planner.setExpand('expanded'));
-
     fetchAtOffset(0)
       .then(({ total }) => {
         setNumDocuments(total);
@@ -118,7 +120,7 @@ function SurprisePage({ userId }: { userId: string }) {
     return () => {
       document.removeEventListener('keydown', handleKeyPress);
     };
-  }, []);
+  }, [chooseSide]);
 
   if (!numDocuments) {
     if (elapsed) {
