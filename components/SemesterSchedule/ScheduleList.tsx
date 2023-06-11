@@ -19,6 +19,7 @@ export default function ScheduleSection({
   schedule, hideAuthor = false, hideHeader = false, noPadding = false,
 }: ScheduleListProps) {
   const classCache = useAppSelector(ClassCache.selectClassCache);
+  const initialized = useAppSelector(ClassCache.selectInitialized);
   const cardExpand = useAppSelector(Planner.selectExpandCards);
 
   // make a singleton list of the owner's uid so that we can use it as a dependency
@@ -40,7 +41,7 @@ export default function ScheduleSection({
         />
       )}
 
-      {schedule.classes.length > 0 ? (
+      {initialized ? (schedule.classes.length > 0 ? (
         <ul className={classNames(
           cardExpand === 'text' ? 'list-inside list-disc' : 'flex flex-wrap',
           cardExpand === 'collapsed' ? 'gap-2' : 'justify-between gap-2',
@@ -63,7 +64,7 @@ export default function ScheduleSection({
             </li>
           )))}
         </ul>
-      ) : <p>No classes yet</p>}
+      ) : <p>No classes yet</p>) : <p>Loading courses...</p>}
     </div>
   );
 }
@@ -106,7 +107,10 @@ function HeaderComponent({
 }
 
 export function ScheduleList({
-  title = 'Schedules', schedules, hideAuthor = false, className = 'space-y-2',
+  title = 'Schedules',
+  schedules,
+  hideAuthor = false,
+  className = 'space-y-2',
 }: {
   title?: string;
   schedules: BaseSchedule[];

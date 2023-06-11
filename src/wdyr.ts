@@ -1,7 +1,8 @@
 /// <reference types="@welldone-software/why-did-you-render" />
 import React from 'react';
+import { isDevelopment } from './utils/utils';
 
-if (process.env.NODE_ENV === 'development') {
+if (isDevelopment) {
   if (typeof window !== 'undefined') {
     // eslint-disable-next-line import/no-extraneous-dependencies, global-require
     const wdyr = require('@welldone-software/why-did-you-render');

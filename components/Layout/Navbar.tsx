@@ -5,6 +5,7 @@ import {
   FaTimes, FaBars, FaCalendarCheck, FaChevronDown,
 } from 'react-icons/fa';
 import { classNames } from '@/src/utils/styles';
+import { isDevelopment } from '@/src/utils/utils';
 import { UserMenu } from './UserMenu';
 
 
@@ -36,7 +37,7 @@ const paths: Path[] = [
   { href: '/about', name: 'About' },
 ];
 
-if (process.env.NODE_ENV === 'development') {
+if (isDevelopment) {
   // check if firebase project is running
   paths.push({ href: 'http://localhost:4000', name: 'Emulators' });
 }

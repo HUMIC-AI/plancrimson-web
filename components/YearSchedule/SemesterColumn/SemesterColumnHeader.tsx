@@ -7,7 +7,9 @@ import { classNames } from '@/src/utils/styles';
 import { Listbox, Menu } from '@headlessui/react';
 import { Term, semesterToTerm, termToSemester } from '@/src/lib';
 import { useCallback, useState } from 'react';
-import { FaCalendar, FaCog, FaEdit } from 'react-icons/fa';
+import {
+  FaCalendar, FaCog, FaEdit, FaLock,
+} from 'react-icons/fa';
 import FadeTransition from '@/components/Utils/FadeTransition';
 import { ScheduleId, ScheduleIdOrSemester } from '@/src/types';
 import { getSchedulesBySemester } from '@/src/utils/schedules';
@@ -17,6 +19,7 @@ import { MenuButton } from './MenuButton';
 import { EditNameForm } from './EditNameForm';
 import { HideScheduleButton } from './HideScheduleButton';
 import { useScheduleFromScheduleIdOrSemester } from './useScheduleFromScheduleIdOrSemester';
+import { PublishScheduleButton } from './PublishScheduleButton';
 
 export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
   const dispatch = useAppDispatch();
@@ -45,6 +48,12 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
               />
             )}
 
+            {schedule && !schedule.public && (
+              <div className="absolute right-full top-1/2 -translate-y-1/2 transition">
+                <FaLock className="text-gray-primary" />
+              </div>
+            )}
+
             <Menu.Button className={classNames(
               'absolute left-full top-1/2 -translate-y-1/2 transition',
               !open && 'opacity-0 group-hover/column:opacity-100 hover:text-accent',
@@ -65,6 +74,7 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
               <>
                 <DeleteScheduleButton scheduleId={schedule.id} />
                 <DuplicateScheduleButton scheduleId={schedule.id} />
+                <PublishScheduleButton scheduleId={schedule.id} />
               </>
               )}
             </Menu.Items>

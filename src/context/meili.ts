@@ -4,6 +4,7 @@ import {
 } from 'react';
 import type { InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
 import Firestore from '../schema';
+import { isDevelopment } from '../utils/utils';
 
 export type { InstantMeiliSearchInstance };
 
@@ -13,9 +14,9 @@ export type { InstantMeiliSearchInstance };
  * @returns The hostname of the Meilisearch instance, without a trailing slash.
  */
 export function getMeiliHost() {
-  const host = process.env.NODE_ENV === 'production'
-    ? process.env.NEXT_PUBLIC_MEILI_IP
-    : (process.env.NEXT_PUBLIC_DEV_MEILI_IP || 'http://127.0.0.1:7700');
+  const host = isDevelopment
+    ? (process.env.NEXT_PUBLIC_DEV_MEILI_IP || 'http://127.0.0.1:7700')
+    : process.env.NEXT_PUBLIC_MEILI_IP;
 
   if (!host) {
     throw new Error('must configure the MEILI_IP environment variable');

@@ -1,8 +1,6 @@
 import {
   DocumentSnapshot,
-  QueryConstraint,
   getDocs,
-  limit, orderBy, query, startAfter,
 } from 'firebase/firestore';
 import {
   useCallback, useEffect, useRef, useState,
@@ -17,8 +15,6 @@ import { BaseSchedule } from '@/src/types';
 import { useMeiliClient } from '@/src/context/meili';
 import { getAllClassIds } from '@/src/utils/schedules';
 import { ScheduleList } from '@/components/SemesterSchedule/ScheduleList';
-
-export const PAGE_SIZE = 20;
 
 export default function () {
   const userId = Auth.useAuthProperty('uid');
@@ -64,7 +60,7 @@ function ConnectPage({ userId }: { userId: string }) {
   const targetRef = useRef<HTMLDivElement>(null);
 
   const [schedules, setSchedules] = useState<BaseSchedule[]>([]);
-  const [finalPoint, setFinalPoint] = useState<DocumentSnapshot<BaseSchedule> | null>(null);
+  const [finalPoint, setFinalPoint] = useState<DocumentSnapshot<BaseSchedule>>();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -124,27 +120,9 @@ function ConnectPage({ userId }: { userId: string }) {
   );
 }
 
-/**
- * Get the next PAGE_SIZE schedules after the given final point.
- */
-function getSchedules(userId: string, finalPoint: DocumentSnapshot | null) {
-  const constraints: QueryConstraint[] = [
-    orderBy('createdAt'),
-    limit(PAGE_SIZE),
-  ];
-
-  if (finalPoint !== null) {
-    constraints.push(startAfter(finalPoint));
-  }
-
-  const q = query(Schema.Collection.schedules(), ...constraints);
-
-  return getDocs(q);
-}
-
-async function scrollUntilSchedule(userId: string, initSchedule: DocumentSnapshot<BaseSchedule> | null = null): Promise<{
+async function scrollUntilSchedule(userId: string, initSchedule?: DocumentSnapshot<BaseSchedule>): Promise<{
   schedules: BaseSchedule[];
-  finalSchedule: DocumentSnapshot<BaseSchedule> | null;
+  finalSchedule: DocumentSnapshot<BaseSchedule> | undefined;
   done: boolean;
 }> {
   const schedules = [];
@@ -152,7 +130,12 @@ async function scrollUntilSchedule(userId: string, initSchedule: DocumentSnapsho
   let done = false;
 
   while (schedules.length === 0) {
-    const snap = await getSchedules(userId, finalSchedule);
+    const snap = await getDocs(Schema.Collection.schedules({
+      ignoreUser: userId,
+      pageSize: 20,
+      startAfter: finalSchedule,
+      publicOnly: true,
+    }));
 
     if (snap.docs.length === 0) {
       done = true;

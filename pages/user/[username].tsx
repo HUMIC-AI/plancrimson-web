@@ -8,7 +8,7 @@ import { Auth, Schedules } from '@/src/features';
 import {
   useAppSelector, useElapsed,
 } from '@/src/utils/hooks';
-import { sendFriendRequest, unfriend } from '@/components/ConnectPageComponents/friendUtils';
+import { sendFriendRequest, unfriend, useFriends } from '@/components/ConnectPageComponents/friendUtils';
 import Layout, { errorMessages } from '@/components/Layout/Layout';
 import { ErrorPage } from '@/components/Layout/ErrorPage';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
@@ -17,13 +17,15 @@ import { UserProfile, WithId } from '@/src/types';
 import useSyncSchedulesMatchingContraints, { sortSchedulesBySemester } from '@/src/utils/schedules';
 import { BioSection } from '@/components/ConnectPageComponents/EditBioForm';
 import { useProfile, useFriendStatus, FriendStatus } from '@/components/ConnectPageComponents/useProfile';
+import { IncomingRequestButtons, IncomingRequestList } from '@/components/ConnectPageComponents/FriendRequests';
 
 const statusMessage: Record<FriendStatus, string> = {
   loading: 'Loading...',
   self: '',
   none: 'Add friend',
   friends: 'Unfriend',
-  pending: 'Cancel request',
+  'pending-incoming': 'ERROR',
+  'pending-outgoing': 'Cancel request',
 };
 
 export default function () {
@@ -32,6 +34,10 @@ export default function () {
   const [pageProfile, error] = useProfile(username);
   const uid = Auth.useAuthProperty('uid');
   const elapsed = useElapsed(5000, [username]);
+
+  if (uid === null) {
+    return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
+  }
 
   if (error) {
     return <ErrorPage>{error.message}</ErrorPage>;
@@ -43,10 +49,6 @@ export default function () {
         <LoadingBars />
       </Layout>
     );
-  }
-
-  if (uid === null) {
-    return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
   }
 
   if (typeof uid === 'undefined') {
@@ -67,8 +69,21 @@ export default function () {
 
 function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserProfile> }) {
   const scheduleMap = useAppSelector(Schedules.selectSchedules);
+  const [refresh, setRefresh] = useState(true);
 
-  const queryConstraints = useMemo(() => [where('ownerUid', '==', pageProfile.id)], [pageProfile]);
+  const friendStatus = useFriendStatus(uid, pageProfile.id, refresh);
+  const { incomingPending } = useFriends(uid);
+
+  const queryConstraints = useMemo(() => {
+    if (friendStatus === 'friends' || friendStatus === 'self') {
+      return [where('ownerUid', '==', pageProfile.id)];
+    }
+
+    return [
+      where('ownerUid', '==', pageProfile.id),
+      where('public', '==', true),
+    ];
+  }, [pageProfile, friendStatus]);
 
   useSyncSchedulesMatchingContraints(queryConstraints);
 
@@ -76,14 +91,37 @@ function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserP
 
   return (
     <div className="flex flex-col space-y-8">
+      <IncomingRequestList incomingPending={incomingPending} />
+
       <div>
         {/* top region with image and name */}
         <section className="flex items-center">
           <ImageWrapper url={pageProfile.photoUrl} size="md" alt="User profile" />
 
-          <h1 className="ml-8">{pageProfile.displayName || pageProfile.username || 'Anonymous'}</h1>
-        </section>
+          <div className="ml-8">
+            <h1 className="text-3xl">{pageProfile.username}</h1>
 
+            {friendStatus === 'pending-incoming' ? (
+              <IncomingRequestButtons profile={pageProfile} />
+            ) : friendStatus !== 'self' && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (friendStatus === 'friends' || friendStatus === 'pending-outgoing') {
+                    unfriend(uid, pageProfile.id);
+                    setRefresh(!refresh);
+                  } else if (friendStatus === 'none') {
+                    sendFriendRequest(uid, pageProfile.id);
+                    setRefresh(!refresh);
+                  }
+                }}
+                className="interactive mt-2 rounded bg-gray-secondary px-2 py-1"
+              >
+                {statusMessage[friendStatus]}
+              </button>
+            )}
+          </div>
+        </section>
 
         {/* bio */}
         <p className="mt-4">
@@ -98,45 +136,15 @@ function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserP
       </div>
 
       {/* schedules */}
-      <ScheduleList schedules={schedules} hideAuthor />
+      <ScheduleList
+        title={(friendStatus === 'friends' || friendStatus === 'self')
+          ? 'Schedules'
+          : 'Public schedules'}
+        schedules={schedules}
+        hideAuthor
+      />
     </div>
   );
 }
 
-
-/**
- * @deprecated
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function AddFriendButton({
-  pageProfile, uid,
-}: {
-  pageProfile: WithId<UserProfile>, uid: string,
-}) {
-  const [refresh, setRefresh] = useState(true);
-
-  const friendStatus = useFriendStatus(uid, pageProfile.id, refresh);
-
-  if (friendStatus === 'self') {
-    return null;
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        if (friendStatus === 'friends' || friendStatus === 'pending') {
-          unfriend(uid, pageProfile.id);
-          setRefresh(!refresh);
-        } else if (friendStatus === 'none') {
-          sendFriendRequest(uid, pageProfile.id);
-          setRefresh(!refresh);
-        }
-      }}
-      className="interactive mt-2 rounded bg-blue-dark px-2 py-1 text-white"
-    >
-      {statusMessage[friendStatus]}
-    </button>
-  );
-}
 

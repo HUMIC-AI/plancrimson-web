@@ -81,6 +81,7 @@ export interface BaseSchedule extends Semester {
   title: string;
   ownerUid: string; // uid of the user that created this schedule
   classes: string[];
+  public: boolean;
 }
 
 export interface FirestoreSchedule extends BaseSchedule {

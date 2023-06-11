@@ -1,8 +1,10 @@
 import React, {
+  PropsWithChildren,
   createContext, useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useRouter } from 'next/router';
 import qs from 'qs';
+import { Semester, getTermId } from '@/src/lib';
 import { throwMissingContext } from '../utils/utils';
 
 interface SearchStateContextType {
@@ -26,24 +28,41 @@ const SearchStateContext = createContext<SearchStateContextType>({
   onSearchStateChange: throwMissingContext,
 });
 
-const DEFAULT_SEARCH_STATE = {
-  // TODO the current term (Fall 2023) (make sure to update every semester)
-  refinementList: { STRM: ['2238'] },
-};
+export function getDefaultSearchStateForSemester(semester: Semester) {
+  return {
+    refinementList: { STRM: [getTermId(semester)] },
+  };
+}
 
-export function SearchStateProvider({ children, oneCol = false } : React.PropsWithChildren<{ oneCol?: boolean }>) {
+/**
+ * Provides the search state to all Instantsearch components.
+ * Also syncs the URL with the search state.
+ * Can pass a default state to use if the URL is empty.
+ */
+export function SearchStateProvider({
+  children,
+  oneCol = false,
+  defaultState,
+} : PropsWithChildren<{
+  oneCol?: boolean;
+  defaultState?: any;
+}>) {
   const router = useRouter();
-  const search = useMemo(
-    () => router.asPath.split('?')[1] ?? qs.stringify(DEFAULT_SEARCH_STATE),
-    [router.asPath],
+
+  // get the query params from the URL. whenever the url changes, update the search state
+  const urlQueryParams = useMemo(
+    // qs.stringify(undefined) returns an empty string
+    () => router.asPath.split('?')[1] ?? qs.stringify(defaultState),
+    [defaultState, router.asPath],
   );
 
-  const [searchState, setSearchState] = useState(qs.parse(search));
+  // qs.parse('') returns an empty object (not null)
+  const [searchState, setSearchState] = useState(qs.parse(urlQueryParams));
   const debouncedSetStateRef = useRef<any>(null);
 
   useEffect(() => {
-    setSearchState(qs.parse(search));
-  }, [search]);
+    setSearchState(qs.parse(urlQueryParams));
+  }, [urlQueryParams]);
 
   const context = useMemo(() => {
     function onSearchStateChange(newState: any) {

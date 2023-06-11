@@ -12,15 +12,15 @@ import {
   Auth, Profile, Schedules, Settings,
 } from '@/src/features';
 import Firestore from '@/src/schema';
-import { extractUsername, getInitialSettings } from '@/src/utils/utils';
+import { extractUsername, getInitialSettings, isDevelopment } from '@/src/utils/utils';
 import GraduationYearDialog from '@/components/Layout/GraduationYearDialog';
-import { getUniqueSemesters } from '@/src/lib';
+import { getCurrentDefaultClassYear, getUniqueSemesters } from '@/src/lib';
 
 
 export async function signInUser() {
   const auth = getAuth();
 
-  if (process.env.NODE_ENV === 'development') {
+  if (isDevelopment) {
     const email = prompt('In development mode. Enter email:')!;
     if (!email) throw new Error('no email entered');
     // encode for firebase auth
@@ -86,11 +86,10 @@ export function useSyncAuth() {
           const userProfile = profile.data()!;
           dispatch(Profile.setClassYear(userProfile.classYear!));
         } else {
-          const now = new Date();
           showContents({
             title: 'Set graduation year',
             content: <GraduationYearDialog
-              defaultYear={now.getFullYear() + (now.getMonth() > 5 ? 4 : 3)}
+              defaultYear={getCurrentDefaultClassYear()}
               handleSubmit={async (classYear) => {
                 dispatch(Profile.setClassYear(classYear));
                 await handleSubmit(user, classYear);

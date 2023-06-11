@@ -5,6 +5,7 @@ import Navbar from './Navbar';
 import Alerts from './Alerts';
 import { Footer } from './Footer';
 import { WithMeili } from './WithMeili';
+import { signInUser } from './useSyncAuth';
 
 export interface LayoutProps {
   title?: string;
@@ -79,7 +80,13 @@ function Wrapper({
 }
 
 export const errorMessages = {
-  unauthorized: 'You are not authorized to access this content!',
+  unauthorized: (
+    <span>
+      You are not authorized to access this content!
+      {' '}
+      <button type="button" onClick={signInUser} className="interactive font-medium">Sign in now.</button>
+    </span>
+  ),
   meiliClient: 'There was an error getting the search client. Please try again later',
 };
 

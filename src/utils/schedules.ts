@@ -1,18 +1,17 @@
 import {
-  getDocs, onSnapshot, query, QueryConstraint, QuerySnapshot,
+  onSnapshot, query, QueryConstraint, QuerySnapshot,
 } from 'firebase/firestore';
 import { useCallback, useEffect } from 'react';
 import { compareSemesters, Semester } from '@/src/lib';
 import { ClassCache, Schedules } from '../features';
 import { alertUnexpectedError, useAppDispatch } from './hooks';
 import { useMeiliClient } from '../context/meili';
-import Firestore from '../schema';
 import type {
-  BaseSchedule,
   FirestoreSchedule,
   ListOfScheduleIdOrSemester, ScheduleId, ScheduleIdOrSemester, ScheduleMap,
 } from '../types';
 import { toLocalSchedule } from '../features/schedules';
+import Schema, { queryWithId } from '../schema';
 
 export function isScheduleId(s: ScheduleIdOrSemester): s is ScheduleId {
   return typeof s === 'string';
@@ -51,7 +50,7 @@ export default function useSyncSchedulesMatchingContraints(constraints: QueryCon
   useEffect(() => {
     if (constraints === null) return;
 
-    const q = query(Firestore.Collection.schedules(), ...constraints);
+    const q = query(Schema.Collection.schedules(), ...constraints);
 
     const unsubSchedules = onSnapshot(q, updateSchedules, (err) => {
       console.error('[useSchedules] error listening for schedules (in the layout):', err);
@@ -91,4 +90,37 @@ export function getSemesterBeforeEarliest(schedules: ScheduleMap): Semester {
     ? ['Fall' as const, earliest.year - 1]
     : ['Spring' as const, earliest.year];
   return { season, year };
+}
+
+export async function getOtherSchedulesAcrossSemesters(
+  ignoreUser: string,
+  friendIds: string[],
+  semesters?: Semester[],
+  limit = 50,
+) {
+  const queries = semesters ? semesters.map((semester) => [
+    queryWithId(Schema.Collection.schedules(), {
+      ...semester,
+      ignoreUser,
+      publicOnly: true,
+      pageSize: limit,
+    }),
+    ...friendIds.map((uid) => queryWithId(Schema.Collection.schedules(), {
+      ...semester,
+      user: uid,
+    })),
+  ]) : [
+    queryWithId(Schema.Collection.schedules(), {
+      ignoreUser,
+      publicOnly: true,
+      pageSize: limit,
+    }),
+    ...friendIds.map((uid) => queryWithId(Schema.Collection.schedules(), {
+      user: uid,
+    })),
+  ];
+
+  const schedules = await Promise.all(queries.flat());
+
+  return schedules.flat();
 }

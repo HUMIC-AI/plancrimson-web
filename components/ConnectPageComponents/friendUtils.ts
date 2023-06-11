@@ -61,19 +61,25 @@ export function useFriends(userId: string) {
   const { incoming, outgoing } = useFriendRequests(userId);
 
   const userIds = useMemo(() => {
+    // get all unique ids
+    const allIds = [...incoming, ...outgoing].flatMap((req) => [req.from, req.to]);
+    const uniqueIds = new Set(allIds);
+    // convert to list
     const ids: string[] = [];
-    new Set([...incoming, ...outgoing].flatMap((req) => [req.from, req.to])).forEach((id) => ids.push(id));
+    uniqueIds.forEach((id) => ids.push(id));
     return ids;
   }, [incoming, outgoing]);
 
   const profiles = useProfiles(userIds);
 
-  const friends = profiles && allTruthy([
+  const friends = useMemo(() => profiles && allTruthy([
     ...incoming.map((req) => (req.accepted ? profiles[req.from] : null)),
     ...outgoing.map((req) => (req.accepted ? profiles[req.to] : null)),
-  ]);
+  ]), [profiles, incoming, outgoing]);
 
-  const incomingPending = profiles && allTruthy(incoming.map((req) => (req.accepted ? null : profiles[req.from])));
+  const incomingPending = useMemo(() => profiles && allTruthy(incoming.map(
+    (req) => (req.accepted ? null : profiles[req.from]),
+  )), [profiles, incoming]);
 
   return { friends, incomingPending };
 }

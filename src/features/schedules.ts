@@ -14,6 +14,8 @@ const initialState: ScheduleMap = {};
 
 type CoursesPayload = { courses: string[]; scheduleId: string };
 
+type PublicPayload = { scheduleId: string, public: boolean };
+
 function unionSchedulesSlice(state: any, action: PayloadAction<LocalSchedule[]>) {
   action.payload.forEach((schedule) => {
     state[schedule.id] = schedule;
@@ -43,6 +45,10 @@ export const schedulesSlice = createSlice({
 
     deleteSchedule(state, action: PayloadAction<string>) {
       delete state[action.payload];
+    },
+
+    setPublic(state, action: PayloadAction<PublicPayload>) {
+      state[action.payload.scheduleId].public = action.payload.public;
     },
 
     rename(state, action: PayloadAction<{ scheduleId: string, title: string }>) {
@@ -101,6 +107,11 @@ export const removeCourses = (payload: { scheduleId: string, courseIds: string[]
 export const renameSchedule = ({ scheduleId, title }: { scheduleId: string, title: string }) => async (dispatch: AppDispatch) => {
   await updateDoc(Firestore.schedule(scheduleId), { title });
   return dispatch(schedulesSlice.actions.rename({ scheduleId, title }));
+};
+
+export const setPublic = (payload: PublicPayload) => async (dispatch: AppDispatch) => {
+  await updateDoc(Firestore.schedule(payload.scheduleId), { public: payload.public });
+  return dispatch(schedulesSlice.actions.setPublic(payload));
 };
 
 export const deleteSchedule = (id: string) => async (dispatch: AppDispatch) => {

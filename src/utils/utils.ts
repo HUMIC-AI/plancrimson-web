@@ -1,4 +1,6 @@
-import type { UserSettings } from '../types';
+import type { UserProfile, UserSettings } from '../types';
+
+export const isDevelopment = process.env.NODE_ENV === 'development';
 
 export function getInitialSettings(): UserSettings {
   return {
@@ -11,6 +13,10 @@ export function getInitialSettings(): UserSettings {
 
 export function throwMissingContext<T>(): T {
   throw new Error('must provide context element');
+}
+
+export function getDisplayName(profile?: UserProfile) {
+  return profile?.displayName || profile?.username || 'Anonymous';
 }
 
 /**

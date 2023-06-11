@@ -6,6 +6,7 @@ import {
   alertUnexpectedError, useAppDispatch, useAppSelector,
 } from '@/src/utils/hooks';
 import { classNames } from '@/src/utils/styles';
+import { isDevelopment } from '@/src/utils/utils';
 import { ImageWrapper } from '../Utils/UserLink';
 import { signInUser } from './useSyncAuth';
 
@@ -84,7 +85,7 @@ export function UserMenu() {
               </button>
             )}
           </Menu.Item>
-          {process.env.NODE_ENV === 'development' && uid && (
+          {isDevelopment && uid && (
             <Menu.Item>
               {({ active }) => (
                 <button

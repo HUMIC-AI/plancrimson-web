@@ -185,7 +185,7 @@ export default function CourseCard({
         {/* end header component */}
 
         {isExpanded && (
-        <div className="h-full p-2">
+        <div className="h-full bg-secondary p-2">
           <div className="inline-grid max-w-full grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm">
             <Instructors course={course} inSearch={inSearchContext} />
             <Location course={course} inSearch={inSearchContext} />

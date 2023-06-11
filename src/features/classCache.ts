@@ -12,11 +12,13 @@ export interface ClassCache {
 }
 
 export interface ClassCacheState {
+  initialized: boolean;
   cache: ClassCache;
   errors: string[];
 }
 
 const initialState: ClassCacheState = {
+  initialized: false,
   cache: {},
   errors: [],
 };
@@ -29,6 +31,7 @@ export const classCacheSlice = createSlice({
       action.payload.forEach((classData) => {
         state.cache[classData.id] = { ...classData };
       });
+      state.initialized = true;
     },
   },
 });
@@ -36,6 +39,8 @@ export const classCacheSlice = createSlice({
 // ========================= SELECTORS =========================
 
 export const selectClassCache: (state: RootState) => ClassCache = (state: RootState) => state.classCache.cache;
+
+export const selectInitialized: (state: RootState) => boolean = (state: RootState) => state.classCache.initialized;
 
 export async function fetchAtOffset(offset: number): Promise<{
   results: [ExtendedClass];
@@ -92,7 +97,7 @@ export function loadCourses(
       if (result.status === 'fulfilled') {
         return result.value;
       }
-      console.error(result.reason);
+      console.error('Error fetching classes', result.reason);
       return null;
     }));
 
