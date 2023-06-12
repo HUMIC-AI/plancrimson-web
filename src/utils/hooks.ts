@@ -12,6 +12,14 @@ import Firestore from '../schema';
 import { UserProfile, WithId } from '../types';
 
 
+export function useMounted() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  return mounted;
+}
+
 export function useElapsed(ms: number, deps: DependencyList) {
   // timer
   const [elapsed, setElapsed] = useState(false);

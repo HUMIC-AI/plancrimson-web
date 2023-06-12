@@ -1,4 +1,3 @@
-import ConnectProfileCard from '@/components/ConnectPageComponents/ConnectProfileCard';
 import { FilterGrid } from '@/components/ConnectPageComponents/FilterGrid';
 import { IncomingRequestList } from '@/components/ConnectPageComponents/FriendRequests';
 import { SearchBar } from '@/components/ConnectPageComponents/SearchBar';
@@ -6,10 +5,11 @@ import { useFriends, useIds } from '@/components/ConnectPageComponents/friendUti
 import { ProfileWithSchedules, useAllProfiles, useLunrIndex } from '@/components/ConnectPageComponents/useLunrIndex';
 import Layout from '@/components/Layout/Layout';
 import ExpandCardsProvider from '@/src/context/expandCards';
+import { useIncludeSemesters } from '@/src/context/includeSemesters';
 import { useMeiliClient } from '@/src/context/meili';
-import { Auth, ClassCache } from '@/src/features';
+import { ClassCache } from '@/src/features';
 import {
-  getDefaultSemesters, getCurrentDefaultClassYear, Term, semesterToTerm, termToSemester, getCurrentSemester,
+  getDefaultSemesters, getCurrentDefaultClassYear, Term, semesterToTerm, termToSemester,
 } from '@/src/lib';
 import Schema from '@/src/schema';
 import {
@@ -17,15 +17,13 @@ import {
 } from '@/src/types';
 import { alertUnexpectedError, useAppDispatch } from '@/src/utils/hooks';
 import { getAllClassIds, useSharedCourses } from '@/src/utils/schedules';
-import { classNames } from '@/src/utils/styles';
-import { getDisplayName } from '@/src/utils/utils';
 import {
   DocumentSnapshot, QueryConstraint, getDocs, limit, query, startAfter, where,
 } from 'firebase/firestore';
-import Link from 'next/link';
 import {
-  Fragment, useCallback, useEffect, useMemo, useState,
+  useCallback, useEffect, useMemo, useState,
 } from 'react';
+import { ProfilesList } from '../components/ConnectPageComponents/ProfilesList';
 
 export default function () {
   return (
@@ -53,15 +51,14 @@ function FriendsPage({ userId }: { userId: string }) {
   const friendIds = useIds(friends);
   const allSemesters = useMemo(() => getDefaultSemesters(getCurrentDefaultClassYear(), 6).slice(1, -1), []);
   const [allSchedules, setAllSchedules] = useState<AllSchedules>({});
-  const [includedSemesters, setIncludedSemesters] = useState<Term[]>([]);
   const [friendsOnly, setFriendsOnly] = useState(false);
   const [matchIds, setMatchIds] = useState<null | string[]>(null); // ids of profiles that match the search query
   const [doneLoading, setDoneLoading] = useState(false);
-  const profilesOnly = useMemo(() => includedSemesters.length === 0, [includedSemesters.length]);
   const showProfiles = useShowProfiles({
-    allSchedules, profilesOnly, friends, friendIds, includedSemesters, friendsOnly,
+    allSchedules, friends, friendIds, friendsOnly,
   });
   const lunrIndex = useLunrIndex(showProfiles);
+  const { includeSemesters, profilesOnly } = useIncludeSemesters();
 
   const searchMore = useCallback(async (term: Term) => {
     if (!friends) return;
@@ -74,7 +71,7 @@ function FriendsPage({ userId }: { userId: string }) {
       where('year', '==', year),
       where('season', '==', season),
       where('classes', '!=', null),
-      limit(Math.floor(40 / includedSemesters.length)),
+      limit(Math.floor(40 / includeSemesters.length)),
     ];
 
     const previousBookmark = allSchedules[term]?.bookmark;
@@ -102,29 +99,22 @@ function FriendsPage({ userId }: { userId: string }) {
     await dispatch(ClassCache.loadCourses(client, getAllClassIds(newSchedules)));
 
     return snap.size;
-  }, [allSchedules, client, dispatch, friends, includedSemesters.length]);
+  }, [allSchedules, client, dispatch, friends, includeSemesters.length]);
 
   useEffect(() => {
-    const promises = includedSemesters.filter((semester) => !(semester in allSchedules)).map(searchMore);
+    const promises = includeSemesters.filter((semester) => !(semester in allSchedules)).map(searchMore);
     Promise.all(promises).catch(alertUnexpectedError);
-  }, [allSchedules, includedSemesters, searchMore]);
-
-  // filter for the current semester on initial load
-  useEffect(() => setIncludedSemesters([semesterToTerm(getCurrentSemester())]), []);
+  }, [allSchedules, includeSemesters, searchMore]);
 
   useEffect(() => {
     setDoneLoading(false);
-  }, [includedSemesters]);
+  }, [includeSemesters]);
 
   return (
     <div className="space-y-6">
       <IncomingRequestList incomingPending={incomingPending} />
 
-      <FilterGrid
-        includedSemesters={includedSemesters}
-        setIncludedSemesters={setIncludedSemesters}
-        allSemesters={allSemesters}
-      />
+      <FilterGrid allSemesters={allSemesters} />
 
       <SearchBar
         handleChange={(e) => {
@@ -139,12 +129,10 @@ function FriendsPage({ userId }: { userId: string }) {
         }}
         setFriendsOnly={setFriendsOnly}
         friendsOnly={friendsOnly}
-        includedSemesters={includedSemesters}
       />
 
       {!profilesOnly && (
         <LoadMoreButton
-          includedSemesters={includedSemesters}
           searchMore={searchMore}
           setDoneLoading={setDoneLoading}
           doneLoading={doneLoading}
@@ -160,7 +148,6 @@ function FriendsPage({ userId }: { userId: string }) {
 
       {!profilesOnly && (
         <LoadMoreButton
-          includedSemesters={includedSemesters}
           searchMore={searchMore}
           setDoneLoading={setDoneLoading}
           doneLoading={doneLoading}
@@ -171,18 +158,19 @@ function FriendsPage({ userId }: { userId: string }) {
 }
 
 function LoadMoreButton({
-  includedSemesters, searchMore, setDoneLoading, doneLoading,
+  searchMore, setDoneLoading, doneLoading,
 }: {
-  includedSemesters: Term[];
   searchMore: (term: Term) => Promise<number | undefined>;
   setDoneLoading: (done: boolean) => void;
   doneLoading: boolean;
 }) {
+  const { includeSemesters } = useIncludeSemesters();
+
   return (
     <button
       type="button"
       className="interactive w-full rounded-lg bg-gray-secondary px-4 py-2 text-lg font-medium disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:opacity-50"
-      onClick={() => Promise.all(includedSemesters.map(searchMore))
+      onClick={() => Promise.all(includeSemesters.map(searchMore))
         .then((results) => {
           if (results.every((result) => result === 0)) {
             setDoneLoading(true);
@@ -196,101 +184,16 @@ function LoadMoreButton({
   );
 }
 
-function ProfilesList({
-  profilesOnly, showProfiles, matchIds, friendIds,
-}: {
-  profilesOnly: boolean;
-  showProfiles: ProfileWithSchedules[];
-  matchIds: string[] | null;
-  friendIds: string[] | undefined;
-}) {
-  const userId = Auth.useAuthProperty('uid');
-
-  const isFriend = (profile: { id: string }) => friendIds?.includes(profile.id);
-
-  // const uniqueYears = new Set(showProfiles.map((profile) => profile.classYear));
-  // const uniqueYearsArray: number[] = [];
-  // uniqueYears.forEach((year) => year && uniqueYearsArray.push(year));
-  // uniqueYearsArray.sort((a, b) => b - a);
-
-  const yearSplit: Record<number, ProfileWithSchedules[]> = {};
-
-  showProfiles.sort((a, b) => {
-    // sort by last name
-    const aParts = getDisplayName(a).split(' ');
-    const bParts = getDisplayName(b).split(' ');
-    const aName = aParts[aParts.length - 1];
-    const bName = bParts[bParts.length - 1];
-    if (aName < bName) return -1;
-    if (aName > bName) return 1;
-    return 0;
-  }).filter((profile) => {
-    // don't include current user
-    if (profile.id === userId) return false;
-    // don't include empty profiles
-    if (!profilesOnly && profile.currentSchedules.length === 0) return false;
-    // don't include profiles that don't match the search query
-    if (matchIds === null) return true;
-    if (!matchIds.includes(profile.id)) return false;
-    return true;
-  }).forEach((profile) => {
-    const year = profile.classYear ?? -1;
-    if (!yearSplit[year]) yearSplit[year] = [];
-    yearSplit[year].push(profile);
-  });
-
-  const uniqueYears = Object.keys(yearSplit)
-    .map((year) => parseInt(year, 10))
-    .sort((a, b) => b - a);
-
-  // create a new section for each year
-  return (
-    <>
-      {uniqueYears.map((year) => (
-        <Fragment key={year}>
-          <h2 className="text-2xl font-bold">{year}</h2>
-          {profilesOnly ? (
-            <ul className="flex flex-wrap items-start gap-x-4 gap-y-2">
-              {yearSplit[year].map((profile) => (
-                <li key={profile.id}>
-                  <Link
-                    href={`/user/${profile.username}`}
-                    className={classNames(
-                      'interactive',
-                      isFriend(profile) ? 'text-blue-primary' : 'text-gray-primary',
-                    )}
-                  >
-                    {getDisplayName(profile)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <ul className="flex flex-wrap items-start gap-4">
-              {yearSplit[year].map((profile) => (
-                <li key={profile.id}>
-                  <ConnectProfileCard isFriend={isFriend(profile)} profile={profile} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </Fragment>
-      ))}
-    </>
-  );
-}
-
 function useShowProfiles({
-  allSchedules, profilesOnly, friends, friendIds, includedSemesters, friendsOnly,
+  allSchedules, friends, friendIds, friendsOnly,
 }: {
   allSchedules: AllSchedules;
-  profilesOnly: boolean;
   friends: WithId<UserProfile>[] | undefined;
   friendIds: string[] | undefined;
-  includedSemesters: Term[];
   friendsOnly: boolean;
 }) {
   const allProfiles = useAllProfiles();
+  const { includeSemesters, profilesOnly } = useIncludeSemesters();
   const friendSchedules = useSharedCourses(friendIds);
 
   // get a massive list of all loaded schedules
@@ -321,13 +224,13 @@ function useShowProfiles({
       }));
     }
 
-    const filterSchedules = (ownerUid: string, schedule: BaseSchedule) => schedule.ownerUid === ownerUid && includedSemesters.includes(semesterToTerm(schedule));
+    const filterSchedules = (ownerUid: string, schedule: BaseSchedule) => schedule.ownerUid === ownerUid && includeSemesters.includes(semesterToTerm(schedule));
 
     return (friendsOnly ? friends! : allProfiles).map((profile) => ({
       ...profile,
       currentSchedules: mergedSchedules.filter((schedule) => filterSchedules(profile.id, schedule)),
     }));
-  }, [allProfiles, mergedSchedules, friendIds, profilesOnly, friendsOnly, friends, includedSemesters]);
+  }, [allProfiles, mergedSchedules, friendIds, profilesOnly, friendsOnly, friends, includeSemesters]);
 
   const emptySchedulesRemoved = useMemo(() => {
     if (profilesOnly) return showProfiles;

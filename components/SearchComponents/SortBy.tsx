@@ -24,9 +24,9 @@ function SortByComponent({
 }: SortByProps) {
   return (
     <>
-      <h3 className="font-medium md:whitespace-nowrap">
+      <h4 className="md:whitespace-nowrap">
         Sort by:
-      </h3>
+      </h4>
 
       <ul className="flex h-min flex-wrap items-center gap-2">
         {items.map((item: Item) => (

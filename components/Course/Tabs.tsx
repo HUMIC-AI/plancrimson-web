@@ -58,14 +58,17 @@ export default function CourseTabs({ course }: { course: ExtendedClass }) {
 
       <Tab.Panels className="bg-gray-secondary p-6">
         <InfoPanel course={course} />
+
         {error ? (
-          error.code === 'permission-denied' ? (
-            <p>You need to be logged in to access this!</p>
-          ) : (
-            <p>
-              An unexpected error occurred loading evaluations!
-            </p>
-          )
+          <Tab.Panel>
+            {error.code === 'permission-denied' ? (
+              <p>You need to be logged in to access this!</p>
+            ) : (
+              <p>
+                An unexpected error occurred loading evaluations!
+              </p>
+            )}
+          </Tab.Panel>
         ) : (
           evaluations
             ? <EvaluationsPanel evaluations={evaluations} />
@@ -75,6 +78,7 @@ export default function CourseTabs({ course }: { course: ExtendedClass }) {
               </Tab.Panel>
             )
         )}
+
         <PlanningPanel course={course} />
         <SocialPanel course={course} />
       </Tab.Panels>

@@ -293,7 +293,7 @@ function EvaluationBody({
         <DisclosureComponent heading="Comments">
           <ul className="-m-2 max-h-72 overflow-auto">
             {courseEvaluation.comments.map((comment) => (
-              <li key={comment} className="p-2 even:bg-gray-light">
+              <li key={comment} className="p-2 even:bg-gray-secondary">
                 {comment}
               </li>
             ))}

@@ -21,8 +21,9 @@ export async function signInUser() {
   const auth = getAuth();
 
   if (isDevelopment) {
-    const email = prompt('In development mode. Enter email:')!;
-    if (!email) throw new Error('no email entered');
+    const username = prompt('In development mode. Enter username:')!;
+    if (!username) throw new Error('no email entered');
+    const email = `${username}@college.harvard.edu`;
     // encode for firebase auth
     const sub = Buffer.from(email).toString('base64');
     const credential = GoogleAuthProvider.credential(JSON.stringify({ sub, email }));

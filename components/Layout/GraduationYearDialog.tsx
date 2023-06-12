@@ -44,8 +44,6 @@ export default function GraduationYearDialog({ defaultYear, handleSubmit }: {
           className="w-32 rounded-xl border-4 bg-gray-secondary p-2 text-center text-3xl text-primary"
         />
 
-        <p className="text-center">Your activity on this site will be public to other users by default.</p>
-
         <div className="relative">
           <button type="submit" className="interactive rounded-xl bg-gray-secondary px-4 py-2 font-bold">
             Get started

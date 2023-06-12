@@ -3,23 +3,24 @@ import {
   Semester,
   Term, semesterToTerm, termToSemester,
 } from '@/src/lib';
+import { useIncludeSemesters } from '@/src/context/includeSemesters';
 
 export function FilterGrid({
-  includedSemesters, setIncludedSemesters, allSemesters,
+  allSemesters,
 }: {
-  includedSemesters: Term[];
-  setIncludedSemesters: (terms: Term[]) => void;
   allSemesters: Semester[];
 }) {
+  const { includeSemesters, setIncludeSemesters } = useIncludeSemesters();
+
   return (
     <div className="grid grid-flow-col grid-rows-3 items-center justify-center justify-items-center">
       <div />
       {['Spring', 'Fall'].map((season) => (
         <FilterButton
           key={season}
-          filterTerms={includedSemesters}
+          filterTerms={includeSemesters}
           season={season}
-          setFilterSemesters={setIncludedSemesters}
+          setFilterSemesters={setIncludeSemesters}
           allSemesters={allSemesters}
         />
       ))}
@@ -29,21 +30,21 @@ export function FilterGrid({
         <Fragment key={`${year}-${season}`}>
           {season === 'Spring' && (
             <FilterButton
-              filterTerms={includedSemesters}
+              filterTerms={includeSemesters}
               year={year}
-              setFilterSemesters={setIncludedSemesters}
+              setFilterSemesters={setIncludeSemesters}
               allSemesters={allSemesters}
             />
           )}
           <input
             type="checkbox"
-            checked={includedSemesters.includes(semesterToTerm({ year, season }))}
+            checked={includeSemesters.includes(semesterToTerm({ year, season }))}
             onChange={(e) => {
               const term = semesterToTerm({ year, season });
               if (e.target.checked) {
-                setIncludedSemesters([...includedSemesters, term]);
+                setIncludeSemesters([...includeSemesters, term]);
               } else {
-                setIncludedSemesters(includedSemesters.filter((t) => t !== term));
+                setIncludeSemesters(includeSemesters.filter((t) => t !== term));
               }
             }}
           />

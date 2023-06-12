@@ -6,7 +6,7 @@ import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
 import { useModal } from '@/src/context/modal';
 import { Subject, getClassId } from '@/src/lib';
 import { alertUnexpectedError, useAppDispatch } from '@/src/utils/hooks';
-import { ClassCache } from '@/src/features';
+import { Auth, ClassCache } from '@/src/features';
 import { useMeiliClient } from '@/src/context/meili';
 import type { CourseLevel } from '@/src/types';
 import { useData } from './useData';
@@ -26,12 +26,15 @@ type Props = {
 export default function ClassesCloudPage({ children, withMeili, ...props }: PropsWithChildren<Props & {
   withMeili?: true;
 }>) {
+  const userId = Auth.useAuthProperty('uid');
+
   if (withMeili) {
     return (
       <Layout
-        className="relative flex flex-1 items-center justify-center bg-black"
+        className="relative flex flex-1 items-center justify-center"
         title="Explore"
-        transparentHeader
+        // should be visible if not logged in
+        transparentHeader={!!userId}
         verify="meili"
       >
         {() => (
@@ -46,7 +49,7 @@ export default function ClassesCloudPage({ children, withMeili, ...props }: Prop
 
   return (
     <Layout
-      className="relative flex flex-1 items-center justify-center bg-black"
+      className="relative flex flex-1 items-center justify-center"
       title="Explore"
       transparentHeader
     >

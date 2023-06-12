@@ -1,13 +1,14 @@
-import { Term } from '@/src/lib';
+import { useIncludeSemesters } from '@/src/context/includeSemesters';
 
 export function SearchBar({
-  handleChange, setFriendsOnly, friendsOnly, includedSemesters,
+  handleChange, setFriendsOnly, friendsOnly,
 }: {
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   setFriendsOnly: (friendsOnly: boolean) => void;
   friendsOnly: boolean;
-  includedSemesters: Term[];
 }) {
+  const { includeSemesters } = useIncludeSemesters();
+
   return (
     <div>
       <div className="flex">
@@ -27,7 +28,7 @@ export function SearchBar({
       </div>
 
       <p className="mt-2 text-center text-xs sm:text-left">
-        {includedSemesters.length === 0 ? (
+        {includeSemesters.length === 0 ? (
           'Searching profiles. Pick a semester to search schedules.'
         ) : (
           'Searching schedules. Clear semesters to search profiles.'

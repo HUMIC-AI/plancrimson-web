@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import React, { PropsWithChildren } from 'react';
+import { classNames } from '@/src/utils/styles';
 import CustomModal from '../Modals/CustomModal';
 import Navbar from './Navbar';
 import Alerts from './Alerts';
@@ -36,9 +37,17 @@ export default function Layout({
     <>
       <HeadMeta pageTitle={pageTitle} description={description} />
 
-      <div className="flex min-h-screen flex-col bg-secondary text-primary">
+      <div className={
+        classNames(
+          'flex min-h-screen flex-col text-primary',
+          transparentHeader ? 'bg-[black]' : 'bg-secondary',
+        )
+      }
+      >
         <Navbar transparent={transparentHeader} />
+
         <Alerts />
+
         {verify ? (
           <AuthWrapper meili={verify === 'meili'}>
             {({ userId }) => (

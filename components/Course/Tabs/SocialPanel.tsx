@@ -14,14 +14,28 @@ import Link from 'next/link';
 import { getDisplayName } from '@/src/utils/utils';
 import { useFriends, useIds } from '@/components/ConnectPageComponents/friendUtils';
 import { useSharedCourses } from '@/src/utils/schedules';
+import { useElapsed } from '@/src/utils/hooks';
 
 type Props = { course: ExtendedClass };
 
 export default function SocialOuter({ course }: Props) {
   const userId = Auth.useAuthProperty('uid');
+  const elapsed = useElapsed(500, [userId]);
 
-  if (!userId) {
-    return <LoadingBars />;
+  if (userId === null) {
+    return (
+      <Tab.Panel>
+        You must be logged in to access this!
+      </Tab.Panel>
+    );
+  }
+
+  if (typeof userId === 'undefined') {
+    return (
+      <Tab.Panel>
+        {elapsed && <LoadingBars />}
+      </Tab.Panel>
+    );
   }
 
   return <SocialPanel course={course} userId={userId} />;

@@ -112,7 +112,7 @@ function TechStack() {
         {' '}
         is open source on
         {' '}
-        <ExternalLink href="https://github.com/HUMIC-AI/plancrimson">
+        <ExternalLink href="https://github.com/HUMIC-AI/plancrimson-web">
           GitHub
         </ExternalLink>
         !

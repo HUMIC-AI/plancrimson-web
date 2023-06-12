@@ -8,20 +8,46 @@ import {
   FaSmile,
 } from 'react-icons/fa';
 import { ExtendedClass, getClassId } from '@/src/lib';
-import { ClassCache, Profile, Schedules } from '@/src/features';
-import { useAppSelector, useAppDispatch } from '@/src/utils/hooks';
+import {
+  Auth, ClassCache, Profile, Schedules,
+} from '@/src/features';
+import { useAppSelector, useAppDispatch, useElapsed } from '@/src/utils/hooks';
 import Tooltip from '@/components/Utils/Tooltip';
 import { checkViable } from '@/src/searchSchedule';
 import type { BaseSchedule } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
 import { sortSchedulesBySemester } from '@/src/utils/schedules';
 import { getClasses } from '@/src/features/schedules';
+import { LoadingBars } from '@/components/Layout/LoadingPage';
 
 /**
  * The planning panel in the course modal. Returns a Tab.Panel.
  * @param course The course that's currently displayed in the modal
  */
-export default function PlanningPanel({ course }: { course: ExtendedClass }) {
+export default function ({ course }: { course: ExtendedClass }) {
+  const userId = Auth.useAuthProperty('uid');
+  const elapsed = useElapsed(500, [userId]);
+
+  if (userId === null) {
+    return (
+      <Tab.Panel>
+        You must be logged in to access this!
+      </Tab.Panel>
+    );
+  }
+
+  if (typeof userId === 'undefined') {
+    return (
+      <Tab.Panel>
+        {elapsed && <LoadingBars />}
+      </Tab.Panel>
+    );
+  }
+
+  return <PlanningPanel course={course} />;
+}
+
+function PlanningPanel({ course }: { course: ExtendedClass }) {
   const schedules = useAppSelector(Schedules.selectSchedules);
 
   if (Object.keys(schedules).length === 0) {

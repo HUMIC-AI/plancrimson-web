@@ -28,7 +28,7 @@ function CurrentRefinementsComponent({
 
   const refinementElements = getUniqueRefinements(refinements).map(([id, items]) => (
     <Fragment key={id}>
-      <h4 className="w-min md:min-w-max">
+      <h4 className="w-min md:whitespace-nowrap">
         {adjustAttr(id)}
         :
       </h4>
@@ -40,20 +40,23 @@ function CurrentRefinementsComponent({
               ? compareWeekdays
               : compareItems,
           )
-          .map(({ label, value }) => (
-            <button
-              key={label}
-              type="button"
-              name={TERM_TO_SEASON[label]?.season || label}
-              className={classNames(
-                'py-1 px-2 hover-blue rounded flex items-center text-sm',
-              )}
-              onClick={() => refine(value)}
-            >
-              {TERM_TO_SEASON[label]?.season || label}
-              <FaTimes className="ml-2" />
-            </button>
-          ))}
+          .map(({ label, value }) => {
+            const name = (label in TERM_TO_SEASON) ? `${TERM_TO_SEASON[label]?.season} ${TERM_TO_SEASON[label]?.year}` : label;
+            return (
+              <button
+                key={label}
+                type="button"
+                name={name}
+                className={classNames(
+                  'py-1 px-2 hover-blue rounded flex items-center text-sm',
+                )}
+                onClick={() => refine(value)}
+              >
+                {name}
+                <FaTimes className="ml-2" />
+              </button>
+            );
+          })}
       </ul>
     </Fragment>
   ));

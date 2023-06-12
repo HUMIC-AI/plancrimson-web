@@ -55,7 +55,7 @@ export default function HeaderSection({ resizeRef, columns }: WithResizeRef & { 
                   dispatch(Planner.showAll());
                 }
               }}
-              className="rounded px-2 py-1 hover:bg-gray-secondary"
+              className="rounded bg-gray-secondary px-2 py-1 font-medium transition-colors hover:bg-gray-primary/50"
             >
               {semesterFormat === 'all'
                 ? 'All schedules'

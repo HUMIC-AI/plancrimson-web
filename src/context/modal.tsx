@@ -9,7 +9,9 @@ interface CustomDialogProps {
   title: string;
   headerContent?: ReactNode;
   content: ReactNode;
+  small?: boolean;
   noExit?: boolean;
+  close?: () => void;
 }
 
 interface ModalContextType {

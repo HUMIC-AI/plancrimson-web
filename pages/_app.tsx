@@ -11,6 +11,7 @@ import { ChosenScheduleProvider } from '@/src/context/selectedSchedule';
 import { useSyncAuth, useSyncUserSettings } from '@/components/Layout/useSyncAuth';
 import { getCurrentSemester } from '@/src/lib';
 import ExpandCardsProvider from '@/src/context/expandCards';
+import IncludeSemestersProvider from '@/src/context/includeSemesters';
 
 export default function (props: AppProps) {
   return (
@@ -30,7 +31,9 @@ function MyApp({ Component, pageProps }: AppProps) {
     <SearchStateProvider defaultState={getDefaultSearchStateForSemester(getCurrentSemester())}>
       <ExpandCardsProvider sticky>
         <ChosenScheduleProvider>
-          <Component {...pageProps} />
+          <IncludeSemestersProvider>
+            <Component {...pageProps} />
+          </IncludeSemestersProvider>
         </ChosenScheduleProvider>
       </ExpandCardsProvider>
     </SearchStateProvider>

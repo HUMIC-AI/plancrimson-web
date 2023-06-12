@@ -16,6 +16,7 @@ import { ScheduleSyncer } from '../ScheduleSyncer';
 import RequirementsSection from './RequirementsSection';
 import { useValidateSchedule } from './useValidateSchedule';
 import { WithMeili } from '../Layout/WithMeili';
+import InstructionsModal from './InstructionsModal';
 
 export default function ({ userId }: { userId: string; }) {
   const showReqs = useAppSelector(Planner.selectShowReqs);
@@ -96,6 +97,8 @@ function BodySection({
       showReqs && 'md:rounded-lg md:shadow-lg',
     )}
     >
+      <InstructionsModal />
+
       <HeaderSection resizeRef={resizeRef} columns={columns} />
 
       <SemestersList
