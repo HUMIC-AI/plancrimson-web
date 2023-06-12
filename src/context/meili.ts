@@ -34,12 +34,13 @@ export async function getMeiliApiKey() {
   return key;
 }
 
+/**
+ * Undefined means there is no context.
+ * A null client means that the context is loading.
+ */
 export const MeiliContext = createContext<{
-  client: InstantMeiliSearchInstance | null;
-  error: string | null;
-}>({
-  client: null,
-  error: null,
-});
+  client?: InstantMeiliSearchInstance | null;
+  error?: string;
+}>({});
 
 export const useMeiliClient = () => useContext(MeiliContext);

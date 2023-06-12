@@ -12,7 +12,8 @@ import { LoadingBars } from '@/components/Layout/LoadingPage';
 import Schema from '@/src/schema';
 import Link from 'next/link';
 import { getDisplayName } from '@/src/utils/utils';
-import { useFriends } from '@/components/ConnectPageComponents/friendUtils';
+import { useFriends, useIds } from '@/components/ConnectPageComponents/friendUtils';
+import { useSharedCourses } from '@/src/utils/schedules';
 
 type Props = { course: ExtendedClass };
 
@@ -30,6 +31,7 @@ function SocialPanel({ course, userId }: Props & { userId: string }) {
   const [allSchedules, setAllSchedules] = useState<Record<string, BaseSchedule>>({});
   const [usernames, setUsernames] = useState<Record<string, string>>({});
   const { friends } = useFriends(userId);
+  const friendIds = useIds(friends);
 
   const updateSnap = (snap: QuerySnapshot<BaseSchedule>) => {
     const entries = snap.docs.map((doc) => [doc.id, doc.data()] as [string, BaseSchedule]);
@@ -47,18 +49,15 @@ function SocialPanel({ course, userId }: Props & { userId: string }) {
     return onSnapshot(q, updateSnap, (err) => console.error(err));
   }, [course.id, userId]);
 
+  const sharedCourses = useSharedCourses(friendIds, course.id);
+
   useEffect(() => {
-    if (!friends) return;
-    const unsubs = friends.map((friend) => {
-      const q = query(
-        Schema.Collection.schedules(),
-        where('ownerUid', '==', friend),
-        where('classes', 'array-contains', course.id),
-      );
-      return onSnapshot(q, updateSnap, (err) => console.error(err));
-    });
-    return () => unsubs.forEach((unsub) => unsub());
-  }, [course.id, friends]);
+    const entries = Object.values(sharedCourses).flatMap((s) => s.map((c) => [c.id, c] as const));
+    setAllSchedules((schedules) => ({
+      ...schedules,
+      ...Object.fromEntries(entries),
+    }));
+  }, [sharedCourses]);
 
   // get the profiles of the users
   useEffect(() => {
@@ -113,3 +112,4 @@ function SocialPanel({ course, userId }: Props & { userId: string }) {
     </Tab.Panel>
   );
 }
+

@@ -30,8 +30,8 @@ export default function ScheduleSection({
 
   return (
     <div className={classNames(
-      'rounded-xl border-2 border-gray-secondary',
-      !noPadding && 'p-4',
+      'rounded-xl',
+      !noPadding && 'p-4 border-2 border-gray-secondary',
     )}
     >
       {!hideHeader && (

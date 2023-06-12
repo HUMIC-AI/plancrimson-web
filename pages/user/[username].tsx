@@ -4,13 +4,12 @@ import {
 import { useRouter } from 'next/router';
 import { useMemo, useState } from 'react';
 import { ScheduleList } from '@/components/SemesterSchedule/ScheduleList';
-import { Auth, Schedules } from '@/src/features';
+import { Schedules } from '@/src/features';
 import {
   useAppSelector, useElapsed,
 } from '@/src/utils/hooks';
 import { sendFriendRequest, unfriend, useFriends } from '@/components/ConnectPageComponents/friendUtils';
-import Layout, { errorMessages } from '@/components/Layout/Layout';
-import { ErrorPage } from '@/components/Layout/ErrorPage';
+import Layout from '@/components/Layout/Layout';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { ImageWrapper } from '@/components/Utils/UserLink';
 import { UserProfile, WithId } from '@/src/types';
@@ -18,6 +17,8 @@ import useSyncSchedulesMatchingContraints, { sortSchedulesBySemester } from '@/s
 import { BioSection } from '@/components/ConnectPageComponents/EditBioForm';
 import { useProfile, useFriendStatus, FriendStatus } from '@/components/ConnectPageComponents/useProfile';
 import { IncomingRequestButtons, IncomingRequestList } from '@/components/ConnectPageComponents/FriendRequests';
+import { ErrorMessage } from '@/components/Layout/AuthWrapper';
+import ExpandCardsProvider from '@/src/context/expandCards';
 
 const statusMessage: Record<FriendStatus, string> = {
   loading: 'Loading...',
@@ -31,48 +32,43 @@ const statusMessage: Record<FriendStatus, string> = {
 export default function () {
   const router = useRouter();
   const username = router.query.username as string;
-  const [pageProfile, error] = useProfile(username);
-  const uid = Auth.useAuthProperty('uid');
-  const elapsed = useElapsed(5000, [username]);
-
-  if (uid === null) {
-    return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
-  }
-
-  if (error) {
-    return <ErrorPage>{error.message}</ErrorPage>;
-  }
-
-  if (!pageProfile) {
-    return (
-      <Layout>
-        <LoadingBars />
-      </Layout>
-    );
-  }
-
-  if (typeof uid === 'undefined') {
-    return (
-      <Layout>
-        {elapsed && <LoadingBars />}
-      </Layout>
-    );
-  }
 
   // need to put UserPage inside layout to access MeiliSearch context provider
   return (
-    <Layout title={pageProfile.username ?? 'User'} className="mx-auto w-full max-w-screen-md flex-1 p-8" withMeili>
-      <UserPage pageProfile={pageProfile} uid={uid} />
+    <Layout title={username ?? 'User'} className="mx-auto w-full max-w-screen-md flex-1 p-8" verify="meili">
+      {({ userId }) => (
+        <ExpandCardsProvider defaultStyle="collapsed">
+          <Wrapper userId={userId} />
+        </ExpandCardsProvider>
+      )}
     </Layout>
   );
 }
 
-function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserProfile> }) {
+function Wrapper({ userId }: { userId: string }) {
+  const router = useRouter();
+  const username = router.query.username as string;
+  const elapsed = useElapsed(500, []);
+  const [pageProfile, error] = useProfile(username, userId);
+
+  if (error) {
+    return <ErrorMessage>{error.message}</ErrorMessage>;
+  }
+
+  if (!pageProfile) {
+    return elapsed ? <LoadingBars /> : null;
+  }
+
+  return <UserPage userId={userId} pageProfile={pageProfile} />;
+}
+
+
+function UserPage({ pageProfile, userId }: { userId: string, pageProfile: WithId<UserProfile> }) {
   const scheduleMap = useAppSelector(Schedules.selectSchedules);
   const [refresh, setRefresh] = useState(true);
 
-  const friendStatus = useFriendStatus(uid, pageProfile.id, refresh);
-  const { incomingPending } = useFriends(uid);
+  const friendStatus = useFriendStatus(userId, pageProfile.id, refresh);
+  const { incomingPending } = useFriends(userId);
 
   const queryConstraints = useMemo(() => {
     if (friendStatus === 'friends' || friendStatus === 'self') {
@@ -108,10 +104,10 @@ function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserP
                 type="button"
                 onClick={() => {
                   if (friendStatus === 'friends' || friendStatus === 'pending-outgoing') {
-                    unfriend(uid, pageProfile.id);
+                    unfriend(userId, pageProfile.id);
                     setRefresh(!refresh);
                   } else if (friendStatus === 'none') {
-                    sendFriendRequest(uid, pageProfile.id);
+                    sendFriendRequest(userId, pageProfile.id);
                     setRefresh(!refresh);
                   }
                 }}
@@ -131,7 +127,7 @@ function UserPage({ pageProfile, uid }: { uid: string, pageProfile: WithId<UserP
         </p>
 
         <section className="mt-4">
-          <BioSection uid={uid} pageProfile={pageProfile} />
+          <BioSection userId={userId} pageProfile={pageProfile} />
         </section>
       </div>
 

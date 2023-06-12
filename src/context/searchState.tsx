@@ -30,7 +30,9 @@ const SearchStateContext = createContext<SearchStateContextType>({
 
 export function getDefaultSearchStateForSemester(semester: Semester) {
   return {
-    refinementList: { STRM: [getTermId(semester)] },
+    refinementList: {
+      STRM: [getTermId(semester)],
+    },
   };
 }
 
@@ -43,22 +45,24 @@ export function SearchStateProvider({
   children,
   oneCol = false,
   defaultState,
+  ignoreUrl = false,
 } : PropsWithChildren<{
   oneCol?: boolean;
   defaultState?: any;
+  ignoreUrl?: boolean;
 }>) {
   const router = useRouter();
 
   // get the query params from the URL. whenever the url changes, update the search state
   const urlQueryParams = useMemo(
     // qs.stringify(undefined) returns an empty string
-    () => router.asPath.split('?')[1] ?? qs.stringify(defaultState),
-    [defaultState, router.asPath],
+    () => (!ignoreUrl && router.asPath.split('?')[1]) || qs.stringify(defaultState),
+    [defaultState, ignoreUrl, router.asPath],
   );
 
   // qs.parse('') returns an empty object (not null)
   const [searchState, setSearchState] = useState(qs.parse(urlQueryParams));
-  const debouncedSetStateRef = useRef<any>(null);
+  const debouncedSetStateRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     setSearchState(qs.parse(urlQueryParams));

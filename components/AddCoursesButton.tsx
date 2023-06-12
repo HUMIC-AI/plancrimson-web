@@ -4,11 +4,16 @@ import dynamic from 'next/dynamic';
 import type { BaseSchedule } from '@/src/types';
 import { PropsWithChildren } from 'react';
 
-const DynamicCourseSearchModal = dynamic(() => import('./CourseSearchModal'));
+const DynamicCourseSearchModal = dynamic(() => import('./Modals/CourseSearchModal'));
+
+type Props = {
+  schedule: BaseSchedule;
+  className?: string;
+};
 
 export default function AddCoursesButton({
   schedule, className = '', children,
-}: PropsWithChildren<{ schedule: BaseSchedule; className?: string; }>) {
+}: PropsWithChildren<Props>) {
   const { showContents } = useModal();
 
   return (

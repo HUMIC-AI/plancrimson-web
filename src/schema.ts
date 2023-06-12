@@ -9,7 +9,7 @@ import { Season } from './lib';
 export type QueryConfig = Partial<{
   publicOnly: boolean;
   user: string;
-  ignoreUser: string;
+  ignoreUsers: string[];
   startAfter: DocumentSnapshot;
   pageSize: number;
   year: number;
@@ -19,9 +19,9 @@ export type QueryConfig = Partial<{
 const db = getFirestore;
 
 function getConstraints({
-  publicOnly, user, ignoreUser, startAfter: snap, pageSize, year, season,
+  publicOnly, user, ignoreUsers, startAfter: snap, pageSize, year, season,
 }: QueryConfig) {
-  if (user && ignoreUser) {
+  if (user && ignoreUsers) {
     throw new Error('Cannot specify both user and ignoreUser');
   }
 
@@ -35,8 +35,8 @@ function getConstraints({
     constraints.push(where('ownerUid', '==', user));
   }
 
-  if (ignoreUser) {
-    constraints.push(where('ownerUid', '!=', ignoreUser));
+  if (ignoreUsers) {
+    constraints.push(where('ownerUid', 'not-in', ignoreUsers));
   }
 
   if (snap) {

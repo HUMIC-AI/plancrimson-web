@@ -10,8 +10,6 @@ const DynamicBodySection = dynamic(() => import('@/components/YearSchedule/BodyS
 export default function PlanPage() {
   const userId = Auth.useAuthProperty('uid');
 
-  if (typeof userId === 'undefined') return null;
-
   if (userId === null) {
     return (
       <ClassesCloud controls="track">
@@ -29,6 +27,8 @@ export default function PlanPage() {
       </ClassesCloud>
     );
   }
+
+  if (typeof userId === 'undefined') return null;
 
   return <DynamicBodySection userId={userId} />;
 }

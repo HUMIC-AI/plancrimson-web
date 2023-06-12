@@ -1,42 +1,63 @@
 import Head from 'next/head';
 import React, { PropsWithChildren } from 'react';
-import CustomModal from '../CustomModal';
+import CustomModal from '../Modals/CustomModal';
 import Navbar from './Navbar';
 import Alerts from './Alerts';
 import { Footer } from './Footer';
-import { WithMeili } from './WithMeili';
-import { signInUser } from './useSyncAuth';
+import AuthWrapper from './AuthWrapper';
 
-export interface LayoutProps {
+type BaseProps = {
   title?: string;
   className?: string;
-  withMeili?: boolean;
   transparentHeader?: boolean;
-}
+};
+
+export type LayoutProps = (BaseProps & {
+  verify: 'meili' | 'auth';
+  children: (props: { userId: string }) => JSX.Element;
+}) | PropsWithChildren<BaseProps & {
+  verify?: never;
+}>;
 
 /**
  * Layout component that wraps around all pages.
+ * Turning on meili implies auth.
  */
 export default function Layout({
   children,
   title,
-  withMeili,
-  ...props
-}: PropsWithChildren<LayoutProps>) {
+  className = LAYOUT_CLASSES,
+  verify,
+  transparentHeader = false,
+}: LayoutProps) {
   const pageTitle = `PlanCrimson${title ? ` | ${title}` : ''}`;
 
   return (
-    <WithMeili enabled={withMeili}>
+    <>
       <HeadMeta pageTitle={pageTitle} description={description} />
 
-      <Wrapper {...props}>
-        {children}
-      </Wrapper>
+      <div className="flex min-h-screen flex-col bg-secondary text-primary">
+        <Navbar transparent={transparentHeader} />
+        <Alerts />
+        {verify ? (
+          <AuthWrapper meili={verify === 'meili'}>
+            {({ userId }) => (
+              <main className={className}>
+                {children({ userId })}
+              </main>
+            )}
+          </AuthWrapper>
+        ) : (
+          <main className={className}>
+            {children}
+          </main>
+        )}
+      </div>
 
       <Footer />
 
       <CustomModal />
-    </WithMeili>
+    </>
   );
 }
 
@@ -59,34 +80,7 @@ export function HeadMeta({
 
 const LAYOUT_CLASSES = 'mx-auto flex-1 container sm:p-8 bg-secondary';
 
-/**
- * Listen to the schedules given by the constraints.
- * Goes inside the meilisearch wrapper.
- */
-function Wrapper({
-  children,
-  className = LAYOUT_CLASSES,
-  transparentHeader = false,
-}: PropsWithChildren<Pick<LayoutProps, 'className' | 'transparentHeader'>>) {
-  return (
-    <div className="flex min-h-screen flex-col bg-secondary text-primary">
-      <Navbar transparent={transparentHeader} />
-      <Alerts />
-      <main className={className}>
-        {children}
-      </main>
-    </div>
-  );
-}
-
 export const errorMessages = {
-  unauthorized: (
-    <span>
-      You are not authorized to access this content!
-      {' '}
-      <button type="button" onClick={signInUser} className="interactive font-medium">Sign in now.</button>
-    </span>
-  ),
   meiliClient: 'There was an error getting the search client. Please try again later',
 };
 

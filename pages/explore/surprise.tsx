@@ -1,166 +1,185 @@
 import CourseCard from '@/components/Course/CourseCard';
-import { ErrorPage } from '@/components/Layout/ErrorPage';
-import Layout, { errorMessages } from '@/components/Layout/Layout';
+import Layout from '@/components/Layout/Layout';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import ExpandCardsProvider from '@/src/context/expandCards';
-import { Auth } from '@/src/features';
 import { fetchAtOffset } from '@/src/features/classCache';
 import { ExtendedClass } from '@/src/lib';
 import Schema from '@/src/schema';
+import { ChoiceRank } from '@/src/types';
 import { alertUnexpectedError, useElapsed } from '@/src/utils/hooks';
 import { arrayUnion, updateDoc } from 'firebase/firestore';
-import {
-  useCallback, useEffect, useRef, useState,
-} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 
 /**
  * Randomly sample pairs of courses and ask which one the user prefers.
  */
 export default function () {
-  const userId = Auth.useAuthProperty('uid');
-
-  if (userId === null) return <ErrorPage>{errorMessages.unauthorized}</ErrorPage>;
-
-  if (typeof userId === 'undefined') {
-    return (
-      <Layout title="Friends">
-        <LoadingBars />
-      </Layout>
-    );
-  }
-
   return (
-    <Layout title="Friends" withMeili>
-      <ExpandCardsProvider defaultStyle="expanded" readonly>
-        <SurprisePage userId={userId} />
-      </ExpandCardsProvider>
+    <Layout title="Friends" verify="meili">
+      {({ userId }) => (
+        <ExpandCardsProvider defaultStyle="expanded" readonly>
+          <Wrapper userId={userId} />
+        </ExpandCardsProvider>
+      )}
     </Layout>
   );
 }
 
-function SurprisePage({ userId }: { userId: string }) {
-  const [numDocuments, setNumDocuments] = useState<number | null>(null);
-  const [course1, setCourse1] = useState<ExtendedClass | null>(null);
-  const [course2, setCourse2] = useState<ExtendedClass | null>(null);
+const CHOICE_KEYS: Record<number, ChoiceRank> = {
+  37: -1, // left arrow key
+  39: 1, // right arrow key
+  32: 0, // space bar
+};
+
+function Wrapper({ userId }: { userId: string }) {
   const elapsed = useElapsed(500, []);
+  const total = useTotal();
 
-  // need to use refs for the keyboard event listener
-  const numDocsRef = useRef<number | null>(null);
-  const courseRef = useRef<{ course1: string; course2: string } | null>(null);
+  if (!total) {
+    return elapsed ? <LoadingBars /> : null;
+  }
 
-  const chooseRandomPair = (total: number) => Promise.all([
-    getRandomCourse(total),
-    getRandomCourse(total),
-  ])
-    .then(([c1, c2]) => {
-      setCourse1(c1);
-      setCourse2(c2);
-      courseRef.current = { course1: c1.id, course2: c2.id };
-    })
-    .catch((err) => {
-      alertUnexpectedError(err);
-    });
+  return <SurprisePage userId={userId} total={total} />;
+}
 
-  const chooseSide = useCallback(async (class1: string, class2: string, choice: -1 | 0 | 1, total: number) => {
+function SurprisePage({
+  userId,
+  total,
+}: {
+  userId: string;
+  total: number;
+}) {
+  const { course1, course2, chooseSide } = useListener(userId, total);
+
+  return (
+    <div className="flex flex-col items-center">
+      <h2 className="sm:my-8">
+        Surprise me!
+      </h2>
+
+      <p className="mb-4 hidden sm:block">Use the left and right arrow keys to pick or spacebar to skip.</p>
+
+      {course1 && course2 ? (
+        <>
+          <button
+            type="button"
+            className="interactive mb-4 rounded-lg bg-gray-secondary px-4 py-2"
+            onClick={() => chooseSide(0)}
+          >
+            Skip
+          </button>
+
+          <div className="flex w-full max-w-4xl space-x-2">
+            <div className="flex-1">
+              <button
+                type="button"
+                className="interactive mb-4 w-full rounded-lg bg-gray-secondary px-4 py-2 text-2xl text-blue-primary"
+                onClick={() => chooseSide(-1)}
+              >
+                <FaArrowLeft className="mr-auto" />
+              </button>
+              <CourseCard course={course1} inSearchContext={false} />
+            </div>
+            <div className="flex-1">
+              <button
+                type="button"
+                className="interactive mb-4 w-full rounded-lg bg-gray-secondary px-4 py-2 text-2xl text-blue-primary"
+                onClick={() => chooseSide(1)}
+              >
+                <FaArrowRight className="ml-auto" />
+              </button>
+              <CourseCard course={course2} inSearchContext={false} />
+            </div>
+          </div>
+        </>
+      ) : <LoadingBars />}
+    </div>
+  );
+}
+
+function useTotal() {
+  const [total, setTotal] = useState<number>();
+  useEffect(() => {
+    fetchAtOffset(0)
+      .then((res) => setTotal(res.total))
+      .catch((err) => console.error(err));
+  }, []);
+  return total;
+}
+
+function useListener(userId: string, total: number) {
+  const [queue, setQueue] = useState<[ExtendedClass, ExtendedClass][]>([]);
+
+  const addPairToQueue = useCallback(async () => {
+    const pair = await Promise.all([
+      getRandomCourse(total),
+      getRandomCourse(total),
+    ]);
+
+    setQueue((prev) => [...prev, pair]);
+  }, [total]);
+
+  useEffect(() => {
+    const promises = [];
+    for (let i = 0; i < 20; i += 1) {
+      promises.push(addPairToQueue());
+    }
+
+    Promise.allSettled(promises)
+      .then((results) => console.info('done loading initial batch', results))
+      .catch(alertUnexpectedError);
+  }, [addPairToQueue]);
+
+  // Called when the user presses an arrow key or space bar or presses one of the top buttons.
+  const chooseSide = useCallback(async (choice: ChoiceRank) => {
+    setQueue((prev) => prev.slice(1));
+
+    const [class1, class2] = queue[0];
+
     await updateDoc(Schema.user(userId), {
       pairwiseRankings: arrayUnion({
-        class1,
-        class2,
+        class1: class1.id,
+        class2: class2.id,
         choice,
       }),
     });
 
-    await chooseRandomPair(total);
-  }, [userId]);
+    await addPairToQueue();
+  }, [addPairToQueue, queue, userId]);
 
   useEffect(() => {
-    fetchAtOffset(0)
-      .then(({ total }) => {
-        setNumDocuments(total);
-        numDocsRef.current = total;
-        return chooseRandomPair(total);
-      })
-      .catch((err) => {
-        alertUnexpectedError(err);
-      });
+    if (!queue) return;
 
-    const handleKeyPress = async (event: KeyboardEvent) => {
-      if (!courseRef.current || !numDocsRef.current) return;
-
-      let choice: null | -1 | 0 | 1 = null;
-
-      // left arrow key
-      if (event.keyCode === 37) {
-        choice = -1;
+    function handleKeyPress(event: KeyboardEvent) {
+      if (event.keyCode in CHOICE_KEYS) {
+        event.preventDefault();
+        chooseSide(CHOICE_KEYS[event.keyCode]).catch(alertUnexpectedError);
       }
-      // right arrow key
-      if (event.keyCode === 39) {
-        choice = 1;
-      }
-      // space bar
-      if (event.keyCode === 32) {
-        choice = 0;
-      }
-
-      if (choice === null) return;
-
-      event.preventDefault();
-
-      await chooseSide(
-        courseRef.current.course1,
-        courseRef.current.course2,
-        choice,
-        numDocsRef.current,
-      );
-    };
+    }
 
     document.addEventListener('keydown', handleKeyPress);
 
     return () => {
       document.removeEventListener('keydown', handleKeyPress);
     };
-  }, [chooseSide]);
+  }, [addPairToQueue, chooseSide, queue]);
 
-  if (!numDocuments) {
-    if (elapsed) {
-      return <LoadingBars />;
-    }
-    return null;
+  if (queue.length === 0) {
+    return {
+      course1: null,
+      course2: null,
+      chooseSide,
+    };
   }
 
-  return (
-    <>
-      <div className="my-8 flex items-center justify-center">
-        <button
-          type="button"
-          className="rounded-md px-4 py-2 text-4xl font-semibold transition-colors hover:bg-gray-secondary"
-          onClick={() => {
-            chooseRandomPair(numDocuments);
-          }}
-        >
-          Surprise me!
-        </button>
-      </div>
+  const [course1, course2] = queue[0];
 
-      {course1 && course2 ? (
-        <div className="mx-auto flex max-w-4xl space-x-4">
-          <div className="w-1/2 shrink-0">
-            <button type="button" className="mb-4 w-full rounded-lg p-4 text-4xl text-blue-primary hover:bg-gray-secondary">
-              <FaArrowLeft className="mr-auto" />
-            </button>
-            <CourseCard course={course1} inSearchContext={false} />
-          </div>
-          <div className="w-1/2 shrink-0">
-            <button type="button" className="mb-4 w-full rounded-lg p-4 text-4xl text-blue-primary hover:bg-gray-secondary">
-              <FaArrowRight className="ml-auto" />
-            </button>
-            <CourseCard course={course2} inSearchContext={false} />
-          </div>
-        </div>
-      ) : <LoadingBars />}
-    </>
-  );
+  return {
+    course1,
+    course2,
+    chooseSide,
+  };
 }
 
 async function getRandomCourse(total: number) {

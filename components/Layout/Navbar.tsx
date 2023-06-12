@@ -26,13 +26,7 @@ const paths: Path[] = [
       { href: '/explore/surprise', name: 'Surprise' },
     ],
   },
-  {
-    href: '/connect',
-    name: 'Connect',
-    children: [
-      { href: '/connect/friends', name: 'Friends' },
-    ],
-  },
+  { href: '/connect', name: 'Connect' },
   { href: '/', name: 'My Courses' },
   { href: '/about', name: 'About' },
 ];
@@ -122,6 +116,7 @@ function NavbarLink({ item, pathname, isParent = false }: { item: Path, pathname
     </Link>
   );
 }
+
 
 const SmallComponents = {
   MenuButton({ open } : { open: boolean }) {

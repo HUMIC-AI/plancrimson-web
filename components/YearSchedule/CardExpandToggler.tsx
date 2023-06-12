@@ -8,7 +8,7 @@ export default function CardExpandToggler() {
   return (
     <button
       type="button"
-      onClick={toggleExpand}
+      onClick={() => toggleExpand()}
       className="flex items-center justify-center text-blue-primary transition-opacity duration-200 hover:opacity-50"
     >
       {expandCards === 'text' && <FaExpand />}

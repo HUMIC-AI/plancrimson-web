@@ -12,6 +12,16 @@ import { useSyncAuth, useSyncUserSettings } from '@/components/Layout/useSyncAut
 import { getCurrentSemester } from '@/src/lib';
 import ExpandCardsProvider from '@/src/context/expandCards';
 
+export default function (props: AppProps) {
+  return (
+    <Provider store={store}>
+      <ModalProvider>
+        <MyApp {...props} />
+      </ModalProvider>
+    </Provider>
+  );
+}
+
 function MyApp({ Component, pageProps }: AppProps) {
   useSyncAuth();
   useSyncUserSettings();
@@ -24,15 +34,5 @@ function MyApp({ Component, pageProps }: AppProps) {
         </ChosenScheduleProvider>
       </ExpandCardsProvider>
     </SearchStateProvider>
-  );
-}
-
-export default function Wrapper(props: AppProps) {
-  return (
-    <Provider store={store}>
-      <ModalProvider>
-        <MyApp {...props} />
-      </ModalProvider>
-    </Provider>
   );
 }

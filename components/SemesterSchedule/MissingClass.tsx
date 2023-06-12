@@ -69,6 +69,7 @@ export function MissingClass({ cls }: { cls: ExtendedClass; }) {
                   type="time"
                   id="startTime"
                   {...register('startTime')}
+                  className="text-primary bg-secondary"
                   defaultValue={classTime && decToStr(classTime.start)}
                 />
 
@@ -79,6 +80,7 @@ export function MissingClass({ cls }: { cls: ExtendedClass; }) {
                   type="time"
                   id="endTime"
                   {...register('endTime')}
+                  className="text-primary bg-secondary"
                   defaultValue={classTime && decToStr(classTime.end)}
                 />
 
@@ -89,6 +91,7 @@ export function MissingClass({ cls }: { cls: ExtendedClass; }) {
                   type="date"
                   id="startDate"
                   {...register('startDate')}
+                  className="text-primary bg-secondary"
                   defaultValue={classTime?.startDate}
                 />
 
@@ -99,13 +102,14 @@ export function MissingClass({ cls }: { cls: ExtendedClass; }) {
                   type="date"
                   id="endDate"
                   {...register('endDate')}
+                  className="text-primary bg-secondary"
                   defaultValue={classTime?.endDate}
                 />
               </div>
             </div>
             <button
               type="submit"
-              className="interactive mt-4 rounded-md bg-gray-light px-4 py-2"
+              className="interactive mt-4 rounded-md bg-gray-secondary px-4 py-2"
             >
               Save
             </button>

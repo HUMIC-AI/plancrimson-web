@@ -59,7 +59,7 @@ export interface UserSettings {
   pairwiseRankings: Array<{
     class1: string;
     class2: string;
-    choice: -1 | 0 | 1;
+    choice: ChoiceRank;
   }>;
 }
 
@@ -70,6 +70,8 @@ export interface CustomTimeRecord {
   startDate: string; // yyyy-mm-dd
   endDate: string; // yyyy-mm-dd
 }
+
+export type ChoiceRank = -1 | 0 | 1;
 
 // ============================== /schedules ==============================
 

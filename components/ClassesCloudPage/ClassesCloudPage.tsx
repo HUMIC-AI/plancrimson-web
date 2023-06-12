@@ -23,9 +23,33 @@ type Props = {
   filterSubjects?: Subject[];
 };
 
-export default function ClassesCloudPage({ children, ...props }: PropsWithChildren<Props>) {
+export default function ClassesCloudPage({ children, withMeili, ...props }: PropsWithChildren<Props & {
+  withMeili?: true;
+}>) {
+  if (withMeili) {
+    return (
+      <Layout
+        className="relative flex flex-1 items-center justify-center bg-black"
+        title="Explore"
+        transparentHeader
+        verify="meili"
+      >
+        {() => (
+          <>
+            <ClassesCloud {...props} />
+            {children}
+          </>
+        )}
+      </Layout>
+    );
+  }
+
   return (
-    <Layout className="relative flex flex-1 items-center justify-center bg-black" title="Plan" transparentHeader>
+    <Layout
+      className="relative flex flex-1 items-center justify-center bg-black"
+      title="Explore"
+      transparentHeader
+    >
       <ClassesCloud {...props} />
       {children}
     </Layout>

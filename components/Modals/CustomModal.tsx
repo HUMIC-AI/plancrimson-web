@@ -6,7 +6,8 @@ import { useModal } from '@/src/context/modal';
 /**
  * Based on https://headlessui.dev/react/dialog
  * Only one instance exists in the root Layout component.
- * It gets controlled by the ModalContext in /src/features/modal.tsx
+ * It gets controlled by the ModalContext in /src/features/modal.tsx.
+ * This does NOT get access to a MeiliSearch instance by default. One must be provided.
  */
 export default function CustomModal() {
   const { open, setOpen, data } = useModal();

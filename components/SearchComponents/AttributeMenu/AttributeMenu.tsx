@@ -12,7 +12,8 @@ interface Props {
 }
 
 /**
- * Renders the list of attributes to filter classes by.
+ * Renders the list of attributes to filter classes by on large screens.
+ * See AttributeMenuDropdown for small screens.
  */
 export default function AttributeMenu({ lgOnly, withWrapper, showSubjectColor = false }: Props) {
   const dispatch = useAppDispatch();

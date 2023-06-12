@@ -4,9 +4,9 @@ import { useElapsed } from '@/src/utils/hooks';
 import useSearchState, { createUrl } from '@/src/context/searchState';
 import { Auth } from '@/src/features';
 import { errorMessages } from '@/components/Layout/Layout';
-import { ErrorMessage } from '@/components/Layout/ErrorPage';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { useMeiliClient } from '@/src/context/meili';
+import { ErrorMessage } from './Layout/AuthWrapper';
 
 /**
  * Only try to connect to MeiliSearch when the user is logged in.

@@ -60,7 +60,7 @@ export function useFriendRequests(uid: string | null | undefined) {
 export function useFriends(userId: string) {
   const { incoming, outgoing } = useFriendRequests(userId);
 
-  const userIds = useMemo(() => {
+  const allUserIdsInRequests = useMemo(() => {
     // get all unique ids
     const allIds = [...incoming, ...outgoing].flatMap((req) => [req.from, req.to]);
     const uniqueIds = new Set(allIds);
@@ -70,7 +70,7 @@ export function useFriends(userId: string) {
     return ids;
   }, [incoming, outgoing]);
 
-  const profiles = useProfiles(userIds);
+  const profiles = useProfiles(allUserIdsInRequests);
 
   const friends = useMemo(() => profiles && allTruthy([
     ...incoming.map((req) => (req.accepted ? profiles[req.from] : null)),
@@ -82,4 +82,8 @@ export function useFriends(userId: string) {
   )), [profiles, incoming]);
 
   return { friends, incomingPending };
+}
+
+export function useIds(users?: { id: string }[]) {
+  return useMemo(() => users?.map((u) => u.id), [users]);
 }

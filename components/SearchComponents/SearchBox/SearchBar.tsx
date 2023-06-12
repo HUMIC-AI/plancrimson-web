@@ -9,7 +9,7 @@ import type { SearchBoxProvided } from 'react-instantsearch-core';
 import ScheduleChooser from '../../ScheduleChooser/ScheduleChooser';
 import Stats from '../Stats';
 import StateResults from '../StateResults';
-import { AttributeMenuDropdown } from './AttributeMenuDropdown';
+import { SmallAttributeMenuDropdown } from './AttributeMenuDropdown';
 
 export type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean };
 
@@ -65,7 +65,7 @@ export function SearchBar({
           </div>
         )}
 
-        {!isLg && <AttributeMenuDropdown />}
+        {!isLg && <SmallAttributeMenuDropdown />}
       </div>
       {/* end box containing search bar and attribute menu */}
 

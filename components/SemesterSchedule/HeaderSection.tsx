@@ -4,7 +4,12 @@ import { downloadJson } from '@/src/utils/utils';
 import { BaseSchedule } from '@/src/types';
 import AddCoursesButton from '../AddCoursesButton';
 
-export function HeaderSection({ events, schedule }: { events: EventAttributes[]; schedule: BaseSchedule; }) {
+type Props = {
+  events: EventAttributes[];
+  schedule: BaseSchedule;
+};
+
+export function CalendarHeaderSection({ events, schedule }: Props) {
   function handleExport() {
     const { error, value } = createEvents(events);
     if (error) {
@@ -17,12 +22,12 @@ export function HeaderSection({ events, schedule }: { events: EventAttributes[];
 
   return (
     <div>
-      <div className="flex items-center justify-center space-x-4 bg-black p-4 text-center text-white">
+      <div className="flex items-center justify-center space-x-4 p-4 text-center">
         <p className="text-xl font-bold">
           {schedule.title}
         </p>
 
-        <p className="text-white">
+        <p>
           {schedule.year}
           {' '}
           {schedule.season}
@@ -35,7 +40,7 @@ export function HeaderSection({ events, schedule }: { events: EventAttributes[];
         <button
           type="button"
           onClick={handleExport}
-          className="rounded-xl bg-gray-dark px-4 py-2 transition-colors hover:bg-white/60"
+          className="interactive rounded-xl bg-gray-secondary px-4 py-2"
         >
           Export to ICS
         </button>
@@ -43,7 +48,7 @@ export function HeaderSection({ events, schedule }: { events: EventAttributes[];
       <p className="text-center">
         Make sure to double-check course times on
         {' '}
-        <a href="https://my.harvard.edu/">my.harvard</a>
+        <a href="https://my.harvard.edu/" className="interactive">my.harvard</a>
         .
       </p>
     </div>

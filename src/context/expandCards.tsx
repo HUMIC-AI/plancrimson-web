@@ -1,5 +1,5 @@
 import {
-  PropsWithChildren, createContext, useContext, useEffect, useMemo, useState,
+  PropsWithChildren, createContext, useContext, useMemo, useState,
 } from 'react';
 import { throwMissingContext } from '../utils/utils';
 
@@ -19,13 +19,6 @@ const ExpandCardsContext = createContext<ExpandCardsContextType>({
   setExpand: throwMissingContext,
 });
 
-function getStickyValue(defaultStyle: CardStyle) {
-  const sticky = localStorage.getItem('expandCards');
-  return sticky !== null
-    ? sticky as CardStyle
-    : defaultStyle;
-}
-
 export default function ExpandCardsProvider({
   children, defaultStyle = 'expanded', sticky = false, readonly = false,
 }: PropsWithChildren<{
@@ -33,17 +26,7 @@ export default function ExpandCardsProvider({
   sticky?: boolean;
   readonly?: boolean;
 }>) {
-  const [expandCards, setExpandCards] = useState<CardStyle>(
-    sticky && typeof localStorage !== 'undefined'
-      ? () => getStickyValue(defaultStyle)
-      : defaultStyle,
-  );
-
-  useEffect(() => {
-    if (sticky && typeof localStorage !== 'undefined') {
-      localStorage.setItem('expandCards', expandCards);
-    }
-  }, [expandCards, sticky]);
+  const [expandCards, setExpandCards] = useState<CardStyle>(defaultStyle);
 
   const context = useMemo(() => ({
     expandCards,

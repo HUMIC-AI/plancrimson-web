@@ -1,17 +1,22 @@
 import {
-  onSnapshot, query, QueryConstraint, QuerySnapshot,
+  onSnapshot, query, QueryConstraint, QuerySnapshot, where,
 } from 'firebase/firestore';
-import { useCallback, useEffect } from 'react';
-import { compareSemesters, Semester } from '@/src/lib';
+import {
+  useCallback, useEffect, useState,
+} from 'react';
+import {
+  compareSemesters, Semester,
+} from '@/src/lib';
 import { ClassCache, Schedules } from '../features';
 import { alertUnexpectedError, useAppDispatch } from './hooks';
 import { useMeiliClient } from '../context/meili';
 import type {
+  BaseSchedule,
   FirestoreSchedule,
-  ListOfScheduleIdOrSemester, ScheduleId, ScheduleIdOrSemester, ScheduleMap,
+  ListOfScheduleIdOrSemester, ScheduleId, ScheduleIdOrSemester, ScheduleMap, WithId,
 } from '../types';
 import { toLocalSchedule } from '../features/schedules';
-import Schema, { queryWithId } from '../schema';
+import Schema from '../schema';
 
 export function isScheduleId(s: ScheduleIdOrSemester): s is ScheduleId {
   return typeof s === 'string';
@@ -92,35 +97,70 @@ export function getSemesterBeforeEarliest(schedules: ScheduleMap): Semester {
   return { season, year };
 }
 
-export async function getOtherSchedulesAcrossSemesters(
-  ignoreUser: string,
-  friendIds: string[],
-  semesters?: Semester[],
-  limit = 50,
-) {
-  const queries = semesters ? semesters.map((semester) => [
-    queryWithId(Schema.Collection.schedules(), {
-      ...semester,
-      ignoreUser,
-      publicOnly: true,
-      pageSize: limit,
-    }),
-    ...friendIds.map((uid) => queryWithId(Schema.Collection.schedules(), {
-      ...semester,
-      user: uid,
-    })),
-  ]) : [
-    queryWithId(Schema.Collection.schedules(), {
-      ignoreUser,
-      publicOnly: true,
-      pageSize: limit,
-    }),
-    ...friendIds.map((uid) => queryWithId(Schema.Collection.schedules(), {
-      user: uid,
-    })),
-  ];
+export function useSchedule(scheduleId: string) {
+  const dispatch = useAppDispatch();
 
-  const schedules = await Promise.all(queries.flat());
+  const [schedule, setSchedule] = useState<BaseSchedule>();
+  const [error, setError] = useState<string>();
+  const { client } = useMeiliClient();
 
-  return schedules.flat();
+  useEffect(() => {
+    if (!scheduleId) return;
+
+    const unsub = onSnapshot(Schema.schedule(scheduleId), (snap) => {
+      if (snap.exists()) {
+        const scheduleData = snap.data()!;
+        setSchedule(scheduleData);
+        if (client) dispatch(ClassCache.loadCourses(client, scheduleData.classes));
+      }
+    }, (err) => setError(err.message));
+
+    return unsub;
+  }, [scheduleId, client, dispatch]);
+
+  return { schedule, error };
+}
+
+/**
+ * Get the schedules of each of the given useres that contain the given course.
+ */
+export function useSharedCourses(friendIds: string[] | undefined, courseId?: string) {
+  const dispatch = useAppDispatch();
+  const { client } = useMeiliClient();
+  const [schedules, setSchedules] = useState<Record<string, WithId<BaseSchedule>[]>>({});
+
+  useEffect(() => {
+    if (!friendIds) return;
+
+    const unsubs = friendIds.map((friend) => {
+      const constraints = [where('ownerUid', '==', friend)];
+
+      if (courseId) constraints.push(where('classes', 'array-contains', courseId));
+
+      const q = query(
+        Schema.Collection.schedules(),
+        ...constraints,
+      );
+
+      return onSnapshot(q, (snap) => {
+        const newSchedules = snap.docs.map((doc) => ({
+          ...doc.data(),
+          id: doc.id,
+        }));
+
+        setSchedules((prev) => ({
+          ...prev,
+          [friend]: newSchedules,
+        }));
+
+        if (client) {
+          dispatch(ClassCache.loadCourses(client, getAllClassIds(newSchedules)));
+        }
+      }, alertUnexpectedError);
+    });
+
+    return () => unsubs.forEach((unsub) => unsub());
+  }, [client, courseId, dispatch, friendIds]);
+
+  return schedules;
 }

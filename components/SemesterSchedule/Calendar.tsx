@@ -15,14 +15,15 @@ import {
 } from './calendarUtil';
 import { MissingClass } from './MissingClass';
 import { DayComponent } from './DayComponent';
-import { HeaderSection } from './HeaderSection';
+import { CalendarHeaderSection } from './HeaderSection';
 
 type CalendarProps = {
   schedule: BaseSchedule;
+  userId: string;
 };
 
 
-export default function Calendar({ schedule }: CalendarProps) {
+export default function Calendar({ schedule, userId }: CalendarProps) {
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const classes = allTruthy(schedule.classes.map((classId) => classCache[classId]));
 
@@ -54,11 +55,11 @@ export default function Calendar({ schedule }: CalendarProps) {
 
   return (
     <>
-      <HeaderSection events={events} schedule={schedule} />
+      <CalendarHeaderSection events={events} schedule={schedule} userId={userId} />
 
-      <div className="overflow-auto">
+      <div className="mt-4 overflow-auto">
         <div className="min-w-[52rem]">
-          <div className="grid grid-cols-5 bg-black py-2 pl-6 text-white">
+          <div className="grid grid-cols-5 rounded-t-xl bg-black py-2 pl-6 text-white">
             {DAY_SHORT.slice(0, 5).map((day) => (
               <h3 key={day} className="text-center font-semibold">
                 {day}
@@ -68,14 +69,13 @@ export default function Calendar({ schedule }: CalendarProps) {
 
           <div className="relative h-[60rem] overflow-auto">
             {/* draw the hours on the left */}
-            <div className="absolute inset-y-0 z-10 w-6 bg-gray-light text-center">
+            <div className="absolute inset-y-0 z-10 w-6 bg-gray-secondary text-center">
               {[...new Array(dayEndTime - dayStartTime)].map((_, i) => (
                 <span
                   key={i}
+                  className="absolute -translate-x-1/2 -translate-y-1/2"
                   style={{
-                    position: 'absolute',
                     top: `${((i + 1) * 100) / (dayEndTime - dayStartTime + 1)}%`,
-                    transform: 'translate(-50%, -50%)',
                   }}
                 >
                   {i + dayStartTime}

@@ -4,7 +4,6 @@ import {
   onSnapshot, query, where,
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { Auth } from '@/src/features';
 import Schema from '@/src/schema';
 import { FriendRequest, UserProfile, WithId } from '@/src/types';
 import { alertUnexpectedError } from '@/src/utils/hooks';
@@ -12,14 +11,15 @@ import { alertUnexpectedError } from '@/src/utils/hooks';
 export type FriendStatus = 'loading' | 'self' | 'none' | 'friends' | 'pending-incoming' | 'pending-outgoing';
 
 // get the profile of the user with the given username
-export function useProfile(username: string) {
-  const userId = Auth.useAuthProperty('uid');
+export function useProfile(username: string, userId: string) {
+  if (!userId) {
+    throw new Error('userId is required');
+  }
+
   const [profile, setProfile] = useState<WithId<UserProfile> | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!username || !userId) return;
-
     const unsubscribe = onSnapshot(
       query(Schema.Collection.profiles(), where('username', '==', username)),
       (snap) => {
@@ -38,7 +38,7 @@ export function useProfile(username: string) {
     );
 
     return () => unsubscribe();
-  }, [username, userId]);
+  }, [username]);
 
   return [profile, error] as const;
 }

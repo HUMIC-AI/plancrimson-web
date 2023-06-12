@@ -1,20 +1,20 @@
 import { onSnapshot, updateDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { ErrorPage } from '@/components/Layout/ErrorPage';
 import Schema from '@/src/schema';
 import { FaEdit } from 'react-icons/fa';
 import type { UserProfile, WithId } from '@/src/types';
+import { ErrorMessage } from '../Layout/AuthWrapper';
 
-type Props = { uid: string; pageProfile: WithId<UserProfile>; };
+type Props = { userId: string; pageProfile: WithId<UserProfile>; };
 
-export function BioSection({ uid, pageProfile }: Props) {
+export function BioSection({ userId, pageProfile }: Props) {
   const [editing, setEditing] = useState(false);
 
   return (
     <>
       <h3 className="flex items-center">
         Bio
-        {pageProfile.id === uid && (
+        {pageProfile.id === userId && (
         <button
           type="button"
           onClick={() => setEditing(!editing)}
@@ -26,7 +26,7 @@ export function BioSection({ uid, pageProfile }: Props) {
       </h3>
 
       {/* show an editable textarea for own page, otherwise other's bio */}
-      {editing ? <EditBioForm uid={uid} setEditing={setEditing} /> : (
+      {editing ? <EditBioForm userId={userId} setEditing={setEditing} /> : (
         <p className="mt-2">
           {pageProfile.bio || 'This user has not written a bio.'}
         </p>
@@ -35,14 +35,14 @@ export function BioSection({ uid, pageProfile }: Props) {
   );
 }
 
-function EditBioForm({ uid, setEditing }: { uid: string; setEditing: (b: boolean) => void; }) {
+function EditBioForm({ userId, setEditing }: { userId: string; setEditing: (b: boolean) => void; }) {
   const [bio, setBio] = useState('');
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(
-      Schema.profile(uid),
+      Schema.profile(userId),
       (snap) => {
         setBio(snap.data()?.bio ?? '');
       },
@@ -51,10 +51,10 @@ function EditBioForm({ uid, setEditing }: { uid: string; setEditing: (b: boolean
       },
     );
     return () => unsub();
-  }, [uid]);
+  }, [userId]);
 
   if (error) {
-    return <ErrorPage>{error.message}</ErrorPage>;
+    return <ErrorMessage>{error.message}</ErrorMessage>;
   }
 
   return (
@@ -63,7 +63,7 @@ function EditBioForm({ uid, setEditing }: { uid: string; setEditing: (b: boolean
         e.preventDefault();
         setLoading(true);
         try {
-          const update = updateDoc(Schema.profile(uid), { bio });
+          const update = updateDoc(Schema.profile(userId), { bio });
           const timer = new Promise((resolve) => {
             setTimeout(resolve, 500);
           });

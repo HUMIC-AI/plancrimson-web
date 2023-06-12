@@ -6,7 +6,7 @@ export function DayComponent({ events }: { events: EventAttributes[]; }) {
   const overlapCounter: Record<string, number> = {};
 
   return (
-    <div className="relative h-full odd:bg-gray-light even:bg-white">
+    <div className="relative h-full odd:bg-gray-secondary even:bg-secondary">
       {events.map((ev, i) => {
         const overlap = getOverlap(events, i);
         const key = overlap[0].uid!;
@@ -30,7 +30,7 @@ export function DayComponent({ events }: { events: EventAttributes[]; }) {
               right: `${right * 100}%`,
             }}
           >
-            <div className="absolute inset-2 flex flex-col items-center overflow-auto text-center text-white">
+            <div className="absolute inset-2 flex flex-col items-center overflow-auto text-center">
               <span className="font-semibold">{label}</span>
               <span>{title}</span>
               <span className="italic">{ev.location}</span>

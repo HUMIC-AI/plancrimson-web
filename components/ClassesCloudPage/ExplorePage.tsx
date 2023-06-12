@@ -1,7 +1,4 @@
 import ClassesCloudPage from '@/components/ClassesCloudPage/ClassesCloudPage';
-import { ErrorPage } from '@/components/Layout/ErrorPage';
-import { errorMessages } from '@/components/Layout/Layout';
-import { Auth } from '@/src/features';
 import {
   Subject,
   getSubjectColor, subjectNames, subjects,
@@ -13,19 +10,16 @@ import { useState } from 'react';
 import { FaBars } from 'react-icons/fa';
 
 export default function ExplorePage({ level }: { level: CourseLevel }) {
-  const uid = Auth.useAuthProperty('uid');
   const [filterSubjects, setFilterSubjects] = useState<Subject[]>(subjectNames);
 
-  if (!uid) {
-    return (
-      <ErrorPage>
-        {errorMessages.unauthorized}
-      </ErrorPage>
-    );
-  }
-
   return (
-    <ClassesCloudPage controls="orbit" interactive level={level} filterSubjects={filterSubjects}>
+    <ClassesCloudPage
+      controls="orbit"
+      interactive
+      level={level}
+      filterSubjects={filterSubjects}
+      withMeili
+    >
       <Listbox
         as="div"
         className="absolute right-4 top-16 sm:right-12 sm:top-24"

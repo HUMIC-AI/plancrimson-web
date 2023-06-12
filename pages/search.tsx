@@ -1,7 +1,5 @@
-import React, { useEffect } from 'react';
-import qs from 'qs';
+import React from 'react';
 import { useAppSelector } from '@/src/utils/hooks';
-import useSearchState from '@/src/context/searchState';
 import { Auth, Planner } from '@/src/features';
 import Layout from '@/components/Layout/Layout';
 import SearchBox from '@/components/SearchComponents/SearchBox/SearchBox';
@@ -13,22 +11,13 @@ import { ScheduleSyncer } from '@/components/ScheduleSyncer';
 import { AuthRequiredInstantSearchProvider } from '../components/AuthRequiredInstantSearchProvider';
 
 export default function SearchPage() {
-  const { setSearchState } = useSearchState();
-  const showAttributes = useAppSelector(Planner.selectShowAttributes);
   const userId = Auth.useAuthProperty('uid');
-
-  // on the initial page load, we want to populate the search state from the query string
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const stateFromQuery = qs.parse(window.location.search.slice(1));
-    process.nextTick(() => setSearchState((prev: any) => ({ ...prev, ...stateFromQuery })));
-  }, []);
+  const showAttributes = useAppSelector(Planner.selectShowAttributes);
 
   return (
     <Layout
       title="Search"
       className="mx-auto flex w-screen max-w-5xl flex-1 justify-center sm:p-8"
-      withMeili
     >
       {userId && <ScheduleSyncer userId={userId} />}
 
