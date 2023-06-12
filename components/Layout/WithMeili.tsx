@@ -11,7 +11,7 @@ export function WithMeili({
   children,
   userId,
 }: PropsWithChildren<{
-  userId?: string
+  userId?: string | null;
 }>) {
   if (!userId) return <>{children}</>;
 

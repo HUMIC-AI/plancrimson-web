@@ -268,14 +268,8 @@ function ProfilesList({
           ) : (
             <ul className="flex flex-wrap items-start gap-4">
               {yearSplit[year].map((profile) => (
-                <li
-                  key={profile.id}
-                  className={classNames(
-                    isFriend(profile) ? 'bg-blue-secondary' : 'bg-gray-secondary',
-                    'space-y-4 rounded-lg px-3 py-1.5',
-                  )}
-                >
-                  <ConnectProfileCard profile={profile} />
+                <li key={profile.id}>
+                  <ConnectProfileCard isFriend={isFriend(profile)} profile={profile} />
                 </li>
               ))}
             </ul>

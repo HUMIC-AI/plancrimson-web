@@ -65,6 +65,7 @@ export default function ({ userId }: { userId: string; }) {
       {() => (
         <>
           <ScheduleSyncer userId={userId} />
+
           <BodySection
             showReqs={showReqs}
             highlightedRequirement={highlightedRequirement}

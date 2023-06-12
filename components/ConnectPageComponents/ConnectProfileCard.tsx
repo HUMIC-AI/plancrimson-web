@@ -9,19 +9,27 @@ import { ProfileWithSchedules } from './useLunrIndex';
 
 export default function ProfileCard({
   profile,
+  isFriend,
 }: {
   profile: ProfileWithSchedules;
+  isFriend?: boolean;
 }): JSX.Element {
   return (
     <Disclosure>
       {({ open }) => (
         <>
-          <Disclosure.Button className="flex w-full items-center justify-between space-x-2 rounded-md transition-colors hover:bg-gray-primary/50">
+          <Disclosure.Button className={classNames(
+            'flex w-full items-center border-gray-secondary justify-between space-x-2 transition-colors hover:bg-gray-primary/50',
+            open ? 'rounded-t-md border-t-2 border-x-2' : 'rounded-md border-2',
+            isFriend ? 'bg-blue-secondary' : (open ? 'bg-secondary' : 'bg-gray-secondary'),
+            'px-3 py-1.5',
+          )}
+          >
             <UserHeader profile={profile} />
             <FaAngleDown className={classNames(open && 'rotate-180')} />
           </Disclosure.Button>
 
-          <Disclosure.Panel>
+          <Disclosure.Panel className="rounded-b-md bg-gray-secondary p-4">
             <p>
               {profile.bio || "This user hasn't written a bio yet."}
             </p>
