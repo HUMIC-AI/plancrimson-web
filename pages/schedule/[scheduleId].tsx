@@ -8,12 +8,12 @@ import { useSchedule } from '@/src/utils/schedules';
 export default function SchedulePage() {
   return (
     <Layout title="Calendar" verify="meili">
-      {({ userId }) => <Wrapper userId={userId} />}
+      {() => <Wrapper />}
     </Layout>
   );
 }
 
-function Wrapper({ userId }: { userId: string }) {
+function Wrapper() {
   const router = useRouter();
   const scheduleId = router.query.scheduleId as string;
   const { schedule, error } = useSchedule(scheduleId);
@@ -27,5 +27,5 @@ function Wrapper({ userId }: { userId: string }) {
     return elapsed ? <ErrorMessage>Could not find schedule</ErrorMessage> : null;
   }
 
-  return <Calendar userId={userId} schedule={schedule} />;
+  return <Calendar schedule={schedule} />;
 }

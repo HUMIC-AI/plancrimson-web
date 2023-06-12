@@ -19,13 +19,12 @@ import { CalendarHeaderSection } from './HeaderSection';
 
 type CalendarProps = {
   schedule: BaseSchedule;
-  userId: string;
 };
 
 
-export default function Calendar({ schedule, userId }: CalendarProps) {
+export default function Calendar({ schedule }: CalendarProps) {
   const classCache = useAppSelector(ClassCache.selectClassCache);
-  const classes = allTruthy(schedule.classes.map((classId) => classCache[classId]));
+  const classes = allTruthy(schedule.classes ? schedule.classes.map((classId) => classCache[classId]) : []);
 
   const customTimes = useAppSelector(Settings.selectCustomTimes);
 
@@ -55,7 +54,7 @@ export default function Calendar({ schedule, userId }: CalendarProps) {
 
   return (
     <>
-      <CalendarHeaderSection events={events} schedule={schedule} userId={userId} />
+      <CalendarHeaderSection events={events} schedule={schedule} />
 
       <div className="mt-4 overflow-auto">
         <div className="min-w-[52rem]">

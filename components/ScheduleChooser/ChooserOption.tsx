@@ -17,7 +17,7 @@ export function ChooserOption({ scheduleId }: { scheduleId: string; }) {
         </span>
         <span>
           (
-          {schedule.classes.length}
+          {schedule.classes ? schedule.classes.length : 0}
           )
         </span>
       </span>

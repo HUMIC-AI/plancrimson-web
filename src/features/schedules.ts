@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
-  deleteDoc, getDoc, serverTimestamp, setDoc, updateDoc,
+  deleteDoc, deleteField, getDoc, serverTimestamp, setDoc, updateDoc,
 } from 'firebase/firestore';
 import { Semester } from '@/src/lib';
 import { v4 as uuidv4 } from 'uuid';
@@ -57,7 +57,7 @@ export const schedulesSlice = createSlice({
     },
 
     clearSchedule(state, action: PayloadAction<string>) {
-      state[action.payload].classes.length = 0;
+      delete state[action.payload].classes;
     },
   },
 });
@@ -98,9 +98,15 @@ export const createDefaultSchedule = ({ season, year }: Semester, uid: string) =
 export const removeCourses = (payload: { scheduleId: string, courseIds: string[] }) => async (dispatch: AppDispatch) => {
   const { scheduleId, courseIds } = payload;
   const snap = await getDoc(Firestore.schedule(scheduleId));
-  if (!snap.exists()) throw new Error('schedule does not exist');
-  const classes = snap.data()!.classes.filter((classId) => !courseIds.includes(classId));
-  await updateDoc(snap.ref, { classes });
+  const data = snap.data();
+  if (!data) throw new Error('schedule does not exist');
+  if (!data.classes) return;
+  const classes = data.classes.filter((classId) => !courseIds.includes(classId));
+  if (classes.length > 0) {
+    await updateDoc(snap.ref, { classes });
+  } else {
+    await updateDoc(snap.ref, { classes: deleteField() });
+  }
   return dispatch(schedulesSlice.actions.setCourses({ scheduleId, courses: classes }));
 };
 
@@ -119,17 +125,18 @@ export const deleteSchedule = (id: string) => async (dispatch: AppDispatch) => {
   return dispatch(schedulesSlice.actions.deleteSchedule(id));
 };
 
-export const addCourses = ({ scheduleId, courses }: CoursesPayload) => async (dispatch: AppDispatch) => {
+export const addCourses = ({ scheduleId, courses: coursesToAdd }: CoursesPayload) => async (dispatch: AppDispatch) => {
   const snap = await getDoc(Firestore.schedule(scheduleId));
   if (!snap.exists) throw new Error('schedule not found');
   const { classes } = snap.data()!;
-  courses.forEach((classId) => {
-    if (!classes.find((id) => id === classId)) {
-      classes.push(classId);
+  const courses = classes ?? [];
+  coursesToAdd.forEach((classId) => {
+    if (!courses.find((id) => id === classId)) {
+      courses.push(classId);
     }
   });
-  await updateDoc(snap.ref, { classes });
-  return dispatch(schedulesSlice.actions.setCourses({ scheduleId, courses: classes }));
+  await updateDoc(snap.ref, { classes: courses });
+  return dispatch(schedulesSlice.actions.setCourses({ scheduleId, courses }));
 };
 
 export const getDefaultSchedule = ({ season, year }: Semester, uid: string) => ({
@@ -137,7 +144,6 @@ export const getDefaultSchedule = ({ season, year }: Semester, uid: string) => (
   title: `My ${season} ${year}`,
   season,
   year,
-  classes: [],
   ownerUid: uid,
   public: true,
 });
@@ -147,3 +153,5 @@ export const toLocalSchedule = (schedule: FirestoreSchedule): LocalSchedule => (
   createdAt: schedule.createdAt?.toDate().toISOString() ?? '',
 });
 
+// a convenience function for getting the classes array from a schedule
+export const getClasses = (schedule?: { classes?: string[] }) => schedule?.classes ?? [];

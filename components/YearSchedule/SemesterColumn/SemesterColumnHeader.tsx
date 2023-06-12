@@ -55,10 +55,11 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
             )}
 
             <Menu.Button className={classNames(
-              'absolute left-full top-1/2 -translate-y-1/2 transition',
+              'absolute left-full top-1/2 -translate-y-1/2 transition focus:outline-none focus:text-accent',
               !open && 'opacity-0 group-hover/column:opacity-100 hover:text-accent',
             )}
             >
+              <span className="sr-only">Settings</span>
               <FaCog />
             </Menu.Button>
           </div>
@@ -133,7 +134,7 @@ function TitleComponent({ scheduleId: id, term, setEditing }: Props) {
       className="relative flex flex-col items-center"
       onChange={chooseNewSchedule}
     >
-      <Listbox.Button className="select-none rounded px-2 text-center text-lg font-medium transition-colors hover:bg-gray-light">
+      <Listbox.Button className="select-none rounded px-2 text-center text-lg font-medium transition-colors hover:bg-gray-primary/50">
         {title}
       </Listbox.Button>
       <FadeTransition>

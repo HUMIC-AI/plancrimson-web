@@ -85,8 +85,8 @@ export function sortSchedulesBySemester(schedules: ScheduleMap) {
   return Object.values(schedules).sort(compareSemesters);
 }
 
-export function getAllClassIds(schedules: { classes: string[] }[]): string[] {
-  return schedules.flatMap((schedule) => schedule.classes);
+export function getAllClassIds(schedules: { classes?: string[] }[]): string[] {
+  return schedules.flatMap((schedule) => schedule.classes ?? []);
 }
 
 export function getSemesterBeforeEarliest(schedules: ScheduleMap): Semester {
@@ -111,7 +111,7 @@ export function useSchedule(scheduleId: string) {
       if (snap.exists()) {
         const scheduleData = snap.data()!;
         setSchedule(scheduleData);
-        if (client) dispatch(ClassCache.loadCourses(client, scheduleData.classes));
+        if (client && scheduleData.classes) dispatch(ClassCache.loadCourses(client, scheduleData.classes));
       }
     }, (err) => setError(err.message));
 

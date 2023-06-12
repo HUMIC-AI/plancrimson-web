@@ -15,6 +15,7 @@ import { checkViable } from '@/src/searchSchedule';
 import type { BaseSchedule } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
 import { sortSchedulesBySemester } from '@/src/utils/schedules';
+import { getClasses } from '@/src/features/schedules';
 
 /**
  * The planning panel in the course modal. Returns a Tab.Panel.
@@ -64,7 +65,7 @@ function ScheduleRow({ schedule, course }: { schedule: BaseSchedule; course: Ext
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const classYear = useAppSelector(Profile.selectClassYear);
 
-  const enabled = !!schedule.classes.find(
+  const enabled = !!getClasses(schedule).find(
     (classId) => classId === getClassId(course),
   );
 

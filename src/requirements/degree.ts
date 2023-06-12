@@ -11,7 +11,7 @@ const totalCredits: Requirement = {
   validate: (count) => count >= 128,
   reducer: (prev, cls, schedule) => {
     // TODO handle advanced standing, etc
-    const takenClass = schedule.classes.find(
+    const takenClass = schedule.classes?.find(
       (classId) => classId === getClassId(cls),
     );
     if (

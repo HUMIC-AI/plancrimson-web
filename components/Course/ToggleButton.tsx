@@ -11,6 +11,7 @@ import {
   ClassCache, Planner, Profile, Schedules,
 } from '@/src/features';
 import { getAnalytics, logEvent } from 'firebase/analytics';
+import { getClasses } from '@/src/features/schedules';
 
 export function ToggleButton({ chosenScheduleId, course }: { chosenScheduleId: string; course: ExtendedClass; }) {
   const dispatch = useAppDispatch();
@@ -55,7 +56,7 @@ export function ToggleButton({ chosenScheduleId, course }: { chosenScheduleId: s
 
   if (!chosenSchedule) return null;
 
-  const inSchedule = chosenSchedule.classes.find((classId) => course.id === classId);
+  const inSchedule = getClasses(chosenSchedule).find((classId) => course.id === classId);
 
   if (semesterFormat === 'sample' || !inSchedule) {
     return (

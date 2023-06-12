@@ -42,7 +42,7 @@ export default function ScheduleSection({
         />
       )}
 
-      {initialized ? (schedule.classes.length > 0 ? (
+      {initialized ? (schedule.classes && schedule.classes.length > 0 ? (
         <ul className={classNames(
           expandCards === 'text' && 'list-inside list-disc',
           expandCards === 'collapsed' && 'flex flex-wrap gap-2',

@@ -12,6 +12,7 @@ import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { downloadJson } from '@/src/utils/utils';
 import type { DownloadPlan, ListOfScheduleIdOrSemester } from '@/src/types';
 import { isListOfScheduleIds } from '@/src/utils/schedules';
+import { getClasses } from '@/src/features/schedules';
 import UploadForm from '../UploadForm';
 import CardExpandToggler from './CardExpandToggler';
 import { WithResizeRef } from './PlanningSection';
@@ -85,7 +86,7 @@ function OptionsMenu({ columns }: { columns: ListOfScheduleIdOrSemester }) {
 
   const totalCourses = useMemo(
     () => Object.values(chosenSchedules).reduce(
-      (acc, scheduleId) => acc + ((scheduleId && userSchedules[scheduleId]?.classes.length) || 0),
+      (acc, scheduleId) => acc + ((scheduleId && getClasses(userSchedules[scheduleId]).length) || 0),
       0,
     ),
     [userSchedules, chosenSchedules],

@@ -7,6 +7,7 @@ import {
   ClassCache, Profile, Schedules,
 } from '@/src/features';
 import AddCoursesButton from '@/components/AddCoursesButton';
+import { getClasses } from '@/src/features/schedules';
 import CourseCard from '../../Course/CourseCard';
 
 type Props = {
@@ -20,7 +21,7 @@ export function CoursesSection({ scheduleId, highlightedRequirement }: Props) {
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const initialized = useAppSelector(ClassCache.selectInitialized);
   const conflicts = useMemo(
-    () => schedule && findConflicts(allTruthy(schedule.classes.map((classId) => classCache[classId]))),
+    () => schedule && findConflicts(allTruthy(schedule.classes ? schedule.classes.map((classId) => classCache[classId]) : [])),
     [schedule, classCache],
   );
   const elapsed = useElapsed(3000, []);
@@ -49,7 +50,7 @@ export function CoursesSection({ scheduleId, highlightedRequirement }: Props) {
           Add courses
         </AddCoursesButton>
 
-        {initialized ? schedule.classes.map((id) => (id && classCache[id] ? (
+        {initialized ? getClasses(schedule).map((id) => (id && classCache[id] ? (
           <CourseCard
             key={id}
             course={classCache[id]}

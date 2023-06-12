@@ -82,7 +82,7 @@ export interface BaseSchedule extends Semester {
   id: string; // global unique id, a uuidv4 (NOT a firestore default assigned id)
   title: string;
   ownerUid: string; // uid of the user that created this schedule
-  classes: string[];
+  classes?: string[]; // originally required but later not due to more efficient firestore queries
   public: boolean;
 }
 

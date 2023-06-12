@@ -9,7 +9,7 @@ import ExpandCardsProvider from '@/src/context/expandCards';
 import { useMeiliClient } from '@/src/context/meili';
 import { Auth, ClassCache } from '@/src/features';
 import {
-  getDefaultSemesters, getCurrentDefaultClassYear, Term, semesterToTerm, getCurrentSemester, termToSemester,
+  getDefaultSemesters, getCurrentDefaultClassYear, Term, semesterToTerm, termToSemester, getCurrentSemester,
 } from '@/src/lib';
 import Schema from '@/src/schema';
 import {
@@ -53,7 +53,7 @@ function FriendsPage({ userId }: { userId: string }) {
   const friendIds = useIds(friends);
   const allSemesters = useMemo(() => getDefaultSemesters(getCurrentDefaultClassYear(), 6).slice(1, -1), []);
   const [allSchedules, setAllSchedules] = useState<AllSchedules>({});
-  const [includedSemesters, setIncludedSemesters] = useState<Term[]>([semesterToTerm(getCurrentSemester())]);
+  const [includedSemesters, setIncludedSemesters] = useState<Term[]>([]);
   const [friendsOnly, setFriendsOnly] = useState(false);
   const [matchIds, setMatchIds] = useState<null | string[]>(null); // ids of profiles that match the search query
   const [doneLoading, setDoneLoading] = useState(false);
@@ -69,11 +69,12 @@ function FriendsPage({ userId }: { userId: string }) {
     const { year, season } = termToSemester(term);
 
     const constraints: QueryConstraint[] = [
-      where('ownerUid', 'not-in', [...friends.map((u) => u.id), userId]),
+      // where('ownerUid', 'not-in', [...friends.map((u) => u.id), userId]),
       where('public', '==', true),
       where('year', '==', year),
       where('season', '==', season),
-      limit(40),
+      where('classes', '!=', null),
+      limit(Math.floor(40 / includedSemesters.length)),
     ];
 
     const previousBookmark = allSchedules[term]?.bookmark;
@@ -101,12 +102,15 @@ function FriendsPage({ userId }: { userId: string }) {
     await dispatch(ClassCache.loadCourses(client, getAllClassIds(newSchedules)));
 
     return snap.size;
-  }, [allSchedules, client, dispatch, friends, userId]);
+  }, [allSchedules, client, dispatch, friends, includedSemesters.length]);
 
   useEffect(() => {
     const promises = includedSemesters.filter((semester) => !(semester in allSchedules)).map(searchMore);
     Promise.all(promises).catch(alertUnexpectedError);
   }, [allSchedules, includedSemesters, searchMore]);
+
+  // filter for the current semester on initial load
+  useEffect(() => setIncludedSemesters([semesterToTerm(getCurrentSemester())]), []);
 
   useEffect(() => {
     setDoneLoading(false);
@@ -211,7 +215,16 @@ function ProfilesList({
 
   const yearSplit: Record<number, ProfileWithSchedules[]> = {};
 
-  const filterProfiles = (profile: ProfileWithSchedules) => {
+  showProfiles.sort((a, b) => {
+    // sort by last name
+    const aParts = getDisplayName(a).split(' ');
+    const bParts = getDisplayName(b).split(' ');
+    const aName = aParts[aParts.length - 1];
+    const bName = bParts[bParts.length - 1];
+    if (aName < bName) return -1;
+    if (aName > bName) return 1;
+    return 0;
+  }).filter((profile) => {
     // don't include current user
     if (profile.id === userId) return false;
     // don't include empty profiles
@@ -220,9 +233,7 @@ function ProfilesList({
     if (matchIds === null) return true;
     if (!matchIds.includes(profile.id)) return false;
     return true;
-  };
-
-  showProfiles.filter(filterProfiles).forEach((profile) => {
+  }).forEach((profile) => {
     const year = profile.classYear ?? -1;
     if (!yearSplit[year]) yearSplit[year] = [];
     yearSplit[year].push(profile);
@@ -328,7 +339,7 @@ function useShowProfiles({
     if (profilesOnly) return showProfiles;
     return showProfiles.map((profile) => ({
       ...profile,
-      currentSchedules: profile.currentSchedules.filter((schedule) => schedule.classes.length > 0),
+      currentSchedules: profile.currentSchedules.filter((schedule) => schedule.classes && schedule.classes.length > 0),
     }));
   }, [profilesOnly, showProfiles]);
 

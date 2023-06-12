@@ -9,7 +9,7 @@ import type { SearchBoxProvided } from 'react-instantsearch-core';
 import ScheduleChooser from '../../ScheduleChooser/ScheduleChooser';
 import Stats from '../Stats';
 import StateResults from '../StateResults';
-import { SmallAttributeMenuDropdown } from './AttributeMenuDropdown';
+import { SmallAttributeMenuDropdown } from './SmallAttributeMenuDropdown';
 
 export type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean };
 

@@ -16,7 +16,7 @@ export default function ProfileCard({
     <Disclosure>
       {({ open }) => (
         <>
-          <Disclosure.Button className="flex w-full rounded-md items-center justify-between space-x-2 transition-colors hover:bg-gray-primary/50">
+          <Disclosure.Button className="flex w-full items-center justify-between space-x-2 rounded-md transition-colors hover:bg-gray-primary/50">
             <UserHeader profile={profile} />
             <FaAngleDown className={classNames(open && 'rotate-180')} />
           </Disclosure.Button>

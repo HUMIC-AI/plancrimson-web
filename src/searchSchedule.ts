@@ -4,6 +4,7 @@ import {
 import { ClassCache } from './features/classCache';
 import { getSchoolYear } from './requirements/util';
 import { BaseSchedule, Viability } from './types';
+import { getClasses } from './features/schedules';
 
 type ViabilityResponse = {
   viability: Viability;
@@ -32,7 +33,7 @@ export function checkViable({
   if (schedule) {
     const conflicts = findConflicts(allTruthy([
       cls,
-      ...schedule.classes.map(
+      ...getClasses(schedule).map(
         (classId) => classCache[classId],
       ),
     ]));

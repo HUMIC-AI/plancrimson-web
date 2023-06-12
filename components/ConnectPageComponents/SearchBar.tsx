@@ -15,7 +15,8 @@ export function SearchBar({
           type="text"
           placeholder="Search for a classmate"
           className="w-full flex-1 rounded-lg bg-gray-secondary px-3 py-2"
-          onChange={handleChange} />
+          onChange={handleChange}
+        />
         <button
           type="button"
           className="interactive ml-2 rounded-lg bg-gray-secondary px-2 text-sm font-medium"

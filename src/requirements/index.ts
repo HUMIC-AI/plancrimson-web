@@ -41,7 +41,7 @@ function validateSchedule<Accumulator>(
   classCache: Readonly<ClassCache>,
 ) {
   const allClasses: ExtendedClass[] = allTruthy(
-    schedule.classes.map((classId) => classCache[classId]),
+    schedule.classes ? schedule.classes.map((classId) => classCache[classId]) : [],
   );
   const usedClasses: string[] = [];
   const validationResult = allClasses.reduce((acc, cls) => {
