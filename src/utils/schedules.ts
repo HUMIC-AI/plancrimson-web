@@ -1,21 +1,19 @@
 import {
-  onSnapshot, query, QueryConstraint, QuerySnapshot, where,
+  onSnapshot, query, where,
 } from 'firebase/firestore';
 import {
-  useCallback, useEffect, useState,
+  useEffect, useState,
 } from 'react';
 import {
   compareSemesters, Semester,
 } from '@/src/lib';
-import { ClassCache, Schedules } from '../features';
+import { ClassCache } from '../features';
 import { alertUnexpectedError, useAppDispatch } from './hooks';
 import { useMeiliClient } from '../context/meili';
 import type {
   BaseSchedule,
-  FirestoreSchedule,
   ListOfScheduleIdOrSemester, ScheduleId, ScheduleIdOrSemester, ScheduleMap, WithId,
 } from '../types';
-import { toLocalSchedule } from '../features/schedules';
 import Schema from '../schema';
 
 export function isScheduleId(s: ScheduleIdOrSemester): s is ScheduleId {
@@ -24,45 +22,6 @@ export function isScheduleId(s: ScheduleIdOrSemester): s is ScheduleId {
 
 export function isListOfScheduleIds(s: ListOfScheduleIdOrSemester): s is ScheduleId[] {
   return (s as ScheduleIdOrSemester[]).every(isScheduleId);
-}
-
-/**
- * Listen to all schedules on Firestore that meet the given constraints.
- * Load these schedules into the Redux store and also load all courses from all schedules into the Redux "class cache".
- * Expects access to the MeiliSearch client through React Context.
- */
-export default function useSyncSchedulesMatchingContraints(constraints: QueryConstraint[] | null) {
-  const dispatch = useAppDispatch();
-  const { client } = useMeiliClient();
-
-  const updateSchedules = useCallback(async (snap: QuerySnapshot<FirestoreSchedule>) => {
-    try {
-      const schedules = snap.docs.map((doc) => doc.data());
-
-      console.info('[useSchedules] Reloaded schedules');
-
-      // load all of the classes into the class cache
-      if (client) {
-        await dispatch(ClassCache.loadCourses(client, getAllClassIds(schedules)));
-      }
-
-      dispatch(Schedules.overwriteSchedules(schedules.map(toLocalSchedule)));
-    } catch (err) {
-      alertUnexpectedError(err);
-    }
-  }, [client]);
-
-  useEffect(() => {
-    if (constraints === null) return;
-
-    const q = query(Schema.Collection.schedules(), ...constraints);
-
-    const unsubSchedules = onSnapshot(q, updateSchedules, (err) => {
-      console.error('[useSchedules] error listening for schedules (in the layout):', err);
-    });
-
-    return unsubSchedules;
-  }, [constraints, client]);
 }
 
 export function getSchedulesBySemester(

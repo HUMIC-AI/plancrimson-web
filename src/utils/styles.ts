@@ -7,7 +7,7 @@ export const breakpoints = {
   lg: 1024,
 };
 
-export function classNames(...classes: (string | boolean)[]) {
+export function classNames(...classes: (string | boolean | null | undefined)[]) {
   return classes
     .filter(Boolean)
     .join(' ')

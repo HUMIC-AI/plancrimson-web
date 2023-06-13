@@ -44,7 +44,7 @@ export default function SemesterColumn({
       style={{ width: `${colWidth}px` }}
     >
       <div
-        className="flex flex-col absolute inset-0"
+        className="absolute inset-0 flex flex-col"
         onDragOver={drag.enabled ? (ev) => {
           ev.preventDefault();
           ev.dataTransfer.dropEffect = 'move';

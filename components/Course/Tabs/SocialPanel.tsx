@@ -2,7 +2,7 @@ import { Tab } from '@headlessui/react';
 import {
   QuerySnapshot,
   getDoc,
-  onSnapshot, query, where,
+  onSnapshot, orderBy, query, where,
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import type { ExtendedClass } from '@/src/lib';
@@ -55,8 +55,8 @@ function SocialPanel({ course, userId }: Props & { userId: string }) {
   useEffect(() => {
     const q = query(
       Schema.Collection.schedules(),
+      orderBy('ownerUid', 'asc'),
       where('ownerUid', '!=', userId),
-      where('public', '==', true),
       where('classes', 'array-contains', course.id),
     );
 

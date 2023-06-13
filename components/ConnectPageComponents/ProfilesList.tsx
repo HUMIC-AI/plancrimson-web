@@ -66,7 +66,7 @@ export function ProfilesList({
                     href={`/user/${profile.username}`}
                     className={classNames(
                       'interactive',
-                      isFriend(profile) ? 'text-blue-primary' : 'text-primary',
+                      isFriend(profile) && 'underline',
                     )}
                   >
                     {getDisplayName(profile)}

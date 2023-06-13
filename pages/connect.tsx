@@ -66,6 +66,7 @@ function FriendsPage({ userId }: { userId: string }) {
     const { year, season } = termToSemester(term);
 
     const constraints: QueryConstraint[] = [
+      // can't have two inequality clauses
       // where('ownerUid', 'not-in', [...friends.map((u) => u.id), userId]),
       where('public', '==', true),
       where('year', '==', year),

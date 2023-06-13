@@ -1,24 +1,34 @@
 import {
+  onSnapshot,
+  query,
   where,
 } from 'firebase/firestore';
 import { useRouter } from 'next/router';
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScheduleList } from '@/components/SemesterSchedule/ScheduleList';
-import { Schedules } from '@/src/features';
 import {
-  useAppSelector, useElapsed,
+  alertUnexpectedError,
+  useAppDispatch,
+  useElapsed,
 } from '@/src/utils/hooks';
 import { sendFriendRequest, unfriend, useFriends } from '@/components/ConnectPageComponents/friendUtils';
 import Layout from '@/components/Layout/Layout';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { ImageWrapper } from '@/components/Utils/UserLink';
-import { UserProfile, WithId } from '@/src/types';
-import useSyncSchedulesMatchingContraints, { sortSchedulesBySemester } from '@/src/utils/schedules';
+import {
+  BaseSchedule, UserProfile, WithId,
+} from '@/src/types';
 import { BioSection } from '@/components/ConnectPageComponents/EditBioForm';
 import { useProfile, useFriendStatus, FriendStatus } from '@/components/ConnectPageComponents/useProfile';
 import { IncomingRequestButtons, IncomingRequestList } from '@/components/ConnectPageComponents/FriendRequests';
 import { ErrorMessage } from '@/components/Layout/AuthWrapper';
 import ExpandCardsProvider from '@/src/context/expandCards';
+import Schema from '@/src/schema';
+import { compareSemesters } from '@/src/lib';
+import { ScheduleSyncer } from '@/components/ScheduleSyncer';
+import { ClassCache } from '@/src/features';
+import { getAllClassIds } from '@/src/utils/schedules';
+import { useMeiliClient } from '@/src/context/meili';
 
 const statusMessage: Record<FriendStatus, string> = {
   loading: 'Loading...',
@@ -64,29 +74,34 @@ function Wrapper({ userId }: { userId: string }) {
 
 
 function UserPage({ pageProfile, userId }: { userId: string, pageProfile: WithId<UserProfile> }) {
-  const scheduleMap = useAppSelector(Schedules.selectSchedules);
+  const dispatch = useAppDispatch();
+  const { client } = useMeiliClient();
   const [refresh, setRefresh] = useState(true);
+  const [schedules, setSchedules] = useState<BaseSchedule[]>([]);
 
   const friendStatus = useFriendStatus(userId, pageProfile.id, refresh);
   const { incomingPending } = useFriends(userId);
 
-  const queryConstraints = useMemo(() => {
-    if (friendStatus === 'friends' || friendStatus === 'self') {
-      return [where('ownerUid', '==', pageProfile.id)];
+  useEffect(() => {
+    const constraints = [where('ownerUid', '==', pageProfile.id)];
+
+    if (friendStatus !== 'friends' && friendStatus !== 'self') {
+      constraints.push(where('public', '==', true));
     }
 
-    return [
-      where('ownerUid', '==', pageProfile.id),
-      where('public', '==', true),
-    ];
-  }, [pageProfile, friendStatus]);
-
-  useSyncSchedulesMatchingContraints(queryConstraints);
-
-  const schedules = sortSchedulesBySemester(scheduleMap);
+    return onSnapshot(query(Schema.Collection.schedules(), ...constraints), (snap) => {
+      const newSchedules = snap.docs.map((doc) => doc.data());
+      setSchedules(newSchedules.sort(compareSemesters));
+      dispatch(ClassCache.loadCourses(client, getAllClassIds(newSchedules)))
+        .then(() => console.info('Loaded new courses from snapshot'))
+        .catch(alertUnexpectedError);
+    }, alertUnexpectedError);
+  }, [pageProfile, friendStatus, dispatch, client]);
 
   return (
     <div className="flex flex-col space-y-8">
+      <ScheduleSyncer userId={userId} />
+
       <IncomingRequestList incomingPending={incomingPending} />
 
       <div>

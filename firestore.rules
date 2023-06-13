@@ -66,7 +66,7 @@ service cloud.firestore {
 
       // allow logged in user to see a schedule
       // if it's public or if they're friends of the schedule's creator
-      allow read: if loggedInStudent() && (
+      allow read: if loggedInStudent() && debug('ownerUid' in request.query.orderBy) || (
         resource.data.public == true
         || request.auth.uid == resource.data.ownerUid
         || isFriend()
