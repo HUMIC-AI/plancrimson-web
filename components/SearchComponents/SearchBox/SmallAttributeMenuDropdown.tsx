@@ -30,7 +30,7 @@ export function SmallAttributeMenuDropdown() {
               )}
             >
               {meiliAttributes.filterableAttributes.map((attr) => (
-                <Menu.Item>
+                <Menu.Item key={attr}>
                   <div>
                     <Attribute
                       attribute={attr}

@@ -5,7 +5,7 @@ import ClassesCloud from '@/components/ClassesCloudPage/ClassesCloudPage';
 import { signInUser } from '@/components/Layout/useSyncAuth';
 import dynamic from 'next/dynamic';
 
-const DynamicBodySection = dynamic(() => import('@/components/YearSchedule/BodySection'));
+const DynamicBodySection = dynamic(() => import('@/components/YearSchedule/PlanningPageBodySection'));
 
 export default function PlanPage() {
   const userId = Auth.useAuthProperty('uid');

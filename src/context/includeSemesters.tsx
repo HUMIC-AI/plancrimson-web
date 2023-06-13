@@ -1,7 +1,7 @@
 import {
   PropsWithChildren, createContext, useContext, useMemo, useState,
 } from 'react';
-import { Term, getCurrentSemester, semesterToTerm } from '../lib';
+import { Term } from '../lib';
 import { throwMissingContext } from '../utils/utils';
 
 type IncludeSemestersContextType = {
@@ -17,9 +17,7 @@ export const IncludeSemestersContext = createContext<IncludeSemestersContextType
 });
 
 export default function IncludeSemestersProvider({ children }: PropsWithChildren<{}>) {
-  const [includedSemesters, setIncludedSemesters] = useState<Term[]>([
-    semesterToTerm(getCurrentSemester()),
-  ]);
+  const [includedSemesters, setIncludedSemesters] = useState<Term[]>([]);
 
   const context = useMemo(() => ({
     includeSemesters: includedSemesters,

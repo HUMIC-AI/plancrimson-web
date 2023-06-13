@@ -8,7 +8,7 @@ import { Listbox, Menu } from '@headlessui/react';
 import { Term, semesterToTerm, termToSemester } from '@/src/lib';
 import { useCallback, useState } from 'react';
 import {
-  FaCalendar, FaCog, FaEdit, FaLock,
+  FaCalendar, FaCog, FaEdit, FaEyeSlash, FaGlobe,
 } from 'react-icons/fa';
 import FadeTransition from '@/components/Utils/FadeTransition';
 import { ScheduleId, ScheduleIdOrSemester } from '@/src/types';
@@ -19,7 +19,6 @@ import { MenuButton } from './MenuButton';
 import { EditNameForm } from './EditNameForm';
 import { HideScheduleButton } from './HideScheduleButton';
 import { useScheduleFromScheduleIdOrSemester } from './useScheduleFromScheduleIdOrSemester';
-import { PublishScheduleButton } from './PublishScheduleButton';
 
 export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
   const dispatch = useAppDispatch();
@@ -48,10 +47,19 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
               />
             )}
 
-            {schedule && !schedule.public && (
-              <div className="absolute right-full top-1/2 -translate-y-1/2 transition">
-                <FaLock className="text-gray-primary" />
-              </div>
+            {schedule && (
+              <button
+                type="button"
+                className="absolute right-full top-1/2 -translate-y-1/2 text-gray-primary opacity-50 transition-opacity hover:opacity-100"
+                onClick={() => dispatch(Schedules.setPublic({ scheduleId: schedule.id, public: !schedule.public }))}
+                title={schedule.public ? 'Make private' : 'Make public'}
+              >
+                {schedule.public ? (
+                  <FaGlobe />
+                ) : (
+                  <FaEyeSlash />
+                )}
+              </button>
             )}
 
             <Menu.Button className={classNames(
@@ -75,7 +83,6 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
               <>
                 <DeleteScheduleButton scheduleId={schedule.id} />
                 <DuplicateScheduleButton scheduleId={schedule.id} />
-                <PublishScheduleButton scheduleId={schedule.id} />
               </>
               )}
             </Menu.Items>

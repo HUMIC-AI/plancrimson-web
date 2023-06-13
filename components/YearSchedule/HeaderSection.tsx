@@ -65,7 +65,7 @@ export default function HeaderSection({ resizeRef, columns }: WithResizeRef & { 
 
           <div
             ref={resizeRef}
-            className="flex w-24 min-w-[96px] max-w-full resize-x justify-center overflow-auto rounded bg-gray-dark py-1"
+            className="hidden w-24 min-w-[96px] max-w-full resize-x justify-center overflow-auto rounded bg-gray-dark py-1 md:flex"
           >
             <FaArrowsAltH />
           </div>

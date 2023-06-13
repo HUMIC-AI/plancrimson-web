@@ -15,7 +15,7 @@ import {
 } from './calendarUtil';
 import { MissingClass } from './MissingClass';
 import { DayComponent } from './DayComponent';
-import { CalendarHeaderSection } from './HeaderSection';
+import { CalendarHeaderSection } from './CalendarPageHeaderSection';
 
 type CalendarProps = {
   schedule: BaseSchedule;

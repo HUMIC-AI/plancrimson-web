@@ -30,7 +30,7 @@ function InstructionsModal() {
             {' '}
             of a schedule to access additional options, such as making it
             {' '}
-            <span className="font-bold">private</span>
+            <span className="font-bold">public</span>
             , duplicating it, or deleting it.
           </p>
           <p>

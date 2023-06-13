@@ -145,7 +145,7 @@ export const getDefaultSchedule = ({ season, year }: Semester, uid: string) => (
   season,
   year,
   ownerUid: uid,
-  public: true,
+  public: false,
 });
 
 export const toLocalSchedule = (schedule: FirestoreSchedule): LocalSchedule => ({

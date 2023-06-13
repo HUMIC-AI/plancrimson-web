@@ -43,7 +43,7 @@ export function CoursesSection({ scheduleId, highlightedRequirement }: Props) {
     : undefined);
 
   return (
-    <div className="h-max flex-1 p-4 md:overflow-auto">
+    <div className="h-max flex-1 overflow-auto p-4">
       <div className="flex min-h-[12rem] flex-col items-stretch space-y-4">
         <AddCoursesButton schedule={schedule}>
           <FaPlus className="mr-2" />
