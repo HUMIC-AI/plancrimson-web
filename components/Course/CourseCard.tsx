@@ -41,6 +41,7 @@ type CourseCardProps = {
 
 /**
  * Renders a given small expandable course card on the planning page or in the search page.
+ * Should be *pure* and only use data from the provided course (and not reference the {@link ClassCache})
  * @param course the course to summarize in this card
  * @param chosenScheduleId the current chosen schedule. Used for various button interactions.
  * @param highlight whether to highlight this class. default false

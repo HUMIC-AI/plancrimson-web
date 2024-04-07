@@ -1,5 +1,5 @@
 import { connectInfiniteHits } from 'react-instantsearch-dom';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import {
@@ -12,6 +12,7 @@ import { classNames } from '@/src/utils/styles';
 import { alertSignIn } from './SearchBox/searchUtils';
 import CourseCard from '../Course/CourseCard';
 import ClientOrDemo from './ClientOrDemo';
+import FadeTransition from '../Utils/FadeTransition';
 
 interface ButtonProps {
   onClick: () => void;
@@ -48,9 +49,9 @@ function CustomButton({
   );
 }
 
-const sampleHits = sampleCourses
+const sampleHits: ExtendedClass[] = sampleCourses
   // oh, the things i do for typescript
-  .map((course) => ({
+  .map((course: ExtendedClass) => ({
     ...course,
     ...Object.assign(
       {},
@@ -60,6 +61,11 @@ const sampleHits = sampleCourses
     ),
   }));
 
+/**
+ * TODO optimize this component
+ * Since number of hits is pretty small so efficiency is fine
+ * but this is very inefficient
+ */
 function HitsComponent({
   hits = sampleHits,
   hasMore = true,
@@ -71,6 +77,18 @@ function HitsComponent({
   const { oneCol } = useSearchState();
   const { chosenScheduleId } = useChosenScheduleContext();
 
+  // keep track of all hits to animate them smoothly
+  const [allHits, setAllHits] = useState<ExtendedClass[]>([]);
+
+  useEffect(() => {
+    // wait until transitions are over to unmount
+    // merge existing hits with new ones by their ids
+    setAllHits((hs) => {
+      const newHits = hits.filter((hit) => !hs.some((h) => h.id === hit.id));
+      return [...hs, ...newHits];
+    });
+  }, [hits]);
+
   return (
     <div className="flex flex-col items-center space-y-6">
       <CustomButton
@@ -79,7 +97,7 @@ function HitsComponent({
         direction="up"
       />
 
-      {hits.length === 0 ? (
+      {allHits.length === 0 ? (
         // <div className="animate-pulse py-2 px-4 rounded-full bg-gray-light">
         //   Loading results...
         // </div>
@@ -89,13 +107,21 @@ function HitsComponent({
           ? 'flex w-full flex-col items-stretch space-y-4'
           : 'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4'}
         >
-          {hits.map((hit) => (
-            <CourseCard
+          {allHits.map((hit) => (
+            <FadeTransition
+              show={hits.some((h) => h.id === hit.id)}
+              appear
               key={getClassId(hit)}
-              course={hit}
-              chosenScheduleId={chosenScheduleId}
-              inSearchContext={inSearch}
-            />
+              afterLeave={() => setAllHits((hs) => hs.filter((h) => h.id !== hit.id))}
+            >
+              <div>
+                <CourseCard
+                  course={hit}
+                  chosenScheduleId={chosenScheduleId}
+                  inSearchContext={inSearch}
+                />
+              </div>
+            </FadeTransition>
           ))}
         </div>
       )}

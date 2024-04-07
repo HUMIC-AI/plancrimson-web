@@ -4,6 +4,7 @@ import React, { Fragment, PropsWithChildren } from 'react';
 type Props = {
   show?: boolean;
   unmount?: boolean;
+  appear?: boolean;
   afterEnter?: () => void;
   beforeEnter?: () => void;
   afterLeave?: () => void;
@@ -11,8 +12,9 @@ type Props = {
 
 export default function FadeTransition({
   children,
-  unmount,
   show,
+  unmount,
+  appear,
   beforeEnter,
   afterEnter,
   afterLeave,
@@ -28,6 +30,7 @@ export default function FadeTransition({
       leaveTo="opacity-0"
       show={show}
       unmount={unmount}
+      appear={appear}
       afterEnter={afterEnter}
       beforeEnter={beforeEnter}
       afterLeave={afterLeave}

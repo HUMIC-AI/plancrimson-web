@@ -6,6 +6,7 @@ import { FC, useMemo } from 'react';
  * Wraps a search UI component to use the default props if the MeiliSearch
  * client doesn't exist.
  * extraProps are passed to the component.
+ * Most of the time these are left empty and the component uses its default props.
  */
 export default function ClientOrDemo({
   connector,
