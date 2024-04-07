@@ -21,7 +21,7 @@
 # production
 /build/
 /data/
-/src/lib/
+/src/lib
 
 # misc
 .DS_Store

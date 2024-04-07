@@ -13,7 +13,22 @@ See [TODO](./TODO.md) for planned features. See the [parent repository](https://
 
 See the [About](pages/about.tsx) page for the tech stack.
 
-Make sure to run Firebase Emulators in parallel with Next.js.
+To use Firebase Emulators, you will need Java installed. You can download it [here](https://www.java.com/en/download/).
+
+Make sure to run Firebase Emulators in parallel with Next.js:
+
+```bash
+yarn dev
+```
+
+In a separate terminal:
+
+```bash
+yarn db
+```
+
+Also make sure you select the workspace TypeScript version.
+Open the VS Code command palette and run `Select TypeScript version > Use Workspace Version`.
 
 ## Notes
 
@@ -29,9 +44,11 @@ See also https://www.algolia.com/doc/guides/building-search-ui/going-further/rou
 
 ### Local Meilisearch
 
-You can run MeiliSearch locally. By default it will be on port `http://localhost:7700/`.
-
+You can run MeiliSearch locally as a Homebrew service with `brew services start meilisearch`.
+(You can list current services with `brew services list`.)
+By default it will be on port `http://localhost:7700/`.
 When running Meilisearch as a Homebrew service, logs are stored under `/usr/local/var/log/meilisearch.log`.
+You can use the interactive CLI in `harvard-scraper` to configure the local MeiliSearch instance and upload course data.
 
 They provide a [Postman Collection](https://www.meilisearch.com/docs/learn/cookbooks/postman_collection), which is helpful
 for easily sending requests to the database.

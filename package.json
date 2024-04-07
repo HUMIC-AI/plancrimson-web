@@ -20,7 +20,7 @@
     "@meilisearch/instant-meilisearch": "^0.10.1",
     "@reduxjs/toolkit": "^1.7.1",
     "d3": "^7.8.4",
-    "firebase": "^9.20.0",
+    "firebase": "^10.10.0",
     "firebase-admin": "^11.7.0",
     "ics": "^3.1.0",
     "lunr": "^2.3.9",
@@ -72,9 +72,12 @@
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-tailwindcss": "^3.11.0",
-    "firebase-tools": "^11.28.0",
+    "firebase-tools": "^13.7.1",
     "postcss": "^8.4.23",
     "typescript": "^5.0.4"
   },
-  "packageManager": "yarn@3.5.0"
+  "packageManager": "yarn@4.1.1",
+  "engines": {
+    "node": "18.20.1"
+  }
 }
