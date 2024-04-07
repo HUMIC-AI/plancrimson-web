@@ -6,6 +6,7 @@ const DynamicMeiliProvider = dynamic(() => import('./MeiliProvider'));
 /**
  * Provides access to the MeiliSearch instance.
  * Provide the signed in user id to enable.
+ * Otherwise just renders its children.
  */
 export function WithMeili({
   children,

@@ -114,7 +114,7 @@ export default function () {
   return (
     <ClientOrDemo
       connector={connectInfiniteHits}
-      component={HitsComponent}
+      Component={HitsComponent}
     />
   );
 }

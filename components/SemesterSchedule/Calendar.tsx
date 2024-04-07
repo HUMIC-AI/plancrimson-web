@@ -2,17 +2,15 @@ import React from 'react';
 import type { ExtendedClass } from '@/src/lib';
 import {
   allTruthy, getClassId, DAYS_OF_WEEK, DAY_SHORT,
-} from '@/src/lib';
-import { useAppSelector } from '@/src/utils/hooks';
-import { ClassCache, Settings } from '@/src/features';
-import { BaseSchedule } from '@/src/types';
-import {
   getEvents,
   doesRRuleHaveDay,
   dateArrayToDec,
   dayEndTime,
   dayStartTime,
-} from './calendarUtil';
+} from '@/src/lib';
+import { useAppSelector } from '@/src/utils/hooks';
+import { ClassCache, Settings } from '@/src/features';
+import { BaseSchedule } from '@/src/types';
 import { MissingClass } from './MissingClass';
 import { DayComponent } from './DayComponent';
 import { CalendarHeaderSection } from './CalendarPageHeaderSection';
@@ -22,12 +20,18 @@ type CalendarProps = {
 };
 
 
+/**
+ * Main calendar view of the Calendar page.
+ */
 export default function Calendar({ schedule }: CalendarProps) {
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const classes = allTruthy(schedule.classes ? schedule.classes.map((classId) => classCache[classId]) : []);
 
   const customTimes = useAppSelector(Settings.selectCustomTimes);
 
+  /**
+   * Extends a class with user-provided custom time information
+   */
   function extendCustomTime(cls: ExtendedClass): ExtendedClass {
     const classId = getClassId(cls);
     if (!(classId in customTimes)) return cls;
@@ -40,7 +44,6 @@ export default function Calendar({ schedule }: CalendarProps) {
       IS_SCL_END_TM_DEC: customTimes[classId].end.toString(),
       START_DT: `${customTimes[classId].startDate}-00.00.00.000000`,
       END_DT: `${customTimes[classId].endDate}-00.00.00.000000`,
-      // @ts-expect-error
       CUSTOM_PLANNED: true,
     };
   }
@@ -53,10 +56,12 @@ export default function Calendar({ schedule }: CalendarProps) {
   );
 
   return (
-    <>
-      <CalendarHeaderSection events={events} schedule={schedule} />
+    <div className="flex flex-col md:flex-row md:space-x-4">
+      <div className="md:w-min">
+        <CalendarHeaderSection events={events} schedule={schedule} />
+      </div>
 
-      <div className="mt-4 overflow-auto">
+      <div className="mt-4 flex-1 overflow-auto">
         <div className="min-w-[52rem]">
           <div className="grid grid-cols-5 rounded-t-xl bg-black py-2 pl-6 text-white">
             {DAY_SHORT.slice(0, 5).map((day) => (
@@ -124,6 +129,6 @@ export default function Calendar({ schedule }: CalendarProps) {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }

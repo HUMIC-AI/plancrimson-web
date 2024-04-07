@@ -27,7 +27,7 @@ export default function () {
   return (
     <ClientOrDemo
       connector={connectStats}
-      component={StatsComponent}
+      Component={StatsComponent}
     />
   );
 }

@@ -9,7 +9,7 @@ import store from '@/src/store';
 import { ModalProvider } from '@/src/context/modal';
 import { ChosenScheduleProvider } from '@/src/context/selectedSchedule';
 import { useSyncAuth, useSyncUserSettings } from '@/components/Layout/useSyncAuth';
-import { getCurrentSemester } from '@/src/lib';
+import { getUpcomingSemester } from '@/src/lib';
 import ExpandCardsProvider from '@/src/context/expandCards';
 import IncludeSemestersProvider from '@/src/context/includeSemesters';
 
@@ -28,7 +28,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   useSyncUserSettings();
 
   return (
-    <SearchStateProvider defaultState={getDefaultSearchStateForSemester(getCurrentSemester())}>
+    <SearchStateProvider defaultState={getDefaultSearchStateForSemester(getUpcomingSemester())}>
       <ExpandCardsProvider sticky>
         <ChosenScheduleProvider>
           <IncludeSemestersProvider>

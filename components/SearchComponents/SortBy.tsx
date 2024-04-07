@@ -56,8 +56,8 @@ export default function () {
   return (
     <ClientOrDemo
       connector={connectSortBy}
-      component={SortByComponent}
-      extraProps={{
+      Component={SortByComponent}
+      componentProps={{
         defaultRefinement: 'courses',
         items: SORT_INDEXES,
       }}

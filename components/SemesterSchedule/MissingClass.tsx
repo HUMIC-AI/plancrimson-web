@@ -3,13 +3,13 @@ import { Disclosure } from '@headlessui/react';
 import React, { Fragment } from 'react';
 import { useForm, FieldValues } from 'react-hook-form';
 import type { ExtendedClass } from '@/src/lib';
-import { getClassId, DAYS_OF_WEEK } from '@/src/lib';
-import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
-import { Settings } from '@/src/features';
 import {
+  getClassId, DAYS_OF_WEEK,
   strToDec,
   decToStr,
-} from './calendarUtil';
+} from '@/src/lib';
+import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
+import { Settings } from '@/src/features';
 
 export function MissingClass({ cls }: { cls: ExtendedClass; }) {
   const dispatch = useAppDispatch();

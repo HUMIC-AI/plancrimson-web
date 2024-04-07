@@ -5,13 +5,14 @@ import React, {
 import { useRouter } from 'next/router';
 import qs from 'qs';
 import { Semester, getTermId } from '@/src/lib';
+import { SearchState } from 'react-instantsearch-core';
 import { throwMissingContext } from '../utils/utils';
 
 interface SearchStateContextType {
   searchState: any;
-  setSearchState: React.Dispatch<React.SetStateAction<any>>;
+  setSearchState: React.Dispatch<React.SetStateAction<SearchState>>;
   oneCol: boolean;
-  onSearchStateChange: (newState: any) => void;
+  onSearchStateChange: (newState: SearchState) => void;
 }
 
 export const createUrl = (state: any) => `?${qs.stringify(state)}`;
@@ -40,8 +41,40 @@ export function getDefaultSearchStateForSemester(semester: Semester) {
  * Provides the search state to all Instantsearch components.
  * Also syncs the URL with the search state.
  * Can pass a default state to use if the URL is empty.
+ * Currently exists a base search provider inside {@link _app.txt}.
  */
 export function SearchStateProvider({
+  children,
+  oneCol = false,
+  defaultState,
+  ignoreUrl = false,
+} : PropsWithChildren<{
+  oneCol?: boolean;
+  defaultState?: SearchState;
+  ignoreUrl?: boolean;
+}>) {
+  const [searchState, setSearchState] = useState(defaultState || {});
+
+  const context = useMemo(() => ({
+    searchState,
+    setSearchState,
+    oneCol,
+    onSearchStateChange(newState: SearchState) {
+      setSearchState((oldState) => ({ ...oldState, ...newState }));
+    },
+  }), [oneCol, searchState]);
+
+  return (
+    <SearchStateContext.Provider value={context}>
+      {children}
+    </SearchStateContext.Provider>
+  );
+}
+
+/**
+ * @deprecated
+ */
+function OldSearchStateProvider({
   children,
   oneCol = false,
   defaultState,
@@ -69,14 +102,19 @@ export function SearchStateProvider({
   }, [urlQueryParams]);
 
   const context = useMemo(() => {
-    function onSearchStateChange(newState: any) {
+    function onSearchStateChange(newState: SearchState) {
       clearTimeout(debouncedSetStateRef.current);
 
-      const mergedState = { ...searchState, ...newState };
+      const mergedState = {
+        ...searchState,
+        ...newState,
+      };
+
+      console.log(mergedState);
 
       debouncedSetStateRef.current = setTimeout(() => {
         router.replace({
-          query: qs.stringify(mergedState),
+          query: qs.stringify({ ...router.query, ...mergedState }),
         }, undefined, { scroll: false, shallow: true });
       }, DEBOUNCE_TIME);
 

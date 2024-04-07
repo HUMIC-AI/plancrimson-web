@@ -16,7 +16,9 @@ export default function MeiliProvider({
 
   useEffect(() => {
     // reset the client if the user logs out or logs in
-    setClient(null);
+    if (!userId) {
+      setClient(null);
+    }
 
     setError(undefined);
 

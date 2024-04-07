@@ -25,8 +25,9 @@ function CurrentRefinementsComponent({
       </span>
     );
   }
+  const uniqueRefinements = getUniqueRefinements(refinements);
 
-  const refinementElements = getUniqueRefinements(refinements).map(([id, items]) => (
+  const refinementElements = uniqueRefinements.map(([id, items]) => (
     <Fragment key={id}>
       <h4 className="w-min md:whitespace-nowrap">
         {adjustAttr(id)}
@@ -76,8 +77,8 @@ export default function (props: CurrentRefinementsExposed) {
   return (
     <ClientOrDemo
       connector={connectCurrentRefinements}
-      component={CurrentRefinementsComponent}
-      extraProps={props}
+      Component={CurrentRefinementsComponent}
+      componentProps={props}
     />
   );
 }

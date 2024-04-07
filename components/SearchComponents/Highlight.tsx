@@ -21,5 +21,5 @@ function Highlight({ highlight, attribute, hit }: HighlightProps) {
 }
 
 export default function (props: Pick<HighlightProps, 'hit' | 'attribute'>) {
-  return <ClientOrDemo connector={connectHighlight} component={Highlight} extraProps={props} />;
+  return <ClientOrDemo connector={connectHighlight} Component={Highlight} componentProps={props} />;
 }

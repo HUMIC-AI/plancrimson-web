@@ -114,8 +114,8 @@ export default function (props: RefinementListExposed & { showSubjectColor: bool
   return (
     <ClientOrDemo
       connector={connectRefinementList}
-      component={RefinementListComponent}
-      extraProps={props}
+      Component={RefinementListComponent}
+      componentProps={props}
     />
   );
 }

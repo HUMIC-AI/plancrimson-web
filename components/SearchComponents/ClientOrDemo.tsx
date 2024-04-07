@@ -1,28 +1,30 @@
 import { useMeiliClient } from '@/src/context/meili';
 import { Auth } from '@/src/features';
-import { useMemo } from 'react';
+import { FC, useMemo } from 'react';
 
 /**
- * Wraps a search component to use the default props if the MeiliSearch
+ * Wraps a search UI component to use the default props if the MeiliSearch
  * client doesn't exist.
+ * extraProps are passed to the component.
  */
 export default function ClientOrDemo({
   connector,
-  component,
-  extraProps = {},
+  Component,
+  componentProps = {},
 }: {
   connector: (component: any) => any;
-  component: any;
-  extraProps?: Record<string, any>;
+  Component: FC<any>;
+  componentProps?: Record<string, any>;
 }) {
   const userId = Auth.useAuthProperty('uid');
   const { client } = useMeiliClient();
 
-  const Component = useMemo(
-    () => (client && userId ? connector(component) : component),
-    [client, userId, component, connector],
+  // needs to be its own memoed component to preserve component state
+  const ShowComponent = useMemo(
+    () => (client && userId ? connector(Component) : Component),
+    [client, userId, Component, connector],
   );
 
-  return <Component {...extraProps} />;
+  return <ShowComponent {...componentProps} />;
 }
 

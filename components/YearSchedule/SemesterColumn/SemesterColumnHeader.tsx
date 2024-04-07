@@ -1,7 +1,7 @@
 import {
   Auth, Planner, Schedules, Settings,
 } from '@/src/features';
-import { selectSchedules } from '@/src/features/schedules';
+import { selectSchedule, selectSchedules } from '@/src/features/schedules';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { classNames } from '@/src/utils/styles';
 import { Listbox, Menu } from '@headlessui/react';
@@ -13,6 +13,7 @@ import {
 import FadeTransition from '@/components/Utils/FadeTransition';
 import { ScheduleId, ScheduleIdOrSemester } from '@/src/types';
 import { getSchedulesBySemester } from '@/src/utils/schedules';
+import Link from 'next/link';
 import { DeleteScheduleButton } from './DeleteScheduleButton';
 import { DuplicateScheduleButton } from './DuplicateScheduleButton';
 import { MenuButton } from './MenuButton';
@@ -93,9 +94,33 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
   );
 }
 
-type Props = { scheduleId: ScheduleId | null; term: Term; setEditing: (editing: boolean) => void; };
+type TitleComponentProps = {
+  scheduleId: ScheduleId | null;
+  term: Term;
+  setEditing: (editing: boolean) => void;
+};
 
-function TitleComponent({ scheduleId: id, term, setEditing }: Props) {
+function TitleComponent({ scheduleId, term, setEditing }: TitleComponentProps) {
+  const schedule = useAppSelector(selectSchedule(scheduleId));
+
+  return schedule ? (
+    <Link
+      href={{
+        pathname: '/schedule/[scheduleId]',
+        query: { scheduleId },
+      }}
+      className="text-center text-lg font-medium"
+    >
+      {schedule.title}
+    </Link>
+  ) : 'Loading...';
+}
+
+/**
+ * Part of the {@link SemesterColumnHeader} component.
+ * @deprecated
+ */
+function OldTitleComponent({ scheduleId: id, term, setEditing }: TitleComponentProps) {
   const dispatch = useAppDispatch();
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const userId = Auth.useAuthProperty('uid');

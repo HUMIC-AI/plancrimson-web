@@ -57,8 +57,8 @@ export default function (props: SearchBoxExposed & { scheduleChooser?: boolean }
   return (
     <ClientOrDemo
       connector={connectSearchBox<SearchBoxProps>}
-      component={SearchBoxComponent}
-      extraProps={props}
+      Component={SearchBoxComponent}
+      componentProps={props}
     />
   );
 }

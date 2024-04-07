@@ -1,6 +1,6 @@
 import React from 'react';
 import { EventAttributes } from 'ics';
-import { getOverlap, toPercent } from './calendarUtil';
+import { getOverlap, toPercent } from '@/src/lib';
 
 export function DayComponent({ events }: { events: EventAttributes[]; }) {
   const overlapCounter: Record<string, number> = {};

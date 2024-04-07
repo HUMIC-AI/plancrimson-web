@@ -21,8 +21,8 @@ export function CalendarHeaderSection({ events, schedule }: Props) {
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-center space-x-4 p-4 text-center">
+    <>
+      <div className="flex items-center justify-center space-x-4 p-4 text-center md:flex-col md:space-x-0">
         <p className="text-xl font-bold">
           {schedule.title}
         </p>
@@ -45,12 +45,13 @@ export function CalendarHeaderSection({ events, schedule }: Props) {
           Export to ICS
         </button>
       </div>
-      <p className="text-center">
+
+      <p className="w-48 text-center">
         Make sure to double-check course times on
         {' '}
         <a href="https://my.harvard.edu/" className="interactive">my.harvard</a>
         .
       </p>
-    </div>
+    </>
   );
 }

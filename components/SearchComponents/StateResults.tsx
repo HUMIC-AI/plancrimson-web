@@ -41,5 +41,5 @@ function StateResultsComponent({ searchState = {} }: Pick<StateResultsProvided, 
 }
 
 export default function () {
-  return <ClientOrDemo connector={connectStateResults} component={StateResultsComponent} />;
+  return <ClientOrDemo connector={connectStateResults} Component={StateResultsComponent} />;
 }
