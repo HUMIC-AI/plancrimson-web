@@ -1,8 +1,16 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { createEvents, EventAttributes } from 'ics';
 import { downloadJson } from '@/src/utils/utils';
 import { BaseSchedule } from '@/src/types';
 import AddCoursesButton from '../AddCoursesButton';
+import { SearchStateProvider, getDefaultSearchStateForSemester } from '../../src/context/searchState';
+import { ChosenScheduleContext, ChosenScheduleContextType } from '../../src/context/selectedSchedule';
+import { AuthRequiredInstantSearchProvider } from '../AuthRequiredInstantSearchProvider';
+import { WithMeili } from '../Layout/WithMeili';
+import { Auth } from '../../src/features';
+import SearchBox from '../SearchComponents/SearchBox/SearchBox';
+import Hits from '../SearchComponents/Hits';
+import { ScheduleSyncer } from '../ScheduleSyncer';
 
 type Props = {
   events: EventAttributes[];
@@ -10,6 +18,7 @@ type Props = {
 };
 
 export function CalendarHeaderSection({ events, schedule }: Props) {
+  const userId = Auth.useAuthProperty('uid');
   function handleExport() {
     const { error, value } = createEvents(events);
     if (error) {
@@ -20,9 +29,14 @@ export function CalendarHeaderSection({ events, schedule }: Props) {
     }
   }
 
+  const chosenScheduleContext = useMemo<ChosenScheduleContextType>(() => ({
+    chosenScheduleId: schedule.id,
+    chooseSchedule: () => null,
+  }), [schedule.id]);
+
   return (
-    <>
-      <div className="flex items-center justify-center space-x-4 p-4 text-center md:flex-col md:space-x-0">
+    <div className="relative md:flex md:w-min md:flex-col md:space-y-4">
+      <div className="relative flex items-center justify-center space-x-4 text-center md:inset-y-0 md:flex-col md:space-x-0 md:space-y-2 md:overflow-hidden">
         <p className="text-xl font-bold">
           {schedule.title}
         </p>
@@ -33,10 +47,6 @@ export function CalendarHeaderSection({ events, schedule }: Props) {
           {schedule.season}
         </p>
 
-        <AddCoursesButton schedule={schedule}>
-          Add courses
-        </AddCoursesButton>
-
         <button
           type="button"
           onClick={handleExport}
@@ -44,14 +54,37 @@ export function CalendarHeaderSection({ events, schedule }: Props) {
         >
           Export to ICS
         </button>
-      </div>
 
-      <p className="w-48 text-center">
-        Make sure to double-check course times on
-        {' '}
-        <a href="https://my.harvard.edu/" className="interactive">my.harvard</a>
-        .
-      </p>
-    </>
+        <div className="md:hidden">
+          <AddCoursesButton schedule={schedule}>
+            Add courses
+          </AddCoursesButton>
+        </div>
+
+        <p className="w-48 text-center text-xs">
+          Make sure to double-check course times on
+          {' '}
+          <a href="https://my.harvard.edu/" className="interactive">my.harvard</a>
+          .
+        </p>
+
+        <div className="relative md:flex-1 md:overflow-auto">
+          <WithMeili userId={userId}>
+            {userId && <ScheduleSyncer userId={userId} />}
+
+            <SearchStateProvider oneCol defaultState={getDefaultSearchStateForSemester(schedule)} ignoreUrl>
+              <ChosenScheduleContext.Provider value={chosenScheduleContext}>
+                <AuthRequiredInstantSearchProvider hitsPerPage={4}>
+                  <SearchBox scheduleChooser={false} />
+                  <div className="md:mt-4">
+                    <Hits />
+                  </div>
+                </AuthRequiredInstantSearchProvider>
+              </ChosenScheduleContext.Provider>
+            </SearchStateProvider>
+          </WithMeili>
+        </div>
+      </div>
+    </div>
   );
 }

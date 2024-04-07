@@ -3,7 +3,7 @@ import React, {
   createContext, Dispatch, PropsWithChildren, useContext, useMemo,
 } from 'react';
 
-interface ChosenScheduleContextType {
+export interface ChosenScheduleContextType {
   chosenScheduleId: string | null;
   chooseSchedule: Dispatch<string | null>;
 }

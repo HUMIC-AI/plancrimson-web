@@ -64,9 +64,9 @@ export function ToggleButton({ chosenScheduleId, course }: { chosenScheduleId: s
         type="button"
         name="Add class to schedule"
         onClick={addClass}
-        className="transition-opacity hover:opacity-50"
+        className="rounded-full bg-secondary p-1 text-blue-primary transition-opacity hover:opacity-50"
       >
-        <FaPlus color="white" />
+        <FaPlus />
       </button>
     );
   }
@@ -79,9 +79,9 @@ export function ToggleButton({ chosenScheduleId, course }: { chosenScheduleId: s
         courseIds: [getClassId(course)],
         scheduleId: chosenSchedule.id,
       }))}
-      className="transition-opacity hover:opacity-50"
+      className="rounded-full bg-gray-secondary p-1 text-blue-primary transition-opacity hover:opacity-50"
     >
-      <FaTimes className="text-yellow" />
+      <FaTimes />
     </button>
   );
 }

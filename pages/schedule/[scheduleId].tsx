@@ -7,7 +7,7 @@ import { useSchedule } from '@/src/utils/schedules';
 
 export default function SchedulePage() {
   return (
-    <Layout title="Calendar" verify="meili">
+    <Layout title="Calendar" verify="meili" className="container relative flex-1 bg-secondary">
       {() => <Wrapper />}
     </Layout>
   );

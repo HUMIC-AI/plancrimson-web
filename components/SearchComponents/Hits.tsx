@@ -91,11 +91,11 @@ function HitsComponent({
 
   return (
     <div className="flex flex-col items-center space-y-6">
-      <CustomButton
+      {/* <CustomButton
         enabled={hasPrevious}
         onClick={refinePrevious}
         direction="up"
-      />
+      /> */}
 
       {allHits.length === 0 ? (
         // <div className="animate-pulse py-2 px-4 rounded-full bg-gray-light">

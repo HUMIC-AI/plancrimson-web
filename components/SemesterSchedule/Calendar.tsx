@@ -11,6 +11,7 @@ import {
 import { useAppSelector } from '@/src/utils/hooks';
 import { ClassCache, Settings } from '@/src/features';
 import { BaseSchedule } from '@/src/types';
+import { EventAttributes } from 'ics';
 import { MissingClass } from './MissingClass';
 import { DayComponent } from './DayComponent';
 import { CalendarHeaderSection } from './CalendarPageHeaderSection';
@@ -51,83 +52,92 @@ export default function Calendar({ schedule }: CalendarProps) {
   const extendedClasses = classes.map(extendCustomTime);
   const events = extendedClasses.flatMap(getEvents);
 
+  return (
+    <div className="flex flex-col md:absolute md:inset-4 md:flex-row md:space-x-4">
+      <CalendarHeaderSection events={events} schedule={schedule} />
+      <CalendarBody classes={extendedClasses} events={events} />
+    </div>
+  );
+}
+
+function CalendarBody({
+  classes,
+  events,
+}: {
+  classes: ExtendedClass[];
+  events: EventAttributes[];
+}) {
   const unscheduledClasses = classes.filter(
     (c) => c.IS_SCL_MEETING_PAT === 'TBA',
   );
 
   return (
-    <div className="flex flex-col md:flex-row md:space-x-4">
-      <div className="md:w-min">
-        <CalendarHeaderSection events={events} schedule={schedule} />
-      </div>
+    <div className="relative mt-4 flex-1 overflow-auto md:mt-0">
+      <div className="flex h-full flex-col items-stretch">
+        <div className="grid grid-cols-5 rounded-t-xl bg-black py-2 pl-6 text-white">
+          {DAY_SHORT.slice(0, 5).map((day) => (
+            <h3 key={day} className="text-center font-semibold">
+              {day}
+            </h3>
+          ))}
+        </div>
 
-      <div className="mt-4 flex-1 overflow-auto">
-        <div className="min-w-[52rem]">
-          <div className="grid grid-cols-5 rounded-t-xl bg-black py-2 pl-6 text-white">
-            {DAY_SHORT.slice(0, 5).map((day) => (
-              <h3 key={day} className="text-center font-semibold">
-                {day}
-              </h3>
+        <div className="relative flex-1 overflow-auto">
+          {/* draw the hours on the left */}
+          <div className="absolute inset-y-0 z-10 w-6 bg-gray-secondary text-center">
+            {[...new Array(dayEndTime - dayStartTime)].map((_, i) => (
+              <span
+                key={i}
+                className="absolute -translate-x-1/2 -translate-y-1/2"
+                style={{
+                  top: `${((i + 1) * 100) / (dayEndTime - dayStartTime + 1)}%`,
+                }}
+              >
+                {i + dayStartTime}
+              </span>
             ))}
           </div>
 
-          <div className="relative h-[60rem] overflow-auto">
-            {/* draw the hours on the left */}
-            <div className="absolute inset-y-0 z-10 w-6 bg-gray-secondary text-center">
-              {[...new Array(dayEndTime - dayStartTime)].map((_, i) => (
-                <span
-                  key={i}
-                  className="absolute -translate-x-1/2 -translate-y-1/2"
-                  style={{
-                    top: `${((i + 1) * 100) / (dayEndTime - dayStartTime + 1)}%`,
-                  }}
-                >
-                  {i + dayStartTime}
-                </span>
-              ))}
-            </div>
+          {/* central courses area */}
+          <div className="absolute inset-y-0 left-6 right-0 grid grid-cols-5">
+            {DAYS_OF_WEEK.slice(0, 5).map((day) => (
+              <DayComponent
+                events={events
+                  .filter((ev) => doesRRuleHaveDay(ev.recurrenceRule!, day))
+                  .sort(
+                    (a, b) => dateArrayToDec(a.start) - dateArrayToDec(b.start),
+                  )}
+                key={day}
+              />
+            ))}
 
-            {/* central courses area */}
-            <div className="relative ml-6 grid h-full grid-cols-5">
-              {DAYS_OF_WEEK.slice(0, 5).map((day) => (
-                <DayComponent
-                  events={events
-                    .filter((ev) => doesRRuleHaveDay(ev.recurrenceRule!, day))
-                    .sort(
-                      (a, b) => dateArrayToDec(a.start) - dateArrayToDec(b.start),
-                    )}
-                  key={day}
-                />
-              ))}
-
-              {/* horizontal bars */}
-              {[...new Array(dayEndTime - dayStartTime)].map((_, i) => (
-                <hr
-                  key={i}
-                  className="absolute inset-x-0"
-                  style={{
-                    top: `${((i + 1) * 100) / (dayEndTime - dayStartTime + 1)}%`,
-                  }}
-                />
-              ))}
-            </div>
+            {/* horizontal bars */}
+            {[...new Array(dayEndTime - dayStartTime)].map((_, i) => (
+              <hr
+                key={i}
+                className="absolute inset-x-0"
+                style={{
+                  top: `${((i + 1) * 100) / (dayEndTime - dayStartTime + 1)}%`,
+                }}
+              />
+            ))}
           </div>
-
-          {unscheduledClasses.length > 0 && (
-            <div className="p-6">
-              <h2 className="mb-4 text-2xl font-semibold">
-                Unscheduled classes
-              </h2>
-              <ul className="space-y-4">
-                {unscheduledClasses.map((cls) => (
-                  <li key={cls.Key}>
-                    <MissingClass cls={cls} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
+
+        {unscheduledClasses.length > 0 && (
+        <div className="p-6">
+          <h2 className="mb-4 text-2xl font-semibold">
+            Unscheduled classes
+          </h2>
+          <ul className="space-y-4">
+            {unscheduledClasses.map((cls) => (
+              <li key={cls.Key}>
+                <MissingClass cls={cls} />
+              </li>
+            ))}
+          </ul>
+        </div>
+        )}
       </div>
     </div>
   );
