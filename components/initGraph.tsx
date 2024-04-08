@@ -44,7 +44,11 @@ const sameLink = (l: LinkDatum, d: LinkDatum) => {
   return (lsrc === dsrc && ltrg === dtrg) || (lsrc === dtrg && ltrg === dsrc);
 };
 
-export function useUpdateGraph(positions: number[][] | null, courses: CourseBrief[] | null) {
+export function useUpdateGraph(
+  positions: number[][] | null,
+  courses: CourseBrief[] | null,
+  onHover: (id: string | null) => void,
+) {
   const dispatch = useAppDispatch();
   const { client } = useMeiliClient();
   const { showCourse } = useModal();
@@ -64,6 +68,7 @@ export function useUpdateGraph(positions: number[][] | null, courses: CourseBrie
       showCourse,
       positions,
       courses,
+      onHover,
     });
 
     dispatch(createLocal({
@@ -75,7 +80,7 @@ export function useUpdateGraph(positions: number[][] | null, courses: CourseBrie
       classes: [],
       ...getUpcomingSemester(),
     }));
-  }, [positions, courses, dispatch, client, showCourse]);
+  }, [positions, courses, dispatch, client, showCourse, onHover]);
 
   // stop simulation when unmounting
   useEffect(() => () => {
@@ -92,13 +97,14 @@ export function useUpdateGraph(positions: number[][] | null, courses: CourseBrie
 }
 
 function initGraph(svgDom: SVGSVGElement, {
-  positions, courses, dispatch, client, showCourse,
+  positions, courses, dispatch, client, showCourse, onHover,
 }: {
   positions: number[][],
   courses: CourseBrief[],
   dispatch: AppDispatch,
   client: InstantMeiliSearchInstance,
   showCourse: (course: ExtendedClass) => void,
+  onHover: (id: string | null) => void,
 }) {
   const svg = d3.select(svgDom);
 
@@ -186,17 +192,19 @@ function initGraph(svgDom: SVGSVGElement, {
     n
       .call(drag)
       // expand node on hover
-      .on('mouseover', (event) => {
+      .on('mouseover', (event, d) => {
         d3.select<SVGCircleElement, Datum>(event.target)
           .transition()
           .duration(T_DURATION)
           .attr('r', (d) => getRadius(d) + RADIUS * 2);
+        onHover(d.id);
       })
       .on('mouseout', (event) => {
         d3.select<SVGCircleElement, Datum>(event.target)
           .transition()
           .duration(T_DURATION)
           .attr('r', getRadius);
+        onHover(null);
       })
       .on('click', (_, d) => {
         dispatch(ClassCache.loadCourses(client, [getClassId(d.id)]))

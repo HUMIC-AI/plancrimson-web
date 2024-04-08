@@ -1,7 +1,7 @@
 import { Dialog } from '@headlessui/react';
 import { FaTimes } from 'react-icons/fa';
 import { classNames } from '@/src/utils/styles';
-import { ReactNode } from 'react';
+import { ReactNode, forwardRef } from 'react';
 
 export interface InfoCardProps {
   title?: string;
@@ -12,14 +12,16 @@ export interface InfoCardProps {
   close?: () => void;
 }
 
-export function InfoCard({
+function InfoCardComponent({
   title, headerContent, content, small, noExit, close, isDialog = true,
-}: InfoCardProps & { isDialog?: boolean }) {
+}: InfoCardProps & { isDialog?: boolean }, ref: React.Ref<HTMLDivElement>) {
   return (
-    <div className={classNames(
-      small ? 'max-w-sm' : 'max-w-lg',
-      'my-8 inline-block w-full overflow-hidden rounded-2xl bg-secondary text-left align-middle text-primary shadow-xl transition-all sm:my-16',
-    )}
+    <div
+      className={classNames(
+        small ? 'max-w-sm' : 'max-w-lg',
+        'my-8 inline-block w-full overflow-hidden rounded-2xl bg-secondary text-left align-middle text-primary shadow-xl transition-all sm:my-16',
+      )}
+      ref={ref}
     >
       <div className="border-none p-6 text-primary">
         {isDialog ? (
@@ -50,3 +52,5 @@ export function InfoCard({
     </div>
   );
 }
+
+export const InfoCard = forwardRef(InfoCardComponent);
