@@ -1,17 +1,16 @@
 import * as d3 from 'd3';
-import { kdTree } from 'kd-tree-javascript';
 import {
   useEffect, useRef,
 } from 'react';
-import { CourseBrief } from './ClassesCloudPage/useData';
+import { CourseBrief } from '../ClassesCloudPage/useData';
 import {
   getSubjectColor, getUpcomingSemester,
-} from '../src/lib';
-import { useMeiliClient } from '../src/context/meili';
-import { transformClassSize } from './Course/RatingIndicators';
-import { useModal } from '../src/context/modal';
-import { createLocal } from '../src/features/schedules';
-import { useAppDispatch } from '../src/utils/hooks';
+} from '../../src/lib';
+import { useMeiliClient } from '../../src/context/meili';
+import { transformClassSize } from '../Course/RatingIndicators';
+import { useModal } from '../../src/context/modal';
+import { createLocal } from '../../src/features/schedules';
+import { useAppDispatch } from '../../src/utils/hooks';
 
 export type DatumBase = CourseBrief & {
   pca: number[];
@@ -48,11 +47,16 @@ const sameLink = (l: LinkDatum, d: LinkDatum) => {
   return (lsrc === dsrc && ltrg === dtrg) || (lsrc === dtrg && ltrg === dsrc);
 };
 
+export type GraphHook = {
+  graph?: ReturnType<typeof initGraph>;
+  ref: React.RefObject<SVGSVGElement>;
+};
+
 export function useUpdateGraph(
   positions: number[][] | null,
   courses: CourseBrief[] | null,
   onHover: (id: string | null) => void,
-) {
+): GraphHook {
   const dispatch = useAppDispatch();
   const { client } = useMeiliClient();
   const { showCourse } = useModal();
@@ -64,7 +68,7 @@ export function useUpdateGraph(
     // only initialize graph once
     if (graphRef.current || !positions || !courses || !ref.current) return;
 
-    console.log('initializing graph');
+    console.info('initializing graph');
 
     graphRef.current = initGraph(ref.current, {
       positions,
@@ -86,17 +90,13 @@ export function useUpdateGraph(
   // stop simulation when unmounting
   useEffect(() => () => {
     if (graphRef.current) {
-      console.log('stopping graph');
+      console.info('stopping graph');
       graphRef.current.sim.stop();
     }
   }, []);
 
   return {
-    update: graphRef.current?.update,
-    remove: graphRef.current?.remove,
-    reset: graphRef.current?.reset,
-    resetZoom: graphRef.current?.resetZoom,
-    setFlip: graphRef.current?.setFlip,
+    graph: graphRef.current,
     ref,
   };
 }
@@ -305,14 +305,12 @@ function initGraph(svgDom: SVGSVGElement, {
   }
 
   return {
-    node,
     sim,
     update,
     remove,
     reset,
     resetZoom,
     setFlip,
-    link,
   };
 }
 
