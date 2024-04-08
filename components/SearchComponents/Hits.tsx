@@ -80,12 +80,13 @@ function HitsComponent({
   }, [hits]);
 
   return (
-    <div className="flex flex-col items-center space-y-6">
+    <div className="flex flex-col items-center space-y-4">
       {/* <CustomButton
         enabled={hasPrevious}
         onClick={refinePrevious}
         direction="up"
       /> */}
+      <CardExpandToggler />
 
       {allHits.length === 0 ? (
         // <div className="animate-pulse py-2 px-4 rounded-full bg-gray-light">

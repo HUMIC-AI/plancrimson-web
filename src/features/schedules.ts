@@ -97,8 +97,16 @@ export const createSchedule = (schedule: BaseSchedule) => async (dispatch: AppDi
 
 export const createDefaultSchedule = ({ season, year }: Semester, uid: string) => createSchedule(getDefaultSchedule({ season, year }, uid));
 
-export const removeCourses = (payload: { scheduleId: string, courseIds: string[] }) => async (dispatch: AppDispatch) => {
+export const removeCourses = (payload: { scheduleId: string, courseIds: string[] }) => async (dispatch: AppDispatch, getState: () => RootState) => {
   const { scheduleId, courseIds } = payload;
+  if (scheduleId === 'GRAPH_SCHEDULE') {
+    const existing = getState().schedules[scheduleId].classes || [];
+    return dispatch(schedulesSlice.actions.setCourses({
+      scheduleId,
+      courses: existing.filter((classId) => !courseIds.includes(classId)),
+    }));
+  }
+
   const snap = await getDoc(Firestore.schedule(scheduleId));
   const data = snap.data();
   if (!data) throw new Error('schedule does not exist');
