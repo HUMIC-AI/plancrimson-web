@@ -74,7 +74,8 @@
     "eslint-plugin-tailwindcss": "^3.11.0",
     "firebase-tools": "^13.7.1",
     "postcss": "^8.4.23",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "vercel": "^33.7.0"
   },
   "packageManager": "yarn@4.1.1",
   "engines": {
