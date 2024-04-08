@@ -143,7 +143,7 @@ export function useSyncUserSettings() {
     });
 
     return unsubUserData;
-  }, [uid]);
+  }, [dispatch, uid]);
 }
 
 /**

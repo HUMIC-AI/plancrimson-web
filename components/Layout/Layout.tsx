@@ -1,6 +1,5 @@
 import Head from 'next/head';
 import React, { PropsWithChildren } from 'react';
-import { classNames } from '@/src/utils/styles';
 import CustomModal from '../Modals/CustomModal';
 import Navbar from './Navbar';
 import Alerts from './Alerts';

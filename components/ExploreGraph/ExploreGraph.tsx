@@ -3,14 +3,14 @@ import { createPortal } from 'react-dom';
 import { useCourseEmbeddingData } from '../ClassesCloudPage/useData';
 import { Schedules } from '../../src/features';
 import { useAppDispatch, useAppSelector } from '../../src/utils/hooks';
-import { DatumBase, useUpdateGraph } from './initGraph';
+import { DatumBase, GraphState, useUpdateGraph } from './initGraph';
 import { CuteSwitch } from '../Utils/CuteSwitch';
 import { Subject, getSubjectColor } from '../../src/lib';
 
 /**
  * A 2D d3 force graph of different courses.
  */
-export function Graph({
+export function ExploreGraph({
   onHover,
   onFix,
   panelRef,
@@ -65,24 +65,20 @@ export function Graph({
         resetZoom={graph.resetZoom}
         setFlip={graph.setFlip}
         subjects={subjects}
+        highlight={graph.highlight}
       />, panelRef.current)}
     </div>
   );
 }
 
 function Buttons({
-  reset, resetZoom, setFlip, subjects,
-}: {
-  reset: () => void;
-  resetZoom: () => void;
-  setFlip: (flip: boolean) => void;
-  subjects: Subject[];
-}) {
+  reset, resetZoom, setFlip, subjects, highlight,
+}: Pick<GraphState, 'reset' | 'resetZoom' | 'setFlip' | 'highlight'> & { subjects: Subject[] }) {
   const dispatch = useAppDispatch();
   const [flip, setToggleFlip] = useState(false);
 
   return (
-    <div className="absolute right-full top-2 mr-2 flex flex-col items-end justify-center space-y-2">
+    <div className="absolute right-full top-8 mr-2 flex flex-col items-end justify-center space-y-2">
       <button
         type="button"
         className="rounded bg-primary px-2 py-1 text-secondary transition hover:bg-gray-primary/50"
@@ -113,7 +109,12 @@ function Buttons({
 
       <ul className="absolute top-full flex flex-col items-end text-xs">
         {subjects.map((s) => (
-          <li key={s} className="flex items-center">
+          <li
+            key={s}
+            className="flex items-center"
+            onMouseEnter={() => { console.log("enter"); highlight(s) }}
+            onMouseLeave={() => highlight(null)}
+          >
             {s}
             <span className="ml-1 h-2 w-2 rounded-full" style={{ backgroundColor: getSubjectColor(s) }} />
           </li>

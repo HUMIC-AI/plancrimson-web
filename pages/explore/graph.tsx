@@ -9,7 +9,7 @@ import { signInUser } from '../../components/Layout/useSyncAuth';
 import { breakpoints, useBreakpoint } from '../../src/utils/styles';
 import { HoveredCourseInfo } from '../../components/ExploreGraph/HoveredCourseInfo';
 import { ExplorePageCourseSearchSection } from '../../components/ExploreGraph/ExplorePageCourseSearchSection';
-import { Graph } from '../../components/ExploreGraph/ExploreGraph';
+import { ExploreGraph } from '../../components/ExploreGraph/ExploreGraph';
 
 
 export default function GraphPage() {
@@ -49,7 +49,7 @@ export default function GraphPage() {
         <ChosenScheduleContext.Provider value={chosenScheduleContext}>
           {/* three main components: the background graph, the left search bar, the right course info */}
           {userId ? (
-            <Graph
+            <ExploreGraph
               onHover={(id) => id && setHoveredClassId(id)}
               onFix={setFixedClassId}
               panelRef={courseInfoRef}

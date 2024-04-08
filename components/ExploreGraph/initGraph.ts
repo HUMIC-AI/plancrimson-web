@@ -41,6 +41,7 @@ export type InitGraphPropsRequired = InitGraphProps & {
   courses: CourseBrief[];
 };
 
+export type GraphState = ReturnType<typeof initGraph>;
 
 const RADIUS = 4;
 const T_DURATION = 150;
@@ -134,16 +135,32 @@ function initGraph(svgDom: SVGSVGElement, {
 
   let node = nodeGroup.selectAll<SVGCircleElement, Datum>('circle');
 
-  let highlight: string | null = null;
+  let fixedId: string | null = null;
+  let highlightedIds: string[] = [];
+
+  function renderHighlights() {
+    return node.transition()
+      .duration(T_DURATION)
+      .attr('stroke-opacity', (d) => {
+        if (fixedId === d.id) return 4;
+        if (highlightedIds.includes(d.id)) return 2;
+        return 0;
+      });
+  }
+
+  function highlight(subject: Subject | null) {
+    console.debug('highlighting subject', subject);
+    const ids = node.data().filter((d) => d.subject === subject).map((d) => d.id);
+    highlightedIds = ids;
+    renderHighlights();
+  }
 
   const setFixedId = (id: string | null) => {
     console.debug('fixing node', id);
-    id = highlight === id ? null : id;
+    id = fixedId === id ? null : id;
     onFix(id);
-    highlight = id;
-    node.transition()
-      .duration(2 * T_DURATION)
-      .attr('stroke-opacity', (d) => (highlight === d.id ? 2 : 0));
+    fixedId = id;
+    renderHighlights();
   };
 
   const ticked = () => {
@@ -287,6 +304,8 @@ function initGraph(svgDom: SVGSVGElement, {
 
   function reset() {
     console.debug('resetting graph');
+    fixedId = null;
+    highlightedIds = [];
     remove(node.data().map((d) => d.id));
   }
 
@@ -336,6 +355,7 @@ function initGraph(svgDom: SVGSVGElement, {
   return {
     sim,
     update,
+    highlight,
     remove,
     reset,
     resetZoom,
