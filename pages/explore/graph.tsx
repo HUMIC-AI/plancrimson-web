@@ -109,7 +109,7 @@ function SearchSection() {
     <SearchStateProvider oneCol defaultState={getDefaultSearchStateForSemester(getUpcomingSemester())} ignoreUrl>
       <AuthRequiredInstantSearchProvider hitsPerPage={4}>
         <div className="relative inset-y-0 flex w-64 flex-col space-y-4 overflow-hidden">
-          <SearchBox scheduleChooser={false} />
+          <SearchBox scheduleChooser={false} showSmallAttributeMenu />
           <div className="relative flex-1">
             <div className="absolute inset-0 overflow-auto">
               <Hits />
@@ -130,7 +130,10 @@ function Graph({
   onHover: (id: string | null) => void;
 }) {
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
-  const { update, remove, ref } = useUpdateGraph(positions, courses, onHover);
+  const {
+    update, remove, reset, ref,
+  } = useUpdateGraph(positions, courses, onHover);
+  const dispatch = useAppDispatch();
   const chosenSchedule = useAppSelector(Schedules.selectSchedule('GRAPH_SCHEDULE'));
   const prevIds = useRef<string[]>();
 
@@ -157,7 +160,7 @@ function Graph({
   }, [chosenSchedule?.classes, courses, positions, remove, update]);
 
   return (
-    <div className="flex-1">
+    <div className="relative flex-1">
       <svg
         ref={ref}
         width={width}
@@ -165,6 +168,16 @@ function Graph({
         viewBox={`${-width / 2} ${-height / 2} ${width} ${height}`}
         className="h-auto w-full"
       />
+      <button
+        type="button"
+        className="absolute right-2 top-2 flex items-center justify-center rounded px-2 py-1 transition hover:bg-gray-primary/50"
+        onClick={() => {
+          if (reset) reset();
+          dispatch(Schedules.clearSchedule('GRAPH_SCHEDULE'));
+        }}
+      >
+        Reset
+      </button>
     </div>
   );
 }

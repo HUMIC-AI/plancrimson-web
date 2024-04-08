@@ -31,14 +31,12 @@ export function SmallAttributeMenuDropdown() {
             >
               {meiliAttributes.filterableAttributes.map((attr) => (
                 <Menu.Item key={attr}>
-                  <div>
-                    <Attribute
-                      attribute={attr}
-                      key={attr}
-                      label={ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr}
-                      showSubjectColor={false}
-                    />
-                  </div>
+                  <Attribute
+                    attribute={attr}
+                    key={attr}
+                    label={ATTRIBUTE_DESCRIPTIONS[attr as keyof Class] || attr}
+                    showSubjectColor={false}
+                  />
                 </Menu.Item>
               ))}
               <span className="p-1 text-xs text-white">

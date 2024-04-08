@@ -31,6 +31,8 @@ export type Simulation = d3.Simulation<Datum, LinkDatum>;
 
 const RADIUS = 5;
 const T_DURATION = 150;
+const LINK_STRENGTH = 0.1;
+const CHARGE_STRENGTH = -100;
 
 const getColor = (d: DatumBase) => getSubjectColor(d.subject, {
   saturation: (d.meanHours || 3) / 5,
@@ -92,6 +94,7 @@ export function useUpdateGraph(
   return {
     update: graphRef.current?.update,
     remove: graphRef.current?.remove,
+    reset: graphRef.current?.reset,
     ref,
   };
 }
@@ -108,8 +111,8 @@ function initGraph(svgDom: SVGSVGElement, {
   // these get initialized later in the component by the user
   const sim = d3
     .forceSimulation()
-    .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(0.01))
-    .force('charge', d3.forceManyBody().strength(-100))
+    .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(LINK_STRENGTH))
+    .force('charge', d3.forceManyBody().strength(CHARGE_STRENGTH))
     .force('x', d3.forceX())
     .force('y', d3.forceY());
 
@@ -162,8 +165,8 @@ function initGraph(svgDom: SVGSVGElement, {
         .map(([[i]]) => ({
           ...courses[i],
           pca: positions[i],
-          x: d.x + Math.random() * RADIUS - RADIUS / 2,
-          y: d.y + Math.random() * RADIUS - RADIUS / 2,
+          x: d.x + Math.random() * RADIUS * 4 - RADIUS * 2,
+          y: d.y + Math.random() * RADIUS * 4 - RADIUS * 2,
         })));
     }
     const links = nodes.map((t) => ({ source: d.id, target: t.id }));
@@ -257,6 +260,11 @@ function initGraph(svgDom: SVGSVGElement, {
     restartSimulation();
   }
 
+  function reset() {
+    console.debug('resetting graph');
+    remove(node.data().map((d) => d.id));
+  }
+
   /**
    * Use {@link DatumBase} since we don't need to initialize x and y.
    */
@@ -299,6 +307,7 @@ function initGraph(svgDom: SVGSVGElement, {
     sim,
     update,
     remove,
+    reset,
     link,
   };
 }

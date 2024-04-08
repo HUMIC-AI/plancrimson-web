@@ -52,7 +52,7 @@ function RefinementListComponent({
         value={miniSearch}
         onChange={({ currentTarget }) => setMiniSearch(currentTarget.value)}
         placeholder="Filter"
-        className="block w-full rounded-md border-gray-primary bg-secondary py-1 pl-2 shadow-sm sm:text-sm"
+        className="block w-full rounded-md border-gray-primary bg-secondary py-1 pl-2 text-primary shadow-sm sm:text-sm"
       />
 
       <button

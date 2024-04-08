@@ -88,15 +88,24 @@ export default function CourseCard({
 
   if (expandCards === 'text') {
     return (
-      <button
-        type="button"
-        onClick={() => showCourse(course)}
-        className="transition-opacity hover:opacity-50"
+      <div
+        className="flex items-center justify-between"
         draggable={drag.enabled}
         onDragStart={onDragStart}
       >
-        {course.SUBJECT + course.CATALOG_NBR}
-      </button>
+        <button
+          type="button"
+          onClick={() => showCourse(course)}
+          className="transition-opacity hover:opacity-50"
+        >
+          {course.SUBJECT + course.CATALOG_NBR}
+        </button>
+
+        <CourseCardToggleButton
+          chosenScheduleId={chosenScheduleId!}
+          course={course}
+        />
+      </div>
     );
   }
 

@@ -11,7 +11,7 @@ import { SearchBar } from './SearchBar';
 import ClientOrDemo from '../ClientOrDemo';
 
 
-type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean };
+type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean; showSmallAttributeMenu?: boolean; };
 
 /**
  * The main search bar that goes at the top of the search page. See {@link SearchBar} below.
@@ -21,6 +21,7 @@ function SearchBoxComponent({
   isSearchStalled = false,
   refine = alertSignIn,
   currentRefinement = 'Search now',
+  showSmallAttributeMenu,
 }: SearchBoxProps) {
   const schedules = useAppSelector(Schedules.selectSchedules);
   const { chooseSchedule: selectSchedule, chosenScheduleId: selectedSchedule } = useChosenScheduleContext();
@@ -33,6 +34,7 @@ function SearchBoxComponent({
           isSearchStalled={isSearchStalled}
           refine={refine}
           currentRefinement={currentRefinement}
+          showSmallAttributeMenu={showSmallAttributeMenu}
         />
       </div>
 
@@ -53,7 +55,7 @@ function SearchBoxComponent({
 
 
 // eslint-disable-next-line react/no-unused-prop-types
-export default function (props: SearchBoxExposed & { scheduleChooser?: boolean }) {
+export default function (props: SearchBoxExposed & { scheduleChooser?: boolean; showSmallAttributeMenu?: boolean; }) {
   return (
     <ClientOrDemo
       connector={connectSearchBox<SearchBoxProps>}

@@ -1,5 +1,5 @@
 import { Disclosure } from '@headlessui/react';
-import React, { useState } from 'react';
+import React, { forwardRef, useState } from 'react';
 import { compareItems, compareWeekdays } from '@/src/lib';
 import { classNames } from '@/src/utils/styles';
 import FadeTransition from '@/components/Utils/FadeTransition';
@@ -16,17 +16,15 @@ interface AttributeProps {
  * @param attribute the Meilisearch attribute to filter by
  * @param label the text to show
  */
-export default function Attribute({ attribute, label, showSubjectColor }: AttributeProps) {
-  return (
-    <Disclosure as="div">
-      <DisclosureChildren
-        attribute={attribute}
-        label={label}
-        showSubjectColor={showSubjectColor}
-      />
-    </Disclosure>
-  );
-}
+export default forwardRef(({ attribute, label, showSubjectColor }: AttributeProps, ref: any) => (
+  <Disclosure as="div" ref={ref}>
+    <DisclosureChildren
+      attribute={attribute}
+      label={label}
+      showSubjectColor={showSubjectColor}
+    />
+  </Disclosure>
+));
 
 function DisclosureChildren({
   attribute, label, showSubjectColor,
