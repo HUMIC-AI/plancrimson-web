@@ -131,7 +131,7 @@ function Graph({
 }) {
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
   const {
-    update, remove, reset, ref,
+    update, remove, reset, resetZoom, ref,
   } = useUpdateGraph(positions, courses, onHover);
   const dispatch = useAppDispatch();
   const chosenSchedule = useAppSelector(Schedules.selectSchedule('GRAPH_SCHEDULE'));
@@ -168,16 +168,27 @@ function Graph({
         viewBox={`${-width / 2} ${-height / 2} ${width} ${height}`}
         className="h-auto w-full"
       />
-      <button
-        type="button"
-        className="absolute right-2 top-2 flex items-center justify-center rounded px-2 py-1 transition hover:bg-gray-primary/50"
-        onClick={() => {
-          if (reset) reset();
-          dispatch(Schedules.clearSchedule('GRAPH_SCHEDULE'));
-        }}
-      >
-        Reset
-      </button>
+      <div className="absolute right-2 top-2 flex flex-col items-end justify-center space-y-2">
+        <button
+          type="button"
+          className="rounded bg-primary px-2 py-1 text-secondary transition hover:bg-gray-primary/50"
+          onClick={() => {
+            if (reset) reset();
+            dispatch(Schedules.clearSchedule('GRAPH_SCHEDULE'));
+          }}
+        >
+          Reset
+        </button>
+        <button
+          type="button"
+          className="rounded bg-primary px-2 py-1 text-secondary transition hover:bg-gray-primary/50"
+          onClick={() => {
+            if (resetZoom) resetZoom();
+          }}
+        >
+          Reset zoom
+        </button>
+      </div>
     </div>
   );
 }

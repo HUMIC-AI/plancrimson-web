@@ -95,6 +95,7 @@ export function useUpdateGraph(
     update: graphRef.current?.update,
     remove: graphRef.current?.remove,
     reset: graphRef.current?.reset,
+    resetZoom: graphRef.current?.resetZoom,
     ref,
   };
 }
@@ -116,10 +117,11 @@ function initGraph(svgDom: SVGSVGElement, {
     .force('x', d3.forceX())
     .force('y', d3.forceY());
 
-  let link = svg.append('g')
+  const linkGroup = svg.append('g')
     .attr('stroke', '#999')
-    .attr('stroke-opacity', 0.6)
-    .selectAll<SVGLineElement, LinkDatum>('line');
+    .attr('stroke-opacity', 0.6);
+
+  let link = linkGroup.selectAll<SVGLineElement, LinkDatum>('line');
 
   const nodeGroup = svg.append('g')
     .attr('stroke', '#fff')
@@ -143,32 +145,20 @@ function initGraph(svgDom: SVGSVGElement, {
   // update node positions
   sim.on('tick', ticked);
 
-  console.log('building kd tree');
-  console.time('kd tree');
-  const dimensions = Array.from({ length: positions[0].length }, (_, i) => i + 1);
-  // eslint-disable-next-line new-cap
-  const tree = new kdTree(
-    // use first position as course index
-    positions.map((pos, i) => [i, ...pos] as const),
-    (a, b) => Math.hypot(...dimensions.map((i) => a[i] - b[i])),
-    dimensions,
-  );
-  console.timeEnd('kd tree');
+  // const tree = buildTree(positions);
 
   function addNewNeighbours(d: Datum) {
-    const nodes: Datum[] = [];
-    const existing = node.data();
-    for (let count = 5; nodes.length < 5; count += 5) {
-      const neighbours = tree.nearest([d.i, ...d.pca], count);
-      nodes.push(...neighbours
-        .filter(([[i]]) => !nodes.some((g) => g.i === i) && !existing.some((g) => g.i === i))
-        .map(([[i]]) => ({
-          ...courses[i],
-          pca: positions[i],
-          x: d.x + Math.random() * RADIUS * 4 - RADIUS * 2,
-          y: d.y + Math.random() * RADIUS * 4 - RADIUS * 2,
-        })));
-    }
+    const nodes: Datum[] = positions.filter((_, i) => !node.data().some((g) => g.i === i))
+      .map((pca, i) => ({ d: cos(d.pca, pca), i }))
+      .sort((a, b) => b.d - a.d)
+      .slice(0, 5)
+      .map(({ i }) => ({
+        ...courses[i],
+        pca: positions[i],
+        x: d.x + Math.random() * RADIUS * 4 - RADIUS * 2,
+        y: d.y + Math.random() * RADIUS * 4 - RADIUS * 2,
+      }));
+
     const links = nodes.map((t) => ({ source: d.id, target: t.id }));
     update(nodes, links);
   }
@@ -224,10 +214,17 @@ function initGraph(svgDom: SVGSVGElement, {
     .extent([[0, 0], [width, height]])
     .scaleExtent([1, 8])
     .on('zoom', (event) => {
-      svg.attr('transform', event.transform);
+      linkGroup.attr('transform', event.transform);
+      nodeGroup.attr('transform', event.transform);
     });
 
   svg.call(zoom);
+
+  function resetZoom() {
+    svg.transition()
+      .duration(T_DURATION)
+      .call(zoom.transform, d3.zoomIdentity);
+  }
 
   function restartSimulation() {
     sim.nodes(node.data());
@@ -308,7 +305,11 @@ function initGraph(svgDom: SVGSVGElement, {
     update,
     remove,
     reset,
+    resetZoom,
     link,
   };
 }
 
+const norm = (a: number[]) => Math.hypot(...a);
+const dot = (a: number[], b: number[]) => a.reduce((acc, v, i) => acc + v * b[i], 0);
+const cos = (a: number[], b: number[]) => dot(a, b) / (norm(a) * norm(b));

@@ -29,7 +29,9 @@
           "debug",
           "info",
           "warn",
-          "error"
+          "error",
+          "time",
+          "timeEnd"
         ]
       }
     ],
