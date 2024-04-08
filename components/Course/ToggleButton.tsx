@@ -66,7 +66,7 @@ export function CourseCardToggleButton({
         type="button"
         name="Add class to schedule"
         onClick={addClass}
-        className="rounded-full bg-secondary p-1 text-blue-primary transition-opacity hover:opacity-50"
+        className="primary rounded-full p-1 text-blue-primary transition-opacity hover:opacity-50"
       >
         <FaPlus />
       </button>
@@ -81,7 +81,7 @@ export function CourseCardToggleButton({
         courseIds: [getClassId(course)],
         scheduleId: chosenSchedule.id,
       }))}
-      className="rounded-full bg-gray-secondary p-1 text-blue-primary transition-opacity hover:opacity-50"
+      className="primary rounded-full p-1 transition-opacity hover:opacity-50"
     >
       <FaTimes />
     </button>

@@ -18,7 +18,6 @@ function InstructionsModal() {
 
     showContents({
       title: 'Welcome to PlanCrimson!',
-      small: true,
       close() {
         localStorage.setItem('seenPlanInstructions', 'true');
         setOpen(false);

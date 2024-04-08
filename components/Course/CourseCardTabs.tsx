@@ -56,7 +56,7 @@ export default function CourseCardTabs({ course }: { course: ExtendedClass }) {
         )}
       </Tab.List>
 
-      <Tab.Panels className="bg-gray-secondary p-6">
+      <Tab.Panels className="overflow-hidden rounded-b-xl bg-gray-secondary p-6 lg:rounded-b-2xl">
         <InfoPanel course={course} />
 
         {error ? (

@@ -1,27 +1,22 @@
 import { Dialog } from '@headlessui/react';
 import { FaTimes } from 'react-icons/fa';
-import { classNames } from '@/src/utils/styles';
 import { ReactNode, forwardRef } from 'react';
 
 export interface InfoCardProps {
   title?: string;
   headerContent?: ReactNode;
   content?: ReactNode;
-  small?: boolean;
   noExit?: boolean;
   close?: () => void;
 }
 
 function InfoCardComponent({
-  title, headerContent, content, small, noExit, close, isDialog = true,
+  title, headerContent, content, noExit, close, isDialog = true,
 }: InfoCardProps & { isDialog?: boolean }, ref: React.Ref<HTMLDivElement>) {
   return (
     <div
-      className={classNames(
-        small ? 'max-w-sm rounded-xl' : 'max-w-lg rounded-2xl',
-        isDialog ? 'my-8 sm:my-16 inline-block align-middle overflow-hidden' : 'h-full overflow-auto',
-        'w-full text-left primary shadow-xl transition-all',
-      )}
+      // className="primary w-full rounded-xl text-left shadow-xl transition-all lg:rounded-2xl"
+      className="primary w-full rounded-xl text-left lg:rounded-2xl"
       ref={ref}
     >
       <div className="border-none p-6 text-primary">
@@ -45,7 +40,7 @@ function InfoCardComponent({
         type="button"
         name="Close dialog"
         onClick={close}
-        className="interactive absolute right-5 top-5 rounded-full bg-gray-primary p-2 text-primary"
+        className="interactive secondary absolute right-5 top-5 rounded-full p-2"
       >
         <FaTimes />
       </button>

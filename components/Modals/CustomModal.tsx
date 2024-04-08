@@ -13,7 +13,7 @@ export default function CustomModal() {
   const { open, setOpen, modalProps: data } = useModal();
 
   const close = () => {
-    console.log('closing modal');
+    console.info('closing modal');
     if (data?.noExit) return;
     if (data?.close) data.close();
     else setOpen(false);
@@ -39,7 +39,7 @@ export default function CustomModal() {
             <Dialog.Overlay className="fixed inset-0 bg-black/50" />
           </Transition.Child>
 
-          {/* This element is to trick the browser into centering the modal contents. */}
+          {/* This element and the inline-block below tricks the browser into centering the modal contents. */}
           <span
             className="inline-block h-screen align-middle"
             aria-hidden="true"
@@ -55,7 +55,10 @@ export default function CustomModal() {
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <InfoCard {...data} close={close} />
+            {/* <div className="mx-auto my-8 inline-block max-w-sm overflow-hidden align-middle sm:my-16 md:max-w-lg"> */}
+            <div className="my-8 inline-block w-full max-w-sm overflow-hidden align-middle shadow-xl transition-all sm:my-16 lg:max-w-lg">
+              <InfoCard {...data} close={close} />
+            </div>
           </Transition.Child>
         </div>
       </Dialog>
