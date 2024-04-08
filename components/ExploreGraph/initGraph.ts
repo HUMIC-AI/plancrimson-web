@@ -304,8 +304,9 @@ function initGraph(svgDom: SVGSVGElement, {
 
   function reset() {
     console.debug('resetting graph');
-    fixedId = null;
-    highlightedIds = [];
+    highlight(null);
+    setFixedId(null);
+    setSubjects([]);
     remove(node.data().map((d) => d.id));
   }
 
