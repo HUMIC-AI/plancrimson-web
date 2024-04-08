@@ -53,7 +53,7 @@ export function ButtonTitle({
           className={classNames(
             'text-sm md:text-base font-medium text-gray-dark text-center py-1',
             'bg-transparent',
-            'hover:border-b focus:border-b focus:text-black focus:outline-none',
+            'hover:underline focus:underline focus:text-black focus:outline-none',
             highlight && 'bg-black text-white px-1',
           )}
           value={newTitle}

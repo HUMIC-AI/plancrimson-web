@@ -60,7 +60,13 @@ export default function ScheduleChooser({
   // if we're showing all schedules, don't render a dropdown menu
   // instead just have the title be clickable to select
   if (!showDropdown) {
-    if (!chosenScheduleId) return <span className="text-center">No schedule selected</span>;
+    if (!chosenScheduleId) {
+      return (
+        <span className="text-center">
+          No schedule selected
+        </span>
+      );
+    }
     return (
       <ButtonTitle
         chosenScheduleId={chosenScheduleId}
@@ -76,7 +82,7 @@ export default function ScheduleChooser({
       value={chosenScheduleId}
       onChange={handleChooseSchedule}
       as="div"
-      className="relative"
+      className="relative rounded border border-gray-primary"
     >
       {({ open }) => (
         <>

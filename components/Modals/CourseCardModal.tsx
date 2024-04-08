@@ -1,7 +1,7 @@
 import { ExtendedClass, getSemester, Semester } from '@/src/lib';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import qs from 'qs';
-import CourseCardTabs from '../Course/Tabs';
+import CourseCardTabs from '../Course/CourseCardTabs';
 import ExternalLink from '../Utils/ExternalLink';
 import { InfoCardProps } from './InfoCard';
 

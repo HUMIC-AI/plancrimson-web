@@ -15,7 +15,7 @@ import { BaseSchedule } from '@/src/types';
 import { EventAttributes } from 'ics';
 import { FaArrowDown } from 'react-icons/fa';
 import { MissingClass } from './MissingClass';
-import { EventTiles } from './DayComponent';
+import { CalendarDayEventTilesColumn } from './CalendarDayEventTilesColumn';
 import { CalendarHeaderSection } from './CalendarPageHeaderSection';
 import { CuteSwitch } from '../Utils/CuteSwitch';
 
@@ -89,9 +89,9 @@ function CalendarBody({
         </div>
         <div className="grid grid-cols-5 rounded-t-xl bg-black py-2 pl-6 text-white">
           {DAY_SHORT.slice(0, 5).map((day) => (
-            <h3 key={day} className="text-center font-semibold">
+            <h4 key={day} className="text-center font-light">
               {day}
-            </h3>
+            </h4>
           ))}
         </div>
 
@@ -114,7 +114,7 @@ function CalendarBody({
           {/* central courses area */}
           <div className="absolute inset-y-0 left-6 right-0 grid grid-cols-5">
             {DAYS_OF_WEEK.slice(0, 5).map((day) => (
-              <EventTiles
+              <CalendarDayEventTilesColumn
                 events={events
                   .filter((ev) => doesRRuleHaveDay(ev.recurrenceRule!, day))
                   .sort(

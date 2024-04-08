@@ -95,7 +95,7 @@ const WeekDisplay: React.FC<{ pattern: string; index?: number }> = function ({
       {pattern === 'TBA' ? (
         <span>TBA</span>
       ) : (
-        <div className="inline-grid w-max grid-cols-5 overflow-hidden rounded border-2 border-gray-secondary">
+        <div className="inline-grid w-max grid-cols-5 overflow-hidden rounded border border-gray-primary">
           {DAYS_OF_WEEK.slice(0, 5)
             .map((val) => val.slice(0, 2))
             .map((abbrev, j) => (

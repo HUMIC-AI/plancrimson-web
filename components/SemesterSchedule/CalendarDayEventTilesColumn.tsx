@@ -3,18 +3,26 @@ import React from 'react';
 import { DateArray, EventAttributes } from 'ics';
 import { getOverlap, toPercent } from '@/src/lib';
 import { classNames } from '../../src/utils/styles';
+import { useModal } from '../../src/context/modal';
+import { useAppDispatch } from '../../src/utils/hooks';
+import { ClassCache } from '../../src/features';
+import { useMeiliClient } from '../../src/context/meili';
 
 type EventTilesProps = {
   events: (EventAttributes & ({ end?: DateArray; isSection?: string; }))[];
   showSections: boolean;
 };
 
-export function EventTiles({ events, showSections }: EventTilesProps) {
+export function CalendarDayEventTilesColumn({ events, showSections }: EventTilesProps) {
   const overlapCounter: Record<string, number> = {};
+  const dispatch = useAppDispatch();
+  const { client } = useMeiliClient();
+  const { showCourse } = useModal();
 
   return (
     <div className="relative h-full odd:bg-gray-secondary even:bg-secondary">
       {events.filter((e) => (showSections ? true : !e.isSection)).map((ev, i) => {
+        console.log(ev);
         const overlap = getOverlap(events, i);
         const key = overlap[0].uid!;
         overlapCounter[key] = (overlapCounter[key] || 0) + 1;
@@ -51,7 +59,18 @@ export function EventTiles({ events, showSections }: EventTilesProps) {
             }}
           >
             <div className={classNames('absolute inset-1 overflow-auto text-xs', textColor)}>
-              <p className="font-semibold">{label}</p>
+              <button
+                className="interactive text-base font-semibold"
+                type="button"
+                onClick={() => dispatch(ClassCache.loadCourses(client, [ev.productId!]))
+                  .then(([course]) => showCourse(course))
+                  .catch((err) => {
+                    console.error(err);
+                    alert('Error loading course');
+                  })}
+              >
+                {label}
+              </button>
               {ev.isSection && (
               <span>
                 Section

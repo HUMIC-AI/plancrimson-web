@@ -87,9 +87,15 @@ function RefinementListComponent({
                 />
 
                 <span
-                  className={classNames('ml-2', isRefined ? 'font-semibold' : 'font-light')}
+                  className={classNames(
+                    'ml-2 transition-opacity',
+                    isRefined ? 'font-semibold' : 'font-light',
+                    count === 0 && 'opacity-50',
+                  )}
                   style={{
-                    color: (showSubjectColor && label in subjects) ? getSubjectColor(label as Subject) : 'inherit',
+                    color: (showSubjectColor && label in subjects)
+                      ? getSubjectColor(label as Subject)
+                      : 'inherit',
                   }}
                 >
                   {label in TERM_TO_SEASON ? `${TERM_TO_SEASON[label].season} ${TERM_TO_SEASON[label].year}` : label}
