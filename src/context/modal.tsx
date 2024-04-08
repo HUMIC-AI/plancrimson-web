@@ -1,24 +1,16 @@
 /* eslint-disable no-param-reassign */
 import {
-  createContext, Dispatch, PropsWithChildren, ReactNode, SetStateAction, useContext, useMemo, useState,
+  createContext, Dispatch, PropsWithChildren, SetStateAction, useContext, useMemo, useState,
 } from 'react';
 import type { ExtendedClass } from '@/src/lib';
 import { getCourseModalContent } from '@/components/Modals/CourseCardModal';
-
-interface CustomDialogProps {
-  title: string;
-  headerContent?: ReactNode;
-  content: ReactNode;
-  small?: boolean;
-  noExit?: boolean;
-  close?: () => void;
-}
+import { InfoCardProps } from '../../components/Modals/InfoCard';
 
 interface ModalContextType {
   open: boolean;
-  data: CustomDialogProps | null;
+  data: InfoCardProps | null;
   setOpen: Dispatch<SetStateAction<boolean>>;
-  showContents: Dispatch<SetStateAction<CustomDialogProps | null>>;
+  showContents: Dispatch<SetStateAction<InfoCardProps | null>>;
   showCourse: (course: ExtendedClass) => void;
 }
 
@@ -35,7 +27,7 @@ const ModalContext = createContext<ModalContextType>({
  */
 export function ModalProvider({ children }: PropsWithChildren<{}>) {
   const [open, setOpen] = useState<boolean>(false);
-  const [data, setContents] = useState<CustomDialogProps | null>(null);
+  const [data, setContents] = useState<InfoCardProps | null>(null);
 
   const showContents: ModalContextType['showContents'] = (c) => {
     setContents(c);
