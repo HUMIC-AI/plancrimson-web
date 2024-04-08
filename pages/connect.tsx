@@ -58,6 +58,7 @@ function FriendsPage({ userId }: { userId: string }) {
     allSchedules, friends, friendIds, friendsOnly,
   });
   const lunrIndex = useLunrIndex(showProfiles);
+  const [searchValue, setSearchValue] = useState('');
   const { includeSemesters, profilesOnly } = useIncludeSemesters();
 
   const searchMore = useCallback(async (term: Term) => {
@@ -119,8 +120,9 @@ function FriendsPage({ userId }: { userId: string }) {
 
       <SearchBar
         handleChange={(e) => {
-          if (!lunrIndex) return;
           const search = e.target.value;
+          setSearchValue(search);
+          if (!lunrIndex) return;
           if (search.length === 0) {
             setMatchIds(null);
           } else {
@@ -142,7 +144,11 @@ function FriendsPage({ userId }: { userId: string }) {
 
       <ProfilesList
         profilesOnly={profilesOnly}
-        showProfiles={showProfiles}
+        showProfiles={
+          includeSemesters.length === 0
+          && searchValue.length === 0
+            ? [] : showProfiles
+        }
         matchIds={matchIds}
         friendIds={friendIds}
       />
