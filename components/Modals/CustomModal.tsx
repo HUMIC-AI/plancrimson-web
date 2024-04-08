@@ -6,13 +6,18 @@ import { InfoCard } from './InfoCard';
 /**
  * Based on https://headlessui.dev/react/dialog
  * Only one instance exists in the root Layout component.
- * It gets controlled by the ModalContext in src/context/modal.tsx.
+ * It gets controlled by the {@link ModalContext} in {@link src/context/modal.tsx}.
  * This does NOT get access to a MeiliSearch instance by default. One must be provided.
  */
 export default function CustomModal() {
-  const { open, setOpen, data } = useModal();
+  const { open, setOpen, modalProps: data } = useModal();
 
-  const close = () => !data?.noExit && (data?.close ? data.close() : setOpen(false));
+  const close = () => {
+    console.log('closing modal');
+    if (data?.noExit) return;
+    if (data?.close) data.close();
+    else setOpen(false);
+  };
 
   return (
     <Transition appear show={open} as={Fragment}>
@@ -50,7 +55,7 @@ export default function CustomModal() {
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <InfoCard {...data} />
+            <InfoCard {...data} close={close} />
           </Transition.Child>
         </div>
       </Dialog>

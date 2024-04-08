@@ -8,7 +8,7 @@ import { InfoCardProps } from '../../components/Modals/InfoCard';
 
 interface ModalContextType {
   open: boolean;
-  data: InfoCardProps | null;
+  modalProps: InfoCardProps | null;
   setOpen: Dispatch<SetStateAction<boolean>>;
   showContents: Dispatch<SetStateAction<InfoCardProps | null>>;
   showCourse: (course: ExtendedClass) => void;
@@ -16,31 +16,32 @@ interface ModalContextType {
 
 const ModalContext = createContext<ModalContextType>({
   open: false,
-  data: null,
+  modalProps: null,
   setOpen: () => {},
   showContents: () => {},
   showCourse: () => {},
 });
 
 /**
- * See also CustomModal
+ * See also {@link CustomModal}
+ * Provides some commands for controlling the global modal.
  */
 export function ModalProvider({ children }: PropsWithChildren<{}>) {
   const [open, setOpen] = useState<boolean>(false);
-  const [data, setContents] = useState<InfoCardProps | null>(null);
+  const [modalContents, setContents] = useState<InfoCardProps | null>(null);
 
-  const showContents: ModalContextType['showContents'] = (c) => {
-    setContents(c);
+  const showContents: ModalContextType['showContents'] = (contents) => {
+    setContents(contents);
     setOpen(true);
   };
 
   const context = useMemo(() => ({
     open,
-    data,
+    data: modalContents,
     setOpen,
     showCourse: (course: ExtendedClass) => showContents(getCourseModalContent(course)),
     showContents,
-  }), [open, data]);
+  }), [open, modalContents]);
 
   return (
     <ModalContext.Provider value={context}>

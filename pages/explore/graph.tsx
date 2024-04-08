@@ -1,5 +1,5 @@
 import {
-  useEffect, useMemo, useState,
+  useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useCourseEmbeddingData } from '../../components/ClassesCloudPage/useData';
 import {
@@ -64,7 +64,7 @@ function HoveredCourseInfo({ courseId }: { courseId: string | null }) {
       });
   }, [courseId, client, dispatch]);
 
-  return <InfoCard isDialog={false} {...(course && getCourseModalContent(course))} />;
+  return <InfoCard small isDialog={false} noExit {...(course && getCourseModalContent(course))} />;
 }
 
 function SearchSection() {
@@ -93,16 +93,17 @@ function Graph({
   onHover: (id: string | null) => void;
 }) {
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
-  const { update, ref } = useUpdateGraph(positions, courses, onHover);
+  const { update, remove, ref } = useUpdateGraph(positions, courses, onHover);
   const chosenSchedule = useAppSelector(Schedules.selectSchedule('GRAPH_SCHEDULE'));
+  const prevIds = useRef<string[]>();
 
   const width = 800;
   const height = 800;
 
   useEffect(() => {
-    if (!chosenSchedule?.classes || !positions || !courses || !update) return;
+    if (!chosenSchedule?.classes || !positions || !courses || !update || !remove) return;
 
-    const nodes: DatumBase[] = chosenSchedule.classes!.map((id) => {
+    const nodes: DatumBase[] = chosenSchedule.classes.map((id) => {
       const courseBrief = courses.find((c) => c.id === id)!;
       return {
         ...courseBrief,
@@ -111,7 +112,12 @@ function Graph({
     });
 
     update(nodes, []);
-  }, [chosenSchedule?.classes, courses, positions, update]);
+    if (prevIds.current) {
+      const removed = prevIds.current.filter((id) => !chosenSchedule.classes.includes(id));
+      remove(removed);
+    }
+    prevIds.current = [...chosenSchedule.classes];
+  }, [chosenSchedule?.classes, courses, positions, remove, update]);
 
   return (
     <div className="flex-1">

@@ -3,8 +3,9 @@ import { getAnalytics, logEvent } from 'firebase/analytics';
 import qs from 'qs';
 import CourseTabs from '../Course/Tabs';
 import ExternalLink from '../Utils/ExternalLink';
+import { InfoCardProps } from './InfoCard';
 
-export function getCourseModalContent(course: ExtendedClass) {
+export function getCourseModalContent(course: ExtendedClass): InfoCardProps {
   const semester = course ? getSemester(course) : null;
 
   const title = course

@@ -9,7 +9,7 @@ export interface InfoCardProps {
   content?: ReactNode;
   small?: boolean;
   noExit?: boolean;
-  close?: () => void;
+  close: () => void;
 }
 
 function InfoCardComponent({
@@ -43,7 +43,7 @@ function InfoCardComponent({
       <button
         type="button"
         name="Close dialog"
-        onClick={close}
+        onClick={() => { console.log('CLICK'); close(); }}
         className="interactive absolute right-5 top-5 rounded-full bg-gray-primary p-2 text-primary"
       >
         <FaTimes />

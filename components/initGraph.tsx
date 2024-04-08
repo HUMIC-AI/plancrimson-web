@@ -92,6 +92,7 @@ export function useUpdateGraph(
 
   return {
     update: graphRef.current?.update,
+    remove: graphRef.current?.remove,
     ref,
   };
 }
@@ -220,13 +221,53 @@ function initGraph(svgDom: SVGSVGElement, {
       });
   }
 
-  const emptyText = svg.append('text')
+  const addEmptyText = () => svg.append('text')
     .attr('x', 0)
     .attr('y', 0)
     .attr('text-anchor', 'middle')
     .attr('dominant-baseline', 'middle')
     .text('No classes selected');
 
+  let emptyText = addEmptyText();
+
+  function restartSimulation() {
+    sim.nodes(node.data());
+    sim.force<d3.ForceLink<Datum, LinkDatum>>('link')!.links(link.data());
+    sim.alpha(1).restart();
+  }
+
+  function remove(ids: string[]) {
+    console.debug('removing nodes', ids.length);
+
+    const nodes = node.data().filter((d) => !ids.some((id) => id === d.id));
+    node = node.data(nodes, (d) => d.id);
+    node.exit()
+      .transition()
+      .duration(T_DURATION)
+      .attr('r', 0)
+      .remove();
+
+    // remove links that are no longer connected
+    const links = link.data().filter(({ source, target }) => !ids.some(
+      (id) => id === stringify(source) || id === stringify(target),
+    ));
+    link = link.data(links);
+    link.exit()
+      .transition()
+      .duration(T_DURATION)
+      .attr('stroke-opacity', 0)
+      .remove();
+
+    restartSimulation();
+
+    if (nodes.length === 0 && emptyText.empty()) {
+      emptyText = addEmptyText().attr('opacity', 0);
+      emptyText
+        .transition()
+        .duration(T_DURATION)
+        .attr('opacity', 1);
+    }
+  }
 
   /**
    * Use {@link DatumBase} since we don't need to initialize x and y.
@@ -262,9 +303,7 @@ function initGraph(svgDom: SVGSVGElement, {
             .text((d) => d.subject)),
       );
 
-    sim.nodes(node.data());
-    sim.force<d3.ForceLink<Datum, LinkDatum>>('link')!.links(link.data());
-    sim.alpha(1).restart();
+    restartSimulation();
 
     if (nodes.length > 0) {
       emptyText
@@ -279,6 +318,7 @@ function initGraph(svgDom: SVGSVGElement, {
     node,
     sim,
     update,
+    remove,
     link,
   };
 }
