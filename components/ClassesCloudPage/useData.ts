@@ -2,25 +2,33 @@ import { useEffect, useMemo, useState } from 'react';
 import { Subject } from '@/src/lib';
 import type { CourseLevel } from '@/src/types';
 
-const DATA_PATHS: Record<CourseLevel, [string, string]> = {
-  undergrad: ['/tsne-undergrad.json', '/courses-undergrad.json'],
-  all: ['/tsne.json', '/courses.json'],
-  grad: ['/tsne-grad.json', '/courses-grad.json'],
+const DATA_PATHS: Record<CourseLevel, {
+  pca: string;
+  tsne: string;
+  courses: string;
+}> = {
+  undergrad: {
+    pca: '/pca-undergrad.json',
+    tsne: '/tsne-undergrad.json',
+    courses: '/courses-undergrad.json',
+  },
+  all: {
+    pca: '/pca.json',
+    tsne: '/tsne.json',
+    courses: '/courses.json',
+  },
+  grad: {
+    pca: '/pca-grad.json',
+    tsne: '/tsne-grad.json',
+    courses: '/courses-grad.json',
+  },
 };
 
-export function useData(level: CourseLevel, filterSubjects?: Subject[]) {
-  const [positions, setPositions] = useState<[number, number, number][] | null>(null);
+export function useCourseData(level: CourseLevel, filterSubjects?: Subject[]) {
   const [courses, setCourses] = useState<[string, Subject][] | null>(null);
 
   useEffect(() => {
-    console.info('fetching data');
-    const [tsnePath, coursesPath] = DATA_PATHS[level];
-
-    fetch(tsnePath)
-      .then((res) => res.json())
-      .then((data) => {
-        setPositions(data);
-      });
+    const coursesPath = DATA_PATHS[level].courses;
 
     fetch(coursesPath)
       .then((res) => res.json())
@@ -29,23 +37,39 @@ export function useData(level: CourseLevel, filterSubjects?: Subject[]) {
       });
   }, [level]);
 
-  const [filteredPositions, filteredCourses] = useMemo(() => {
-    if (!filterSubjects) return [positions, courses];
+  const filteredCourses = useMemo(() => {
+    if (!courses) return null;
+    if (!filterSubjects) return courses.map(([id, subject], i) => ({ id, subject, i }));
+    return courses
+      .map(([id, subject], i) => (filterSubjects.includes(subject) ? { id, subject, i } : null!))
+      .filter(Boolean);
+  }, [courses, filterSubjects]);
 
-    if (!positions || !courses) return [null, null];
+  return filteredCourses;
+}
 
-    const newPositions: typeof positions = [];
-    const newCourses: typeof courses = [];
+export function useCourseEmbeddingData(level: CourseLevel, filterSubjects?: Subject[]) {
+  const [positions, setPositions] = useState<[number, number, number][] | null>(null);
+  const filteredCourses = useCourseData(level, filterSubjects);
 
-    courses.forEach(([key, subject], i) => {
-      if (filterSubjects.includes(subject)) {
-        newPositions.push(positions[i]);
-        newCourses.push([key, subject]);
-      }
-    });
+  useEffect(() => {
+    console.info('fetching data');
+    const tsnePath = DATA_PATHS[level].tsne;
 
-    return [newPositions, newCourses];
-  }, [positions, courses, filterSubjects]);
+    fetch(tsnePath)
+      .then((res) => res.json())
+      .then((data) => {
+        setPositions(data);
+      });
+  }, [level]);
 
-  return { positions: filteredPositions, courses: filteredCourses };
+  const filteredPositions = useMemo(() => {
+    if (!filteredCourses || !positions) return null;
+    return filteredCourses.map(({ i }) => positions[i]);
+  }, [filteredCourses, positions]);
+
+  return {
+    positions: filteredPositions,
+    courses: filteredCourses,
+  };
 }

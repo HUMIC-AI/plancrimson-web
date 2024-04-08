@@ -24,6 +24,7 @@ const paths: Path[] = [
       { href: '/explore/undergrad', name: 'Undergrad' },
       { href: '/explore/grad', name: 'Grad' },
       { href: '/explore/surprise', name: 'Surprise' },
+      { href: '/explore/graph', name: 'Graph' },
     ],
   },
   { href: '/connect', name: 'Connect' },

@@ -9,7 +9,7 @@ import { alertUnexpectedError, useAppDispatch } from '@/src/utils/hooks';
 import { Auth, ClassCache } from '@/src/features';
 import { useMeiliClient } from '@/src/context/meili';
 import type { CourseLevel } from '@/src/types';
-import { useData } from './useData';
+import { useCourseEmbeddingData } from './useData';
 
 const sensitivity = 8;
 const CLICK_DELAY = 200; // only register a click if the amount of time is less than this
@@ -78,7 +78,7 @@ function ClassesCloud({
   const clickTimeout = useRef<ReturnType<typeof setTimeout>>();
   const gtSm = useBreakpoint(breakpoints.sm);
   const { showCourse } = useModal();
-  const { positions, courses } = useData(level, filterSubjects);
+  const { positions, courses } = useCourseEmbeddingData(level, filterSubjects);
   const { client } = useMeiliClient();
   const [sceneUtils, setSceneUtils] = useState<typeof import('./createScene')>();
 
@@ -151,7 +151,7 @@ function ClassesCloud({
   useEffect(() => {
     if (!sceneUtils || !positions || !courses) return;
     if (pointsRef.current) sceneRef.current!.remove(pointsRef.current);
-    pointsRef.current = sceneUtils.createPoints(courses.map((courseData) => courseData[1]), positions, particleSize);
+    pointsRef.current = sceneUtils.createPoints(courses.map((courseData) => courseData.subject), positions, particleSize);
     sceneRef.current!.add(pointsRef.current);
   }, [sceneUtils, positions, courses]);
 
@@ -176,7 +176,7 @@ function ClassesCloud({
           if (isClick.current) {
             const idx = currentHoverRef.current;
             if (idx !== null && courses) {
-              const key = courses[idx][0];
+              const key = courses[idx].id;
               const courseId = getClassId(key);
               dispatch(ClassCache.loadCourses(client, [courseId]))
                 .then(([course]) => {

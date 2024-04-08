@@ -2290,6 +2290,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/kd-tree-javascript@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "@types/kd-tree-javascript@npm:1.0.3"
+  checksum: 10/e0a1ec8edb5901b07016d47f85eaae9f3cbaf8e50753feaec2fe34c0a26b1ed0cb5ca456c9bd5f94f12bf7626f3bb0cb3234b8bbec9e1ee5229aae460563b871
+  languageName: node
+  linkType: hard
+
 "@types/linkify-it@npm:*":
   version: 3.0.2
   resolution: "@types/linkify-it@npm:3.0.2"
@@ -8656,6 +8663,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"kd-tree-javascript@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "kd-tree-javascript@npm:1.0.3"
+  checksum: 10/a0dd961ed79ef0626bdfff92febc4990f742c4711ea52047727883b156a5938298c4878e146eede282c0306d466e164647513fe2cbe2c832bdc6caa786fc09c2
+  languageName: node
+  linkType: hard
+
 "klaw@npm:^3.0.0":
   version: 3.0.0
   resolution: "klaw@npm:3.0.0"
@@ -10292,6 +10306,7 @@ __metadata:
     "@reduxjs/toolkit": "npm:^1.7.1"
     "@rushstack/eslint-patch": "npm:^1.2.0"
     "@types/d3": "npm:^7.4.0"
+    "@types/kd-tree-javascript": "npm:^1.0.3"
     "@types/lunr": "npm:^2.3.4"
     "@types/node": "npm:18.11.17"
     "@types/qs": "npm:^6.9.7"
@@ -10322,6 +10337,7 @@ __metadata:
     firebase-admin: "npm:^11.7.0"
     firebase-tools: "npm:^13.7.1"
     ics: "npm:^3.1.0"
+    kd-tree-javascript: "npm:^1.0.3"
     lunr: "npm:^2.3.9"
     meilisearch: "npm:^0.32.3"
     next: "npm:^13.3.1"
