@@ -38,7 +38,7 @@ export function EditNameForm({ title, setEditing, handleSubmit }: {
             .replace(/[^a-zA-Z0-9-_ ]/g, '')
             .slice(0, 30),
         )}
-        className="w-full rounded border-2 bg-secondary py-1 pl-2 pr-7 text-primary shadow-inner focus:shadow"
+        className="primary w-full rounded border-2 py-1 pl-2 pr-7 shadow-inner focus:shadow"
       />
       <button
         type="submit"

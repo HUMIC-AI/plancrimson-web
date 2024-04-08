@@ -18,8 +18,9 @@ function InfoCardComponent({
   return (
     <div
       className={classNames(
-        small ? 'max-w-sm' : 'max-w-lg',
-        'my-8 inline-block w-full overflow-hidden rounded-2xl bg-secondary text-left align-middle text-primary shadow-xl transition-all sm:my-16',
+        small ? 'max-w-sm rounded-xl' : 'max-w-lg rounded-2xl',
+        isDialog ? 'my-8 sm:my-16 inline-block align-middle overflow-hidden' : 'overflow-auto',
+        'w-full text-left primary shadow-xl transition-all',
       )}
       ref={ref}
     >

@@ -68,7 +68,7 @@ export function MissingClass({ cls }: { cls: ClassSchedulingInfo; }) {
                   type="time"
                   id="startTime"
                   {...register('startTime')}
-                  className="bg-secondary text-primary"
+                  className="primary"
                   defaultValue={classTime && decToStr(classTime.start)}
                 />
 
@@ -79,7 +79,7 @@ export function MissingClass({ cls }: { cls: ClassSchedulingInfo; }) {
                   type="time"
                   id="endTime"
                   {...register('endTime')}
-                  className="bg-secondary text-primary"
+                  className="primary"
                   defaultValue={classTime && decToStr(classTime.end)}
                 />
 
@@ -90,7 +90,7 @@ export function MissingClass({ cls }: { cls: ClassSchedulingInfo; }) {
                   type="date"
                   id="startDate"
                   {...register('startDate')}
-                  className="bg-secondary text-primary"
+                  className="primary"
                   defaultValue={classTime?.startDate}
                 />
 
@@ -101,7 +101,7 @@ export function MissingClass({ cls }: { cls: ClassSchedulingInfo; }) {
                   type="date"
                   id="endDate"
                   {...register('endDate')}
-                  className="bg-secondary text-primary"
+                  className="primary"
                   defaultValue={classTime?.endDate}
                 />
               </div>

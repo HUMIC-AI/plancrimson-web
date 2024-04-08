@@ -19,6 +19,9 @@ import { DatumBase, useUpdateGraph } from '../../components/initGraph';
 import { InfoCard, InfoCardProps } from '../../components/Modals/InfoCard';
 import { getCourseModalContent } from '../../components/Modals/CourseCardModal';
 import { useMeiliClient } from '../../src/context/meili';
+import { signInUser } from '../../components/Layout/useSyncAuth';
+import { breakpoints, useBreakpoint } from '../../src/utils/styles';
+import { CuteSwitch } from '../../components/Utils/CuteSwitch';
 
 
 export default function GraphPage() {
@@ -30,13 +33,39 @@ export default function GraphPage() {
     chosenScheduleId: 'GRAPH_SCHEDULE',
   }), []);
 
+  const isLg = useBreakpoint(breakpoints.md);
+
+  if (!isLg) {
+    return (
+      <Layout title="Graph" className="relative w-full flex-1 bg-secondary">
+        <div className="flex flex-1 items-center justify-center">
+          <p className="text-center">
+            The graph is not available on small screens.
+            <br />
+            Please use a larger screen to explore the graph.
+          </p>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout title="Graph" className="relative w-full flex-1 bg-secondary">
       <WithMeili userId={userId}>
         <ChosenScheduleContext.Provider value={chosenScheduleContext}>
           <div className="absolute inset-2 flex">
             <SearchSection />
-            <Graph onHover={(id) => id && setHoveredClassId(id)} />
+            {userId ? <Graph onHover={(id) => id && setHoveredClassId(id)} /> : (
+              <div className="flex flex-1 items-center justify-center">
+                <button
+                  type="button"
+                  onClick={() => signInUser().catch((err) => console.error(err))}
+                  className="interactive font-medium"
+                >
+                  Sign in to explore the graph!
+                </button>
+              </div>
+            )}
             <HoveredCourseInfo courseId={hoveredClassId} />
           </div>
         </ChosenScheduleContext.Provider>
@@ -130,8 +159,9 @@ function Graph({
   onHover: (id: string | null) => void;
 }) {
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
+  const [flip, setToggleFlip] = useState(false);
   const {
-    update, remove, reset, resetZoom, ref,
+    update, remove, reset, resetZoom, setFlip, ref,
   } = useUpdateGraph(positions, courses, onHover);
   const dispatch = useAppDispatch();
   const chosenSchedule = useAppSelector(Schedules.selectSchedule('GRAPH_SCHEDULE'));
@@ -188,6 +218,16 @@ function Graph({
         >
           Reset zoom
         </button>
+        <div className="flex items-center">
+          <span className="mr-2">Add opposites</span>
+          <CuteSwitch
+            enabled={flip}
+            onChange={(checked) => {
+              if (setFlip) setFlip(checked);
+              setToggleFlip(checked);
+            }}
+          />
+        </div>
       </div>
     </div>
   );

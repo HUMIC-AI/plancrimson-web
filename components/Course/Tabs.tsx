@@ -15,7 +15,7 @@ const TABS = ['Description', 'Evaluations', 'Plan', 'Social'];
  * The tabs for the opened course modal.
  * @param course the active course in the modal
  */
-export default function CourseTabs({ course }: { course: ExtendedClass }) {
+export default function CourseCardTabs({ course }: { course: ExtendedClass }) {
   const [evaluations, error] = useEvaluations(course.SUBJECT + course.CATALOG_NBR);
 
   return (
@@ -80,6 +80,7 @@ export default function CourseTabs({ course }: { course: ExtendedClass }) {
         )}
 
         <PlanningPanel course={course} />
+
         <SocialPanel course={course} />
       </Tab.Panels>
     </Tab.Group>

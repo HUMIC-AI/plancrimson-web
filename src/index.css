@@ -54,13 +54,17 @@
   .dark-gradient {
     @apply from-black to-blue-dark bg-gradient-to-br;
   }
-}
 
-@layer components {
   .interactive {
     @apply hover:opacity-50 transition-opacity;
   }
 
+  .primary {
+    @apply text-primary bg-secondary;
+  }
+}
+
+@layer components {
   .menu-button {
     @apply flex w-full items-center px-1 transition hover:bg-gray-dark/50;
   }

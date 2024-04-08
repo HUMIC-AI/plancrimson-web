@@ -96,6 +96,7 @@ export function useUpdateGraph(
     remove: graphRef.current?.remove,
     reset: graphRef.current?.reset,
     resetZoom: graphRef.current?.resetZoom,
+    setFlip: graphRef.current?.setFlip,
     ref,
   };
 }
@@ -103,9 +104,9 @@ export function useUpdateGraph(
 function initGraph(svgDom: SVGSVGElement, {
   positions, courses, onHover,
 }: {
-  positions: number[][],
-  courses: CourseBrief[],
-  onHover: (id: string | null) => void,
+  positions: number[][];
+  courses: CourseBrief[];
+  onHover: (id: string | null) => void;
 }) {
   const svg = d3.select(svgDom);
 
@@ -145,12 +146,12 @@ function initGraph(svgDom: SVGSVGElement, {
   // update node positions
   sim.on('tick', ticked);
 
-  // const tree = buildTree(positions);
+  let flip = false;
 
   function addNewNeighbours(d: Datum) {
     const nodes: Datum[] = positions.filter((_, i) => !node.data().some((g) => g.i === i))
       .map((pca, i) => ({ d: cos(d.pca, pca), i }))
-      .sort((a, b) => b.d - a.d)
+      .sort((a, b) => (flip ? -1 : +1) * (b.d - a.d))
       .slice(0, 5)
       .map(({ i }) => ({
         ...courses[i],
@@ -161,6 +162,10 @@ function initGraph(svgDom: SVGSVGElement, {
 
     const links = nodes.map((t) => ({ source: d.id, target: t.id }));
     update(nodes, links);
+  }
+
+  function setFlip(f: boolean) {
+    flip = f;
   }
 
   function addListeners(n: d3.Selection<SVGCircleElement, Datum, SVGGElement, unknown>) {
@@ -306,6 +311,7 @@ function initGraph(svgDom: SVGSVGElement, {
     remove,
     reset,
     resetZoom,
+    setFlip,
     link,
   };
 }

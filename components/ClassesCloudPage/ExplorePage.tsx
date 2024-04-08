@@ -51,21 +51,21 @@ function SubjectsPanel({ setFilterSubjects }: {
     <Listbox.Options className="absolute right-0 w-32 rounded bg-white/40 p-1 text-sm">
       <input
         type="text"
-        className="w-full rounded border border-gray-dark bg-secondary px-1 py-0.5 text-primary outline-none placeholder:text-gray-light"
+        className="primary w-full rounded border border-gray-dark px-1 py-0.5 outline-none placeholder:text-gray-light"
         placeholder="Find subject"
         value={subjectText}
         onChange={(e) => setSubjectText(e.target.value.toUpperCase())}
       />
       <button
         type="button"
-        className="mt-1 w-full rounded-t bg-secondary px-1 text-left font-medium text-primary transition-colors hover:bg-gray-dark/80"
+        className="primary mt-1 w-full rounded-t px-1 text-left font-medium transition-colors hover:bg-gray-dark/80"
         onClick={() => setFilterSubjects(subjectNames)}
       >
         Select all
       </button>
       <button
         type="button"
-        className="mb-1 w-full rounded-b bg-secondary px-1 text-left font-medium text-primary transition-colors hover:bg-gray-dark/80"
+        className="primary mb-1 w-full rounded-b px-1 text-left font-medium transition-colors hover:bg-gray-dark/80"
         onClick={() => setFilterSubjects([])}
       >
         Select none

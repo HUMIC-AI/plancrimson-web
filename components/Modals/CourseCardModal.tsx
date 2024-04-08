@@ -1,7 +1,7 @@
 import { ExtendedClass, getSemester, Semester } from '@/src/lib';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import qs from 'qs';
-import CourseTabs from '../Course/Tabs';
+import CourseCardTabs from '../Course/Tabs';
 import ExternalLink from '../Utils/ExternalLink';
 import { InfoCardProps } from './InfoCard';
 
@@ -20,7 +20,7 @@ export function getCourseModalContent(course: ExtendedClass): InfoCardProps {
     catalogNumber: course.CATALOG_NBR,
   });
 
-  const content = course && <CourseTabs course={course} />;
+  const content = course && <CourseCardTabs course={course} />;
 
   return {
     title, headerContent, content,
