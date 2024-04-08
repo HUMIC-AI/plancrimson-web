@@ -2,7 +2,7 @@
 import { Disclosure } from '@headlessui/react';
 import React, { Fragment } from 'react';
 import { useForm, FieldValues } from 'react-hook-form';
-import type { ExtendedClass } from '@/src/lib';
+import type { ClassSchedulingInfo, ExtendedClass } from '@/src/lib';
 import {
   getClassId, DAYS_OF_WEEK,
   strToDec,
@@ -11,10 +11,9 @@ import {
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { Settings } from '@/src/features';
 
-export function MissingClass({ cls }: { cls: ExtendedClass; }) {
+export function MissingClass({ cls }: { cls: ClassSchedulingInfo; }) {
   const dispatch = useAppDispatch();
-  const classId = getClassId(cls);
-  const classTime = useAppSelector(Settings.selectCustomTime(classId));
+  const classTime = useAppSelector(Settings.selectCustomTime(cls.id));
 
   const { register, handleSubmit } = useForm();
 
@@ -25,7 +24,7 @@ export function MissingClass({ cls }: { cls: ExtendedClass; }) {
       alert('Invalid time. Please try again.');
     } else {
       dispatch(Settings.customTime({
-        classId,
+        classId: cls.id,
         pattern: DAYS_OF_WEEK.filter((day) => data[day]),
         start,
         end,
@@ -47,13 +46,13 @@ export function MissingClass({ cls }: { cls: ExtendedClass; }) {
             <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
               <div className="grid grid-cols-[auto_1fr] items-center rounded-lg border-2 p-2 shadow">
                 {DAYS_OF_WEEK.slice(0, 5).map((day) => (
-                  <Fragment key={classId + day}>
-                    <label htmlFor={classId + day} className="text-right">
+                  <Fragment key={cls.id + day}>
+                    <label htmlFor={cls.id + day} className="text-right">
                       {day}
                     </label>
                     <input
                       type="checkbox"
-                      id={classId + day}
+                      id={cls.id + day}
                       className="ml-2 px-2 py-1"
                       defaultChecked={classTime?.pattern.includes(day)}
                       {...register(day)}

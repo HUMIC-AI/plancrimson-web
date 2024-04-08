@@ -44,7 +44,7 @@ export function EventTiles({ events, showSections }: EventTilesProps) {
             className="absolute z-10 rounded hover:z-20"
             style={{
               top: `${toPercent(ev.start)}%`,
-              bottom: `${100 - toPercent(ev.end)}%`,
+              bottom: `${100 - toPercent(ev.end!)}%`,
               left: `${left * 100}%`,
               right: `${right * 100}%`,
               backgroundColor: hexColor,

@@ -113,7 +113,7 @@ function TitleComponent({ scheduleId, term, setEditing }: TitleComponentProps) {
     >
       {schedule.title}
     </Link>
-  ) : 'Loading...';
+  ) : <span>Loading...</span>;
 }
 
 /**

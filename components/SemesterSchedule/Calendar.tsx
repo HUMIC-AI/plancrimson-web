@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { ExtendedClass } from '@/src/lib';
+import type { ClassSchedulingInfo, ExtendedClass } from '@/src/lib';
 import {
   allTruthy, getClassId, DAYS_OF_WEEK, DAY_SHORT,
   getEvents,
@@ -36,7 +36,7 @@ export default function Calendar({ schedule }: CalendarProps) {
   /**
    * Extends a class with user-provided custom time information
    */
-  function extendCustomTime(cls: ExtendedClass): ExtendedClass {
+  function extendCustomTime(cls: ExtendedClass): ExtendedClass & { CUSTOM_PLANNED?: true } {
     const classId = getClassId(cls);
     if (!(classId in customTimes)) return cls;
     return {
@@ -69,7 +69,7 @@ function CalendarBody({
   classes,
   events,
 }: {
-  classes: ExtendedClass[];
+  classes: ClassSchedulingInfo[];
   events: EventAttributes[];
 }) {
   const unscheduledClasses = classes.filter(
@@ -151,7 +151,7 @@ function CalendarBody({
           <p>You can enter corrected times below.</p>
           <ul className="space-y-4">
             {unscheduledClasses.map((cls) => (
-              <li key={cls.Key}>
+              <li key={cls.id}>
                 <MissingClass cls={cls} />
               </li>
             ))}

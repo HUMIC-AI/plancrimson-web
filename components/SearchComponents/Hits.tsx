@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import {
-  sampleCourses, ExtendedClass, DAY_SHORT, getClassId,
+  sampleCourses, ExtendedClass, getClassId,
 } from '@/src/lib';
 import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
 import useChosenScheduleContext from '@/src/context/selectedSchedule';
@@ -49,17 +49,7 @@ function CustomButton({
   );
 }
 
-const sampleHits: ExtendedClass[] = sampleCourses
-  // oh, the things i do for typescript
-  .map((course: ExtendedClass) => ({
-    ...course,
-    ...Object.assign(
-      {},
-      ...DAY_SHORT.map((attr) => ({
-        [attr]: course[attr] as 'Y' | 'N',
-      })),
-    ),
-  }));
+const sampleHits = sampleCourses as ExtendedClass[];
 
 /**
  * TODO optimize this component
@@ -69,9 +59,9 @@ const sampleHits: ExtendedClass[] = sampleCourses
 function HitsComponent({
   hits = sampleHits,
   hasMore = true,
-  hasPrevious = false,
+  // hasPrevious = false,
   refineNext = alertSignIn,
-  refinePrevious = alertSignIn,
+  // refinePrevious = alertSignIn,
   inSearch = false,
 }: InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }) {
   const { oneCol } = useSearchState();
