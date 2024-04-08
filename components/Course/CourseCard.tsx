@@ -24,7 +24,7 @@ import {
 } from './CourseComponents';
 import { ClassSizeRating, HoursRating, StarRating } from './RatingIndicators';
 import { useDragAndDropContext } from '../YearSchedule/SemesterColumn/DragAndDrop';
-import { ToggleButton } from './ToggleButton';
+import { CourseCardToggleButton } from './ToggleButton';
 
 type Department = keyof typeof departmentImages;
 
@@ -155,7 +155,10 @@ export default function CourseCard({
                 </Tooltip>
                 )}
 
-                <ToggleButton chosenScheduleId={chosenScheduleId!} course={course} />
+                <CourseCardToggleButton
+                  chosenScheduleId={chosenScheduleId!}
+                  course={course}
+                />
               </span>
             </p>
 

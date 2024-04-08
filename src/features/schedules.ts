@@ -75,7 +75,9 @@ export function selectSchedule(scheduleId: ScheduleId | null | undefined) {
 
 // ========================= ACTION CREATORS =========================
 
-export const { overwriteSchedules, unionSchedules, clearSchedule } = schedulesSlice.actions;
+export const {
+  overwriteSchedules, unionSchedules, clearSchedule, create: createLocal,
+} = schedulesSlice.actions;
 
 // Checks if the given schedule is in the Redux store.
 // If it is, throw an error.
@@ -125,7 +127,15 @@ export const deleteSchedule = (id: string) => async (dispatch: AppDispatch) => {
   return dispatch(schedulesSlice.actions.deleteSchedule(id));
 };
 
-export const addCourses = ({ scheduleId, courses: coursesToAdd }: CoursesPayload) => async (dispatch: AppDispatch) => {
+export const addCourses = ({ scheduleId, courses: coursesToAdd }: CoursesPayload) => async (dispatch: AppDispatch, getState: () => RootState) => {
+  if (scheduleId === 'GRAPH_SCHEDULE') {
+    const existing = getState().schedules[scheduleId].classes || [];
+    return dispatch(schedulesSlice.actions.setCourses({
+      scheduleId,
+      courses: [...existing, ...coursesToAdd],
+    }));
+  }
+
   const snap = await getDoc(Firestore.schedule(scheduleId));
   if (!snap.exists) throw new Error('schedule not found');
   const { classes } = snap.data()!;

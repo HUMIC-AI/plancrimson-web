@@ -151,9 +151,13 @@ function ClassesCloud({
   useEffect(() => {
     if (!sceneUtils || !positions || !courses) return;
     if (pointsRef.current) sceneRef.current!.remove(pointsRef.current);
-    pointsRef.current = sceneUtils.createPoints(courses.map((courseData) => courseData.subject), positions, particleSize);
+    pointsRef.current = sceneUtils.createPoints(
+      courses.map((courseData) => courseData.subject),
+      positions as [number, number, number][],
+      particleSize,
+    );
     sceneRef.current!.add(pointsRef.current);
-  }, [sceneUtils, positions, courses]);
+  }, [sceneUtils, positions, courses, particleSize]);
 
   return (
     <div className={classNames(

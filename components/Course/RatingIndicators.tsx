@@ -8,7 +8,7 @@ import {
  * Scale of one to five stars.
  */
 export function StarRating({ rating }: { rating: number; }) {
-  const stars = useMemo(() => getStars(rating), [rating]);
+  const stars = useStars(rating);
 
   return (
     <div className="flex items-center space-x-1">
@@ -32,8 +32,10 @@ export function StarRating({ rating }: { rating: number; }) {
   );
 }
 
+export const transformClassSize = (population: number) => Math.log(population);
+
 export function ClassSizeRating({ population }: { population: number }) {
-  const stars = useMemo(() => getStars(Math.log(population)), [population]);
+  const stars = useStars(transformClassSize(population));
 
   return (
     <div className="flex items-center space-x-1">
@@ -62,7 +64,7 @@ export function ClassSizeRating({ population }: { population: number }) {
 
 export function HoursRating({ hours }: { hours: number }) {
   // 5 stars approximately corresponds to 16 hours
-  const stars = useMemo(() => getStars(Math.log(hours) * 1.8), [hours]);
+  const stars = useStars(Math.log(hours) * 1.8);
 
   return (
     <div className="flex items-center space-x-1">
@@ -91,9 +93,11 @@ export function HoursRating({ hours }: { hours: number }) {
  * @param value from 0 to 5.
  * @returns a flat array filled with "full", "half", or "empty".
  */
-export function getStars(value: number): ('full' | 'half' | 'empty')[] {
-  const halfStars = value - Math.floor(value) >= 0.5 ? 1 : 0;
-  const fullStars = Math.min(Math.max(Math.floor(value), 0), 5 - halfStars);
-  const emptyStars = 5 - fullStars - halfStars;
-  return [...Array(fullStars).fill('full'), ...Array(halfStars).fill('half'), ...Array(emptyStars).fill('empty')];
+export function useStars(value: number): ('full' | 'half' | 'empty')[] {
+  return useMemo(() => {
+    const halfStars = value - Math.floor(value) >= 0.5 ? 1 : 0;
+    const fullStars = Math.min(Math.max(Math.floor(value), 0), 5 - halfStars);
+    const emptyStars = 5 - fullStars - halfStars;
+    return [...Array(fullStars).fill('full'), ...Array(halfStars).fill('half'), ...Array(emptyStars).fill('empty')];
+  }, [value]);
 }

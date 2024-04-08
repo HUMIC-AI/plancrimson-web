@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Subject } from '@/src/lib';
 import type { CourseLevel } from '@/src/types';
 
-const DATA_PATHS: Record<CourseLevel, {
-  pca: string;
-  tsne: string;
-  courses: string;
-}> = {
+export const DATA_FIELDS = ['pca', 'tsne'] as const;
+
+export type DataField = typeof DATA_FIELDS[number];
+
+const DATA_PATHS: Record<CourseLevel, Record<DataField | 'courses', string>> = {
   undergrad: {
     pca: '/pca-undergrad.json',
     tsne: '/tsne-undergrad.json',
@@ -24,44 +24,55 @@ const DATA_PATHS: Record<CourseLevel, {
   },
 };
 
-export function useCourseData(level: CourseLevel, filterSubjects?: Subject[]) {
-  const [courses, setCourses] = useState<[string, Subject][] | null>(null);
+export type CourseBrief = {
+  i: number;
+  id: string;
+  subject: Subject;
+  meanClassSize: number | null;
+  meanHours: number | null;
+  meanRating: number | null;
+  meanRecommendation: number | null;
+};
+
+export function useCourseData(level: CourseLevel, filterSubjects?: Subject[]): CourseBrief[] | null {
+  const [courses, setCourses] = useState<CourseBrief[] | null>(null);
 
   useEffect(() => {
-    const coursesPath = DATA_PATHS[level].courses;
-
-    fetch(coursesPath)
+    fetch(DATA_PATHS[level].courses)
       .then((res) => res.json())
       .then((data) => {
         setCourses(data);
+      })
+      .catch((err) => {
+        console.error(err);
       });
   }, [level]);
 
   const filteredCourses = useMemo(() => {
     if (!courses) return null;
-    if (!filterSubjects) return courses.map(([id, subject], i) => ({ id, subject, i }));
+    if (!filterSubjects) return courses.map((course, i) => ({ ...course, i }));
     return courses
-      .map(([id, subject], i) => (filterSubjects.includes(subject) ? { id, subject, i } : null!))
+      .map((course, i) => (filterSubjects.includes(course.subject) ? { ...course, i } : null!))
       .filter(Boolean);
   }, [courses, filterSubjects]);
 
   return filteredCourses;
 }
 
-export function useCourseEmbeddingData(level: CourseLevel, filterSubjects?: Subject[]) {
-  const [positions, setPositions] = useState<[number, number, number][] | null>(null);
+export function useCourseEmbeddingData(level: CourseLevel, filterSubjects?: Subject[], dataType: DataField = 'tsne') {
+  const [positions, setPositions] = useState<number[][] | null>(null);
   const filteredCourses = useCourseData(level, filterSubjects);
 
   useEffect(() => {
-    console.info('fetching data');
-    const tsnePath = DATA_PATHS[level].tsne;
-
-    fetch(tsnePath)
+    fetch(DATA_PATHS[level][dataType])
       .then((res) => res.json())
       .then((data) => {
         setPositions(data);
+      })
+      .catch((err) => {
+        console.error(err);
       });
-  }, [level]);
+  }, [dataType, level]);
 
   const filteredPositions = useMemo(() => {
     if (!filteredCourses || !positions) return null;

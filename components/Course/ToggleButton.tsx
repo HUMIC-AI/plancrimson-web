@@ -13,7 +13,9 @@ import {
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { getClasses } from '@/src/features/schedules';
 
-export function ToggleButton({ chosenScheduleId, course }: { chosenScheduleId: string; course: ExtendedClass; }) {
+export function CourseCardToggleButton({
+  chosenScheduleId, course,
+}: { chosenScheduleId: string; course: ExtendedClass; }) {
   const dispatch = useAppDispatch();
   const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
