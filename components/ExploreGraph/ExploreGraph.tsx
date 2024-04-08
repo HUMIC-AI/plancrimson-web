@@ -5,19 +5,25 @@ import { Schedules } from '../../src/features';
 import { useAppDispatch, useAppSelector } from '../../src/utils/hooks';
 import { DatumBase, useUpdateGraph } from './initGraph';
 import { CuteSwitch } from '../Utils/CuteSwitch';
+import { Subject, getSubjectColor } from '../../src/lib';
 
 /**
  * A 2D d3 force graph of different courses.
  */
 export function Graph({
   onHover,
+  onFix,
   panelRef,
 }: {
   onHover: (id: string | null) => void;
+  onFix: (id: string | null) => void;
   panelRef: React.RefObject<HTMLDivElement>;
 }) {
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
-  const { graph, ref } = useUpdateGraph(positions, courses, onHover);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const { graph, ref } = useUpdateGraph({
+    positions, courses, onHover, onFix, setSubjects,
+  });
   const chosenSchedule = useAppSelector(Schedules.selectSchedule('GRAPH_SCHEDULE'));
   const prevIds = useRef<string[]>();
 
@@ -58,17 +64,19 @@ export function Graph({
         reset={graph.reset}
         resetZoom={graph.resetZoom}
         setFlip={graph.setFlip}
+        subjects={subjects}
       />, panelRef.current)}
     </div>
   );
 }
 
 function Buttons({
-  reset, resetZoom, setFlip,
+  reset, resetZoom, setFlip, subjects,
 }: {
   reset: () => void;
   resetZoom: () => void;
   setFlip: (flip: boolean) => void;
+  subjects: Subject[];
 }) {
   const dispatch = useAppDispatch();
   const [flip, setToggleFlip] = useState(false);
@@ -102,6 +110,15 @@ function Buttons({
           }}
         />
       </div>
+
+      <ul className="absolute top-full flex flex-col items-end text-xs">
+        {subjects.map((s) => (
+          <li key={s} className="flex items-center">
+            {s}
+            <span className="ml-1 h-2 w-2 rounded-full" style={{ backgroundColor: getSubjectColor(s) }} />
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

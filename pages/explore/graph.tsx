@@ -15,6 +15,7 @@ import { Graph } from '../../components/ExploreGraph/ExploreGraph';
 export default function GraphPage() {
   const userId = Auth.useAuthProperty('uid');
   const [hoveredClassId, setHoveredClassId] = useState<string | null>(null);
+  const [fixedClassId, setFixedClassId] = useState<string | null>(null);
   const courseInfoRef = useRef<HTMLDivElement>(null);
 
   const chosenScheduleContext = useMemo((): ChosenScheduleContextType => ({
@@ -44,22 +45,30 @@ export default function GraphPage() {
         <ChosenScheduleContext.Provider value={chosenScheduleContext}>
           {/* three main components: the background graph, the left search bar, the right course info */}
           {userId ? (
-            <Graph onHover={(id) => id && setHoveredClassId(id)} panelRef={courseInfoRef} />
-          ) : (
-            <div className="flex flex-1 items-center justify-center">
-              <button
-                type="button"
-                onClick={() => signInUser().catch((err) => console.error(err))}
-                className="interactive font-medium"
-              >
-                Sign in to explore the graph!
-              </button>
-            </div>
-          )}
+            <Graph
+              onHover={(id) => id && setHoveredClassId(id)}
+              onFix={setFixedClassId}
+              panelRef={courseInfoRef}
+            />
+          ) : <NoGraphMessage />}
           <ExplorePageCourseSearchSection />
-          <HoveredCourseInfo ref={courseInfoRef} courseId={hoveredClassId} />
+          <HoveredCourseInfo ref={courseInfoRef} courseId={fixedClassId ?? hoveredClassId} />
         </ChosenScheduleContext.Provider>
       </WithMeili>
     </Layout>
+  );
+}
+
+function NoGraphMessage() {
+  return (
+    <div className="flex flex-1 items-center justify-center">
+      <button
+        type="button"
+        onClick={() => signInUser().catch((err) => console.error(err))}
+        className="interactive font-medium"
+      >
+        Sign in to explore the graph!
+      </button>
+    </div>
   );
 }

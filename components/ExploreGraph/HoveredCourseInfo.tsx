@@ -38,25 +38,43 @@ export const HoveredCourseInfo = forwardRef(({ courseId }: {
 
     const modalProps: Partial<InfoCardProps> = {
       title: 'Hover over a course to see more information',
-      headerContent: 'Click a course to browse similar ones',
+      headerContent: (
+        <p className="mt-2">
+          <strong>Click</strong>
+          {' '}
+          a course to browse
+          {' '}
+          <em>similar</em>
+          {' '}
+          ones. Or
+          {' '}
+          <strong>add opposites</strong>
+          {' '}
+          and see what happens!
+        </p>
+      ),
       content: (
         <div className="space-y-2 p-6">
           <p>
-            The size of each dot indicates the typical number of students.
+            The
+            {' '}
+            <strong>size</strong>
+            {' '}
+            of each dot indicates the typical number of students.
           </p>
           <p>
             The
             {' '}
             <strong>saturation</strong>
             {' '}
-            indicates the mean number of hours.
+            indicates the average rating. (More saturated means higher rating!)
           </p>
           <p>
             The
             {' '}
             <strong>opacity</strong>
             {' '}
-            indicates the average rating.
+            indicates the workload. (More opaque means more work!)
           </p>
         </div>
       ),

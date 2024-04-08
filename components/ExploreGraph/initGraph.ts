@@ -4,10 +4,10 @@ import {
 } from 'react';
 import { CourseBrief } from '../ClassesCloudPage/useData';
 import {
+  Subject,
   getSubjectColor, getUpcomingSemester,
 } from '../../src/lib';
 import { useMeiliClient } from '../../src/context/meili';
-import { transformClassSize } from '../Course/RatingIndicators';
 import { useModal } from '../../src/context/modal';
 import { createLocal } from '../../src/features/schedules';
 import { useAppDispatch } from '../../src/utils/hooks';
@@ -28,16 +28,30 @@ export type LinkDatum = {
 
 export type Simulation = d3.Simulation<Datum, LinkDatum>;
 
-const RADIUS = 5;
+export type InitGraphProps = {
+  positions: number[][] | null;
+  courses: CourseBrief[] | null;
+  onHover: (id: string | null) => void;
+  onFix: (id: string | null) => void;
+  setSubjects: (subjects: Subject[]) => void;
+};
+
+export type InitGraphPropsRequired = InitGraphProps & {
+  positions: number[][];
+  courses: CourseBrief[];
+};
+
+
+const RADIUS = 4;
 const T_DURATION = 150;
 const LINK_STRENGTH = 0.1;
 const CHARGE_STRENGTH = -100;
 
 const getColor = (d: DatumBase) => getSubjectColor(d.subject, {
-  saturation: (d.meanHours || 3) / 5,
-  opacity: (d.meanRating || 3) / 5,
+  saturation: (d.meanRating ? d.meanRating : 3) / 5,
+  opacity: (d.meanHours ? d.meanHours : 3) / 5,
 });
-const getRadius = (d: CourseBrief) => RADIUS * transformClassSize(d.meanClassSize || 30);
+const getRadius = (d: CourseBrief) => RADIUS * (d.meanClassSize ? Math.sqrt(d.meanClassSize) : Math.sqrt(20));
 const stringify = (d: string | { id: string }) => (typeof d === 'string' ? d : d.id);
 const sameLink = (l: LinkDatum, d: LinkDatum) => {
   const lsrc = stringify(l.source);
@@ -52,11 +66,7 @@ export type GraphHook = {
   ref: React.RefObject<SVGSVGElement>;
 };
 
-export function useUpdateGraph(
-  positions: number[][] | null,
-  courses: CourseBrief[] | null,
-  onHover: (id: string | null) => void,
-): GraphHook {
+export function useUpdateGraph(props: InitGraphProps): GraphHook {
   const dispatch = useAppDispatch();
   const { client } = useMeiliClient();
   const { showCourse } = useModal();
@@ -66,15 +76,11 @@ export function useUpdateGraph(
 
   useEffect(() => {
     // only initialize graph once
-    if (graphRef.current || !positions || !courses || !ref.current) return;
+    if (graphRef.current || !props.positions || !props.courses || !ref.current) return;
 
     console.info('initializing graph');
 
-    graphRef.current = initGraph(ref.current, {
-      positions,
-      courses,
-      onHover,
-    });
+    graphRef.current = initGraph(ref.current, props as InitGraphPropsRequired);
 
     dispatch(createLocal({
       id: 'GRAPH_SCHEDULE',
@@ -85,7 +91,7 @@ export function useUpdateGraph(
       classes: [],
       ...getUpcomingSemester(),
     }));
-  }, [positions, courses, dispatch, client, showCourse, onHover]);
+  }, [dispatch, client, showCourse, props]);
 
   // stop simulation when unmounting
   useEffect(() => () => {
@@ -102,12 +108,8 @@ export function useUpdateGraph(
 }
 
 function initGraph(svgDom: SVGSVGElement, {
-  positions, courses, onHover,
-}: {
-  positions: number[][];
-  courses: CourseBrief[];
-  onHover: (id: string | null) => void;
-}) {
+  positions, courses, onHover, onFix, setSubjects,
+}: InitGraphPropsRequired) {
   const svg = d3.select(svgDom);
 
   // these get initialized later in the component by the user
@@ -115,6 +117,7 @@ function initGraph(svgDom: SVGSVGElement, {
     .forceSimulation()
     .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(LINK_STRENGTH))
     .force('charge', d3.forceManyBody().strength(CHARGE_STRENGTH))
+    .force('collide', d3.forceCollide<Datum>((d) => getRadius(d) + RADIUS * 2).iterations(2))
     .force('x', d3.forceX())
     .force('y', d3.forceY());
 
@@ -130,6 +133,18 @@ function initGraph(svgDom: SVGSVGElement, {
     .attr('cursor', 'grab');
 
   let node = nodeGroup.selectAll<SVGCircleElement, Datum>('circle');
+
+  let highlight: string | null = null;
+
+  const setFixedId = (id: string | null) => {
+    console.debug('fixing node', id);
+    id = highlight === id ? null : id;
+    onFix(id);
+    highlight = id;
+    node.transition()
+      .duration(2 * T_DURATION)
+      .attr('stroke-opacity', (d) => (highlight === d.id ? 2 : 0));
+  };
 
   const ticked = () => {
     link
@@ -147,6 +162,11 @@ function initGraph(svgDom: SVGSVGElement, {
   sim.on('tick', ticked);
 
   let flip = false;
+
+  svg.on('contextmenu', (event) => {
+    event.preventDefault();
+    setFixedId(null);
+  });
 
   function addNewNeighbours(d: Datum) {
     const nodes: Datum[] = positions.filter((_, i) => !node.data().some((g) => g.i === i))
@@ -205,10 +225,13 @@ function initGraph(svgDom: SVGSVGElement, {
           .attr('r', getRadius);
         onHover(null);
       })
-      // right click on a node adds neighbours to graph
       .on('click', (event, d) => {
-        event.preventDefault();
         addNewNeighbours(d);
+      })
+      .on('contextmenu', (event, d) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setFixedId(d.id);
       });
   }
 
@@ -293,6 +316,9 @@ function initGraph(svgDom: SVGSVGElement, {
       .join(
         (enter) => enter.append('circle')
           .attr('fill', getColor)
+          .attr('stroke', 'black')
+          .attr('stroke-width', 1.5)
+          .attr('stroke-opacity', 0)
           .call(addListeners)
           .call((n) => n.transition()
             .duration(T_DURATION)
@@ -302,6 +328,9 @@ function initGraph(svgDom: SVGSVGElement, {
       );
 
     restartSimulation();
+
+    // set unique subjects
+    setSubjects([...new Set(nodes.map((d) => d.subject))]);
   }
 
   return {
