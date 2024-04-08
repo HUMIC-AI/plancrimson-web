@@ -153,7 +153,7 @@ function Graph({
 
     update(nodes, []);
     if (prevIds.current) {
-      const removed = prevIds.current.filter((id) => !chosenSchedule.classes.includes(id));
+      const removed = prevIds.current.filter((id) => !chosenSchedule.classes!.includes(id));
       remove(removed);
     }
     prevIds.current = [...chosenSchedule.classes];

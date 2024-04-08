@@ -23,8 +23,8 @@ export type Datum = DatumBase & {
 };
 
 export type LinkDatum = {
-  source: string;
-  target: string;
+  source: Datum;
+  target: Datum;
 };
 
 export type Simulation = d3.Simulation<Datum, LinkDatum>;
@@ -268,8 +268,8 @@ function initGraph(svgDom: SVGSVGElement, {
   /**
    * Use {@link DatumBase} since we don't need to initialize x and y.
    */
-  function update(nodes: DatumBase[], links: LinkDatum[]) {
-    console.debug('updating graph', nodes.length, links.length);
+  function update(nodes: DatumBase[], idLinks: { source: string; target: string; }[]) {
+    console.debug('updating graph', nodes.length, idLinks.length);
 
     // copy existing nodes and links
     nodes = node.data().concat(
@@ -277,9 +277,9 @@ function initGraph(svgDom: SVGSVGElement, {
         .map((d) => ({ ...d }) as Datum),
     );
 
-    links = link.data().concat(
-      links.filter((d) => !link.data().some((l) => sameLink(l, d)))
-        .map((d) => ({ ...d })),
+    const links = link.data().concat(
+      idLinks.filter((d) => !link.data().some((l) => sameLink(l, d as unknown as LinkDatum)))
+        .map((d) => ({ ...d }) as unknown as LinkDatum),
     );
 
     link = link
