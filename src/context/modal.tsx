@@ -28,20 +28,20 @@ const ModalContext = createContext<ModalContextType>({
  */
 export function ModalProvider({ children }: PropsWithChildren<{}>) {
   const [open, setOpen] = useState<boolean>(false);
-  const [modalContents, setContents] = useState<InfoCardProps | null>(null);
+  const [modalProps, setModalProps] = useState<InfoCardProps | null>(null);
 
   const showContents: ModalContextType['showContents'] = (contents) => {
-    setContents(contents);
+    setModalProps(contents);
     setOpen(true);
   };
 
   const context = useMemo(() => ({
     open,
-    data: modalContents,
+    modalProps,
     setOpen,
     showCourse: (course: ExtendedClass) => showContents(getCourseModalContent(course)),
     showContents,
-  }), [open, modalContents]);
+  }), [open, modalProps]);
 
   return (
     <ModalContext.Provider value={context}>
