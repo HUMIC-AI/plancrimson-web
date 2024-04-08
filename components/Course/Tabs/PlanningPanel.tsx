@@ -1,4 +1,4 @@
-import { Tab, Switch } from '@headlessui/react';
+import { Tab } from '@headlessui/react';
 import Link from 'next/link';
 import React, { useMemo } from 'react';
 import {
@@ -15,7 +15,6 @@ import { useAppSelector, useAppDispatch, useElapsed } from '@/src/utils/hooks';
 import Tooltip from '@/components/Utils/Tooltip';
 import { checkViable } from '@/src/searchSchedule';
 import type { BaseSchedule } from '@/src/types';
-import { classNames } from '@/src/utils/styles';
 import { sortSchedulesBySemester } from '@/src/utils/schedules';
 import { getClasses } from '@/src/features/schedules';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
