@@ -10,6 +10,7 @@ import AttributeMenu from '@/components/SearchComponents/AttributeMenu/Attribute
 import { ScheduleSyncer } from '@/components/ScheduleSyncer';
 import { WithMeili } from '@/components/Layout/WithMeili';
 import { AuthRequiredInstantSearchProvider } from '../components/AuthRequiredInstantSearchProvider';
+import { classNames } from '../src/utils/styles';
 
 export default function SearchPage() {
   const userId = Auth.useAuthProperty('uid');
@@ -18,13 +19,13 @@ export default function SearchPage() {
   return (
     <Layout
       title="Search"
-      className="mx-auto flex w-screen max-w-5xl flex-1 justify-center sm:p-8"
+      className="mx-auto flex w-screen max-w-5xl flex-1 justify-center px-4 sm:p-8"
     >
       <WithMeili userId={userId}>
         {userId && <ScheduleSyncer userId={userId} />}
 
         <AuthRequiredInstantSearchProvider>
-          <div className={showAttributes ? 'mr-8' : 'hidden'}>
+          <div className={classNames('hidden', showAttributes && 'lg:block lg:mr-8')}>
             <AttributeMenu withWrapper lgOnly />
           </div>
 

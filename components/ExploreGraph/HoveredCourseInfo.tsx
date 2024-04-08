@@ -66,7 +66,7 @@ export const HoveredCourseInfo = forwardRef(({ courseId }: {
   }, [course]);
 
   return (
-    <div className="absolute inset-y-0 right-0" ref={ref}>
+    <div className="absolute inset-y-0 right-0 max-w-xs p-2" ref={ref}>
       <InfoCard small isDialog={false} noExit {...props} />
     </div>
   );

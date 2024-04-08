@@ -2,28 +2,26 @@ import { FilterGrid } from '@/components/ConnectPageComponents/FilterGrid';
 import { IncomingRequestList } from '@/components/ConnectPageComponents/FriendRequests';
 import { SearchBar } from '@/components/ConnectPageComponents/SearchBar';
 import { useFriends, useIds } from '@/components/ConnectPageComponents/friendUtils';
-import { ProfileWithSchedules, useAllProfiles, useLunrIndex } from '@/components/ConnectPageComponents/useLunrIndex';
+import { useLunrIndex } from '@/components/ConnectPageComponents/useLunrIndex';
 import Layout from '@/components/Layout/Layout';
 import ExpandCardsProvider from '@/src/context/expandCards';
 import { useIncludeSemesters } from '@/src/context/includeSemesters';
 import { useMeiliClient } from '@/src/context/meili';
 import { ClassCache } from '@/src/features';
 import {
-  getDefaultSemesters, getCurrentDefaultClassYear, Term, semesterToTerm, termToSemester,
+  getDefaultSemesters, getCurrentDefaultClassYear, Term, termToSemester,
 } from '@/src/lib';
 import Schema from '@/src/schema';
-import {
-  BaseSchedule, FirestoreSchedule, UserProfile, WithId,
-} from '@/src/types';
 import { alertUnexpectedError, useAppDispatch } from '@/src/utils/hooks';
-import { getAllClassIds, useSharedCourses } from '@/src/utils/schedules';
+import { getAllClassIds } from '@/src/utils/schedules';
 import {
-  DocumentSnapshot, QueryConstraint, getDocs, limit, query, startAfter, where,
+  QueryConstraint, getDocs, limit, query, startAfter, where,
 } from 'firebase/firestore';
 import {
   useCallback, useEffect, useMemo, useState,
 } from 'react';
 import { ProfilesList } from '../components/ConnectPageComponents/ProfilesList';
+import { AllSchedules, useShowProfiles } from '../components/ConnectPageComponents/useShowProfiles';
 
 export default function () {
   return (
@@ -38,11 +36,6 @@ export default function () {
     </Layout>
   );
 }
-
-type AllSchedules = Record<Term, {
-  schedules: WithId<BaseSchedule>[];
-  bookmark: DocumentSnapshot<FirestoreSchedule> | null;
-}>;
 
 function FriendsPage({ userId }: { userId: string }) {
   const dispatch = useAppDispatch();
@@ -113,7 +106,7 @@ function FriendsPage({ userId }: { userId: string }) {
   }, [includeSemesters]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4">
       <IncomingRequestList incomingPending={incomingPending} />
 
       <FilterGrid allSemesters={allSemesters} />
@@ -191,61 +184,4 @@ function LoadMoreButton({
   );
 }
 
-function useShowProfiles({
-  allSchedules, friends, friendIds, friendsOnly,
-}: {
-  allSchedules: AllSchedules;
-  friends: WithId<UserProfile>[] | undefined;
-  friendIds: string[] | undefined;
-  friendsOnly: boolean;
-}) {
-  const allProfiles = useAllProfiles();
-  const { includeSemesters, profilesOnly } = useIncludeSemesters();
-  const friendSchedules = useSharedCourses(friendIds);
 
-  // get a massive list of all loaded schedules
-  const mergedSchedules = useMemo(() => {
-    const schedules = [...Object.values(friendSchedules).flat(), ...Object.values(allSchedules).flatMap((term) => term.schedules)];
-    const seen = new Set<string>();
-    return schedules.filter((schedule) => {
-      if (seen.has(schedule.id)) return false;
-      seen.add(schedule.id);
-      return true;
-    });
-  }, [friendSchedules, allSchedules]);
-
-  // get a list of profiles
-  const showProfiles = useMemo((): ProfileWithSchedules[] => {
-    if (!allProfiles || !mergedSchedules) return [];
-
-    const friendMap = new Set(friendIds);
-
-    if (profilesOnly) {
-      const profiles = friendsOnly
-        ? allProfiles.filter((profile) => friendMap.has(profile.id))
-        : allProfiles;
-
-      return profiles.map((profile) => ({
-        ...profile,
-        currentSchedules: [],
-      }));
-    }
-
-    const filterSchedules = (ownerUid: string, schedule: BaseSchedule) => schedule.ownerUid === ownerUid && includeSemesters.includes(semesterToTerm(schedule));
-
-    return (friendsOnly ? friends! : allProfiles).map((profile) => ({
-      ...profile,
-      currentSchedules: mergedSchedules.filter((schedule) => filterSchedules(profile.id, schedule)),
-    }));
-  }, [allProfiles, mergedSchedules, friendIds, profilesOnly, friendsOnly, friends, includeSemesters]);
-
-  const emptySchedulesRemoved = useMemo(() => {
-    if (profilesOnly) return showProfiles;
-    return showProfiles.map((profile) => ({
-      ...profile,
-      currentSchedules: profile.currentSchedules.filter((schedule) => schedule.classes && schedule.classes.length > 0),
-    }));
-  }, [profilesOnly, showProfiles]);
-
-  return emptySchedulesRemoved;
-}

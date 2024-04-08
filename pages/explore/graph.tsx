@@ -8,7 +8,7 @@ import { ChosenScheduleContext, ChosenScheduleContextType } from '../../src/cont
 import { signInUser } from '../../components/Layout/useSyncAuth';
 import { breakpoints, useBreakpoint } from '../../src/utils/styles';
 import { HoveredCourseInfo } from '../../components/ExploreGraph/HoveredCourseInfo';
-import { ExplorePageCourseSearchSection } from '../../components/ExploreGraph/SearchSection';
+import { ExplorePageCourseSearchSection } from '../../components/ExploreGraph/ExplorePageCourseSearchSection';
 import { Graph } from '../../components/ExploreGraph/ExploreGraph';
 
 
@@ -22,7 +22,7 @@ export default function GraphPage() {
     chosenScheduleId: 'GRAPH_SCHEDULE',
   }), []);
 
-  const isLg = useBreakpoint(breakpoints.md);
+  const isLg = useBreakpoint(breakpoints.lg);
 
   if (!isLg) {
     return (

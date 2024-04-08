@@ -93,7 +93,7 @@ function Buttons({
         Reset zoom
       </button>
       <div className="flex items-center">
-        <span className="mr-2">Add opposites</span>
+        <span className="mr-2 whitespace-nowrap">Add opposites</span>
         <CuteSwitch
           enabled={flip}
           onChange={(checked) => {
