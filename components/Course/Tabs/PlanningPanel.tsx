@@ -19,6 +19,7 @@ import { classNames } from '@/src/utils/styles';
 import { sortSchedulesBySemester } from '@/src/utils/schedules';
 import { getClasses } from '@/src/features/schedules';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
+import { CuteSwitch } from '../../Utils/CuteSwitch';
 
 /**
  * The planning panel in the course modal. Returns a Tab.Panel.
@@ -101,7 +102,7 @@ function ScheduleRow({ schedule, course }: { schedule: BaseSchedule; course: Ext
 
   if (viabilityStatus === null) return null;
 
-  function handleSwitch(checked: boolean) {
+  const handleSwitch = (checked: boolean) => {
     if (checked) {
       if (viabilityStatus !== null && viabilityStatus.viability === 'No') {
         alert('This course is not being offered in this semester!');
@@ -117,7 +118,7 @@ function ScheduleRow({ schedule, course }: { schedule: BaseSchedule; course: Ext
         scheduleId: schedule.id,
       }));
     }
-  }
+  };
 
   return (
     <>
@@ -126,29 +127,7 @@ function ScheduleRow({ schedule, course }: { schedule: BaseSchedule; course: Ext
       </span>
       <span className="text-gray-primary">{`${schedule.season} ${schedule.year}`}</span>
       <div className="relative flex flex-row-reverse">
-        {/* Code from https://headlessui.dev/react/switch */}
-        <Switch
-          checked={enabled}
-          onChange={(checked) => handleSwitch(checked)}
-          className={classNames(
-            enabled ? 'bg-blue-primary' : 'bg-blue-secondary',
-            'relative inline-flex items-center h-[28px] w-[64px]',
-            'border-2 border-transparent rounded-full cursor-pointer',
-            'transition-colors ease-in-out duration-500',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/80',
-          )}
-        >
-          {/* the actual circle part */}
-          <span
-            aria-hidden="true"
-            className={classNames(
-              enabled ? 'translate-x-9 bg-gray-secondary' : 'translate-x-0 bg-gray-primary',
-              'pointer-events-none h-[24px] w-[24px] rounded-full',
-              'shadow-lg transform ring-0',
-              'transition ease-in-out duration-200',
-            )}
-          />
-        </Switch>
+        <CuteSwitch enabled={enabled} onChange={handleSwitch} />
         <div className="mr-2 flex items-center">
           <Tooltip text={viabilityStatus.reason} direction="left">
             {viabilityStatus.viability === 'Yes' && (

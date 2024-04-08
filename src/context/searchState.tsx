@@ -110,8 +110,6 @@ function OldSearchStateProvider({
         ...newState,
       };
 
-      console.log(mergedState);
-
       debouncedSetStateRef.current = setTimeout(() => {
         router.replace({
           query: qs.stringify({ ...router.query, ...mergedState }),

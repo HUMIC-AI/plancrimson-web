@@ -13,14 +13,16 @@ import Hits from '../SearchComponents/Hits';
 import { ScheduleSyncer } from '../ScheduleSyncer';
 
 type Props = {
-  events: EventAttributes[];
+  events: (EventAttributes & { isSection?: string })[];
   schedule: BaseSchedule;
 };
 
 export function CalendarHeaderSection({ events, schedule }: Props) {
   const userId = Auth.useAuthProperty('uid');
-  function handleExport() {
-    const { error, value } = createEvents(events);
+  function exportScheduleToIcs() {
+    const { error, value } = createEvents(events.map(({ isSection, ...event }) => ({
+      ...event,
+    })));
     if (error) {
       console.error(error);
       alert('There was an error exporting your schedule. Please try again later.');
@@ -49,7 +51,7 @@ export function CalendarHeaderSection({ events, schedule }: Props) {
 
         <button
           type="button"
-          onClick={handleExport}
+          onClick={exportScheduleToIcs}
           className="interactive rounded-xl bg-gray-secondary px-4 py-2"
         >
           Export to ICS
