@@ -10,7 +10,8 @@ import AuthWrapper from './AuthWrapper';
 type BaseProps = {
   title?: string;
   className?: string;
-  transparentHeader?: boolean;
+  headerStyles?: string;
+  containerStyles?: string;
 };
 
 export type LayoutProps = (BaseProps & {
@@ -29,7 +30,8 @@ export default function Layout({
   title,
   className = LAYOUT_CLASSES,
   verify,
-  transparentHeader = false,
+  headerStyles,
+  containerStyles = 'primary flex min-h-screen flex-col',
 }: LayoutProps) {
   const pageTitle = `PlanCrimson${title ? ` | ${title}` : ''}`;
 
@@ -37,14 +39,8 @@ export default function Layout({
     <>
       <HeadMeta pageTitle={pageTitle} description={description} />
 
-      <div className={
-        classNames(
-          'flex min-h-screen flex-col text-primary',
-          transparentHeader ? 'bg-[black]' : 'bg-secondary',
-        )
-      }
-      >
-        <Navbar transparent={transparentHeader} />
+      <div className={containerStyles}>
+        <Navbar className={headerStyles} />
 
         <Alerts />
 

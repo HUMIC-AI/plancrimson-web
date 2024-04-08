@@ -23,6 +23,9 @@ type Props = {
   filterSubjects?: Subject[];
 };
 
+/**
+ * TODO I forget what I was doing here with the `withMeili` prop
+ */
 export default function ClassesCloudPage({ children, withMeili, ...props }: PropsWithChildren<Props & {
   withMeili?: true;
 }>) {
@@ -34,8 +37,11 @@ export default function ClassesCloudPage({ children, withMeili, ...props }: Prop
         className="relative flex flex-1 items-center justify-center"
         title="Explore"
         // should be visible if not logged in
-        transparentHeader={!!userId}
+        headerStyles={userId
+          ? 'absolute inset-x-0 z-10 bg-gray-secondary/40 hover:bg-gray-secondary/80 text-primary transition-colors'
+          : 'bg-gray-secondary/90 text-primary'}
         verify="meili"
+        containerStyles="bg-black text-primary flex min-h-screen flex-col"
       >
         {() => (
           <>
@@ -51,7 +57,8 @@ export default function ClassesCloudPage({ children, withMeili, ...props }: Prop
     <Layout
       className="relative flex flex-1 items-center justify-center"
       title="Explore"
-      transparentHeader
+      headerStyles="absolute inset-x-0 z-10 bg-gray-secondary/40 hover:bg-gray-secondary/80 text-primary transition-colors"
+      containerStyles="bg-black text-primary flex min-h-screen flex-col"
     >
       <ClassesCloud {...props} />
       {children}

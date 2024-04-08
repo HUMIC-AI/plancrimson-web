@@ -40,7 +40,11 @@ export default function GraphPage() {
   }
 
   return (
-    <Layout title="Graph" className="relative w-full flex-1 bg-secondary">
+    <Layout
+      title="Graph"
+      className="relative w-full flex-1 bg-secondary"
+      headerStyles="bg-secondary/50 text-primary absolute inset-x-0 z-10 hover:bg-secondary/80 transition-colors"
+    >
       <WithMeili userId={userId}>
         <ChosenScheduleContext.Provider value={chosenScheduleContext}>
           {/* three main components: the background graph, the left search bar, the right course info */}

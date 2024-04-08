@@ -39,26 +39,19 @@ if (isDevelopment) {
 
 
 export default function Navbar({
-  transparent = false,
+  className = 'bg-secondary/90 text-primary',
 }: {
-  transparent?: boolean;
+  className?: string;
 }) {
   return (
-    <Menu
-      as="nav"
-      className={classNames(
-        transparent
-          ? 'absolute inset-x-0 z-10 bg-gray-secondary/40 hover:bg-gray-secondary/80 transition-colors'
-          : 'bg-secondary',
-      )}
-    >
+    <Menu as="nav" className={className}>
       {({ open }) => (
         <>
           <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
             <div className="relative flex h-16 items-center justify-between">
               <SmallComponents.MenuButton open={open} />
 
-              <div className="flex flex-1 items-center justify-center text-primary sm:items-stretch sm:justify-start">
+              <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex shrink-0 items-center">
                   <Link href="/home">
                     {/* this on <lg */}

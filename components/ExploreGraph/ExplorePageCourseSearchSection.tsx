@@ -6,7 +6,7 @@ import Hits from '../SearchComponents/Hits';
 
 export function ExplorePageCourseSearchSection() {
   return (
-    <div className="absolute inset-y-0 left-0 flex w-full max-w-xs flex-col space-y-4 overflow-hidden p-2">
+    <div className="absolute bottom-0 left-0 top-16 flex w-full max-w-xs flex-col space-y-4 overflow-hidden px-2 pb-2 pt-8">
       <SearchStateProvider oneCol defaultState={getDefaultSearchStateForSemester(getUpcomingSemester())} ignoreUrl>
         <AuthRequiredInstantSearchProvider hitsPerPage={4}>
           <SearchBox scheduleChooser={false} showSmallAttributeMenu />
