@@ -16,7 +16,7 @@ import Hits from '../../components/SearchComponents/Hits';
 import { useAppDispatch, useAppSelector } from '../../src/utils/hooks';
 import { ChosenScheduleContext, ChosenScheduleContextType } from '../../src/context/selectedSchedule';
 import { DatumBase, useUpdateGraph } from '../../components/initGraph';
-import { InfoCard } from '../../components/Modals/InfoCard';
+import { InfoCard, InfoCardProps } from '../../components/Modals/InfoCard';
 import { getCourseModalContent } from '../../components/Modals/CourseCardModal';
 import { useMeiliClient } from '../../src/context/meili';
 
@@ -45,10 +45,13 @@ export default function GraphPage() {
   );
 }
 
-function HoveredCourseInfo({ courseId }: { courseId: string | null }) {
+function HoveredCourseInfo({ courseId }: {
+  courseId: string | null;
+}) {
   const dispatch = useAppDispatch();
   const { client } = useMeiliClient();
   const [course, setCourse] = useState<ExtendedClass>();
+
   useEffect(() => {
     if (!courseId) {
       setCourse(undefined);
@@ -64,7 +67,41 @@ function HoveredCourseInfo({ courseId }: { courseId: string | null }) {
       });
   }, [courseId, client, dispatch]);
 
-  return <InfoCard small isDialog={false} noExit {...(course && getCourseModalContent(course))} />;
+  const props = useMemo(() => {
+    if (course) {
+      return getCourseModalContent(course);
+    }
+
+    const modalProps: Partial<InfoCardProps> = {
+      title: 'Hover over a course to see more information',
+      headerContent: 'Click a course to browse similar ones',
+      content: (
+        <div className="space-y-2 p-6">
+          <p>
+            The size of each dot indicates the typical number of students.
+          </p>
+          <p>
+            The
+            {' '}
+            <strong>saturation</strong>
+            {' '}
+            indicates the mean number of hours.
+          </p>
+          <p>
+            The
+            {' '}
+            <strong>opacity</strong>
+            {' '}
+            indicates the average rating.
+          </p>
+        </div>
+      ),
+    };
+
+    return modalProps;
+  }, [course]);
+
+  return <InfoCard small isDialog={false} noExit {...props} />;
 }
 
 function SearchSection() {

@@ -5,11 +5,9 @@ import {
 } from 'react';
 import { CourseBrief } from './ClassesCloudPage/useData';
 import {
-  ExtendedClass, getClassId, getSubjectColor, getUpcomingSemester,
+  getSubjectColor, getUpcomingSemester,
 } from '../src/lib';
-import { ClassCache } from '../src/features';
-import { InstantMeiliSearchInstance, useMeiliClient } from '../src/context/meili';
-import { AppDispatch } from '../src/store';
+import { useMeiliClient } from '../src/context/meili';
 import { transformClassSize } from './Course/RatingIndicators';
 import { useModal } from '../src/context/modal';
 import { createLocal } from '../src/features/schedules';
@@ -34,6 +32,10 @@ export type Simulation = d3.Simulation<Datum, LinkDatum>;
 const RADIUS = 5;
 const T_DURATION = 150;
 
+const getColor = (d: DatumBase) => getSubjectColor(d.subject, {
+  saturation: (d.meanHours || 3) / 5,
+  opacity: (d.meanRating || 3) / 5,
+});
 const getRadius = (d: CourseBrief) => RADIUS * transformClassSize(d.meanClassSize || 30);
 const stringify = (d: string | { id: string }) => (typeof d === 'string' ? d : d.id);
 const sameLink = (l: LinkDatum, d: LinkDatum) => {
@@ -63,9 +65,6 @@ export function useUpdateGraph(
     console.log('initializing graph');
 
     graphRef.current = initGraph(ref.current, {
-      dispatch,
-      client,
-      showCourse,
       positions,
       courses,
       onHover,
@@ -98,13 +97,10 @@ export function useUpdateGraph(
 }
 
 function initGraph(svgDom: SVGSVGElement, {
-  positions, courses, dispatch, client, showCourse, onHover,
+  positions, courses, onHover,
 }: {
   positions: number[][],
   courses: CourseBrief[],
-  dispatch: AppDispatch,
-  client: InstantMeiliSearchInstance,
-  showCourse: (course: ExtendedClass) => void,
   onHover: (id: string | null) => void,
 }) {
   const svg = d3.select(svgDom);
@@ -122,10 +118,12 @@ function initGraph(svgDom: SVGSVGElement, {
     .attr('stroke-opacity', 0.6)
     .selectAll<SVGLineElement, LinkDatum>('line');
 
-  let node = svg.append('g')
+  const nodeGroup = svg.append('g')
     .attr('stroke', '#fff')
     .attr('stroke-width', 1.5)
-    .selectAll<SVGCircleElement, Datum>('circle');
+    .attr('cursor', 'grab');
+
+  let node = nodeGroup.selectAll<SVGCircleElement, Datum>('circle');
 
   const ticked = () => {
     link
@@ -179,6 +177,7 @@ function initGraph(svgDom: SVGSVGElement, {
         if (!event.active) sim.alphaTarget(0.3).restart();
         event.subject.fx = event.subject.x;
         event.subject.fy = event.subject.y;
+        nodeGroup.attr('cursor', 'grabbing');
       })
       .on('drag', (event) => {
         event.subject.fx = event.x;
@@ -188,6 +187,7 @@ function initGraph(svgDom: SVGSVGElement, {
         if (!event.active) sim.alphaTarget(0);
         event.subject.fx = null;
         event.subject.fy = null;
+        nodeGroup.attr('cursor', 'grab');
       });
 
     n
@@ -197,7 +197,7 @@ function initGraph(svgDom: SVGSVGElement, {
         d3.select<SVGCircleElement, Datum>(event.target)
           .transition()
           .duration(T_DURATION)
-          .attr('r', (d) => getRadius(d) + RADIUS * 2);
+          .attr('r', (g) => getRadius(g) + RADIUS * 2);
         onHover(d.id);
       })
       .on('mouseout', (event) => {
@@ -207,28 +207,24 @@ function initGraph(svgDom: SVGSVGElement, {
           .attr('r', getRadius);
         onHover(null);
       })
-      .on('click', (_, d) => {
-        dispatch(ClassCache.loadCourses(client, [getClassId(d.id)]))
-          .then(([course]) => {
-            showCourse(course);
-          })
-          .catch((err) => console.error(err));
-      })
       // right click on a node adds neighbours to graph
-      .on('contextmenu', (event, d) => {
+      .on('click', (event, d) => {
         event.preventDefault();
         addNewNeighbours(d);
       });
   }
 
-  const addEmptyText = () => svg.append('text')
-    .attr('x', 0)
-    .attr('y', 0)
-    .attr('text-anchor', 'middle')
-    .attr('dominant-baseline', 'middle')
-    .text('No classes selected');
+  const width = svgDom.width.baseVal.value;
+  const height = svgDom.height.baseVal.value;
 
-  let emptyText = addEmptyText();
+  const zoom = d3.zoom<SVGSVGElement, unknown>()
+    .extent([[0, 0], [width, height]])
+    .scaleExtent([1, 8])
+    .on('zoom', (event) => {
+      svg.attr('transform', event.transform);
+    });
+
+  svg.call(zoom);
 
   function restartSimulation() {
     sim.nodes(node.data());
@@ -259,14 +255,6 @@ function initGraph(svgDom: SVGSVGElement, {
       .remove();
 
     restartSimulation();
-
-    if (nodes.length === 0 && emptyText.empty()) {
-      emptyText = addEmptyText().attr('opacity', 0);
-      emptyText
-        .transition()
-        .duration(T_DURATION)
-        .attr('opacity', 1);
-    }
   }
 
   /**
@@ -294,7 +282,7 @@ function initGraph(svgDom: SVGSVGElement, {
       .data(nodes as Datum[], (d) => d.id)
       .join(
         (enter) => enter.append('circle')
-          .attr('fill', (d) => getSubjectColor(d.subject, (d.meanRating || 3) / 5))
+          .attr('fill', getColor)
           .call(addListeners)
           .call((n) => n.transition()
             .duration(T_DURATION)
@@ -304,14 +292,6 @@ function initGraph(svgDom: SVGSVGElement, {
       );
 
     restartSimulation();
-
-    if (nodes.length > 0) {
-      emptyText
-        .transition()
-        .duration(T_DURATION)
-        .attr('opacity', 0)
-        .remove();
-    }
   }
 
   return {
