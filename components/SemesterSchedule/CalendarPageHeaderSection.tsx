@@ -52,7 +52,7 @@ export function CalendarHeaderSection({ events, schedule }: Props) {
         <button
           type="button"
           onClick={exportScheduleToIcs}
-          className="interactive rounded-xl bg-gray-secondary px-4 py-2"
+          className="button secondary"
         >
           Export to ICS
         </button>

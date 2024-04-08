@@ -19,7 +19,7 @@ export default function SearchPage() {
   return (
     <Layout
       title="Search"
-      className="mx-auto flex w-screen max-w-5xl flex-1 justify-center px-4 sm:p-8"
+      className="mx-auto flex w-screen flex-1 justify-center px-4 sm:p-8"
     >
       <WithMeili userId={userId}>
         {userId && <ScheduleSyncer userId={userId} />}

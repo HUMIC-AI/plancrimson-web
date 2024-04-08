@@ -81,7 +81,7 @@ function Buttons({
     <div className="absolute right-full top-8 mr-2 flex flex-col items-end justify-center space-y-2">
       <button
         type="button"
-        className="rounded bg-primary px-2 py-1 text-secondary transition hover:bg-gray-primary/50"
+        className="secondary button"
         onClick={() => {
           reset();
           dispatch(Schedules.clearSchedule('GRAPH_SCHEDULE'));
@@ -91,7 +91,7 @@ function Buttons({
       </button>
       <button
         type="button"
-        className="rounded bg-primary px-2 py-1 text-secondary transition hover:bg-gray-primary/50"
+        className="secondary button"
         onClick={resetZoom}
       >
         Reset zoom
@@ -112,7 +112,7 @@ function Buttons({
           <li
             key={s}
             className="flex items-center"
-            onMouseEnter={() => { console.log("enter"); highlight(s) }}
+            onMouseEnter={() => highlight(s)}
             onMouseLeave={() => highlight(null)}
           >
             {s}

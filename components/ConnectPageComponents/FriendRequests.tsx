@@ -62,7 +62,7 @@ export function IncomingRequestButtons({ profile }: { profile: WithId<UserProfil
           updateDoc(ref, { accepted: true })
             .catch((err) => console.error('error accepting request', err));
         }}
-        className="interactive rounded bg-gray-secondary px-2 py-1"
+        className="button primary"
       >
         Accept
       </button>
@@ -72,7 +72,7 @@ export function IncomingRequestButtons({ profile }: { profile: WithId<UserProfil
           deleteDoc(ref)
             .catch((err) => console.error('error rejecting request', err));
         }}
-        className="interactive ml-2 rounded bg-gray-secondary px-2 py-1"
+        className="button primary ml-2"
       >
         Reject
       </button>
