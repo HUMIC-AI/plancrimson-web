@@ -6,6 +6,7 @@ import type { ExtendedClass } from '@/src/lib';
 import { allTruthy } from '@/src/lib';
 import { getMeiliApiKey, getMeiliHost } from '@/src/context/meili';
 import type { AppDispatch, RootState } from '../store';
+import { isDevelopment } from '../utils/utils';
 
 export interface ClassCache {
   [classId: string]: ExtendedClass;
@@ -57,6 +58,27 @@ export async function fetchAtOffset(offset: number): Promise<{
   return data;
 }
 
+// api key is required except in development
+// manually fetch the specified document from the Meilisearch index
+const fetchCourse = async (indexName: 'courses' | 'archive', classId: string, apiKey: string): Promise<ExtendedClass> => {
+  const response = await fetch(
+    `${getMeiliHost()}/indexes/${indexName}/documents/${classId}`,
+    {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${apiKey}`,
+      },
+    });
+
+  if (!response.ok && indexName !== 'archive') {
+    const archive = await fetchCourse('archive', classId, apiKey!);
+    return archive;
+  }
+
+  const data: ExtendedClass = await response.json();
+  return data;
+}
+
 /**
  * Load the given classes from the index into Redux.
  * @param index the Meilisearch index to get classes from
@@ -64,6 +86,7 @@ export async function fetchAtOffset(offset: number): Promise<{
  *
  * Note that the latest Meilisearch client does not support the `getDocument` method.
  * We fetch the document directly from the Meilisearch API.
+ * The type hint ensures that the index is accessible.
  */
 export function loadCourses(
   index: InstantMeiliSearchInstance,
@@ -73,25 +96,15 @@ export function loadCourses(
     const state = getState();
     const cache = selectClassCache(state);
 
-    const classes = await Promise.allSettled(classIds.map(async (classId) => {
-      // if the class is already in the cache, return it
-      if (classId in cache) {
-        return cache[classId];
-      }
+    const apiKey = await getMeiliApiKey();
 
-      const apiKey = await getMeiliApiKey();
+    if (!apiKey && !isDevelopment) {
+      throw new Error('No Meili API key found');
+    }
 
-      // manually fetch the specified document from the Meilisearch index
-      const response = await fetch(`${getMeiliHost()}/indexes/courses/documents/${classId}`, {
-        method: 'GET',
-        headers: {
-          authorization: `Bearer ${apiKey}`,
-        },
-      });
-
-      const data: ExtendedClass = await response.json();
-      return data;
-    }));
+    const classes = await Promise.allSettled(classIds.map((classId) => (classId in cache
+      ? Promise.resolve(cache[classId])
+      : fetchCourse('courses', classId, apiKey!))));
 
     const fetchedClasses = allTruthy(classes.map((result) => {
       if (result.status === 'fulfilled') {
