@@ -56,6 +56,7 @@ export function SearchStateProvider({
 }>) {
   const [searchState, setSearchState] = useState(defaultState || {});
   const lastLogTime = useRef(0);
+  const router = useRouter();
 
   const context = useMemo(() => ({
     searchState,
@@ -66,12 +67,12 @@ export function SearchStateProvider({
       const now = Date.now();
       if (now - lastLogTime.current > 200) {
         lastLogTime.current = now;
-        logEvent(getAnalytics(), 'search', newState);
+        logEvent(getAnalytics(), 'search', { ...newState, path: router.asPath });
       }
 
       setSearchState((oldState) => ({ ...oldState, ...newState }));
     },
-  }), [oneCol, searchState]);
+  }), [oneCol, router.asPath, searchState]);
 
   return (
     <SearchStateContext.Provider value={context}>

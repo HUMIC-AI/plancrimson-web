@@ -73,10 +73,11 @@ function HitsComponent({
   useEffect(() => {
     // wait until transitions are over to unmount
     // merge existing hits with new ones by their ids
-    setAllHits((hs) => {
-      const newHits = hits.filter((hit) => !hs.some((h) => h.id === hit.id));
-      return [...hs, ...newHits];
-    });
+    // show new hits first
+    setAllHits((hs) => [
+      ...hits,
+      ...hs.filter((h) => !hits.some((hit) => h.id === hit.id)),
+    ]);
   }, [hits]);
 
   return (
