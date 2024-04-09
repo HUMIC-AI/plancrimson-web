@@ -84,8 +84,10 @@ export const HoveredCourseInfo = forwardRef(({ courseId }: {
   }, [course]);
 
   return (
-    <div className="absolute bottom-0 right-0 top-16 w-full max-w-xs overflow-auto py-2 md:right-4 md:max-w-sm" ref={ref}>
-      <InfoCard isDialog={false} noExit {...props} />
+    <div className="absolute bottom-0 right-0 top-16 w-full max-w-xs md:right-4 md:max-w-sm" ref={ref}>
+      <div className="absolute inset-0 overflow-auto pb-6">
+        <InfoCard isDialog={false} noExit {...props} />
+      </div>
     </div>
   );
 });
