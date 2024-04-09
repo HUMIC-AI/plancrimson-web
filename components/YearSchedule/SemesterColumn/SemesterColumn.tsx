@@ -5,7 +5,7 @@ import { classNames } from '@/src/utils/styles';
 import { Season, semesterToTerm } from '@/src/lib';
 import { isScheduleId } from '@/src/utils/schedules';
 import SemesterColumnHeader from './SemesterColumnHeader';
-import { CoursesSection } from './CoursesSection';
+import { PlanningPageCoursesSection } from './CoursesSection';
 import { useDragAndDropContext } from './DragAndDrop';
 import { useScheduleFromScheduleIdOrSemester } from './useScheduleFromScheduleIdOrSemester';
 
@@ -57,7 +57,7 @@ export default function SemesterColumn({
         <SemesterColumnHeader s={s} />
 
         {schedule && (
-        <CoursesSection
+        <PlanningPageCoursesSection
           scheduleId={schedule.id}
           highlightedRequirement={highlightedRequirement}
         />

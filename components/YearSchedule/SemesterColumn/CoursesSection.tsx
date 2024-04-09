@@ -7,15 +7,16 @@ import {
   ClassCache, Profile, Schedules,
 } from '@/src/features';
 import AddCoursesButton from '@/components/AddCoursesButton';
-import { getClasses } from '@/src/features/schedules';
+import { getClassIdsOfSchedule } from '@/src/features/schedules';
 import CourseCard from '../../Course/CourseCard';
+import { CourseCardToggleButton } from '../../Course/ToggleButton';
 
 type Props = {
   scheduleId: string;
   highlightedRequirement: Requirement | undefined;
 };
 
-export function CoursesSection({ scheduleId, highlightedRequirement }: Props) {
+export function PlanningPageCoursesSection({ scheduleId, highlightedRequirement }: Props) {
   const schedule = useAppSelector(Schedules.selectSchedule(scheduleId));
   const profile = useAppSelector(Profile.selectUserProfile);
   const classCache = useAppSelector(ClassCache.selectClassCache);
@@ -50,7 +51,7 @@ export function CoursesSection({ scheduleId, highlightedRequirement }: Props) {
           Add courses
         </AddCoursesButton>
 
-        {initialized ? getClasses(schedule).map((id) => (id && classCache[id] ? (
+        {initialized ? getClassIdsOfSchedule(schedule).map((id) => (id && classCache[id] ? (
           <CourseCard
             key={id}
             course={classCache[id]}
@@ -60,7 +61,20 @@ export function CoursesSection({ scheduleId, highlightedRequirement }: Props) {
             warnings={warnings(id)}
           />
         ) : (
-          <div key={id}>{elapsed ? `Course ${id.slice(0, 12)}... not found` : 'Loading course data...'}</div>
+          <div key={id}>
+            {elapsed
+              ? (
+                <div className="flex items-center justify-between">
+                  <span>
+                    Course
+                    {id.slice(0, 12)}
+                    ... not found
+                  </span>
+                  <CourseCardToggleButton chosenScheduleId={scheduleId} courseId={id} />
+                </div>
+              )
+              : 'Loading course data...'}
+          </div>
         ))) : (
           <p>Loading course data...</p>
         )}

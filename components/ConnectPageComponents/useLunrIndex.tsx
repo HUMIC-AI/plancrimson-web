@@ -7,7 +7,7 @@ import {
 import { alertUnexpectedError, useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import lunr from 'lunr';
 import Schema, { queryWithId } from '@/src/schema';
-import { getClasses } from '@/src/features/schedules';
+import { getClassIdsOfSchedule } from '@/src/features/schedules';
 
 export type ProfileWithSchedules = WithId<UserProfile & { currentSchedules: BaseSchedule[]; }>;
 
@@ -25,7 +25,7 @@ export function useLunrIndex(profiles: ProfileWithSchedules[]) {
       this.field('courseTitles');
 
       profiles.forEach((profile) => {
-        const courseTitles = profile.currentSchedules.map((schedule) => getClasses(schedule).map((classId) => (
+        const courseTitles = profile.currentSchedules.map((schedule) => getClassIdsOfSchedule(schedule).map((classId) => (
           classId in classCache ? [
             classCache[classId].Title,
             classCache[classId].SUBJECT,

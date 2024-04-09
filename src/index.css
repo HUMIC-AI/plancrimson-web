@@ -56,7 +56,7 @@
   }
 
   .interactive {
-    @apply hover:opacity-50 hover:shadow motion-reduce:hover:shadow-none transition-all;
+    @apply hover:opacity-50 hover:shadow-md motion-reduce:hover:shadow-none transition;
   }
 
   .primary {
@@ -66,12 +66,21 @@
   .secondary {
     @apply text-secondary bg-primary;
   }
+
+  .gray-primary {
+    @apply text-primary bg-gray-secondary;
+  }
+
+  .secondary-gray {
+    @apply text-secondary bg-gray-primary;
+  }
 }
 
 @layer components {
   .button {
-    @apply interactive rounded px-2 py-1;
+    @apply interactive rounded px-2 py-1 font-medium text-sm;
   }
+
   .menu-button {
     @apply flex w-full items-center px-1 transition hover:bg-gray-dark/50;
   }

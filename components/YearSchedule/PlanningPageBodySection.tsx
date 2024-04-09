@@ -3,7 +3,7 @@ import { Requirement, RequirementGroup } from '@/src/requirements/util';
 import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
 import { SemestersList } from '@/components/YearSchedule/PlanningSection';
 import HiddenSchedules from '@/components/YearSchedule/HiddenSchedules';
-import HeaderSection from '@/components/YearSchedule/HeaderSection';
+import PlanningPageHeaderSection from '@/components/YearSchedule/HeaderSection';
 import { useColumns } from '@/components/YearSchedule/useColumns';
 import { Planner } from '@/src/features';
 import collegeRequirements from '@/src/requirements/college';
@@ -99,7 +99,7 @@ function BodySection({
     >
       <InstructionsModal />
 
-      <HeaderSection resizeRef={resizeRef} columns={columns} />
+      <PlanningPageHeaderSection resizeRef={resizeRef} columns={columns} />
 
       <SemestersList
         highlightedRequirement={highlightedRequirement}

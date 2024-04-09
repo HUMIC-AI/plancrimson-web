@@ -11,21 +11,22 @@ import {
   ClassCache, Planner, Profile, Schedules,
 } from '@/src/features';
 import { getAnalytics, logEvent } from 'firebase/analytics';
-import { getClasses } from '@/src/features/schedules';
+import { getClassIdsOfSchedule } from '@/src/features/schedules';
 
 export function CourseCardToggleButton({
-  chosenScheduleId, course,
-}: { chosenScheduleId: string; course: ExtendedClass; }) {
+  chosenScheduleId, courseId,
+}: { chosenScheduleId: string; courseId: string; }) {
   const dispatch = useAppDispatch();
   const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const classYear = useAppSelector(Profile.selectClassYear);
   const classCache = useAppSelector(ClassCache.selectClassCache);
+  const course = classCache[courseId] as ExtendedClass | undefined;
 
   // adds a class to the selected schedule.
   // linked to plus button in top right corner.
   function addClass() {
-    if (!chosenSchedule || !classYear) return;
+    if (!chosenSchedule || !classYear || !course) return;
 
     const viability = checkViable({
       cls: course,
@@ -58,9 +59,9 @@ export function CourseCardToggleButton({
 
   if (!chosenSchedule) return null;
 
-  const inSchedule = getClasses(chosenSchedule).find((classId) => course.id === classId);
+  const isInSchedule = getClassIdsOfSchedule(chosenSchedule).includes(courseId);
 
-  if (semesterFormat === 'sample' || !inSchedule) {
+  if (semesterFormat === 'sample' || !isInSchedule) {
     return (
       <button
         type="button"
@@ -78,7 +79,7 @@ export function CourseCardToggleButton({
       type="button"
       name="Remove class from schedule"
       onClick={() => dispatch(Schedules.removeCourses({
-        courseIds: [getClassId(course)],
+        courseIds: [courseId],
         scheduleId: chosenSchedule.id,
       }))}
       className="primary rounded-full p-1 transition-opacity hover:opacity-50"

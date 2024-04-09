@@ -9,7 +9,7 @@ export default function CardExpandToggler() {
     <button
       type="button"
       onClick={() => toggleExpand()}
-      className="flex items-center justify-center rounded-full bg-gray-secondary p-1 text-primary transition-opacity duration-200 hover:opacity-50"
+      className="interactive secondary-gray flex items-center justify-center rounded-full p-1"
     >
       {expandCards === 'text' && <FaExpand />}
       {expandCards === 'collapsed' && <FaExpandArrowsAlt />}

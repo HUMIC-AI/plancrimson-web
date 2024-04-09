@@ -16,7 +16,7 @@ import Tooltip from '@/components/Utils/Tooltip';
 import { checkViable } from '@/src/searchSchedule';
 import type { BaseSchedule } from '@/src/types';
 import { sortSchedulesBySemester } from '@/src/utils/schedules';
-import { getClasses } from '@/src/features/schedules';
+import { getClassIdsOfSchedule } from '@/src/features/schedules';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { CuteSwitch } from '../../Utils/CuteSwitch';
 
@@ -91,7 +91,7 @@ function ScheduleRow({ schedule, course }: { schedule: BaseSchedule; course: Ext
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const classYear = useAppSelector(Profile.selectClassYear);
 
-  const enabled = !!getClasses(schedule).find(
+  const enabled = !!getClassIdsOfSchedule(schedule).find(
     (classId) => classId === getClassId(course),
   );
 

@@ -12,7 +12,7 @@ import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { downloadJson } from '@/src/utils/utils';
 import type { DownloadPlan, ListOfScheduleIdOrSemester } from '@/src/types';
 import { isListOfScheduleIds } from '@/src/utils/schedules';
-import { getClasses } from '@/src/features/schedules';
+import { getClassIdsOfSchedule } from '@/src/features/schedules';
 import UploadForm from '../UploadForm';
 import CardExpandToggler from './CardExpandToggler';
 import { WithResizeRef } from './PlanningSection';
@@ -20,7 +20,7 @@ import { WithResizeRef } from './PlanningSection';
 /**
  * The header section of the planning page.
  */
-export default function HeaderSection({ resizeRef, columns }: WithResizeRef & { columns: ListOfScheduleIdOrSemester }) {
+export default function PlanningPageHeaderSection({ resizeRef, columns }: WithResizeRef & { columns: ListOfScheduleIdOrSemester }) {
   const dispatch = useAppDispatch();
   const showReqs = useAppSelector(Planner.selectShowReqs);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
@@ -55,7 +55,7 @@ export default function HeaderSection({ resizeRef, columns }: WithResizeRef & { 
                   dispatch(Planner.showAll());
                 }
               }}
-              className="rounded bg-gray-secondary px-2 py-1 font-medium transition-colors hover:bg-gray-primary/50"
+              className="button secondary-gray"
             >
               {semesterFormat === 'all'
                 ? 'All schedules'
@@ -65,7 +65,7 @@ export default function HeaderSection({ resizeRef, columns }: WithResizeRef & { 
 
           <div
             ref={resizeRef}
-            className="hidden w-24 min-w-[96px] max-w-full resize-x justify-center overflow-auto rounded bg-gray-dark py-1 md:flex"
+            className="interactive secondary-gray hidden w-24 min-w-[96px] max-w-full resize-x overflow-auto rounded py-1 md:flex md:justify-center"
           >
             <FaArrowsAltH />
           </div>
@@ -86,7 +86,7 @@ function OptionsMenu({ columns }: { columns: ListOfScheduleIdOrSemester }) {
 
   const totalCourses = useMemo(
     () => Object.values(chosenSchedules).reduce(
-      (acc, scheduleId) => acc + ((scheduleId && getClasses(userSchedules[scheduleId]).length) || 0),
+      (acc, scheduleId) => acc + ((scheduleId && getClassIdsOfSchedule(userSchedules[scheduleId]).length) || 0),
       0,
     ),
     [userSchedules, chosenSchedules],
