@@ -80,6 +80,7 @@ function RefinementListComponent({
                     const analytics = getAnalytics();
                     logEvent(analytics, 'search_filter', {
                       filter: label,
+                      // set opposite since this is on a flip
                       value: isRefined ? 'off' : 'on',
                     });
                     refine(value);

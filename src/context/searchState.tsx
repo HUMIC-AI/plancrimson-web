@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import qs from 'qs';
 import { Semester, getTermId } from '@/src/lib';
 import { SearchState } from 'react-instantsearch-core';
+import { getAnalytics, logEvent } from 'firebase/analytics';
 import { throwMissingContext } from '../utils/utils';
 
 interface SearchStateContextType {
@@ -54,12 +55,20 @@ export function SearchStateProvider({
   ignoreUrl?: boolean;
 }>) {
   const [searchState, setSearchState] = useState(defaultState || {});
+  const lastLogTime = useRef(0);
 
   const context = useMemo(() => ({
     searchState,
     setSearchState,
     oneCol,
     onSearchStateChange(newState: SearchState) {
+      // merge the new state with the old state
+      const now = Date.now();
+      if (now - lastLogTime.current > 200) {
+        lastLogTime.current = now;
+        logEvent(getAnalytics(), 'search', newState);
+      }
+
       setSearchState((oldState) => ({ ...oldState, ...newState }));
     },
   }), [oneCol, searchState]);
