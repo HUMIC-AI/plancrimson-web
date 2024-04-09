@@ -67,6 +67,7 @@ export function PlanningPageCoursesSection({ scheduleId, highlightedRequirement 
                 <div className="flex items-center justify-between">
                   <span>
                     Course
+                    {' '}
                     {id.slice(0, 12)}
                     ... not found
                   </span>

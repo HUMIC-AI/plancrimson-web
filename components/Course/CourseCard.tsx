@@ -4,8 +4,7 @@ import {
   FaExclamationTriangle,
 } from 'react-icons/fa';
 import {
-  ExtendedClass,
-  getClassId, departmentImages, getSemester, semesterToTerm,
+  ExtendedClass, departmentImages, getSemester, semesterToTerm,
 } from '@/src/lib';
 import { useModal } from '@/src/context/modal';
 import { alertUnexpectedError, useAppSelector } from '@/src/utils/hooks';
@@ -78,7 +77,7 @@ export default function CourseCard({
       drag.setDragStatus({
         dragging: true,
         data: {
-          classId: getClassId(course),
+          classId: course.id,
           originScheduleId: chosenSchedule.id,
           originTerm: semesterToTerm(semester),
         },
@@ -103,7 +102,7 @@ export default function CourseCard({
 
         <CourseCardToggleButton
           chosenScheduleId={chosenScheduleId!}
-          course={course}
+          courseId={course.id}
         />
       </div>
     );
