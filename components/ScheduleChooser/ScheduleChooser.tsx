@@ -13,7 +13,7 @@ import { ChooserOption } from './ChooserOption';
 
 export interface ScheduleChooserProps {
   chosenScheduleId: string | null;
-  handleChooseSchedule: React.Dispatch<string | null>;
+  chooseSchedule: React.Dispatch<string | null>;
   scheduleIds: string[];
   season?: Season;
   year?: number;
@@ -47,7 +47,7 @@ export default function ScheduleChooser({
   chosenScheduleId,
   season,
   year,
-  handleChooseSchedule,
+  chooseSchedule,
   direction,
   showTerm = 'auto',
   parentWidth,
@@ -80,7 +80,7 @@ export default function ScheduleChooser({
   return (
     <Listbox
       value={chosenScheduleId}
-      onChange={handleChooseSchedule}
+      onChange={chooseSchedule}
       as="div"
       className="relative rounded border border-gray-primary"
     >

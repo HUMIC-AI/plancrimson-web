@@ -64,7 +64,7 @@ export function SearchBar({
           <div className="hidden sm:block">
             <ScheduleChooser
               scheduleIds={sortSchedulesBySemester(schedules).map((schedule) => schedule.id)}
-              handleChooseSchedule={chooseSchedule}
+              chooseSchedule={chooseSchedule}
               chosenScheduleId={chosenScheduleId}
               direction="left"
               showDropdown

@@ -44,7 +44,7 @@ function SearchBoxComponent({
       <div className="relative sm:hidden">
         <ScheduleChooser
           scheduleIds={sortSchedulesBySemester(schedules).map((schedule) => schedule.id)}
-          handleChooseSchedule={selectSchedule}
+          chooseSchedule={selectSchedule}
           chosenScheduleId={selectedSchedule}
           direction="right"
           showDropdown
