@@ -49,6 +49,7 @@ export function AuthRequiredInstantSearchProvider({
       searchClient={client}
       searchState={searchState}
       onSearchStateChange={onSearchStateChange}
+      // automatic debouncing
       stalledSearchDelay={500}
       createURL={createUrl}
     >

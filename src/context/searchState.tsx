@@ -4,7 +4,9 @@ import React, {
 } from 'react';
 import { useRouter } from 'next/router';
 import qs from 'qs';
-import { Semester, getTermId } from '@/src/lib';
+import {
+  CURRENT_ARCHIVE_TERMS, CURRENT_COURSES_TERMS, Semester, getTermId, semesterToTerm,
+} from '@/src/lib';
 import { SearchState } from 'react-instantsearch-core';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { throwMissingContext } from '../utils/utils';
@@ -30,9 +32,11 @@ const SearchStateContext = createContext<SearchStateContextType>({
   onSearchStateChange: throwMissingContext,
 });
 
-export function getDefaultSearchStateForSemester(semester: Semester) {
+export function getDefaultSearchStateForSemester(semester: Semester): SearchState {
   const termId = getTermId(semester);
-  if (!termId) return {};
+  if (!termId || ![...CURRENT_ARCHIVE_TERMS, ...CURRENT_COURSES_TERMS].includes(semesterToTerm(semester))) {
+    return {};
+  }
   return {
     refinementList: {
       STRM: [termId],
@@ -49,13 +53,13 @@ export function getDefaultSearchStateForSemester(semester: Semester) {
 export function SearchStateProvider({
   children,
   oneCol = false,
-  defaultState,
+  defaultState = {},
 } : PropsWithChildren<{
   oneCol?: boolean;
   defaultState?: SearchState;
   ignoreUrl?: boolean;
 }>) {
-  const [searchState, setSearchState] = useState(defaultState || {});
+  const [searchState, setSearchState] = useState<SearchState>(defaultState);
   const lastLogTime = useRef(0);
   const router = useRouter();
 
@@ -69,6 +73,7 @@ export function SearchStateProvider({
       if (now - lastLogTime.current > 200) {
         lastLogTime.current = now;
         logEvent(getAnalytics(), 'search', { ...newState, path: router.asPath });
+        console.debug('search', newState);
       }
 
       setSearchState((oldState) => ({ ...oldState, ...newState }));

@@ -11,22 +11,24 @@ import { WithMeili } from '../Layout/WithMeili';
 
 /**
  * Used in the main course planning page to search for courses to add to the schedule
- * See also CustomModal and `src/context/modal.tsx`
+ * See also {@link CustomModal} and `src/context/modal.tsx`
  */
 export default function CourseSearchModal({ selected, semester }: {
   selected: string;
-  semester?: Semester;
+  semester: Semester;
 }) {
   const uid = Auth.useAuthProperty('uid');
   const context = useMemo(() => ({ chosenScheduleId: selected, chooseSchedule() {} }), [selected]);
 
+  const indexName = isOldSemester(semester) ? 'archive' : 'courses';
+
   return (
     // create a new search state provider to override the one in "pages/_app.tsx"
     <WithMeili userId={uid!}>
-      <SearchStateProvider oneCol defaultState={semester && getDefaultSearchStateForSemester(semester)} ignoreUrl>
+      <SearchStateProvider oneCol defaultState={getDefaultSearchStateForSemester(semester)} ignoreUrl>
         <ChosenScheduleContext.Provider value={context}>
           <AuthRequiredInstantSearchProvider
-            indexName={isOldSemester(semester) ? 'archive' : 'courses'}
+            indexName={indexName}
             hitsPerPage={4}
           >
             <div className="flex space-x-4">

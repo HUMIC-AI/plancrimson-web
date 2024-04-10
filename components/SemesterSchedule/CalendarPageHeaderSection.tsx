@@ -37,9 +37,11 @@ export function CalendarHeaderSection({ events, schedule }: Props) {
     chooseSchedule: () => null,
   }), [schedule.id]);
 
+  const indexName = isOldSemester(schedule) ? 'archive' : 'courses';
+
   return (
     <div className="relative md:flex md:w-min md:flex-col md:space-y-4 lg:w-full lg:max-w-md">
-      <div className="relative flex items-center justify-center space-x-4 text-center md:inset-y-0 md:flex-col md:space-x-0 md:space-y-2 md:overflow-hidden">
+      <div className="relative flex flex-1 items-center justify-center space-x-4 text-center md:inset-y-0 md:flex-col md:space-x-0 md:space-y-2 md:overflow-hidden">
         <p className="text-xl font-bold">
           {schedule.title}
         </p>
@@ -77,10 +79,10 @@ export function CalendarHeaderSection({ events, schedule }: Props) {
 
             <SearchStateProvider oneCol defaultState={getDefaultSearchStateForSemester(schedule)} ignoreUrl>
               <ChosenScheduleContext.Provider value={chosenScheduleContext}>
-                <AuthRequiredInstantSearchProvider indexName={isOldSemester(schedule) ? 'archive' : 'courses'} hitsPerPage={4}>
-                  <SearchBox scheduleChooser={false} />
+                <AuthRequiredInstantSearchProvider indexName={indexName} hitsPerPage={4}>
+                  <SearchBox scheduleChooser={false} showSmallAttributeMenu />
                   <div className="md:mt-4">
-                    <Hits />
+                    <Hits inSearch />
                   </div>
                 </AuthRequiredInstantSearchProvider>
               </ChosenScheduleContext.Provider>
