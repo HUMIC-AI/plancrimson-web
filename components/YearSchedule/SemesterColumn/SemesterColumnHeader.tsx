@@ -3,17 +3,14 @@ import {
 } from '@/src/features';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { classNames } from '@/src/utils/styles';
-import { Listbox, Menu } from '@headlessui/react';
+import { Menu } from '@headlessui/react';
 import { Term, semesterToTerm, termToSemester } from '@/src/lib';
 import { useCallback, useState } from 'react';
 import {
-  FaChevronDown,
   FaCog, FaEdit, FaEyeSlash, FaGlobe,
 } from 'react-icons/fa';
 import FadeTransition from '@/components/Utils/FadeTransition';
-import { ScheduleId, ScheduleIdOrSemester } from '@/src/types';
-import { getSchedulesBySemester } from '@/src/utils/schedules';
-import Link from 'next/link';
+import { ScheduleIdOrSemester } from '@/src/types';
 import { DeleteScheduleButton } from './DeleteScheduleButton';
 import { DuplicateScheduleButton } from './DuplicateScheduleButton';
 import { MenuButton } from './MenuButton';
@@ -21,12 +18,22 @@ import { EditNameForm } from './EditNameForm';
 import { HideScheduleButton } from './HideScheduleButton';
 import { useScheduleFromScheduleIdOrSemester } from './useScheduleFromScheduleIdOrSemester';
 import { ClearScheduleButton } from './ClearScheduleButton';
+import { TitleComponent } from './TitleComponent';
+import { getSchedulesBySemester } from '../../../src/utils/schedules';
 
 export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
   const dispatch = useAppDispatch();
   const { schedule, semester } = useScheduleFromScheduleIdOrSemester(s);
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const [editing, setEditing] = useState(false);
+  const term = semester && semesterToTerm(semester);
+  const { justCreated, chooseSchedule } = useChooseSchedule(term, setEditing);
+  const schedules = useAppSelector(Schedules.selectSchedules);
+  const idList = semester
+    ? getSchedulesBySemester(schedules, semester)
+      .map((g) => (g.id !== justCreated ? g.id : null!))
+      .filter(Boolean)
+    : [];
 
   return (
     <Menu as="div" className="relative flex flex-col items-center p-2">
@@ -48,8 +55,8 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
             ) : (
               <TitleComponent
                 scheduleId={schedule ? schedule.id : null}
-                term={semesterToTerm(semester!)}
-                setEditing={setEditing}
+                chooseSchedule={chooseSchedule}
+                idList={idList}
               />
             )}
 
@@ -110,81 +117,21 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
   );
 }
 
-type TitleComponentProps = {
-  scheduleId: ScheduleId | null;
-  term: Term;
-  setEditing: (editing: boolean) => void;
-};
 
-/**
- * Part of the {@link SemesterColumnHeader} component.
- */
-function TitleComponent({ scheduleId, term, setEditing }: TitleComponentProps) {
-  const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
-  const schedules = useAppSelector(Schedules.selectSchedules);
-  const { justCreated, chooseNewSchedule } = useTitle(term, setEditing);
-  const termSchedules = getSchedulesBySemester(schedules, termToSemester(term));
-
-  const title = (scheduleId && schedules[scheduleId]?.title) ?? 'Loading...';
-
-  // don't show the dropdown if all schedules are being shown
-  if (semesterFormat === 'all') {
-    return (
-      <p className="text-center text-lg font-medium">
-        {title}
-      </p>
-    );
-  }
-
-  return (
-    <Listbox
-      as="div"
-      className="relative flex items-center"
-      onChange={chooseNewSchedule}
-    >
-      {({ open }) => (
-        <>
-          <Link
-            href={{
-              pathname: '/schedule/[scheduleId]',
-              query: { scheduleId },
-            }}
-            className="button text-center text-lg font-medium"
-          >
-            {title}
-          </Link>
-
-          <Listbox.Button className={classNames('round interactive select-none transition duration-500', open && 'rotate-180')}>
-            <FaChevronDown />
-          </Listbox.Button>
-
-          <FadeTransition>
-            <Listbox.Options className="menu-dropdown absolute left-1/2 top-full z-10 mt-2 w-max -translate-x-1/2 divide-y">
-              {termSchedules.map((schedule) => schedule.id !== justCreated && (
-              <Listbox.Option key={schedule.id} value={schedule.id} className="menu-button select-none first:rounded-t">
-                {schedule.title}
-              </Listbox.Option>
-              ))}
-              <Listbox.Option value={null} className="menu-button select-none rounded-b">
-                Create new
-              </Listbox.Option>
-            </Listbox.Options>
-          </FadeTransition>
-        </>
-      )}
-    </Listbox>
-  );
-}
-
-function useTitle(
-  term: Term,
+function useChooseSchedule(
+  term: Term | null,
   setEditing: (editing: boolean) => void,
 ) {
   const dispatch = useAppDispatch();
   const userId = Auth.useAuthProperty('uid');
   const [justCreated, setJustCreated] = useState<string | null>(null);
 
-  const chooseNewSchedule = useCallback(async (id: string | null) => {
+  const chooseSchedule = useCallback(async (id: string | null) => {
+    if (!term) {
+      console.error('No term provided to chooseSchedule');
+      return;
+    }
+
     if (id !== null) {
       await dispatch(Settings.chooseSchedule({
         term,
@@ -211,6 +158,6 @@ function useTitle(
 
   return {
     justCreated,
-    chooseNewSchedule,
+    chooseSchedule,
   };
 }
