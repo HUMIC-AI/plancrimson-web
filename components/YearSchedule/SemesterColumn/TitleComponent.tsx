@@ -36,6 +36,7 @@ export function TitleComponent({ scheduleId, idList, chooseSchedule }: TitleComp
     <Listbox
       as="div"
       className="relative flex items-center"
+      value={scheduleId}
       onChange={chooseSchedule}
     >
       {({ open }) => (

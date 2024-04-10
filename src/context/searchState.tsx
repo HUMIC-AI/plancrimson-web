@@ -31,9 +31,11 @@ const SearchStateContext = createContext<SearchStateContextType>({
 });
 
 export function getDefaultSearchStateForSemester(semester: Semester) {
+  const termId = getTermId(semester);
+  if (!termId) return {};
   return {
     refinementList: {
-      STRM: [getTermId(semester)],
+      STRM: [termId],
     },
   };
 }
