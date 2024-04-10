@@ -11,10 +11,10 @@ import { ScheduleSyncer } from '@/components/ScheduleSyncer';
 import { WithMeili } from '@/components/Layout/WithMeili';
 import { AuthRequiredInstantSearchProvider } from '../AuthRequiredInstantSearchProvider';
 import { classNames } from '../../src/utils/styles';
+import { SearchStateProvider } from '../../src/context/searchState';
 
 export function SearchPage({ indexName }: { indexName: 'courses' | 'archive' }) {
   const userId = Auth.useAuthProperty('uid');
-  const showAttributes = useAppSelector(Planner.selectShowAttributes);
 
   return (
     <Layout
@@ -24,23 +24,38 @@ export function SearchPage({ indexName }: { indexName: 'courses' | 'archive' }) 
       <WithMeili userId={userId}>
         {userId && <ScheduleSyncer userId={userId} />}
 
-        <AuthRequiredInstantSearchProvider indexName={indexName}>
-          <div className={classNames('hidden', showAttributes && 'lg:block lg:mr-8')}>
-            <AttributeMenu withWrapper lgOnly />
-          </div>
-
-          <div className="space-y-4">
-            <SearchBox />
-            <div className="grid grid-cols-[auto_1fr] items-center gap-4">
-              <SortBy indexName={indexName} />
-              <CurrentRefinements />
-            </div>
-            <Hits inSearch />
-          </div>
-        </AuthRequiredInstantSearchProvider>
+        {indexName === 'archive' ? (
+          <SearchStateProvider>
+            <Contents indexName={indexName} />
+          </SearchStateProvider>
+        ) : (
+          <Contents indexName={indexName} />
+        )}
       </WithMeili>
     </Layout>
   );
 }
 
+function Contents({
+  indexName,
+}: { indexName: 'courses' | 'archive' }) {
+  const showAttributes = useAppSelector(Planner.selectShowAttributes);
+
+  return (
+    <AuthRequiredInstantSearchProvider indexName={indexName}>
+      <div className={classNames('hidden', showAttributes && 'lg:block lg:mr-8')}>
+        <AttributeMenu withWrapper lgOnly />
+      </div>
+
+      <div className="space-y-4">
+        <SearchBox />
+        <div className="grid grid-cols-[auto_1fr] items-center gap-4">
+          <SortBy indexName={indexName} />
+          <CurrentRefinements />
+        </div>
+        <Hits inSearch />
+      </div>
+    </AuthRequiredInstantSearchProvider>
+  );
+}
 
