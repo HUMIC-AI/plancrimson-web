@@ -52,7 +52,11 @@
   }
 
   .interactive {
-    @apply box-border border-2 border-gray-primary/0 transition duration-150 hover:border-gray-primary/50 hover:opacity-50 hover:shadow-md motion-reduce:hover:shadow-none;
+    @apply transition duration-150 hover:opacity-50;
+  }
+
+  .bordered {
+    @apply box-border rounded-lg border-2 border-gray-primary/0 hover:border-gray-primary/50 hover:shadow-md motion-reduce:hover:shadow-none;
   }
 
   .primary {
@@ -78,7 +82,7 @@
 
 @layer components {
   .button {
-    @apply interactive rounded px-2 py-1 font-medium text-sm;
+    @apply interactive bordered px-2 py-1 font-medium text-sm;
   }
 
   .menu-button {

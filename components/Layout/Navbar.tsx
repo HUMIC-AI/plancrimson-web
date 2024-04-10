@@ -100,7 +100,7 @@ function NavbarLink({ item, pathname, isParent = false }: { item: Path, pathname
     isCurrent
       ? 'text-blue-primary font-semibold'
       : 'text-gray-primary',
-    'block relative hover:bg-gray-secondary px-3 py-2 rounded-md text-center transition-colors',
+    'block relative button flex items-center justify-center',
     'sm:flex sm:items-center sm:text-sm',
   );
 
@@ -108,7 +108,7 @@ function NavbarLink({ item, pathname, isParent = false }: { item: Path, pathname
     <div className={blockStyles}>
       <Link href={item.href} aria-current={isCurrent ? 'page' : 'false'}>{item.name}</Link>
       <FaChevronDown className={classNames(
-        'absolute right-2 top-1/2 -translate-y-1/2',
+        'absolute transition-transform group-hover/nav:rotate-180 right-2 top-1/2 -translate-y-1/2',
         'sm:ml-2 sm:static sm:translate-y-0',
       )}
       />
@@ -214,7 +214,12 @@ const LargeOnly = {
       <div className="group/nav relative">
         <NavbarLink item={item} pathname={pathname} isParent />
 
-        <div className="invisible absolute left-1/2 top-full z-10 -translate-x-1/2 rounded bg-secondary opacity-0 transition-opacity group-hover/nav:visible group-hover/nav:opacity-100">
+        <div className={classNames(
+          'absolute inset-x-0 top-full z-10',
+          'rounded primary',
+          'invisible opacity-0 transition-opacity group-hover/nav:visible group-hover/nav:opacity-100',
+        )}
+        >
           {item.children!.map((child) => (
             <NavbarLink key={child.name} item={child} pathname={pathname} />
           ))}

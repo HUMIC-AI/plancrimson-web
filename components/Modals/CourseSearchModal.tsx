@@ -31,7 +31,7 @@ export default function CourseSearchModal({ selected, semester }: {
           >
             <div className="flex space-x-4">
               <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-secondary p-6 shadow-lg">
-                <SearchBox scheduleChooser={false} />
+                <SearchBox scheduleChooser={false} showSmallAttributeMenu />
                 <Hits inSearch />
               </div>
             </div>

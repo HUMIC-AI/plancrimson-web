@@ -57,9 +57,9 @@ export function CalendarDayEventTilesColumn({ events, showSections }: EventTiles
               backgroundColor: hexColor,
             }}
           >
-            <div className={classNames('absolute inset-1 overflow-auto text-xs', textColor)}>
+            <div className={classNames('absolute inset-y-1 inset-x-2 overflow-auto text-xs', textColor)}>
               <button
-                className="interactive text-base font-semibold"
+                className="interactive font-semibold md:text-base"
                 type="button"
                 onClick={() => dispatch(ClassCache.loadCourses(client, [ev.productId!]))
                   .then(([course]) => showCourse(course))
