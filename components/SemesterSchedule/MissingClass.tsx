@@ -2,9 +2,9 @@
 import { Disclosure } from '@headlessui/react';
 import React, { Fragment } from 'react';
 import { useForm, FieldValues } from 'react-hook-form';
-import type { ClassSchedulingInfo, ExtendedClass } from '@/src/lib';
+import type { ClassSchedulingInfo } from '@/src/lib';
 import {
-  getClassId, DAYS_OF_WEEK,
+  DAYS_OF_WEEK,
   strToDec,
   decToStr,
 } from '@/src/lib';

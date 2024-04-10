@@ -1,8 +1,16 @@
 import { connectHighlight } from 'react-instantsearch-dom';
 import type { HighlightProps } from 'react-instantsearch-core';
-import ClientOrDemo from './ClientOrDemo';
+import useClientOrDemo from './ClientOrDemo';
 
-function Highlight({ highlight, attribute, hit }: HighlightProps) {
+type Provided = Pick<HighlightProps, 'highlight'>;
+
+type Exposed = Pick<HighlightProps, 'hit' | 'attribute'>;
+
+type Props = Provided & Exposed;
+
+function Highlight({
+  highlight, attribute, hit,
+}: Props) {
   const parsedHit = highlight({
     highlightProperty: '_highlightResult',
     attribute,
@@ -20,6 +28,10 @@ function Highlight({ highlight, attribute, hit }: HighlightProps) {
   );
 }
 
-export default function (props: Pick<HighlightProps, 'hit' | 'attribute'>) {
-  return <ClientOrDemo connector={connectHighlight} Component={Highlight} componentProps={props} />;
+export default function (props: Exposed) {
+  const Component = useClientOrDemo<Provided, Exposed>(
+    connectHighlight as any,
+    Highlight,
+  );
+  return <Component {...props} />;
 }

@@ -22,7 +22,6 @@ export function CalendarDayEventTilesColumn({ events, showSections }: EventTiles
   return (
     <div className="relative h-full odd:bg-gray-secondary even:bg-secondary">
       {events.filter((e) => (showSections ? true : !e.isSection)).map((ev, i) => {
-        console.log(ev);
         const overlap = getOverlap(events, i);
         const key = overlap[0].uid!;
         overlapCounter[key] = (overlapCounter[key] || 0) + 1;

@@ -21,7 +21,7 @@ export default function AddCoursesButton({
       type="button"
       title="Add courses"
       className={classNames(
-        'flex items-center hover:bg-gray-primary/50 justify-center transition py-1 px-2 rounded',
+        'flex items-center justify-center button',
         className,
       )}
       onClick={() => {

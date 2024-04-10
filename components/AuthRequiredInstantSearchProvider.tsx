@@ -13,9 +13,11 @@ import { ErrorMessage } from './Layout/AuthWrapper';
  * Must be inside the layout to access the MeiliSearch context.
  */
 export function AuthRequiredInstantSearchProvider({
+  indexName,
   children,
   hitsPerPage = 12,
 }: PropsWithChildren<{
+  indexName: 'courses' | 'archive';
   hitsPerPage?: number;
 }>) {
   const { searchState, onSearchStateChange } = useSearchState();
@@ -43,7 +45,7 @@ export function AuthRequiredInstantSearchProvider({
 
   return (
     <InstantSearch
-      indexName="courses"
+      indexName={indexName}
       searchClient={client}
       searchState={searchState}
       onSearchStateChange={onSearchStateChange}

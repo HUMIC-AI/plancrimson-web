@@ -11,9 +11,9 @@ export function Footer() {
   return (
     <footer className="bg-black">
       <div className="container mx-auto flex flex-col space-y-1 p-4 text-center text-xs text-white sm:text-sm">
-        <span>Course data last updated 2023-01-03</span>
+        <span>Course data last updated 2024-04-07</span>
         <span>
-          &#169; 2023 Alexander Cai | alexcai [at] college |
+          &#169; 2024 Alexander Cai | alexcai [at] college |
           {' '}
           <ExternalLink href="https://account.venmo.com/u/adzcai">
             Buy me a coffee
@@ -68,6 +68,10 @@ export function Footer() {
           <ExternalLink href="https://github.com/HUMIC-AI/plancrimson">
             GitHub
           </ExternalLink>
+          {' | '}
+          <Link href={{ pathname: '/about', query }} className="interactive font-bold">
+            About
+          </Link>
         </span>
       </div>
     </footer>

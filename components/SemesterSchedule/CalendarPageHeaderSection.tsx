@@ -11,6 +11,7 @@ import { Auth } from '../../src/features';
 import SearchBox from '../SearchComponents/SearchBox/SearchBox';
 import Hits from '../SearchComponents/Hits';
 import { ScheduleSyncer } from '../ScheduleSyncer';
+import { isOldSemester } from '../../src/lib';
 
 type Props = {
   events: (EventAttributes & { isSection?: string })[];
@@ -37,7 +38,7 @@ export function CalendarHeaderSection({ events, schedule }: Props) {
   }), [schedule.id]);
 
   return (
-    <div className="relative md:flex md:w-min md:flex-col md:space-y-4">
+    <div className="relative md:flex md:w-min md:flex-col md:space-y-4 lg:w-full lg:max-w-md">
       <div className="relative flex items-center justify-center space-x-4 text-center md:inset-y-0 md:flex-col md:space-x-0 md:space-y-2 md:overflow-hidden">
         <p className="text-xl font-bold">
           {schedule.title}
@@ -76,7 +77,7 @@ export function CalendarHeaderSection({ events, schedule }: Props) {
 
             <SearchStateProvider oneCol defaultState={getDefaultSearchStateForSemester(schedule)} ignoreUrl>
               <ChosenScheduleContext.Provider value={chosenScheduleContext}>
-                <AuthRequiredInstantSearchProvider hitsPerPage={4}>
+                <AuthRequiredInstantSearchProvider indexName={isOldSemester(schedule) ? 'archive' : 'courses'} hitsPerPage={4}>
                   <SearchBox scheduleChooser={false} />
                   <div className="md:mt-4">
                     <Hits />

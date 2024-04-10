@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { connectCurrentRefinements } from 'react-instantsearch-dom';
-import type { CurrentRefinementsExposed, CurrentRefinementsProvided, Refinement } from 'react-instantsearch-core';
+import type { CurrentRefinementsProvided, Refinement } from 'react-instantsearch-core';
 import {
   TERM_TO_SEASON,
   adjustAttr,
@@ -10,14 +10,14 @@ import {
 } from '@/src/lib';
 import { classNames } from '@/src/utils/styles';
 import { alertSignIn } from './SearchBox/searchUtils';
-import ClientOrDemo from './ClientOrDemo';
+import useClientOrDemo from './ClientOrDemo';
 
-type Props = Pick<CurrentRefinementsProvided, 'items' | 'refine'>;
+type Provided = Pick<CurrentRefinementsProvided, 'items' | 'refine'>;
 
 function CurrentRefinementsComponent({
   items: refinements = [],
   refine = alertSignIn,
-}: Props) {
+}: Provided) {
   if (refinements.length === 0) {
     return (
       <span className="relative col-span-2">
@@ -73,12 +73,10 @@ function getUniqueRefinements(refinements: Refinement[]) {
   );
 }
 
-export default function (props: CurrentRefinementsExposed) {
-  return (
-    <ClientOrDemo
-      connector={connectCurrentRefinements}
-      Component={CurrentRefinementsComponent}
-      componentProps={props}
-    />
+export default function CurrentRefinements() {
+  const Component = useClientOrDemo<Provided, {}>(
+    connectCurrentRefinements,
+    CurrentRefinementsComponent,
   );
+  return <Component />;
 }

@@ -7,9 +7,14 @@ import {
 import { classNames } from '@/src/utils/styles';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { alertSignIn } from './SearchBox/searchUtils';
-import ClientOrDemo from './ClientOrDemo';
+import useClientOrDemo from './ClientOrDemo';
 
-type Props = Pick<RefinementListProvided, 'items' | 'refine'> & { showSubjectColor: boolean };
+type Provided = Pick<RefinementListProvided, 'items' | 'refine'>;
+
+// eslint-disable-next-line react/no-unused-prop-types
+type Exposed = RefinementListExposed & { showSubjectColor: boolean };
+
+type Props = Provided & Exposed;
 
 const defaultItems = [
   {
@@ -116,13 +121,10 @@ function RefinementListComponent({
 /**
  * There'll be one of these for each of the (MeiliSearch) attributes that you can filter by.
  */
-// eslint-disable-next-line react/no-unused-prop-types
-export default function (props: RefinementListExposed & { showSubjectColor: boolean }) {
-  return (
-    <ClientOrDemo
-      connector={connectRefinementList}
-      Component={RefinementListComponent}
-      componentProps={props}
-    />
+export default function RefinementList(props: Exposed) {
+  const Component = useClientOrDemo<Provided, Exposed>(
+    connectRefinementList as any,
+    RefinementListComponent,
   );
+  return <Component {...props} />;
 }

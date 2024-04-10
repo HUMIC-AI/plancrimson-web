@@ -2,7 +2,7 @@ import { classNames } from '@/src/utils/styles';
 import React from 'react';
 import { connectSortBy } from 'react-instantsearch-dom';
 import { alertSignIn, SORT_INDEXES } from './SearchBox/searchUtils';
-import ClientOrDemo from './ClientOrDemo';
+import useClientOrDemo from './ClientOrDemo';
 
 type Item = {
   value: string;
@@ -11,15 +11,14 @@ type Item = {
 };
 
 type SortByProps = {
+  // eslint-disable-next-line react/no-unused-prop-types
+  defaultRefinement: 'courses' | 'archive';
   items: Item[];
   refine: (value: string) => any;
 };
 
 function SortByComponent({
-  items = SORT_INDEXES.map((val, i) => ({
-    ...val,
-    isRefined: i === 0,
-  })),
+  items,
   refine = alertSignIn,
 }: SortByProps) {
   return (
@@ -52,15 +51,18 @@ function SortByComponent({
 }
 
 
-export default function () {
+export default function SortBy({ indexName }: { indexName: 'courses' | 'archive' }) {
+  const Component = useClientOrDemo(
+    connectSortBy,
+    SortByComponent,
+  );
   return (
-    <ClientOrDemo
-      connector={connectSortBy}
-      Component={SortByComponent}
-      componentProps={{
-        defaultRefinement: 'courses',
-        items: SORT_INDEXES,
-      }}
+    <Component
+      defaultRefinement={indexName}
+      items={SORT_INDEXES(indexName).map((val, i) => ({
+        ...val,
+        isRefined: i === 0,
+      }))}
     />
   );
 }

@@ -1,11 +1,11 @@
 import React from 'react';
 import type { StatsProvided } from 'react-instantsearch-core';
 import { connectStats } from 'react-instantsearch-dom';
-import ClientOrDemo from './ClientOrDemo';
+import useClientOrDemo from './ClientOrDemo';
 
-type StatsProps = Pick<StatsProvided, 'nbHits' | 'processingTimeMS'>;
+type Provided = Pick<StatsProvided, 'nbHits' | 'processingTimeMS'>;
 
-function StatsComponent({ nbHits = 20000, processingTimeMS = 50 }: StatsProps) {
+function StatsComponent({ nbHits = 20000, processingTimeMS = 50 }: Provided) {
   return (
     <div className="flex flex-wrap items-center space-x-2">
       <p className="whitespace-nowrap">
@@ -24,10 +24,9 @@ function StatsComponent({ nbHits = 20000, processingTimeMS = 50 }: StatsProps) {
 }
 
 export default function () {
-  return (
-    <ClientOrDemo
-      connector={connectStats}
-      Component={StatsComponent}
-    />
+  const Component = useClientOrDemo<Provided, {}>(
+    connectStats,
+    StatsComponent,
   );
+  return <Component {...{}} />;
 }

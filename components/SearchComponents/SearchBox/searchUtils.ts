@@ -1,25 +1,25 @@
 export const alertSignIn = () => alert('Sign in to search for courses!');
 
-export const SORT_INDEXES = [
-  { label: 'Relevant', value: 'courses' },
+export const SORT_INDEXES = (indexName: 'courses' | 'archive') => [
+  { label: 'Relevant', value: indexName },
   {
     label: 'Catalog number',
-    value: 'courses:CATALOG_NBR:asc',
+    value: `${indexName}:CATALOG_NBR:asc`,
   },
   {
     label: 'Popularity',
-    value: 'courses:meanClassSize:desc',
+    value: `${indexName}:meanClassSize:desc`,
   },
   {
     label: 'Light Workload',
-    value: 'courses:meanHours:asc',
+    value: `${indexName}:meanHours:asc`,
   },
   {
     label: 'Highly Recommended',
-    value: 'courses:meanRecommendation:desc',
+    value: `${indexName}:meanRecommendation:desc`,
   },
   {
     label: 'Highly Rated',
-    value: 'courses:meanRating:desc',
+    value: `${indexName}:meanRating:desc`,
   },
-];
+] as const;

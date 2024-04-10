@@ -15,6 +15,8 @@ const links: [string, string][] = [
   ['Coursicle', 'https://www.coursicle.com/harvard/'],
   ['Deez Classes', 'https://www.deezclasses.com/?F22=false'],
   ['classes.wtf', 'https://classes.wtf/'],
+  ['Classiq', 'https://classiq.red/'],
+  ['cs50.courses', 'https://cs50.courses/'],
 ];
 
 const siteInfoLinks = [

@@ -16,7 +16,6 @@ type Path = {
 };
 
 const paths: Path[] = [
-  { href: '/search', name: 'Search' },
   {
     href: '/explore',
     name: 'Explore',
@@ -27,8 +26,15 @@ const paths: Path[] = [
       { href: '/explore/graph', name: 'Graph' },
     ],
   },
-  { href: '/connect', name: 'Connect' },
+  {
+    href: '/search',
+    name: 'Search',
+    children: [
+      { href: '/search/archive', name: 'Archive' },
+    ],
+  },
   { href: '/', name: 'My Courses' },
+  { href: '/connect', name: 'Connect' },
   { href: '/about', name: 'About' },
 ];
 

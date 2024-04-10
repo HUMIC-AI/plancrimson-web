@@ -1,4 +1,4 @@
-import CourseCard from '@/components/Course/CourseCard';
+import { CourseCard } from '@/components/Course/CourseCard';
 import Layout from '@/components/Layout/Layout';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import ExpandCardsProvider from '@/src/context/expandCards';

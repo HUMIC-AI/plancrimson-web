@@ -8,11 +8,11 @@ export function ExplorePageCourseSearchSection() {
   return (
     <div className="absolute bottom-0 left-0 top-16 flex w-full max-w-xs flex-col space-y-4 overflow-hidden pb-2 pt-8 md:left-4 md:max-w-sm">
       <SearchStateProvider oneCol defaultState={getDefaultSearchStateForSemester(getUpcomingSemester())} ignoreUrl>
-        <AuthRequiredInstantSearchProvider hitsPerPage={4}>
+        <AuthRequiredInstantSearchProvider indexName="courses" hitsPerPage={4}>
           <SearchBox scheduleChooser={false} showSmallAttributeMenu />
           <div className="relative flex-1">
             <div className="absolute inset-0 overflow-auto">
-              <Hits />
+              <Hits inSearch />
             </div>
           </div>
         </AuthRequiredInstantSearchProvider>

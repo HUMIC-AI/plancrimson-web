@@ -3,11 +3,13 @@ import React, { useCallback, useState } from 'react';
 import type { StateResultsProvided } from 'react-instantsearch-core';
 import { connectStateResults } from 'react-instantsearch-dom';
 import FadeTransition from '../Utils/FadeTransition';
-import ClientOrDemo from './ClientOrDemo';
+import useClientOrDemo from './ClientOrDemo';
 
 const POPUP_DURATION = 1000;
 
-function StateResultsComponent({ searchState = {} }: Pick<StateResultsProvided, 'searchState'>) {
+type Provided = Pick<StateResultsProvided, 'searchState'>;
+
+function StateResultsComponent({ searchState = {} }: Provided) {
   const [popup, setPopup] = useState(false);
 
   const handleClick = useCallback(() => {
@@ -40,6 +42,10 @@ function StateResultsComponent({ searchState = {} }: Pick<StateResultsProvided, 
   );
 }
 
-export default function () {
-  return <ClientOrDemo connector={connectStateResults} Component={StateResultsComponent} />;
+export default function StateResults() {
+  const Component = useClientOrDemo<Provided, {}>(
+    connectStateResults,
+    StateResultsComponent,
+  );
+  return <Component {...{}} />;
 }

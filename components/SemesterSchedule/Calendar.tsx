@@ -87,6 +87,7 @@ function CalendarBody({
             <CuteSwitch enabled={showSections} onChange={setShowSections} />
           </div>
         </div>
+
         <div className="grid grid-cols-5 rounded-t-xl bg-black py-2 pl-6 text-white">
           {DAY_SHORT.slice(0, 5).map((day) => (
             <h4 key={day} className="text-center font-light">

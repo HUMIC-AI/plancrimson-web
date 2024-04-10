@@ -48,7 +48,6 @@ export function SearchStateProvider({
   children,
   oneCol = false,
   defaultState,
-  ignoreUrl = false,
 } : PropsWithChildren<{
   oneCol?: boolean;
   defaultState?: SearchState;
@@ -83,6 +82,7 @@ export function SearchStateProvider({
 
 /**
  * @deprecated
+ * Used to sync up with the URL. Buggy.
  */
 function OldSearchStateProvider({
   children,

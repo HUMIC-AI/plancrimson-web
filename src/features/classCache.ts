@@ -68,7 +68,8 @@ const fetchCourse = async (indexName: 'courses' | 'archive', classId: string, ap
       headers: {
         authorization: `Bearer ${apiKey}`,
       },
-    });
+    },
+  );
 
   if (!response.ok && indexName !== 'archive') {
     const archive = await fetchCourse('archive', classId, apiKey!);
@@ -77,7 +78,7 @@ const fetchCourse = async (indexName: 'courses' | 'archive', classId: string, ap
 
   const data: ExtendedClass = await response.json();
   return data;
-}
+};
 
 /**
  * Load the given classes from the index into Redux.

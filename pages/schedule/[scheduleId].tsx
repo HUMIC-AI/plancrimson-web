@@ -4,20 +4,32 @@ import Layout from '@/components/Layout/Layout';
 import Calendar from '@/components/SemesterSchedule/Calendar';
 import { ErrorMessage } from '@/components/Layout/AuthWrapper';
 import { useSchedule } from '@/src/utils/schedules';
+import { useEffect } from 'react';
+import { getAnalytics, logEvent } from 'firebase/analytics';
 
 export default function SchedulePage() {
   return (
-    <Layout title="Calendar" verify="meili" className="container relative flex-1 bg-secondary">
-      {() => <Wrapper />}
+    <Layout title="Calendar" verify="meili" className="relative w-full max-w-screen-xl flex-1 bg-secondary xl:mx-auto">
+      {({ userId }) => <Wrapper userId={userId} />}
     </Layout>
   );
 }
 
-function Wrapper() {
+function Wrapper({ userId }: { userId: string; }) {
   const router = useRouter();
   const scheduleId = router.query.scheduleId as string;
   const { schedule, error } = useSchedule(scheduleId);
   const elapsed = useElapsed(500, []);
+
+  useEffect(() => {
+    if (userId && schedule) {
+      logEvent(getAnalytics(), 'page_view', {
+        page_location: router.asPath,
+        page_path: router.pathname,
+        schedule,
+      });
+    }
+  }, [schedule, router, userId]);
 
   if (error) {
     return <ErrorMessage>{error}</ErrorMessage>;

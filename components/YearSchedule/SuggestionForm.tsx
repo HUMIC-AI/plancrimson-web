@@ -80,7 +80,7 @@ export function SuggestionForm() {
         showMessage();
       }
     },
-    [email, uid],
+    [email, showMessage, uid],
   );
 
   return (

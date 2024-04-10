@@ -1,14 +1,14 @@
 import {
   Auth, Planner, Schedules, Settings,
 } from '@/src/features';
-import { selectSchedule, selectSchedules } from '@/src/features/schedules';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { classNames } from '@/src/utils/styles';
 import { Listbox, Menu } from '@headlessui/react';
 import { Term, semesterToTerm, termToSemester } from '@/src/lib';
 import { useCallback, useState } from 'react';
 import {
-  FaCalendar, FaCog, FaEdit, FaEyeSlash, FaGlobe,
+  FaChevronDown,
+  FaCog, FaEdit, FaEyeSlash, FaGlobe,
 } from 'react-icons/fa';
 import FadeTransition from '@/components/Utils/FadeTransition';
 import { ScheduleId, ScheduleIdOrSemester } from '@/src/types';
@@ -20,6 +20,7 @@ import { MenuButton } from './MenuButton';
 import { EditNameForm } from './EditNameForm';
 import { HideScheduleButton } from './HideScheduleButton';
 import { useScheduleFromScheduleIdOrSemester } from './useScheduleFromScheduleIdOrSemester';
+import { ClearScheduleButton } from './ClearScheduleButton';
 
 export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
   const dispatch = useAppDispatch();
@@ -28,17 +29,21 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
   const [editing, setEditing] = useState(false);
 
   return (
-    <Menu as="div" className="relative flex flex-col items-center px-2">
+    <Menu as="div" className="relative flex flex-col items-center p-2">
       {({ open }) => (
         <>
-          <div className="group/column relative mx-4 p-2">
+          <div className="group/column relative">
             {(schedule && editing) ? (
               <EditNameForm
                 title={schedule.title}
                 setEditing={setEditing}
                 handleSubmit={(title) => (title
                   ? dispatch(Schedules.renameSchedule({ scheduleId: schedule.id, title }))
-                  : Promise.reject(new Error('Invalid title')))}
+                  : Promise.reject(new Error('Invalid title')))
+                  .catch((err) => {
+                    console.error('Error renaming schedule', err);
+                    alert('Error renaming schedule');
+                  })}
               />
             ) : (
               <TitleComponent
@@ -49,33 +54,43 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
             )}
 
             {schedule && (
-              <button
-                type="button"
-                className="absolute right-full top-1/2 -translate-y-1/2 text-gray-primary opacity-50 transition-opacity hover:opacity-100"
-                onClick={() => dispatch(Schedules.setPublic({ scheduleId: schedule.id, public: !schedule.public }))}
-                title={schedule.public ? 'Make private' : 'Make public'}
+              <div className={classNames(
+                'absolute right-full top-1/2 -translate-y-1/2',
+                'opacity-0 transition-opacity group-hover/column:opacity-100',
+                'flex items-center justify-center',
+              )}
               >
-                {schedule.public ? (
-                  <FaGlobe />
-                ) : (
-                  <FaEyeSlash />
-                )}
-              </button>
+                <button
+                  type="button"
+                  className="interactive"
+                  onClick={() => dispatch(Schedules.setPublic({ scheduleId: schedule.id, public: !schedule.public }))}
+                  title={schedule.public ? 'Make private' : 'Make public'}
+                >
+                  {schedule.public ? (
+                    <FaGlobe />
+                  ) : (
+                    <FaEyeSlash />
+                  )}
+                </button>
+              </div>
             )}
 
-            <Menu.Button className={classNames(
-              'absolute left-full top-1/2 -translate-y-1/2 transition focus:outline-none focus:text-accent',
-              !open && 'opacity-0 group-hover/column:opacity-100 hover:text-accent',
+            <div className={classNames(
+              'absolute left-full top-1/2 -translate-y-1/2',
+              'flex items-center justify-center',
+              !open && 'opacity-0 transition-opacity group-hover/column:opacity-100',
             )}
             >
-              <span className="sr-only">Settings</span>
-              <FaCog />
-            </Menu.Button>
+              <Menu.Button className="interactive focus:outline-none">
+                <span className="sr-only">Settings</span>
+                <FaCog />
+              </Menu.Button>
+            </div>
           </div>
 
+          {/* items of the menu positioned absolutely */}
           <FadeTransition>
             <Menu.Items className="menu-dropdown absolute top-full z-10">
-              {schedule && <MenuButton href={`/schedule/${schedule.id}`} Icon={FaCalendar} title="Calendar" />}
               {semesterFormat !== 'sample' && schedule && (
               <MenuButton onClick={() => { setEditing(true); }} Icon={FaEdit} title="Rename" />
               )}
@@ -84,6 +99,7 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
               <>
                 <DeleteScheduleButton scheduleId={schedule.id} />
                 <DuplicateScheduleButton scheduleId={schedule.id} />
+                <ClearScheduleButton scheduleId={schedule.id} />
               </>
               )}
             </Menu.Items>
@@ -100,39 +116,79 @@ type TitleComponentProps = {
   setEditing: (editing: boolean) => void;
 };
 
-function TitleComponent({ scheduleId, term, setEditing }: TitleComponentProps) {
-  const schedule = useAppSelector(selectSchedule(scheduleId));
-
-  return schedule ? (
-    <Link
-      href={{
-        pathname: '/schedule/[scheduleId]',
-        query: { scheduleId },
-      }}
-      className="text-center text-lg font-medium"
-    >
-      {schedule.title}
-    </Link>
-  ) : <span>Loading...</span>;
-}
-
 /**
  * Part of the {@link SemesterColumnHeader} component.
- * @deprecated
  */
-function OldTitleComponent({ scheduleId: id, term, setEditing }: TitleComponentProps) {
-  const dispatch = useAppDispatch();
+function TitleComponent({ scheduleId, term, setEditing }: TitleComponentProps) {
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
-  const userId = Auth.useAuthProperty('uid');
-  const schedules = useAppSelector(selectSchedules);
+  const schedules = useAppSelector(Schedules.selectSchedules);
+  const { justCreated, chooseNewSchedule } = useTitle(term, setEditing);
   const termSchedules = getSchedulesBySemester(schedules, termToSemester(term));
+
+  const title = (scheduleId && schedules[scheduleId]?.title) ?? 'Loading...';
+
+  // don't show the dropdown if all schedules are being shown
+  if (semesterFormat === 'all') {
+    return (
+      <p className="text-center text-lg font-medium">
+        {title}
+      </p>
+    );
+  }
+
+  return (
+    <Listbox
+      as="div"
+      className="relative flex items-center"
+      onChange={chooseNewSchedule}
+    >
+      {({ open }) => (
+        <>
+          <Link
+            href={{
+              pathname: '/schedule/[scheduleId]',
+              query: { scheduleId },
+            }}
+            className="button text-center text-lg font-medium"
+          >
+            {title}
+          </Link>
+
+          <Listbox.Button className={classNames('round interactive select-none transition duration-500', open && 'rotate-180')}>
+            <FaChevronDown />
+          </Listbox.Button>
+
+          <FadeTransition>
+            <Listbox.Options className="menu-dropdown absolute left-1/2 top-full z-10 mt-2 w-max -translate-x-1/2 divide-y">
+              {termSchedules.map((schedule) => schedule.id !== justCreated && (
+              <Listbox.Option key={schedule.id} value={schedule.id} className="menu-button select-none first:rounded-t">
+                {schedule.title}
+              </Listbox.Option>
+              ))}
+              <Listbox.Option value={null} className="menu-button select-none rounded-b">
+                Create new
+              </Listbox.Option>
+            </Listbox.Options>
+          </FadeTransition>
+        </>
+      )}
+    </Listbox>
+  );
+}
+
+function useTitle(
+  term: Term,
+  setEditing: (editing: boolean) => void,
+) {
+  const dispatch = useAppDispatch();
+  const userId = Auth.useAuthProperty('uid');
   const [justCreated, setJustCreated] = useState<string | null>(null);
 
-  const chooseNewSchedule = useCallback(async (scheduleId: string | null) => {
-    if (scheduleId !== null) {
+  const chooseNewSchedule = useCallback(async (id: string | null) => {
+    if (id !== null) {
       await dispatch(Settings.chooseSchedule({
         term,
-        scheduleId,
+        scheduleId: id,
       }));
       return;
     }
@@ -151,37 +207,10 @@ function OldTitleComponent({ scheduleId: id, term, setEditing }: TitleComponentP
       console.error(err);
       alert("Couldn't create a new schedule! Please try again later.");
     }
-  }, [term, userId]);
+  }, [dispatch, setEditing, term, userId]);
 
-  const title = (id && id in schedules) ? schedules[id].title : 'None';
-
-  // don't show the dropdown if all schedules are being shown
-  if (semesterFormat === 'all') {
-    return <p className="text-center text-lg font-medium">{title}</p>;
-  }
-
-  return (
-    <Listbox
-      as="div"
-      className="relative flex flex-col items-center"
-      onChange={chooseNewSchedule}
-    >
-      <Listbox.Button className="select-none rounded px-2 text-center text-lg font-medium transition-colors hover:bg-gray-primary/50">
-        {title}
-      </Listbox.Button>
-      <FadeTransition>
-        <Listbox.Options className="menu-dropdown absolute top-full z-10 mt-2 w-max divide-y">
-          {termSchedules.map((schedule) => schedule.id !== justCreated && (
-            <Listbox.Option key={schedule.id} value={schedule.id} className="menu-button select-none first:rounded-t">
-              {schedule.title}
-            </Listbox.Option>
-          ))}
-          <Listbox.Option value={null} className="menu-button select-none rounded-b">
-            Create new
-          </Listbox.Option>
-        </Listbox.Options>
-      </FadeTransition>
-    </Listbox>
-  );
+  return {
+    justCreated,
+    chooseNewSchedule,
+  };
 }
-

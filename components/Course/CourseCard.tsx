@@ -1,5 +1,7 @@
 import Image from 'next/image';
-import React, { DragEventHandler, useMemo } from 'react';
+import React, {
+  DragEventHandler, Ref, forwardRef, useMemo,
+} from 'react';
 import {
   FaExclamationTriangle,
 } from 'react-icons/fa';
@@ -46,7 +48,7 @@ type CourseCardProps = {
  * @param highlight whether to highlight this class. default false
  * @param warnings an optional list of warnings, eg time collisions with other classes
  */
-export default function CourseCard({
+export const CourseCard = forwardRef(({
   course,
   chosenScheduleId = null,
   highlight = false,
@@ -54,7 +56,7 @@ export default function CourseCard({
   warnings,
   hideTerm = false,
   hideRatings = false,
-}: CourseCardProps) {
+}: CourseCardProps, ref: Ref<HTMLDivElement>) => {
   const { expandCards } = useExpandCards();
   const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
   const { showCourse } = useModal();
@@ -91,6 +93,7 @@ export default function CourseCard({
         className="flex items-center justify-between"
         draggable={drag.enabled}
         onDragStart={onDragStart}
+        ref={ref}
       >
         <button
           type="button"
@@ -112,7 +115,7 @@ export default function CourseCard({
 
   return (
     // move the shadow outside to avoid it getting hidden
-    <div className="overflow-hidden rounded-xl border border-gray-secondary shadow-xl">
+    <div className="overflow-hidden rounded-xl border border-gray-secondary shadow-xl" ref={ref}>
       <div
         className={classNames(
           'relative text-left h-full',
@@ -224,4 +227,4 @@ export default function CourseCard({
       </div>
     </div>
   );
-}
+});

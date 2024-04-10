@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { ImageWrapper } from '@/components/Utils/UserLink';
-import CourseCard from '@/components/Course/CourseCard';
+import { CourseCard } from '@/components/Course/CourseCard';
 import { ClassCache } from '@/src/features';
 import { useAppSelector, useProfiles } from '@/src/utils/hooks';
 import type { BaseSchedule, UserProfile, WithId } from '@/src/types';

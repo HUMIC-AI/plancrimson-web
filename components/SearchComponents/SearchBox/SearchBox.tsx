@@ -4,14 +4,16 @@ import useChosenScheduleContext from '@/src/context/selectedSchedule';
 import { useAppSelector } from '@/src/utils/hooks';
 import { sortSchedulesBySemester } from '@/src/utils/schedules';
 import { Schedules } from '@/src/features';
-import type { SearchBoxExposed, SearchBoxProvided } from 'react-instantsearch-core';
+import type { SearchBoxProvided } from 'react-instantsearch-core';
 import ScheduleChooser from '../../ScheduleChooser/ScheduleChooser';
 import { alertSignIn } from './searchUtils';
 import { SearchBar } from './SearchBar';
-import ClientOrDemo from '../ClientOrDemo';
+import useClientOrDemo from '../ClientOrDemo';
 
+// eslint-disable-next-line react/no-unused-prop-types
+type Exposed = { scheduleChooser?: boolean; showSmallAttributeMenu?: boolean; };
 
-type SearchBoxProps = SearchBoxProvided & { scheduleChooser?: boolean; showSmallAttributeMenu?: boolean; };
+type SearchBoxProps = SearchBoxProvided & Exposed;
 
 /**
  * The main search bar that goes at the top of the search page. See {@link SearchBar} below.
@@ -53,15 +55,11 @@ function SearchBoxComponent({
   );
 }
 
-
-// eslint-disable-next-line react/no-unused-prop-types
-export default function (props: SearchBoxExposed & { scheduleChooser?: boolean; showSmallAttributeMenu?: boolean; }) {
-  return (
-    <ClientOrDemo
-      connector={connectSearchBox<SearchBoxProps>}
-      Component={SearchBoxComponent}
-      componentProps={props}
-    />
+export default function SearchBox(props: Exposed) {
+  const Component = useClientOrDemo<SearchBoxProvided, Exposed>(
+    connectSearchBox as any,
+    SearchBoxComponent,
   );
+  return <Component {...props} />;
 }
 

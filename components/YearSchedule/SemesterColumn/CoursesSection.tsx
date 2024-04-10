@@ -8,7 +8,7 @@ import {
 } from '@/src/features';
 import AddCoursesButton from '@/components/AddCoursesButton';
 import { getClassIdsOfSchedule } from '@/src/features/schedules';
-import CourseCard from '../../Course/CourseCard';
+import { CourseCard } from '../../Course/CourseCard';
 import { ToggleButton } from '../../Course/ToggleButton';
 
 type Props = {
@@ -47,10 +47,12 @@ export function PlanningPageCoursesSection({ scheduleId, highlightedRequirement 
   return (
     <div className="h-max flex-1 overflow-auto p-4">
       <div className="flex min-h-[12rem] flex-col items-stretch space-y-4">
-        <AddCoursesButton schedule={schedule}>
-          <FaPlus className="mr-2" />
-          Add courses
-        </AddCoursesButton>
+        <div className="mx-auto">
+          <AddCoursesButton schedule={schedule}>
+            <FaPlus className="mr-2" />
+            Add courses
+          </AddCoursesButton>
+        </div>
 
         {initialized ? getClassIdsOfSchedule(schedule).map((id) => (id && classCache[id] ? (
           <CourseCard

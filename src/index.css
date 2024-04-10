@@ -56,7 +56,7 @@
   }
 
   .interactive {
-    @apply hover:opacity-50 hover:shadow-md motion-reduce:hover:shadow-none transition;
+    @apply box-border border-2 border-gray-primary/0 transition duration-150 hover:border-gray-primary/50 hover:opacity-50 hover:shadow-md motion-reduce:hover:shadow-none;
   }
 
   .primary {

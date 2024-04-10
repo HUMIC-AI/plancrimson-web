@@ -101,7 +101,7 @@ export function useFriendStatus(
     );
 
     return unsub;
-  }, [ref]);
+  }, [direction, ref]);
 
   return status;
 }

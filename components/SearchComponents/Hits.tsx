@@ -1,55 +1,24 @@
 import { connectInfiniteHits } from 'react-instantsearch-dom';
 import React, { useEffect, useState } from 'react';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
-import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import {
   sampleCourses, ExtendedClass, getClassId,
 } from '@/src/lib';
 import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
 import useChosenScheduleContext from '@/src/context/selectedSchedule';
 import useSearchState from '@/src/context/searchState';
-import { classNames } from '@/src/utils/styles';
 import { alertSignIn } from './SearchBox/searchUtils';
-import CourseCard from '../Course/CourseCard';
-import ClientOrDemo from './ClientOrDemo';
+import { CourseCard } from '../Course/CourseCard';
+import useClientOrDemo from './ClientOrDemo';
 import FadeTransition from '../Utils/FadeTransition';
-
-interface ButtonProps {
-  onClick: () => void;
-  enabled: boolean;
-  direction: 'up' | 'down';
-}
-
-function CustomButton({
-  onClick,
-  enabled,
-  direction,
-}: ButtonProps) {
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={!enabled}
-        className={classNames(
-          enabled
-            ? 'hover:opacity-50'
-            : 'cursor-not-allowed',
-          'p-2 bg-gray-secondary shadow w-24 sm:w-48 rounded transition-opacity',
-          'flex justify-center',
-        )}
-      >
-        {direction === 'up' && <FaChevronUp />}
-        {direction === 'down' && <FaChevronDown />}
-      </button>
-      <div className="absolute left-full top-1/2 ml-2 -translate-y-1/2">
-        <CardExpandToggler />
-      </div>
-    </div>
-  );
-}
+import { MoreHitsButton } from './MoreHitsButton';
 
 const sampleHits = sampleCourses as ExtendedClass[];
+
+type Provided = InfiniteHitsProvided<ExtendedClass>;
+
+// eslint-disable-next-line react/no-unused-prop-types
+type Exposed = { inSearch?: boolean };
 
 /**
  * TODO optimize this component
@@ -63,7 +32,7 @@ function HitsComponent({
   refineNext = alertSignIn,
   // refinePrevious = alertSignIn,
   inSearch = false,
-}: InfiniteHitsProvided<ExtendedClass> & { inSearch?: boolean }) {
+}: Provided & Exposed) {
   const { oneCol } = useSearchState();
   const { chosenScheduleId } = useChosenScheduleContext();
 
@@ -106,19 +75,17 @@ function HitsComponent({
               key={getClassId(hit)}
               afterLeave={() => setAllHits((hs) => hs.filter((h) => h.id !== hit.id))}
             >
-              <div>
-                <CourseCard
-                  course={hit}
-                  chosenScheduleId={chosenScheduleId}
-                  inSearchContext={inSearch}
-                />
-              </div>
+              <CourseCard
+                course={hit}
+                chosenScheduleId={chosenScheduleId}
+                inSearchContext={inSearch}
+              />
             </FadeTransition>
           ))}
         </div>
       )}
 
-      <CustomButton
+      <MoreHitsButton
         enabled={hasMore}
         onClick={refineNext}
         direction="down"
@@ -128,11 +95,11 @@ function HitsComponent({
   );
 }
 
-export default function () {
-  return (
-    <ClientOrDemo
-      connector={connectInfiniteHits}
-      Component={HitsComponent}
-    />
+
+export default function Hits(props: Exposed) {
+  const Component = useClientOrDemo<Provided, Exposed>(
+    connectInfiniteHits,
+    HitsComponent,
   );
+  return <Component {...props} />;
 }
