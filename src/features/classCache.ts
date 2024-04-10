@@ -2,7 +2,7 @@ import type { InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearc
 import {
   createSlice, PayloadAction,
 } from '@reduxjs/toolkit';
-import type { ExtendedClass } from '@/src/lib';
+import type { ExtendedClass, IndexName } from '@/src/lib';
 import { allTruthy } from '@/src/lib';
 import { getMeiliApiKey, getMeiliHost } from '@/src/context/meili';
 import type { AppDispatch, RootState } from '../store';
@@ -60,7 +60,7 @@ export async function fetchAtOffset(offset: number): Promise<{
 
 // api key is required except in development
 // manually fetch the specified document from the Meilisearch index
-const fetchCourse = async (indexName: 'courses' | 'archive', classId: string, apiKey: string): Promise<ExtendedClass> => {
+const fetchCourse = async (indexName: IndexName, classId: string, apiKey: string): Promise<ExtendedClass> => {
   const response = await fetch(
     `${getMeiliHost()}/indexes/${indexName}/documents/${classId}`,
     {

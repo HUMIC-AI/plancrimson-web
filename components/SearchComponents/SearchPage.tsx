@@ -4,16 +4,16 @@ import { Auth, Planner } from '@/src/features';
 import Layout from '@/components/Layout/Layout';
 import SearchBox from '@/components/SearchComponents/SearchBox/SearchBox';
 import Hits from '@/components/SearchComponents/Hits';
-import CurrentRefinements from '@/components/SearchComponents/CurrentRefinements';
-import SortBy from '@/components/SearchComponents/SortBy';
 import AttributeMenu from '@/components/SearchComponents/AttributeMenu/AttributeMenu';
 import { ScheduleSyncer } from '@/components/ScheduleSyncer';
 import { WithMeili } from '@/components/Layout/WithMeili';
 import { AuthRequiredInstantSearchProvider } from '../AuthRequiredInstantSearchProvider';
 import { classNames } from '../../src/utils/styles';
 import { SearchStateProvider } from '../../src/context/searchState';
+import { SortingAndRefinementsGrid } from './CurrentRefinements';
+import type { IndexName } from '../../src/lib';
 
-export function SearchPage({ indexName }: { indexName: 'courses' | 'archive' }) {
+export function SearchPage({ indexName }: { indexName: IndexName }) {
   const userId = Auth.useAuthProperty('uid');
 
   return (
@@ -38,7 +38,7 @@ export function SearchPage({ indexName }: { indexName: 'courses' | 'archive' }) 
 
 function Contents({
   indexName,
-}: { indexName: 'courses' | 'archive' }) {
+}: { indexName: IndexName }) {
   const showAttributes = useAppSelector(Planner.selectShowAttributes);
 
   return (
@@ -49,10 +49,7 @@ function Contents({
 
       <div className="space-y-4">
         <SearchBox />
-        <div className="grid grid-cols-[auto_1fr] items-center gap-4">
-          <SortBy indexName={indexName} />
-          <CurrentRefinements />
-        </div>
+        <SortingAndRefinementsGrid indexName={indexName} />
         <Hits inSearch />
       </div>
     </AuthRequiredInstantSearchProvider>

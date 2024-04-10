@@ -3,6 +3,7 @@ import { FaTimes } from 'react-icons/fa';
 import { connectCurrentRefinements } from 'react-instantsearch-dom';
 import type { CurrentRefinementsProvided, Refinement } from 'react-instantsearch-core';
 import {
+  type IndexName,
   TERM_TO_SEASON,
   adjustAttr,
   compareItems,
@@ -11,6 +12,7 @@ import {
 import { classNames } from '@/src/utils/styles';
 import { alertSignIn } from './SearchBox/searchUtils';
 import useClientOrDemo from './ClientOrDemo';
+import SortBy from './SortBy';
 
 type Provided = Pick<CurrentRefinementsProvided, 'items' | 'refine'>;
 
@@ -25,6 +27,7 @@ function CurrentRefinementsComponent({
       </span>
     );
   }
+
   const uniqueRefinements = getUniqueRefinements(refinements);
 
   const refinementElements = uniqueRefinements.map(([id, items]) => (
@@ -79,4 +82,13 @@ export default function CurrentRefinements() {
     CurrentRefinementsComponent,
   );
   return <Component />;
+}
+
+export function SortingAndRefinementsGrid({ indexName }: { indexName: IndexName; }) {
+  return (
+    <div className="grid grid-cols-[auto_1fr] items-center gap-4">
+      <SortBy indexName={indexName} />
+      <CurrentRefinements />
+    </div>
+  );
 }

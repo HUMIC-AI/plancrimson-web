@@ -7,6 +7,7 @@ import { errorMessages } from '@/components/Layout/Layout';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { useMeiliClient } from '@/src/context/meili';
 import { ErrorMessage } from './Layout/AuthWrapper';
+import type { IndexName } from '../src/lib';
 
 /**
  * Only try to connect to MeiliSearch when the user is logged in.
@@ -17,7 +18,7 @@ export function AuthRequiredInstantSearchProvider({
   children,
   hitsPerPage = 12,
 }: PropsWithChildren<{
-  indexName: 'courses' | 'archive';
+  indexName: IndexName;
   hitsPerPage?: number;
 }>) {
   const { searchState, onSearchStateChange } = useSearchState();

@@ -1,6 +1,8 @@
+import type { IndexName } from '../../../src/lib';
+
 export const alertSignIn = () => alert('Sign in to search for courses!');
 
-export const SORT_INDEXES = (indexName: 'courses' | 'archive') => [
+export const SORT_INDEXES = (indexName: IndexName) => [
   { label: 'Relevant', value: indexName },
   {
     label: 'Catalog number',

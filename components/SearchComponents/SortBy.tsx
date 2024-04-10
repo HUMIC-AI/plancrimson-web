@@ -3,6 +3,7 @@ import React from 'react';
 import { connectSortBy } from 'react-instantsearch-dom';
 import { alertSignIn, SORT_INDEXES } from './SearchBox/searchUtils';
 import useClientOrDemo from './ClientOrDemo';
+import type { IndexName } from '../../src/lib';
 
 type Item = {
   value: string;
@@ -12,7 +13,7 @@ type Item = {
 
 type SortByProps = {
   // eslint-disable-next-line react/no-unused-prop-types
-  defaultRefinement: 'courses' | 'archive';
+  defaultRefinement: IndexName;
   items: Item[];
   refine: (value: string) => any;
 };
@@ -51,7 +52,7 @@ function SortByComponent({
 }
 
 
-export default function SortBy({ indexName }: { indexName: 'courses' | 'archive' }) {
+export default function SortBy({ indexName }: { indexName: IndexName }) {
   const Component = useClientOrDemo(
     connectSortBy,
     SortByComponent,
