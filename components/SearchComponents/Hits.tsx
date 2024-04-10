@@ -36,19 +36,6 @@ function HitsComponent({
   const { oneCol } = useSearchState();
   const { chosenScheduleId } = useChosenScheduleContext();
 
-  // keep track of all hits to animate them smoothly
-  const [allHits, setAllHits] = useState<ExtendedClass[]>([]);
-
-  useEffect(() => {
-    // wait until transitions are over to unmount
-    // merge existing hits with new ones by their ids
-    // show new hits first
-    setAllHits((hs) => [
-      ...hits,
-      ...hs.filter((h) => !hits.some((hit) => h.id === hit.id)),
-    ]);
-  }, [hits]);
-
   return (
     <div className="flex flex-col items-center space-y-4">
       {/* <CustomButton
@@ -58,7 +45,7 @@ function HitsComponent({
       /> */}
       <CardExpandToggler />
 
-      {allHits.length === 0 ? (
+      {hits.length === 0 ? (
         // <div className="animate-pulse py-2 px-4 rounded-full bg-gray-light">
         //   Loading results...
         // </div>
@@ -68,19 +55,13 @@ function HitsComponent({
           ? 'flex w-full flex-col items-stretch space-y-4'
           : 'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4'}
         >
-          {allHits.map((hit) => (
-            <FadeTransition
-              show={hits.some((h) => h.id === hit.id)}
-              appear
-              key={getClassId(hit)}
-              afterLeave={() => setAllHits((hs) => hs.filter((h) => h.id !== hit.id))}
-            >
-              <CourseCard
-                course={hit}
-                chosenScheduleId={chosenScheduleId}
-                inSearchContext={inSearch}
-              />
-            </FadeTransition>
+          {hits.map((hit) => (
+            <CourseCard
+              key={hit.id}
+              course={hit}
+              chosenScheduleId={chosenScheduleId}
+              inSearchContext={inSearch}
+            />
           ))}
         </div>
       )}
