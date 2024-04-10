@@ -17,8 +17,8 @@ export default function HiddenSchedules() {
   }
 
   return (
-    <div className="mt-4 text-white">
-      <h4 className="inline">Hidden schedules:</h4>
+    <div className="mt-4">
+      <span className="mr-1">Hidden schedules:</span>
       <ul className="inline">
         {Object.keys(hidden).map((data) => {
           let title: string;
@@ -29,7 +29,7 @@ export default function HiddenSchedules() {
             title = `${semester.season} ${semester.year}`;
           }
           return (
-            <li key={title} className="ml-2 inline">
+            <li key={title} className="inline">
               <button
                 type="button"
                 onClick={() => {
@@ -39,7 +39,7 @@ export default function HiddenSchedules() {
                     dispatch(Planner.setHiddenTerm({ term: data as Term, hidden: false }));
                   }
                 }}
-                className="interactive"
+                className="interactive rounded px-1"
               >
                 {title}
               </button>
