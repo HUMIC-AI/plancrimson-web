@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaTimes } from 'react-icons/fa';
 import { findConflicts, allTruthy } from '@/src/lib';
-import { useAppSelector, useElapsed } from '@/src/utils/hooks';
+import { useAppDispatch, useAppSelector, useElapsed } from '@/src/utils/hooks';
 import { Requirement } from '@/src/requirements/util';
 import {
   ClassCache, Profile, Schedules,
@@ -9,7 +9,7 @@ import {
 import AddCoursesButton from '@/components/AddCoursesButton';
 import { getClassIdsOfSchedule } from '@/src/features/schedules';
 import CourseCard from '../../Course/CourseCard';
-import { CourseCardToggleButton } from '../../Course/ToggleButton';
+import { ToggleButton } from '../../Course/ToggleButton';
 
 type Props = {
   scheduleId: string;
@@ -17,6 +17,7 @@ type Props = {
 };
 
 export function PlanningPageCoursesSection({ scheduleId, highlightedRequirement }: Props) {
+  const dispatch = useAppDispatch();
   const schedule = useAppSelector(Schedules.selectSchedule(scheduleId));
   const profile = useAppSelector(Profile.selectUserProfile);
   const classCache = useAppSelector(ClassCache.selectClassCache);
@@ -71,7 +72,15 @@ export function PlanningPageCoursesSection({ scheduleId, highlightedRequirement 
                     {id.slice(0, 12)}
                     ... not found
                   </span>
-                  <CourseCardToggleButton chosenScheduleId={scheduleId} courseId={id} />
+                  <ToggleButton
+                    name="Remove class from schedule"
+                    onClick={() => dispatch(Schedules.removeCourses({
+                      courseIds: [id],
+                      scheduleId,
+                    }))}
+                  >
+                    <FaTimes />
+                  </ToggleButton>
                 </div>
               )
               : 'Loading course data...'}

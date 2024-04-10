@@ -102,7 +102,7 @@ export default function CourseCard({
 
         <CourseCardToggleButton
           chosenScheduleId={chosenScheduleId!}
-          courseId={course.id}
+          course={course}
         />
       </div>
     );
@@ -166,7 +166,7 @@ export default function CourseCard({
 
                 <CourseCardToggleButton
                   chosenScheduleId={chosenScheduleId!}
-                  courseId={course.id}
+                  course={course}
                 />
               </span>
             </p>

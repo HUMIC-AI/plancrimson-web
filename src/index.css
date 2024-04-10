@@ -74,6 +74,10 @@
   .secondary-gray {
     @apply text-secondary bg-gray-primary;
   }
+
+  .round {
+    @apply rounded-full p-1;
+  }
 }
 
 @layer components {
