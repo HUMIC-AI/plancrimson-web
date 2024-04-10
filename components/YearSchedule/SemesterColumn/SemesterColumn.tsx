@@ -10,10 +10,10 @@ import { useDragAndDropContext } from './DragAndDrop';
 import { useScheduleFromScheduleIdOrSemester } from './useScheduleFromScheduleIdOrSemester';
 
 const VIABILITY_COLORS: Record<Viability, string> = {
-  Yes: 'bg-green',
-  Likely: 'bg-blue-light',
-  Unlikely: 'bg-yellow',
-  No: 'bg-red',
+  Yes: 'bg-blue-primary',
+  Likely: 'bg-blue-secondary',
+  Unlikely: 'bg-gray-secondary',
+  No: 'bg-gray-secondary',
 };
 
 type Props = {
@@ -82,9 +82,9 @@ function useStylesForSchedule(schedule: BaseSchedule | null, season: Season | nu
   }
 
   return season === 'Fall'
-    ? 'bg-season-fall'
+    ? 'bg-gray-secondary/40'
     : season === 'Spring'
-      ? 'bg-season-spring'
-      : 'bg-gray-light';
+      ? 'bg-blue-secondary/40'
+      : 'bg-gray-secondary';
 }
 

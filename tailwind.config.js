@@ -41,10 +41,6 @@ module.exports = {
         4: colors.orange[300],
         5: colors.rose[300],
       },
-      season: {
-        spring: 'rgb(var(--color-season-spring) / <alpha-value>)',
-        fall: 'rgb(var(--color-season-fall) / <alpha-value>)',
-      }
     },
   },
   variants: {

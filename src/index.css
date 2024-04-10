@@ -16,8 +16,6 @@
     --color-gray-secondary: 203 213 225;
     --color-blue-primary: 30 58 138;
     --color-blue-secondary: 186 230 253;
-    --color-season-spring: 247 254 231;
-    --color-season-fall: 255 241 242;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -28,8 +26,6 @@
       --color-gray-secondary: 30 41 59; /* 800 */
       --color-blue-primary: 96 165 250;
       --color-blue-secondary: 30 58 138;
-      --color-season-spring: 5 46 22;
-      --color-season-fall: 67 20 7;
     }
   }
 

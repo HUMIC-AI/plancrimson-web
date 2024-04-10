@@ -1,7 +1,7 @@
 import { Listbox } from '@headlessui/react';
 import Link from 'next/link';
 import { FaChevronDown } from 'react-icons/fa';
-import { useMemo } from 'react';
+import { PropsWithChildren, useMemo } from 'react';
 import { Planner, Schedules } from '../../../src/features';
 import { ScheduleId } from '../../../src/types';
 import { useAppSelector } from '../../../src/utils/hooks';
@@ -26,9 +26,9 @@ export function TitleComponent({ scheduleId, idList, chooseSchedule }: TitleComp
   // don't show the dropdown if all schedules are being shown
   if (semesterFormat === 'all') {
     return (
-      <p className="text-center text-lg font-medium">
+      <TitleLink scheduleId={scheduleId}>
         {title}
-      </p>
+      </TitleLink>
     );
   }
 
@@ -40,15 +40,9 @@ export function TitleComponent({ scheduleId, idList, chooseSchedule }: TitleComp
     >
       {({ open }) => (
         <>
-          <Link
-            href={{
-              pathname: '/schedule/[scheduleId]',
-              query: { scheduleId },
-            }}
-            className="button text-center text-lg font-medium"
-          >
+          <TitleLink scheduleId={scheduleId}>
             {title}
-          </Link>
+          </TitleLink>
 
           <Listbox.Button className={classNames('round interactive select-none transition duration-500', open && 'rotate-180')}>
             <FaChevronDown />
@@ -69,5 +63,32 @@ export function TitleComponent({ scheduleId, idList, chooseSchedule }: TitleComp
         </>
       )}
     </Listbox>
+  );
+}
+
+function TitleLink({
+  children,
+  scheduleId,
+}: PropsWithChildren<{
+  scheduleId: ScheduleId | null;
+}>) {
+  if (!scheduleId) {
+    return (
+      <p className="text-center text-lg font-medium">
+        {children}
+      </p>
+    );
+  }
+
+  return (
+    <Link
+      href={{
+        pathname: '/schedule/[scheduleId]',
+        query: { scheduleId },
+      }}
+      className="button text-center text-lg font-medium"
+    >
+      {children}
+    </Link>
   );
 }
