@@ -4,7 +4,7 @@ import { Disclosure } from '@headlessui/react';
 import Link from 'next/link';
 import { FaAngleDown } from 'react-icons/fa';
 import { getDisplayName } from '@/src/utils/utils';
-import ScheduleSection from '../SemesterSchedule/ScheduleList';
+import { ScheduleSection } from '../SemesterSchedule/ScheduleList';
 import { ProfileWithSchedules } from './useLunrIndex';
 
 export default function ProfileCard({

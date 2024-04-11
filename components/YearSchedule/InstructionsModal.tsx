@@ -2,13 +2,13 @@ import { useModal } from '@/src/context/modal';
 import { useMounted } from '@/src/utils/hooks';
 import { useEffect } from 'react';
 
-export default function () {
+export function InstructionsModal() {
   const mounted = useMounted();
   if (!mounted) return null;
-  return <InstructionsModal />;
+  return <InstructionsModalComponent />;
 }
 
-function InstructionsModal() {
+function InstructionsModalComponent() {
   const { showContents, setOpen } = useModal();
 
   useEffect(() => {

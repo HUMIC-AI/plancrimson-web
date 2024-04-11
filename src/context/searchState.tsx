@@ -13,7 +13,7 @@ import { throwMissingContext } from '../utils/utils';
 import { Auth } from '../features';
 
 interface SearchStateContextType {
-  searchState: any;
+  searchState: SearchState | null;
   setSearchState: React.Dispatch<React.SetStateAction<SearchState>>;
   oneCol: boolean;
   onSearchStateChange: (newState: SearchState) => void;

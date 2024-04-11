@@ -17,7 +17,7 @@ export type ScheduleListProps = {
   noPadding?: boolean;
 };
 
-export default function ScheduleSection({
+export function ScheduleSection({
   schedule, hideAuthor = false, hideHeader = false, noPadding = false,
 }: ScheduleListProps) {
   const classCache = useAppSelector(ClassCache.selectClassCache);

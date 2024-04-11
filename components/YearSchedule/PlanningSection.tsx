@@ -19,6 +19,7 @@ import { ListOfScheduleIdOrSemester } from '@/src/types';
 import { DragObservers, useObserver } from './SemesterColumn/DragObservers';
 import { DragAndDropProvider } from './SemesterColumn/DragAndDrop';
 import SemesterColumn from './SemesterColumn/SemesterColumn';
+import { SearchStateProvider } from '../../src/context/searchState';
 
 export interface WithResizeRef {
   resizeRef: React.MutableRefObject<HTMLDivElement>;
@@ -61,46 +62,48 @@ export function SemestersList({
     : columns.filter((column) => !(semesterToTerm(column) in hiddenTerms));
 
   return (
-    <DragAndDropProvider>
-      <div className="relative mt-4 flex-1">
-        <div className="absolute inset-0 overflow-scroll" ref={semestersContainerRef}>
-          <div className="mx-auto flex h-full w-max overflow-hidden rounded-lg">
-            {/* when dragging a card, drag over this area to scroll left */}
-            <div ref={leftScrollRef} />
+    <SearchStateProvider defaultState={null}>
+      <DragAndDropProvider>
+        <div className="relative mt-4 flex-1">
+          <div className="absolute inset-0 overflow-scroll" ref={semestersContainerRef}>
+            <div className="mx-auto flex h-full w-max overflow-hidden rounded-lg">
+              {/* when dragging a card, drag over this area to scroll left */}
+              <div ref={leftScrollRef} />
 
-            {/* add previous semester button */}
-            {!isScheduleIds && classYear && (
-            <button
-              type="button"
-              className="h-full grow-0 bg-blue-secondary px-4 transition hover:bg-blue-primary"
-              onClick={addPrevSemester}
-              name="Add previous semester"
-              title="Add previous semester"
-            >
-              <FaPlus />
-            </button>
-            )}
+              {/* add previous semester button */}
+              {!isScheduleIds && classYear && (
+              <button
+                type="button"
+                className="h-full grow-0 bg-blue-secondary px-4 transition hover:bg-blue-primary"
+                onClick={addPrevSemester}
+                name="Add previous semester"
+                title="Add previous semester"
+              >
+                <FaPlus />
+              </button>
+              )}
 
-            {showColumns.map((column) => (
-              <SemesterColumn
-                key={isScheduleIds ? column as string : semesterToTerm(column as Semester)}
-                s={column}
-                colWidth={colWidth}
-                highlightedRequirement={highlightedRequirement}
-              />
-            ))}
+              {showColumns.map((column) => (
+                <SemesterColumn
+                  key={isScheduleIds ? column as string : semesterToTerm(column as Semester)}
+                  s={column}
+                  colWidth={colWidth}
+                  highlightedRequirement={highlightedRequirement}
+                />
+              ))}
 
-            {/* when dragging, drag over this area to scroll right */}
-            <div ref={rightScrollRef} />
+              {/* when dragging, drag over this area to scroll right */}
+              <div ref={rightScrollRef} />
+            </div>
           </div>
-        </div>
 
-        <DragObservers
-          leftIntersecting={leftIntersecting}
-          rightIntersecting={rightIntersecting}
-          semestersContainerRef={semestersContainerRef}
-        />
-      </div>
-    </DragAndDropProvider>
+          <DragObservers
+            leftIntersecting={leftIntersecting}
+            rightIntersecting={rightIntersecting}
+            semestersContainerRef={semestersContainerRef}
+          />
+        </div>
+      </DragAndDropProvider>
+    </SearchStateProvider>
   );
 }

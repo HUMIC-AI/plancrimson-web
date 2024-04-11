@@ -12,10 +12,6 @@ type Props = Provided & Exposed;
 function HighlightComponent({
   highlight, attribute, hit,
 }: Props) {
-  const { searchState } = useSearchState();
-
-  if (!searchState) return <span>{hit[attribute]}</span>;
-
   const parsedHit = highlight({
     highlightProperty: '_highlightResult',
     attribute,
@@ -33,10 +29,21 @@ function HighlightComponent({
   );
 }
 
-export default function Highlight(props: Exposed) {
+export function Highlight({ hit, attribute }: Exposed) {
+  const { searchState } = useSearchState();
+
+  if (!searchState) return <span>{hit[attribute]}</span>;
+
+  console.log('search state found');
+
+  return <HighlightWrapper hit={hit} attribute={attribute} />;
+}
+
+function HighlightWrapper(props: Exposed) {
   const Component = useClientOrDemo<Provided, Exposed>(
     connectHighlight as any,
     HighlightComponent,
   );
+
   return <Component {...props} />;
 }

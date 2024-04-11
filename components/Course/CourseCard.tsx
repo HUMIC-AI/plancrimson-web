@@ -19,7 +19,7 @@ import Tooltip from '../Utils/Tooltip';
 import { ClassSizeRating, HoursRating, StarRating } from './RatingIndicators';
 import { useDragAndDropContext } from '../YearSchedule/SemesterColumn/DragAndDrop';
 import { CourseCardToggleButton } from './ToggleButton';
-import Highlight from '../SearchComponents/Highlight';
+import { Highlight } from '../SearchComponents/Highlight';
 import {
   Instructors, DaysOfWeek, Location, ClassTime,
 } from './CourseComponents';

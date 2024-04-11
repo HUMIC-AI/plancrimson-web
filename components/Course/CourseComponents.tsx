@@ -4,7 +4,7 @@ import {
 } from 'react-icons/fa';
 import { ExtendedClass, DAYS_OF_WEEK } from '@/src/lib';
 import { classNames } from '@/src/utils/styles';
-import Highlight from '../SearchComponents/Highlight';
+import { Highlight } from '../SearchComponents/Highlight';
 
 type CourseProps = {
   course: ExtendedClass;

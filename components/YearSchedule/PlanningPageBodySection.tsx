@@ -16,8 +16,7 @@ import { ScheduleSyncer } from '../ScheduleSyncer';
 import RequirementsSection from './RequirementsSection';
 import { useValidateSchedule } from './useValidateSchedule';
 import { WithMeili } from '../Layout/WithMeili';
-import InstructionsModal from './InstructionsModal';
-import { SearchStateProvider } from '../../src/context/searchState';
+import { InstructionsModal } from './InstructionsModal';
 
 export default function PlanningPageBodySection({ userId }: { userId: string; }) {
   const showReqs = useAppSelector(Planner.selectShowReqs);
