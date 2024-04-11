@@ -34,8 +34,6 @@ export function Highlight({ hit, attribute }: Exposed) {
 
   if (!searchState) return <span>{hit[attribute]}</span>;
 
-  console.log('search state found');
-
   return <HighlightWrapper hit={hit} attribute={attribute} />;
 }
 

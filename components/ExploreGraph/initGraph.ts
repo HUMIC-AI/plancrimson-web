@@ -5,6 +5,7 @@ import {
 import { CourseBrief } from '../ClassesCloudPage/useData';
 import {
   Subject,
+  cos,
   getSubjectColor, getUpcomingSemester,
 } from '../../src/lib';
 import { useMeiliClient } from '../../src/context/meili';
@@ -47,6 +48,10 @@ const RADIUS = 4;
 const T_DURATION = 150;
 const LINK_STRENGTH = 0.1;
 const CHARGE_STRENGTH = -100;
+const CENTER_STRENGTH = 1e-3;
+
+// a scale of five emojis from least to most happy
+const EMOJI_SCALE = ['😢', '😐', '😊', '😁', '🤩'];
 
 const getColor = (d: DatumBase) => getSubjectColor(d.subject, {
   saturation: (d.meanRating ? d.meanRating : 3) / 5,
@@ -119,8 +124,8 @@ function initGraph(svgDom: SVGSVGElement, {
     .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(LINK_STRENGTH))
     .force('charge', d3.forceManyBody().strength(CHARGE_STRENGTH))
     .force('collide', d3.forceCollide<Datum>((d) => getRadius(d) + RADIUS * 2).iterations(2))
-    .force('x', d3.forceX())
-    .force('y', d3.forceY());
+    .force('x', d3.forceX().strength(CENTER_STRENGTH))
+    .force('y', d3.forceY().strength(CENTER_STRENGTH));
 
   const linkGroup = svg.append('g')
     .attr('stroke', '#999')
@@ -133,13 +138,15 @@ function initGraph(svgDom: SVGSVGElement, {
     .attr('stroke-width', 1.5)
     .attr('cursor', 'grab');
 
-  let node = nodeGroup.selectAll<SVGCircleElement, Datum>('circle');
+  let node = nodeGroup.selectAll<SVGCircleElement, Datum>('g.course');
 
   let fixedId: string | null = null;
   let highlightedIds: string[] = [];
 
   function renderHighlights() {
-    return node.transition()
+    return node
+      .select('circle')
+      .transition()
       .duration(T_DURATION)
       .attr('stroke-opacity', (d) => {
         if (fixedId === d.id) return 4;
@@ -171,8 +178,7 @@ function initGraph(svgDom: SVGSVGElement, {
       .attr('y2', (d) => d.target.y);
 
     node
-      .attr('cx', (d) => d.x)
-      .attr('cy', (d) => d.y);
+      .attr('transform', (d) => `translate(${d.x},${d.y})`);
   };
 
   // update node positions
@@ -205,9 +211,23 @@ function initGraph(svgDom: SVGSVGElement, {
     flip = f;
   }
 
-  function addListeners(n: d3.Selection<SVGCircleElement, Datum, SVGGElement, unknown>) {
+  function setRadius(g: SVGGElement, radius: number) {
+    const group = d3.select<SVGGElement, Datum>(g);
+
+    group.selectChild('circle')
+      .transition()
+      .duration(T_DURATION)
+      .attr('r', radius);
+
+    group.selectChild('text')
+      .transition()
+      .duration(T_DURATION)
+      .attr('font-size', `${radius}px`);
+  }
+
+  function addListeners(n: d3.Selection<SVGGElement, Datum, SVGGElement, unknown>) {
     // drag nodes around
-    const drag = d3.drag<SVGCircleElement, Datum>()
+    const drag = d3.drag<SVGGElement, Datum>()
       .on('start', (event) => {
         if (!event.active) sim.alphaTarget(0.3).restart();
         event.subject.fx = event.subject.x;
@@ -228,18 +248,12 @@ function initGraph(svgDom: SVGSVGElement, {
     n
       .call(drag)
       // expand node on hover
-      .on('mouseover', (event, d) => {
-        d3.select<SVGCircleElement, Datum>(event.target)
-          .transition()
-          .duration(T_DURATION)
-          .attr('r', (g) => getRadius(g) + RADIUS * 2);
+      .on('mouseover', function (event, d) {
+        setRadius(this, getRadius(d) + RADIUS * 2);
         onHover(d.id);
       })
-      .on('mouseout', (event) => {
-        d3.select<SVGCircleElement, Datum>(event.target)
-          .transition()
-          .duration(T_DURATION)
-          .attr('r', getRadius);
+      .on('mouseout', function (event, d) {
+        setRadius(this, getRadius(d));
         onHover(null);
       })
       .on('click', (event, d) => {
@@ -311,6 +325,7 @@ function initGraph(svgDom: SVGSVGElement, {
   }
 
   /**
+   * Main update function for entering nodes into the graph.
    * Use {@link DatumBase} since we don't need to initialize x and y.
    */
   function update(nodes: DatumBase[], idLinks: { source: string; target: string; }[]) {
@@ -334,17 +349,36 @@ function initGraph(svgDom: SVGSVGElement, {
     node = node
       .data(nodes as Datum[], (d) => d.id)
       .join(
-        (enter) => enter.append('circle')
-          .attr('fill', getColor)
-          .attr('stroke', 'black')
-          .attr('stroke-width', 1.5)
-          .attr('stroke-opacity', 0)
-          .call(addListeners)
-          .call((n) => n.transition()
+        (enter) => enter.append('g')
+          .classed('course', true)
+          // add circle to each group
+          .call((n) => n.append('circle')
+            .attr('fill', getColor)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 1.5)
+            .attr('stroke-opacity', 0)
+            .attr('r', 0)
+            .transition()
             .duration(T_DURATION)
             .attr('r', getRadius))
-          .call((n) => n.append('title')
-            .text((d) => d.subject)),
+          // add event listeners to each group
+          .call(addListeners)
+          .call((n) => n
+            // add emoji to each group to indicate mean rating
+            .select(function (d) {
+              if (typeof d.meanRating === 'number') return this;
+              return null;
+            })
+            .append('text')
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'middle')
+            // some additional recentering
+            .attr('dy', '0.15rem')
+            .attr('font-size', getRadius)
+            .attr('fill', 'black')
+            .style('pointer-events', 'none')
+            // some rescaling since average rating is quite high
+            .text((d) => EMOJI_SCALE[Math.floor((d.meanRating! ** 2) / 5 - 1e-6)])),
       );
 
     restartSimulation();
@@ -363,7 +397,3 @@ function initGraph(svgDom: SVGSVGElement, {
     setFlip,
   };
 }
-
-const norm = (a: number[]) => Math.hypot(...a);
-const dot = (a: number[], b: number[]) => a.reduce((acc, v, i) => acc + v * b[i], 0);
-const cos = (a: number[], b: number[]) => dot(a, b) / (norm(a) * norm(b));
