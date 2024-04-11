@@ -17,8 +17,9 @@ import RequirementsSection from './RequirementsSection';
 import { useValidateSchedule } from './useValidateSchedule';
 import { WithMeili } from '../Layout/WithMeili';
 import InstructionsModal from './InstructionsModal';
+import { SearchStateProvider } from '../../src/context/searchState';
 
-export default function ({ userId }: { userId: string; }) {
+export default function PlanningPageBodySection({ userId }: { userId: string; }) {
   const showReqs = useAppSelector(Planner.selectShowReqs);
   const md = useBreakpoint(breakpoints.md);
   const [selectedRequirements, setSelectedRequirements] = useState<RequirementGroup>(collegeRequirements);
