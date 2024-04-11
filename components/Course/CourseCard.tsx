@@ -132,7 +132,7 @@ export const CourseCard = forwardRef(({
             src={departmentImages[department].urls.thumb}
             alt={departmentImages[department].alt_description || ''}
             fill
-            sizes="240px"
+            sizes="200px"
             style={{ objectFit: 'cover' }}
             className={highlight ? 'opacity-10' : 'opacity-30'}
           />
