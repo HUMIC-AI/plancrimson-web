@@ -4,7 +4,7 @@ import '@/src/initFirebase';
 import type { AppProps } from 'next/app';
 import { Provider } from 'react-redux';
 import React from 'react';
-import { SearchStateProvider, getDefaultSearchStateForSemester } from '@/src/context/searchState';
+import { SearchStateProvider, getDefaultSearchStateForSemester, useDefaultSearchState } from '@/src/context/searchState';
 import store from '@/src/store';
 import { ModalProvider } from '@/src/context/modal';
 import { ChosenScheduleProvider } from '@/src/context/selectedSchedule';
@@ -17,18 +17,19 @@ export default function (props: AppProps) {
   return (
     <Provider store={store}>
       <ModalProvider>
-        <MyApp {...props} />
+        <AppWrapper {...props} />
       </ModalProvider>
     </Provider>
   );
 }
 
-function MyApp({ Component, pageProps }: AppProps) {
+function AppWrapper({ Component, pageProps }: AppProps) {
+  const defaultState = useDefaultSearchState();
   useSyncAuth();
   useSyncUserSettings();
 
   return (
-    <SearchStateProvider defaultState={getDefaultSearchStateForSemester(getUpcomingSemester())}>
+    <SearchStateProvider defaultState={defaultState}>
       <ExpandCardsProvider sticky>
         <ChosenScheduleProvider>
           <IncludeSemestersProvider>

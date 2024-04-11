@@ -3,7 +3,7 @@ import { createEvents, EventAttributes } from 'ics';
 import { downloadJson } from '@/src/utils/utils';
 import { BaseSchedule } from '@/src/types';
 import AddCoursesButton from '../AddCoursesButton';
-import { SearchStateProvider, getDefaultSearchStateForSemester } from '../../src/context/searchState';
+import { SearchStateProvider, useDefaultSearchState } from '../../src/context/searchState';
 import { ChosenScheduleContext, ChosenScheduleContextType } from '../../src/context/selectedSchedule';
 import { AuthRequiredInstantSearchProvider } from '../AuthRequiredInstantSearchProvider';
 import { WithMeili } from '../Layout/WithMeili';
@@ -20,17 +20,7 @@ type Props = {
 
 export function CalendarHeaderSection({ events, schedule }: Props) {
   const userId = Auth.useAuthProperty('uid');
-  function exportScheduleToIcs() {
-    const { error, value } = createEvents(events.map(({ isSection, ...event }) => ({
-      ...event,
-    })));
-    if (error) {
-      console.error(error);
-      alert('There was an error exporting your schedule. Please try again later.');
-    } else if (value) {
-      downloadJson('schedule', value, 'ics');
-    }
-  }
+  const defaultState = useDefaultSearchState(schedule);
 
   const chosenScheduleContext = useMemo<ChosenScheduleContextType>(() => ({
     chosenScheduleId: schedule.id,
@@ -54,7 +44,7 @@ export function CalendarHeaderSection({ events, schedule }: Props) {
 
         <button
           type="button"
-          onClick={exportScheduleToIcs}
+          onClick={() => exportScheduleToIcs(events)}
           className="button secondary"
         >
           Export to ICS
@@ -77,12 +67,12 @@ export function CalendarHeaderSection({ events, schedule }: Props) {
           <WithMeili userId={userId}>
             {userId && <ScheduleSyncer userId={userId} />}
 
-            <SearchStateProvider oneCol defaultState={getDefaultSearchStateForSemester(schedule)} ignoreUrl>
+            <SearchStateProvider oneCol defaultState={defaultState} ignoreUrl>
               <ChosenScheduleContext.Provider value={chosenScheduleContext}>
                 <AuthRequiredInstantSearchProvider indexName={indexName} hitsPerPage={4}>
                   <SearchBox scheduleChooser={false} showSmallAttributeMenu />
                   <div className="md:mt-4">
-                    <Hits inSearch />
+                    <Hits />
                   </div>
                 </AuthRequiredInstantSearchProvider>
               </ChosenScheduleContext.Provider>
@@ -92,4 +82,17 @@ export function CalendarHeaderSection({ events, schedule }: Props) {
       </div>
     </div>
   );
+}
+
+
+function exportScheduleToIcs(events: Props['events']) {
+  const { error, value } = createEvents(events.map(({ isSection, ...event }) => ({
+    ...event,
+  })));
+  if (error) {
+    console.error(error);
+    alert('There was an error exporting your schedule. Please try again later.');
+  } else if (value) {
+    downloadJson('schedule', value, 'ics');
+  }
 }

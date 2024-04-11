@@ -10,6 +10,7 @@ import AddCoursesButton from '@/components/AddCoursesButton';
 import { getClassIdsOfSchedule } from '@/src/features/schedules';
 import { CourseCard } from '../../Course/CourseCard';
 import { ToggleButton } from '../../Course/ToggleButton';
+import { SearchStateProvider } from '../../../src/context/searchState';
 
 type Props = {
   scheduleId: string;
@@ -46,51 +47,52 @@ export function PlanningPageCoursesSection({ scheduleId, highlightedRequirement 
 
   return (
     <div className="h-max flex-1 overflow-auto p-4">
-      <div className="flex min-h-[12rem] flex-col items-stretch space-y-4">
-        <div className="mx-auto">
-          <AddCoursesButton schedule={schedule}>
-            <FaPlus className="mr-2" />
-            Add courses
-          </AddCoursesButton>
-        </div>
-
-        {initialized ? getClassIdsOfSchedule(schedule).map((id) => (id && classCache[id] ? (
-          <CourseCard
-            key={id}
-            course={classCache[id]}
-            highlight={doHighlight(id)}
-            chosenScheduleId={schedule.id}
-            inSearchContext={false}
-            warnings={warnings(id)}
-          />
-        ) : (
-          <div key={id}>
-            {elapsed
-              ? (
-                <div className="flex items-center justify-between">
-                  <span>
-                    Course
-                    {' '}
-                    {id.slice(0, 12)}
-                    ... not found
-                  </span>
-                  <ToggleButton
-                    name="Remove class from schedule"
-                    onClick={() => dispatch(Schedules.removeCourses({
-                      courseIds: [id],
-                      scheduleId,
-                    }))}
-                  >
-                    <FaTimes />
-                  </ToggleButton>
-                </div>
-              )
-              : 'Loading course data...'}
+      <SearchStateProvider defaultState={null}>
+        <div className="flex min-h-[12rem] flex-col items-stretch space-y-4">
+          <div className="mx-auto">
+            <AddCoursesButton schedule={schedule}>
+              <FaPlus className="mr-2" />
+              Add courses
+            </AddCoursesButton>
           </div>
-        ))) : (
-          <p>Loading course data...</p>
-        )}
-      </div>
+
+          {initialized ? getClassIdsOfSchedule(schedule).map((id) => (id && classCache[id] ? (
+            <CourseCard
+              key={id}
+              course={classCache[id]}
+              highlight={doHighlight(id)}
+              chosenScheduleId={schedule.id}
+              warnings={warnings(id)}
+            />
+          ) : (
+            <div key={id}>
+              {elapsed
+                ? (
+                  <div className="flex items-center justify-between">
+                    <span>
+                      Course
+                      {' '}
+                      {id.slice(0, 12)}
+                      ... not found
+                    </span>
+                    <ToggleButton
+                      name="Remove class from schedule"
+                      onClick={() => dispatch(Schedules.removeCourses({
+                        courseIds: [id],
+                        scheduleId,
+                      }))}
+                    >
+                      <FaTimes />
+                    </ToggleButton>
+                  </div>
+                )
+                : 'Loading course data...'}
+            </div>
+          ))) : (
+            <p>Loading course data...</p>
+          )}
+        </div>
+      </SearchStateProvider>
     </div>
   );
 }

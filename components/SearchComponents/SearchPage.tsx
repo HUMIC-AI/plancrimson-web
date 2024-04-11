@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useAppSelector } from '@/src/utils/hooks';
 import { Auth, Planner } from '@/src/features';
 import Layout from '@/components/Layout/Layout';
@@ -15,6 +15,8 @@ import type { IndexName } from '../../src/lib';
 
 export function SearchPage({ indexName }: { indexName: IndexName }) {
   const userId = Auth.useAuthProperty('uid');
+  // not sure if memoing this is necessary to avoid rerenders
+  const defaultState = useMemo(() => ({}), []);
 
   return (
     <Layout
@@ -25,7 +27,8 @@ export function SearchPage({ indexName }: { indexName: IndexName }) {
         {userId && <ScheduleSyncer userId={userId} />}
 
         {indexName === 'archive' ? (
-          <SearchStateProvider>
+          // create a new search state so that we don't override the main search state
+          <SearchStateProvider defaultState={defaultState}>
             <Contents indexName={indexName} />
           </SearchStateProvider>
         ) : (
@@ -50,7 +53,7 @@ function Contents({
       <div className="space-y-4">
         <SearchBox />
         <SortingAndRefinementsGrid indexName={indexName} />
-        <Hits inSearch />
+        <Hits />
       </div>
     </AuthRequiredInstantSearchProvider>
   );

@@ -5,11 +5,12 @@ import React, {
 import { useRouter } from 'next/router';
 import qs from 'qs';
 import {
-  CURRENT_ARCHIVE_TERMS, CURRENT_COURSES_TERMS, Semester, getTermId, semesterToTerm,
+  CURRENT_ARCHIVE_TERMS, CURRENT_COURSES_TERMS, Semester, getTermId, getUpcomingSemester, semesterToTerm,
 } from '@/src/lib';
 import { SearchState } from 'react-instantsearch-core';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { throwMissingContext } from '../utils/utils';
+import { Auth } from '../features';
 
 interface SearchStateContextType {
   searchState: any;
@@ -53,21 +54,25 @@ export function getDefaultSearchStateForSemester(semester: Semester): SearchStat
 export function SearchStateProvider({
   children,
   oneCol = false,
-  defaultState = {},
+  defaultState,
 } : PropsWithChildren<{
   oneCol?: boolean;
-  defaultState?: SearchState;
+  defaultState: SearchState | null;
   ignoreUrl?: boolean;
 }>) {
-  const [searchState, setSearchState] = useState<SearchState>(defaultState);
+  // don't allow search state unless user is signed in
+  const userId = Auth.useAuthProperty('uid');
+  const [searchState, setSearchState] = useState<SearchState | null>(defaultState);
   const lastLogTime = useRef(0);
   const router = useRouter();
 
   const context = useMemo(() => ({
-    searchState,
+    searchState: userId ? searchState : null,
     setSearchState,
     oneCol,
     onSearchStateChange(newState: SearchState) {
+      if (defaultState === null) return;
+
       // merge the new state with the old state
       const now = Date.now();
       if (now - lastLogTime.current > 200) {
@@ -78,7 +83,7 @@ export function SearchStateProvider({
 
       setSearchState((oldState) => ({ ...oldState, ...newState }));
     },
-  }), [oneCol, router.asPath, searchState]);
+  }), [defaultState, oneCol, router.asPath, searchState, userId]);
 
   return (
     <SearchStateContext.Provider value={context}>
@@ -151,3 +156,7 @@ function OldSearchStateProvider({
 const useSearchState = () => useContext(SearchStateContext);
 
 export default useSearchState;
+
+export function useDefaultSearchState(semester?: Semester) {
+  return useMemo(() => getDefaultSearchStateForSemester(semester ?? getUpcomingSemester()), [semester]);
+}

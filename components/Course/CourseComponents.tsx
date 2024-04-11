@@ -8,28 +8,10 @@ import Highlight from '../SearchComponents/Highlight';
 
 type CourseProps = {
   course: ExtendedClass;
-  // eslint-disable-next-line react/no-unused-prop-types
-  inSearch?: boolean;
-};
-
-type HighlightComponentProps = {
-  course: ExtendedClass;
-  inSearch: boolean;
-  attribute: keyof ExtendedClass;
-};
-
-export const HighlightComponent: React.FC<HighlightComponentProps> = function ({
-  inSearch,
-  attribute,
-  course,
-}) {
-  if (inSearch) return <Highlight hit={course} attribute={attribute} />;
-  return <span>{course[attribute]}</span>;
 };
 
 export const Instructors: React.FC<CourseProps> = function ({
   course,
-  inSearch,
 }) {
   const instructors = course.IS_SCL_DESCR_IS_SCL_DESCRL;
 
@@ -38,10 +20,9 @@ export const Instructors: React.FC<CourseProps> = function ({
       <FaUser />
       {instructors ? (
         typeof instructors === 'string' ? (
-          <HighlightComponent
-            course={course}
+          <Highlight
+            hit={course}
             attribute="IS_SCL_DESCR_IS_SCL_DESCRL"
-            inSearch={inSearch || false}
           />
         ) : (
           <span>{instructors.join(', ')}</span>
@@ -53,7 +34,7 @@ export const Instructors: React.FC<CourseProps> = function ({
   );
 };
 
-export const Location: React.FC<CourseProps> = function ({ course, inSearch }) {
+export const Location: React.FC<CourseProps> = function ({ course }) {
   return (
     <>
       <FaMapMarkerAlt />
@@ -61,10 +42,9 @@ export const Location: React.FC<CourseProps> = function ({ course, inSearch }) {
         <span>MIT</span>
       ) : (
         <span>
-          <HighlightComponent
-            course={course}
+          <Highlight
+            hit={course}
             attribute="LOCATION_DESCR_LOCATION"
-            inSearch={inSearch || false}
           />
           {course.IS_SCL_DESCR_IS_SCL_DESCRG && (
             <>
@@ -133,7 +113,6 @@ export const DaysOfWeek: React.FC<CourseProps> = function ({ course }) {
 
 export const ClassTime: React.FC<CourseProps> = function ({
   course,
-  inSearch,
 }) {
   const startTime = course.IS_SCL_TIME_START;
   const endTime = course.IS_SCL_TIME_END;
@@ -157,16 +136,14 @@ export const ClassTime: React.FC<CourseProps> = function ({
       <FaClock title="Class time" />
       {startTime ? (
         <span>
-          <HighlightComponent
+          <Highlight
             attribute="IS_SCL_TIME_START"
-            course={course}
-            inSearch={inSearch || false}
+            hit={course}
           />
           –
-          <HighlightComponent
+          <Highlight
             attribute="IS_SCL_TIME_END"
-            course={course}
-            inSearch={inSearch || false}
+            hit={course}
           />
         </span>
       ) : (

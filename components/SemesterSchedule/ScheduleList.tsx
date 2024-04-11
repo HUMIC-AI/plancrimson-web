@@ -8,6 +8,7 @@ import type { BaseSchedule, UserProfile, WithId } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
 import { useExpandCards } from '@/src/context/expandCards';
 import CardExpandToggler from '../YearSchedule/CardExpandToggler';
+import { SearchStateProvider } from '../../src/context/searchState';
 
 export type ScheduleListProps = {
   schedule: BaseSchedule;
@@ -53,7 +54,6 @@ export default function ScheduleSection({
             <li key={classId} className="max-w-xs">
               <CourseCard
                 course={classCache[classId]}
-                inSearchContext={false}
                 hideTerm
               />
             </li>
@@ -120,26 +120,29 @@ export function ScheduleList({
   className?: string;
 }) {
   return (
-    <section>
-      <div className="mb-4 flex items-center justify-between border-b-2">
-        <h2>
-          {title}
-        </h2>
-        <CardExpandToggler />
-      </div>
+    // not part of a search
+    <SearchStateProvider defaultState={null}>
+      <section>
+        <div className="mb-4 flex items-center justify-between border-b-2">
+          <h2>
+            {title}
+          </h2>
+          <CardExpandToggler />
+        </div>
 
-      {schedules.length > 0 ? (
-        <ul className={className}>
-          {schedules.map((schedule) => (
-            <li key={schedule.id}>
-              <ScheduleSection
-                schedule={schedule}
-                hideAuthor={hideAuthor}
-              />
-            </li>
-          ))}
-        </ul>
-      ) : <p>No schedules yet</p>}
-    </section>
+        {schedules.length > 0 ? (
+          <ul className={className}>
+            {schedules.map((schedule) => (
+              <li key={schedule.id}>
+                <ScheduleSection
+                  schedule={schedule}
+                  hideAuthor={hideAuthor}
+                />
+              </li>
+            ))}
+          </ul>
+        ) : <p>No schedules yet</p>}
+      </section>
+    </SearchStateProvider>
   );
 }

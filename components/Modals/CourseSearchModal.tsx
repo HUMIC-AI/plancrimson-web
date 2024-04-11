@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { SearchStateProvider, getDefaultSearchStateForSemester } from '@/src/context/searchState';
+import { SearchStateProvider, useDefaultSearchState } from '@/src/context/searchState';
 import { ChosenScheduleContext } from '@/src/context/selectedSchedule';
 import { AuthRequiredInstantSearchProvider } from '@/components/AuthRequiredInstantSearchProvider';
 import { Semester, isOldSemester } from '@/src/lib';
@@ -19,13 +19,13 @@ export default function CourseSearchModal({ selected, semester }: {
 }) {
   const uid = Auth.useAuthProperty('uid');
   const context = useMemo(() => ({ chosenScheduleId: selected, chooseSchedule() {} }), [selected]);
-
+  const defaultState = useDefaultSearchState(semester);
   const indexName = isOldSemester(semester) ? 'archive' : 'courses';
 
   return (
     // create a new search state provider to override the one in "pages/_app.tsx"
     <WithMeili userId={uid!}>
-      <SearchStateProvider oneCol defaultState={getDefaultSearchStateForSemester(semester)} ignoreUrl>
+      <SearchStateProvider oneCol defaultState={defaultState} ignoreUrl>
         <ChosenScheduleContext.Provider value={context}>
           <AuthRequiredInstantSearchProvider
             indexName={indexName}
@@ -34,7 +34,7 @@ export default function CourseSearchModal({ selected, semester }: {
             <div className="flex space-x-4">
               <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-secondary p-6 shadow-lg">
                 <SearchBox scheduleChooser={false} showSmallAttributeMenu />
-                <Hits inSearch />
+                <Hits />
               </div>
             </div>
           </AuthRequiredInstantSearchProvider>

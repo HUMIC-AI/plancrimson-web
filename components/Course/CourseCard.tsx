@@ -16,16 +16,13 @@ import {
 import { classNames } from '@/src/utils/styles';
 import { useExpandCards } from '@/src/context/expandCards';
 import Tooltip from '../Utils/Tooltip';
-import {
-  ClassTime,
-  DaysOfWeek,
-  HighlightComponent,
-  Instructors,
-  Location,
-} from './CourseComponents';
 import { ClassSizeRating, HoursRating, StarRating } from './RatingIndicators';
 import { useDragAndDropContext } from '../YearSchedule/SemesterColumn/DragAndDrop';
 import { CourseCardToggleButton } from './ToggleButton';
+import Highlight from '../SearchComponents/Highlight';
+import {
+  Instructors, DaysOfWeek, Location, ClassTime,
+} from './CourseComponents';
 
 type Department = keyof typeof departmentImages;
 
@@ -34,7 +31,6 @@ type CourseCardProps = {
   course: ExtendedClass;
   chosenScheduleId?: string | null;
   highlight?: boolean;
-  inSearchContext?: boolean;
   warnings?: string;
   hideTerm?: boolean;
   hideRatings?: boolean;
@@ -45,14 +41,13 @@ type CourseCardProps = {
  * Should be *pure* and only use data from the provided course (and not reference the {@link ClassCache})
  * @param course the course to summarize in this card
  * @param chosenScheduleId the current chosen schedule. Used for various button interactions.
- * @param highlight whether to highlight this class. default false
+ * @param highlight whether to highlight this class. Used in the requirements checker. default false
  * @param warnings an optional list of warnings, eg time collisions with other classes
  */
 export const CourseCard = forwardRef(({
   course,
   chosenScheduleId = null,
   highlight = false,
-  inSearchContext = true,
   warnings,
   hideTerm = false,
   hideRatings = false,
@@ -147,15 +142,13 @@ export const CourseCard = forwardRef(({
           <div className="relative space-y-1">
             <p className="flex items-center justify-between">
               <button type="button" className="interactive border-b text-left font-bold text-blue-primary" onClick={() => showCourse(course)}>
-                <HighlightComponent
+                <Highlight
                   attribute="SUBJECT"
-                  course={course}
-                  inSearch={inSearchContext}
+                  hit={course}
                 />
-                <HighlightComponent
+                <Highlight
                   attribute="CATALOG_NBR"
-                  course={course}
-                  inSearch={inSearchContext}
+                  hit={course}
                 />
               </button>
 
@@ -175,10 +168,9 @@ export const CourseCard = forwardRef(({
             </p>
 
             <p className={classNames(isExpanded || 'text-sm', 'font-medium')}>
-              <HighlightComponent
+              <Highlight
                 attribute="Title"
-                course={course}
-                inSearch={inSearchContext}
+                hit={course}
               />
             </p>
 
@@ -204,20 +196,19 @@ export const CourseCard = forwardRef(({
         {isExpanded && (
         <div className="h-full bg-secondary p-2">
           <div className="inline-grid max-w-full grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm">
-            <Instructors course={course} inSearch={inSearchContext} />
-            <Location course={course} inSearch={inSearchContext} />
-            <DaysOfWeek course={course} inSearch={inSearchContext} />
-            <ClassTime course={course} inSearch={inSearchContext} />
+            <Instructors course={course} />
+            <Location course={course} />
+            <DaysOfWeek course={course} />
+            <ClassTime course={course} />
           </div>
 
           {course.textDescription.length > 0 && (
           <>
             <hr className="my-2 border-black" />
             <p className="line-clamp-3 text-sm">
-              <HighlightComponent
+              <Highlight
                 attribute="textDescription"
-                course={course}
-                inSearch={inSearchContext}
+                hit={course}
               />
             </p>
           </>

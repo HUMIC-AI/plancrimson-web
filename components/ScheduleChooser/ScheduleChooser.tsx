@@ -67,6 +67,7 @@ export default function ScheduleChooser({
         </span>
       );
     }
+
     return (
       <ButtonTitle
         chosenScheduleId={chosenScheduleId}
@@ -82,19 +83,20 @@ export default function ScheduleChooser({
       value={chosenScheduleId}
       onChange={chooseSchedule}
       as="div"
-      className="relative rounded border border-gray-primary"
+      className="relative"
     >
       {({ open }) => (
         <>
           {chosenScheduleId
             ? (
-              <div className="flex w-full">
+              <div className="flex w-full rounded border border-gray-primary">
                 <ButtonTitle
                   showTerm={showTerm}
                   chosenScheduleId={chosenScheduleId}
                   highlight={highlight}
                   showDropdown
                 />
+
                 <Listbox.Button name="Select schedule">
                   <FaAngleDown
                     className={classNames(

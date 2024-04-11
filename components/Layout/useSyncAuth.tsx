@@ -43,7 +43,7 @@ export async function signInUser() {
 
 /**
  * Sync the Firebase Auth state (i.e. when the user logs in or out) with Redux.
- * Gets called in _app.tsx.
+ * Gets called in {@link pages/_app.tsx}.
  */
 export function useSyncAuth() {
   const auth = getAuth();
@@ -107,7 +107,7 @@ export function useSyncAuth() {
     );
 
     return unsub;
-  }, []);
+  }, [auth, dispatch, showContents]);
 }
 
 /**
