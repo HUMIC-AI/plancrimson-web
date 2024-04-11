@@ -10,6 +10,7 @@ import { alertUnexpectedError, useElapsed } from '@/src/utils/hooks';
 import { arrayUnion, updateDoc } from 'firebase/firestore';
 import { useCallback, useEffect, useState } from 'react';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+import { SearchStateProvider } from '../../src/context/searchState';
 
 /**
  * Randomly sample pairs of courses and ask which one the user prefers.
@@ -40,7 +41,11 @@ function Wrapper({ userId }: { userId: string }) {
     return elapsed ? <LoadingBars /> : null;
   }
 
-  return <SurprisePage userId={userId} total={total} />;
+  return (
+    <SearchStateProvider defaultState={null}>
+      <SurprisePage userId={userId} total={total} />
+    </SearchStateProvider>
+  );
 }
 
 function SurprisePage({
@@ -79,7 +84,7 @@ function SurprisePage({
               >
                 <FaArrowLeft className="mr-auto" />
               </button>
-              <CourseCard course={course1} inSearchContext={false} />
+              <CourseCard course={course1} />
             </div>
             <div className="flex-1">
               <button
@@ -89,7 +94,7 @@ function SurprisePage({
               >
                 <FaArrowRight className="ml-auto" />
               </button>
-              <CourseCard course={course2} inSearchContext={false} />
+              <CourseCard course={course2} />
             </div>
           </div>
         </>
