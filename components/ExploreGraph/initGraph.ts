@@ -46,9 +46,9 @@ export type GraphState = ReturnType<typeof initGraph>;
 
 const RADIUS = 4;
 const T_DURATION = 150;
-const LINK_STRENGTH = 0.1;
+const MAX_LINK_STRENGTH = 0.3;
 const CHARGE_STRENGTH = -100;
-const CENTER_STRENGTH = 1e-3;
+const CENTER_STRENGTH = 1e-2;
 
 // a scale of five emojis from least to most happy
 const EMOJI_SCALE = ['😢', '😐', '😊', '😁', '🤩'];
@@ -121,7 +121,7 @@ function initGraph(svgDom: SVGSVGElement, {
   // these get initialized later in the component by the user
   const sim = d3
     .forceSimulation()
-    .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(LINK_STRENGTH))
+    .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(({ source, target }) => MAX_LINK_STRENGTH * (cos(source.pca, target.pca) + 1) / 2))
     .force('charge', d3.forceManyBody().strength(CHARGE_STRENGTH))
     .force('collide', d3.forceCollide<Datum>((d) => getRadius(d) + RADIUS * 2).iterations(2))
     .force('x', d3.forceX().strength(CENTER_STRENGTH))
@@ -186,10 +186,15 @@ function initGraph(svgDom: SVGSVGElement, {
 
   let flip = false;
 
-  svg.on('contextmenu', (event) => {
-    event.preventDefault();
-    setFixedId(null);
-  });
+  svg
+    .on('click', (event) => {
+      event.preventDefault();
+      setFixedId(null);
+    })
+    .on('contextmenu', (event) => {
+      event.preventDefault();
+      setFixedId(null);
+    });
 
   function addNewNeighbours(d: Datum) {
     const nodes: Datum[] = positions.filter((_, i) => !node.data().some((g) => g.i === i))
@@ -257,7 +262,10 @@ function initGraph(svgDom: SVGSVGElement, {
         onHover(null);
       })
       .on('click', (event, d) => {
+        event.preventDefault();
+        event.stopPropagation();
         addNewNeighbours(d);
+        setFixedId(d.id);
       })
       .on('contextmenu', (event, d) => {
         event.preventDefault();

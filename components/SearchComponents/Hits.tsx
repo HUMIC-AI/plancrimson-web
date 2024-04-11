@@ -42,7 +42,7 @@ function HitsComponent({
         // <div className="animate-pulse py-2 px-4 rounded-full bg-gray-light">
         //   Loading results...
         // </div>
-        <span>No results found</span>
+        <span>No results found. Try filtering by different properties.</span>
       ) : (
         <div className={oneCol
           ? 'flex w-full flex-col items-stretch space-y-4'

@@ -28,6 +28,7 @@ const siteInfoLinks = [
   ['Three.js', 'https://threejs.org/'],
   ['Redux (Toolkit)', 'https://redux-toolkit.js.org/'],
   ['MeiliSearch', 'https://www.meilisearch.com/'],
+  ['InstantSearch', 'https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/react/'],
   ['Firebase', 'https://firebase.google.com/'],
   ['DigitalOcean', 'https://www.digitalocean.com/'],
   ['Vercel', 'https://vercel.com/'],
@@ -57,6 +58,14 @@ const AboutPage: React.FC = function () {
         </p>
         <Resources />
         <TechStack />
+        <h2>
+          About me
+        </h2>
+        <p>
+          <ExternalLink href="https://notes.adzc.ai">
+            adzc.ai
+          </ExternalLink>
+        </p>
       </div>
     </Layout>
   );

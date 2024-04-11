@@ -12,6 +12,7 @@ import { classNames } from '../../src/utils/styles';
 import { SearchStateProvider } from '../../src/context/searchState';
 import { SortingAndRefinementsGrid } from './CurrentRefinements';
 import type { IndexName } from '../../src/lib';
+import { signInUser } from '../Layout/useSyncAuth';
 
 export function SearchPage({ indexName }: { indexName: IndexName }) {
   const userId = Auth.useAuthProperty('uid');
@@ -42,6 +43,7 @@ export function SearchPage({ indexName }: { indexName: IndexName }) {
 function Contents({
   indexName,
 }: { indexName: IndexName }) {
+  const userId = Auth.useAuthProperty('uid');
   const showAttributes = useAppSelector(Planner.selectShowAttributes);
 
   return (
@@ -51,6 +53,11 @@ function Contents({
       </div>
 
       <div className="space-y-4">
+        {!userId && (
+        <button type="button" onClick={signInUser} className="button secondary w-full">
+          Log in to search for courses!
+        </button>
+        )}
         <SearchBox />
         <SortingAndRefinementsGrid indexName={indexName} />
         <Hits />
