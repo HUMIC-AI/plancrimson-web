@@ -15,6 +15,7 @@ import { getDisplayName } from '@/src/utils/utils';
 import { useFriends, useIds } from '@/components/ConnectPageComponents/friendUtils';
 import { useSharedCourses } from '@/src/utils/schedules';
 import { useElapsed } from '@/src/utils/hooks';
+import { MESSAGES } from '../../../src/utils/config';
 
 type Props = { course: ExtendedClass };
 
@@ -25,7 +26,7 @@ export default function SocialOuter({ course }: Props) {
   if (userId === null) {
     return (
       <Tab.Panel>
-        You must be logged in to access this!
+        {MESSAGES.login}
       </Tab.Panel>
     );
   }

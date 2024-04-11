@@ -1,13 +1,19 @@
-import React, { PropsWithChildren } from 'react';
+import React, { PropsWithChildren, createContext, useContext } from 'react';
 import { Configure, InstantSearch } from 'react-instantsearch-dom';
 import { useElapsed } from '@/src/utils/hooks';
 import useSearchState, { createUrl } from '@/src/context/searchState';
 import { Auth } from '@/src/features';
-import { errorMessages } from '@/components/Layout/Layout';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { useMeiliClient } from '@/src/context/meili';
-import { ErrorMessage } from './Layout/AuthWrapper';
+import { ErrorMessage } from './Layout/ErrorMessage';
 import type { IndexName } from '../src/lib';
+import { MESSAGES } from '../src/utils/config';
+
+const HasInstantSearchContext = createContext<boolean>(false);
+
+export function useHasInstantSearch() {
+  return useContext(HasInstantSearchContext);
+}
 
 /**
  * Only try to connect to MeiliSearch when the user is logged in.
@@ -34,7 +40,7 @@ export function AuthRequiredInstantSearchProvider({
   if (error) {
     return (
       <ErrorMessage>
-        {errorMessages.meiliClient}
+        {MESSAGES.meiliClient}
       </ErrorMessage>
     );
   }
@@ -54,8 +60,10 @@ export function AuthRequiredInstantSearchProvider({
       stalledSearchDelay={500}
       createURL={createUrl}
     >
-      <Configure hitsPerPage={hitsPerPage} />
-      {children}
+      <HasInstantSearchContext.Provider value>
+        <Configure hitsPerPage={hitsPerPage} />
+        {children}
+      </HasInstantSearchContext.Provider>
     </InstantSearch>
   );
 }

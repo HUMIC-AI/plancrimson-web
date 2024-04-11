@@ -19,6 +19,7 @@ import { sortSchedulesBySemester } from '@/src/utils/schedules';
 import { getClassIdsOfSchedule } from '@/src/features/schedules';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { CuteSwitch } from '../../Utils/CuteSwitch';
+import { MESSAGES } from '../../../src/utils/config';
 
 /**
  * The planning panel in the course modal. Returns a Tab.Panel.
@@ -31,7 +32,7 @@ export default function ({ course }: { course: ExtendedClass }) {
   if (userId === null) {
     return (
       <Tab.Panel>
-        You must be logged in to access this!
+        {MESSAGES.login}
       </Tab.Panel>
     );
   }

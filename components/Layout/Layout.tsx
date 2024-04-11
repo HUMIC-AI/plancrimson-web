@@ -1,10 +1,11 @@
 import Head from 'next/head';
 import React, { PropsWithChildren } from 'react';
 import CustomModal from '../Modals/CustomModal';
-import Navbar from './Navbar';
+import { Navbar } from './Navbar';
 import Alerts from './Alerts';
 import { Footer } from './Footer';
-import AuthWrapper from './AuthWrapper';
+import { AuthWrapper } from './AuthWrapper';
+import { MESSAGES } from '../../src/utils/config';
 
 type BaseProps = {
   title?: string;
@@ -36,7 +37,9 @@ export default function Layout({
 
   return (
     <>
-      <HeadMeta pageTitle={pageTitle} description={description} />
+      <HeadMeta pageTitle={pageTitle}>
+        {MESSAGES.description}
+      </HeadMeta>
 
       <div className={containerStyles}>
         <Navbar className={headerStyles} />
@@ -66,15 +69,15 @@ export default function Layout({
 }
 
 export function HeadMeta({
-  pageTitle, description,
-}: { pageTitle: string, description: string }) {
+  pageTitle, children,
+}: { pageTitle: string, children: string }) {
   return (
     <Head>
       <title>{pageTitle}</title>
       <link rel="icon" href="favicon.svg" type="image/x-icon" />
-      <meta name="description" content={description} />
+      <meta name="description" content={children} />
       <meta property="og:title" content={pageTitle} />
-      <meta property="og:description" content={description} />
+      <meta property="og:description" content={children} />
       <meta property="og:image" content="https://plancrimson.xyz/demo.png" />
       <meta property="og:type" content="website" />
       <meta property="og:url" content="https://plancrimson.xyz/" />
@@ -83,9 +86,3 @@ export function HeadMeta({
 }
 
 const LAYOUT_CLASSES = 'mx-auto flex-1 container sm:p-8 bg-secondary';
-
-export const errorMessages = {
-  meiliClient: 'There was an error getting the search client. Please try again later',
-};
-
-export const description = 'Wait no longer to plan out your concentration. For Harvard College students. Q Reports, Course Evaluations, my.harvard, and more, all in one place.';

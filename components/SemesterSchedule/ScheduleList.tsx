@@ -8,7 +8,6 @@ import type { BaseSchedule, UserProfile, WithId } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
 import { useExpandCards } from '@/src/context/expandCards';
 import CardExpandToggler from '../YearSchedule/CardExpandToggler';
-import { SearchStateProvider } from '../../src/context/searchState';
 
 export type ScheduleListProps = {
   schedule: BaseSchedule;
@@ -120,29 +119,26 @@ export function ScheduleList({
   className?: string;
 }) {
   return (
-    // not part of a search
-    <SearchStateProvider defaultState={null}>
-      <section>
-        <div className="mb-4 flex items-center justify-between border-b-2">
-          <h2>
-            {title}
-          </h2>
-          <CardExpandToggler />
-        </div>
+    <section>
+      <div className="mb-4 flex items-center justify-between border-b-2">
+        <h2>
+          {title}
+        </h2>
+        <CardExpandToggler />
+      </div>
 
-        {schedules.length > 0 ? (
-          <ul className={className}>
-            {schedules.map((schedule) => (
-              <li key={schedule.id}>
-                <ScheduleSection
-                  schedule={schedule}
-                  hideAuthor={hideAuthor}
-                />
-              </li>
-            ))}
-          </ul>
-        ) : <p>No schedules yet</p>}
-      </section>
-    </SearchStateProvider>
+      {schedules.length > 0 ? (
+        <ul className={className}>
+          {schedules.map((schedule) => (
+            <li key={schedule.id}>
+              <ScheduleSection
+                schedule={schedule}
+                hideAuthor={hideAuthor}
+              />
+            </li>
+          ))}
+        </ul>
+      ) : <p>No schedules yet</p>}
+    </section>
   );
 }

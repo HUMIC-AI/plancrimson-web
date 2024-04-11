@@ -21,7 +21,7 @@ import {
 import { BioSection } from '@/components/ConnectPageComponents/EditBioForm';
 import { useProfile, useFriendStatus, FriendStatus } from '@/components/ConnectPageComponents/useProfile';
 import { IncomingRequestButtons, IncomingRequestList } from '@/components/ConnectPageComponents/FriendRequests';
-import { ErrorMessage } from '@/components/Layout/AuthWrapper';
+import { ErrorMessage } from '@/components/Layout/ErrorMessage';
 import ExpandCardsProvider from '@/src/context/expandCards';
 import Schema from '@/src/schema';
 import { compareSemesters } from '@/src/lib';

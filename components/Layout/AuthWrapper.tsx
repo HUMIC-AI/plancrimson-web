@@ -1,14 +1,14 @@
 import { Auth } from '@/src/features';
 import { useElapsed } from '@/src/utils/hooks';
-import { PropsWithChildren } from 'react';
 import { LoadingBars } from './LoadingPage';
 import { signInUser } from './useSyncAuth';
 import { WithMeili } from './WithMeili';
+import { ErrorMessage } from './ErrorMessage';
 
 /**
  * Wraps around the main content of the page.
  */
-export default function AuthWrapper({ children, meili }: {
+export function AuthWrapper({ children, meili }: {
   meili?: boolean;
   children: (props: { userId: string }) => JSX.Element
 }) {
@@ -42,10 +42,4 @@ export default function AuthWrapper({ children, meili }: {
   return children({ userId });
 }
 
-export function ErrorMessage({ children }: PropsWithChildren<{}>) {
-  return (
-    <p className="mx-auto mt-8 max-w-3xl rounded-xl bg-red p-8 shadow">
-      {children}
-    </p>
-  );
-}
+

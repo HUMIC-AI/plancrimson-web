@@ -58,6 +58,7 @@ export function SearchStateProvider({
 } : PropsWithChildren<{
   oneCol?: boolean;
   defaultState: SearchState | null;
+  // eslint-disable-next-line react/no-unused-prop-types
   ignoreUrl?: boolean;
 }>) {
   // don't allow search state unless user is signed in

@@ -10,7 +10,6 @@ import { Auth, ClassCache } from '@/src/features';
 import { useMeiliClient } from '@/src/context/meili';
 import type { CourseLevel } from '@/src/types';
 import { useCourseEmbeddingData } from './useData';
-import { SearchStateProvider } from '../../src/context/searchState';
 
 const sensitivity = 8;
 const CLICK_DELAY = 200; // only register a click if the amount of time is less than this
@@ -168,42 +167,40 @@ function ClassesCloud({
   }, [sceneUtils, positions, courses, particleSize]);
 
   return (
-    <SearchStateProvider defaultState={null}>
-      <div className={classNames(
-        'absolute inset-0 overflow-hidden',
-        'transition-opacity ease-in duration-[1750ms]',
-        (positions && courses) ? 'opacity-100' : 'opacity-0',
-      )}
-      >
-        <canvas
-          ref={canvasRef}
-          onMouseDown={() => {
-            isClick.current = true;
-            clickTimeout.current = setTimeout(() => {
-              isClick.current = false;
-            }, CLICK_DELAY);
-          }}
-          onMouseUp={() => {
-            clearTimeout(clickTimeout.current);
-
-            if (isClick.current) {
-              const idx = currentHoverRef.current;
-              if (idx !== null && courses) {
-                const key = courses[idx].id;
-                const courseId = getClassId(key);
-                dispatch(ClassCache.loadCourses(client, [courseId]))
-                  .then(([course]) => {
-                    showCourse(course);
-                  })
-                  .catch(alertUnexpectedError);
-              }
-            }
-
+    <div className={classNames(
+      'absolute inset-0 overflow-hidden',
+      'transition-opacity ease-in duration-[1750ms]',
+      (positions && courses) ? 'opacity-100' : 'opacity-0',
+    )}
+    >
+      <canvas
+        ref={canvasRef}
+        onMouseDown={() => {
+          isClick.current = true;
+          clickTimeout.current = setTimeout(() => {
             isClick.current = false;
-          }}
-        />
-      </div>
-    </SearchStateProvider>
+          }, CLICK_DELAY);
+        }}
+        onMouseUp={() => {
+          clearTimeout(clickTimeout.current);
+
+          if (isClick.current) {
+            const idx = currentHoverRef.current;
+            if (idx !== null && courses) {
+              const key = courses[idx].id;
+              const courseId = getClassId(key);
+              dispatch(ClassCache.loadCourses(client, [courseId]))
+                .then(([course]) => {
+                  showCourse(course);
+                })
+                .catch(alertUnexpectedError);
+            }
+          }
+
+          isClick.current = false;
+        }}
+      />
+    </div>
   );
 }
 

@@ -10,6 +10,7 @@ import FadeTransition from '../Utils/FadeTransition';
 import { ButtonTitle } from './ButtonTitle';
 import { StyledOption } from './StyledOption';
 import { ChooserOption } from './ChooserOption';
+import { MESSAGES } from '../../src/utils/config';
 
 export interface ScheduleChooserProps {
   chosenScheduleId: string | null;
@@ -146,7 +147,7 @@ export default function ScheduleChooser({
                 value={null}
                 onClick={async () => {
                   if (!userId) {
-                    alert('You must be logged in!');
+                    alert(MESSAGES.login);
                     return;
                   }
                   const newSchedule = await dispatch(Schedules.createDefaultSchedule({ season, year }, userId));

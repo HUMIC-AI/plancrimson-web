@@ -5,46 +5,10 @@ import {
   FaTimes, FaBars, FaCalendarCheck, FaChevronDown,
 } from 'react-icons/fa';
 import { classNames } from '@/src/utils/styles';
-import { isDevelopment } from '@/src/utils/utils';
 import { UserMenu } from './UserMenu';
+import { Path, paths } from '../../src/utils/config';
 
-
-type Path = {
-  href: string;
-  name: string;
-  children?: Path[];
-};
-
-const paths: Path[] = [
-  {
-    href: '/explore',
-    name: 'Explore',
-    children: [
-      { href: '/explore/undergrad', name: 'Undergrad' },
-      { href: '/explore/grad', name: 'Grad' },
-      { href: '/explore/surprise', name: 'Surprise' },
-      { href: '/explore/graph', name: 'Graph' },
-    ],
-  },
-  {
-    href: '/search',
-    name: 'Search',
-    children: [
-      { href: '/search/archive', name: 'Archive' },
-    ],
-  },
-  { href: '/', name: 'My Courses' },
-  { href: '/connect', name: 'Connect' },
-  { href: '/about', name: 'About' },
-];
-
-if (isDevelopment) {
-  // check if firebase project is running
-  paths.push({ href: 'http://localhost:4000', name: 'Emulators' });
-}
-
-
-export default function Navbar({
+export function Navbar({
   className = 'bg-secondary/90 text-primary',
 }: {
   className?: string;

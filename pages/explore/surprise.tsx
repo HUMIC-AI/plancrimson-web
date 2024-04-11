@@ -10,7 +10,7 @@ import { alertUnexpectedError, useElapsed } from '@/src/utils/hooks';
 import { arrayUnion, updateDoc } from 'firebase/firestore';
 import { useCallback, useEffect, useState } from 'react';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
-import { SearchStateProvider } from '../../src/context/searchState';
+import { CHOICE_KEYS } from '../../src/utils/config';
 
 /**
  * Randomly sample pairs of courses and ask which one the user prefers.
@@ -27,12 +27,6 @@ export default function () {
   );
 }
 
-const CHOICE_KEYS: Record<number, ChoiceRank> = {
-  37: -1, // left arrow key
-  39: 1, // right arrow key
-  32: 0, // space bar
-};
-
 function Wrapper({ userId }: { userId: string }) {
   const elapsed = useElapsed(500, []);
   const total = useTotal();
@@ -41,11 +35,7 @@ function Wrapper({ userId }: { userId: string }) {
     return elapsed ? <LoadingBars /> : null;
   }
 
-  return (
-    <SearchStateProvider defaultState={null}>
-      <SurprisePage userId={userId} total={total} />
-    </SearchStateProvider>
-  );
+  return <SurprisePage userId={userId} total={total} />;
 }
 
 function SurprisePage({

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Schema from '@/src/schema';
 import { FaEdit } from 'react-icons/fa';
 import type { UserProfile, WithId } from '@/src/types';
-import { ErrorMessage } from '../Layout/AuthWrapper';
+import { ErrorMessage } from '../Layout/ErrorMessage';
 
 type Props = { userId: string; pageProfile: WithId<UserProfile>; };
 

@@ -1,7 +1,7 @@
 import { connectHighlight } from 'react-instantsearch-dom';
 import type { HighlightProps } from 'react-instantsearch-core';
 import useClientOrDemo from './ClientOrDemo';
-import useSearchState from '../../src/context/searchState';
+import { useHasInstantSearch } from '../AuthRequiredInstantSearchProvider';
 
 type Provided = Pick<HighlightProps, 'highlight'>;
 
@@ -30,9 +30,9 @@ function HighlightComponent({
 }
 
 export function Highlight({ hit, attribute }: Exposed) {
-  const { searchState } = useSearchState();
+  const hasInstantSearch = useHasInstantSearch();
 
-  if (!searchState) return <span>{hit[attribute]}</span>;
+  if (!hasInstantSearch) return <span>{hit[attribute]}</span>;
 
   return <HighlightWrapper hit={hit} attribute={attribute} />;
 }

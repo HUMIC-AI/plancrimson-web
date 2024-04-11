@@ -10,6 +10,7 @@ import {
 import { Auth } from '@/src/features';
 import { classNames } from '@/src/utils/styles';
 import FadeTransition from '../Utils/FadeTransition';
+import { MESSAGES } from '../../src/utils/config';
 
 export function SuggestionForm() {
   const uid = Auth.useAuthProperty('uid');
@@ -36,7 +37,7 @@ export function SuggestionForm() {
       // only allow user to submit every 2 seconds
       if (typeof timeoutRef.current !== 'undefined') return;
       if (!uid) {
-        setSuggestion('You must be logged in to give suggestions!');
+        setSuggestion(MESSAGES.login);
         showMessage();
         return;
       }

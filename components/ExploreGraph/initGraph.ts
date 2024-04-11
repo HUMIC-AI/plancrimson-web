@@ -138,7 +138,7 @@ function initGraph(svgDom: SVGSVGElement, {
     .attr('stroke-width', 1.5)
     .attr('cursor', 'grab');
 
-  let node = nodeGroup.selectAll<SVGCircleElement, Datum>('g.course');
+  let node = nodeGroup.selectAll<SVGGElement, Datum>('g.course');
 
   let fixedId: string | null = null;
   let highlightedIds: string[] = [];
@@ -371,9 +371,7 @@ function initGraph(svgDom: SVGSVGElement, {
             })
             .append('text')
             .attr('text-anchor', 'middle')
-            .attr('dominant-baseline', 'middle')
-            // some additional recentering
-            .attr('dy', '0.15rem')
+            .attr('dominant-baseline', 'central')
             .attr('font-size', getRadius)
             .attr('fill', 'black')
             .style('pointer-events', 'none')

@@ -20,10 +20,9 @@ const ExpandCardsContext = createContext<ExpandCardsContextType>({
 });
 
 export default function ExpandCardsProvider({
-  children, defaultStyle = 'expanded', sticky = false, readonly = false,
+  children, defaultStyle = 'expanded', readonly = false,
 }: PropsWithChildren<{
   defaultStyle?: CardStyle;
-  sticky?: boolean;
   readonly?: boolean;
 }>) {
   const [expandCards, setExpandCards] = useState<CardStyle>(defaultStyle);

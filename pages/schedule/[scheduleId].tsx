@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import { useElapsed } from '@/src/utils/hooks';
 import Layout from '@/components/Layout/Layout';
 import Calendar from '@/components/SemesterSchedule/Calendar';
-import { ErrorMessage } from '@/components/Layout/AuthWrapper';
+import { ErrorMessage } from '@/components/Layout/ErrorMessage';
 import { useSchedule } from '@/src/utils/schedules';
 import { useEffect } from 'react';
 import { getAnalytics, logEvent } from 'firebase/analytics';

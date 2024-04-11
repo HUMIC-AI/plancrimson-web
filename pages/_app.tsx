@@ -4,12 +4,11 @@ import '@/src/initFirebase';
 import type { AppProps } from 'next/app';
 import { Provider } from 'react-redux';
 import React from 'react';
-import { SearchStateProvider, getDefaultSearchStateForSemester, useDefaultSearchState } from '@/src/context/searchState';
+import { SearchStateProvider, useDefaultSearchState } from '@/src/context/searchState';
 import store from '@/src/store';
 import { ModalProvider } from '@/src/context/modal';
 import { ChosenScheduleProvider } from '@/src/context/selectedSchedule';
 import { useSyncAuth, useSyncUserSettings } from '@/components/Layout/useSyncAuth';
-import { getUpcomingSemester } from '@/src/lib';
 import ExpandCardsProvider from '@/src/context/expandCards';
 import IncludeSemestersProvider from '@/src/context/includeSemesters';
 
@@ -30,7 +29,7 @@ function AppWrapper({ Component, pageProps }: AppProps) {
 
   return (
     <SearchStateProvider defaultState={defaultState}>
-      <ExpandCardsProvider sticky>
+      <ExpandCardsProvider>
         <ChosenScheduleProvider>
           <IncludeSemestersProvider>
             <Component {...pageProps} />

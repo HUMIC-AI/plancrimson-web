@@ -10,13 +10,14 @@ import collegeRequirements from '@/src/requirements/college';
 import { useAppSelector } from '@/src/utils/hooks';
 import CustomModal from '../Modals/CustomModal';
 import { Footer } from '../Layout/Footer';
-import Layout, { HeadMeta, description } from '../Layout/Layout';
-import Navbar from '../Layout/Navbar';
+import Layout, { HeadMeta } from '../Layout/Layout';
+import { Navbar } from '../Layout/Navbar';
 import { ScheduleSyncer } from '../ScheduleSyncer';
 import RequirementsSection from './RequirementsSection';
 import { useValidateSchedule } from './useValidateSchedule';
 import { WithMeili } from '../Layout/WithMeili';
 import { InstructionsModal } from './InstructionsModal';
+import { MESSAGES } from '../../src/utils/config';
 
 export default function PlanningPageBodySection({ userId }: { userId: string; }) {
   const showReqs = useAppSelector(Planner.selectShowReqs);
@@ -38,7 +39,9 @@ export default function PlanningPageBodySection({ userId }: { userId: string; })
     // custom layout for mobile
     return (
       <>
-        <HeadMeta pageTitle="Plan" description={description} />
+        <HeadMeta pageTitle="Plan">
+          {MESSAGES.description}
+        </HeadMeta>
         <ScheduleSyncer userId={userId} />
 
         <div className="flex min-h-screen flex-col">
