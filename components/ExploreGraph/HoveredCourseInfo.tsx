@@ -8,6 +8,7 @@ import { useAppDispatch } from '../../src/utils/hooks';
 import { InfoCard, InfoCardProps } from '../Modals/InfoCard';
 import { getCourseModalContent } from '../Modals/CourseCardModal';
 import { useMeiliClient } from '../../src/context/meili';
+import { SearchStateProvider } from '../../src/context/searchState';
 
 export const HoveredCourseInfo = forwardRef(({ courseId }: {
   courseId: string | null;
@@ -86,7 +87,9 @@ export const HoveredCourseInfo = forwardRef(({ courseId }: {
   return (
     <div className="absolute bottom-0 right-0 top-16 w-full max-w-xs md:right-4 md:max-w-sm" ref={ref}>
       <div className="absolute inset-0 overflow-auto pb-6">
-        <InfoCard isDialog={false} noExit {...props} />
+        <SearchStateProvider defaultState={null}>
+          <InfoCard isDialog={false} noExit {...props} />
+        </SearchStateProvider>
       </div>
     </div>
   );
