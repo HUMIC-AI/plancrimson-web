@@ -216,7 +216,7 @@ const LargeOnly = {
 
         <div className={classNames(
           'absolute inset-x-0 top-full z-10',
-          'rounded primary',
+          'rounded-md bg-secondary/80',
           'invisible opacity-0 transition-opacity group-hover/nav:visible group-hover/nav:opacity-100',
         )}
         >
