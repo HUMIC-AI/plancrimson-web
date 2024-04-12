@@ -14,8 +14,8 @@ const sitePaths: Path[] = [
     children: [
       { href: '/explore/undergrad', name: 'Undergrad' },
       { href: '/explore/grad', name: 'Grad' },
+      { href: '/explore/all', name: 'All' },
       { href: '/explore/surprise', name: 'Surprise' },
-      { href: '/explore/graph', name: 'Graph' },
     ],
   },
   {
