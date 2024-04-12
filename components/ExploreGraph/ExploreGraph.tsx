@@ -44,7 +44,9 @@ export function ExploreGraph({
     graph.update(nodes, []);
     if (prevIds.current) {
       const removed = prevIds.current.filter((id) => !chosenSchedule.classes!.includes(id));
-      graph.remove(removed);
+      if (removed.length > 0) {
+        graph.remove(removed);
+      }
     }
     prevIds.current = [...chosenSchedule.classes];
   }, [chosenSchedule?.classes, courses, graph, positions]);

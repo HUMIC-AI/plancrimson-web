@@ -6,7 +6,7 @@ import {
 } from 'react-icons/fa';
 import { classNames } from '@/src/utils/styles';
 import { UserMenu } from './UserMenu';
-import { Path, paths } from '../../src/utils/config';
+import { Path, PATHS } from '../../src/utils/config';
 
 export function Navbar({
   className = 'bg-secondary/90 text-primary',
@@ -117,7 +117,7 @@ const SmallComponents = {
     return (
       <Menu.Items className="bg-gray-dark/50 sm:hidden">
         <div className="flex flex-col justify-center p-4">
-          {paths.map((item) => (
+          {PATHS.map((item) => (
             <Menu.Item
               key={item.name}
               aria-current={item.href === pathname ? 'page' : undefined}
@@ -160,7 +160,7 @@ const LargeOnly = {
 
     return (
       <div className="hidden items-center space-x-4 sm:ml-6 sm:flex">
-        {paths.map((item) => (
+        {PATHS.map((item) => (
           // pass the query between pages to preserve the selected schedule
           item.children ? (
             <LargeOnly.SubMenu item={item} key={item.href} />

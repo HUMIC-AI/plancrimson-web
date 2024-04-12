@@ -178,7 +178,7 @@ function useListener(userId: string, total: number) {
 }
 
 async function getRandomCourse(total: number) {
-  const offset1 = Math.floor(Math.random() * total);
-  const data = await fetchAtOffset(offset1);
+  const offset = Math.floor(Math.random() * total);
+  const data = await fetchAtOffset(offset);
   return data.results[0];
 }

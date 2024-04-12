@@ -44,11 +44,15 @@ export type InitGraphPropsRequired = InitGraphProps & {
 
 export type GraphState = ReturnType<typeof initGraph>;
 
+export type CourseGroup = d3.Selection<SVGGElement, Datum, SVGGElement, unknown>;
+
 const RADIUS = 4;
 const T_DURATION = 150;
 const MAX_LINK_STRENGTH = 0.3;
 const CHARGE_STRENGTH = -100;
 const CENTER_STRENGTH = 1e-2;
+
+const getLinkStrength = ({ source, target }: LinkDatum) => (MAX_LINK_STRENGTH * (cos(source.pca, target.pca) + 1)) / 2;
 
 // a scale of five emojis from least to most happy
 const EMOJI_SCALE = ['😢', '😐', '😊', '😁', '🤩'];
@@ -121,7 +125,7 @@ function initGraph(svgDom: SVGSVGElement, {
   // these get initialized later in the component by the user
   const sim = d3
     .forceSimulation()
-    .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(({ source, target }) => MAX_LINK_STRENGTH * (cos(source.pca, target.pca) + 1) / 2))
+    .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(getLinkStrength))
     .force('charge', d3.forceManyBody().strength(CHARGE_STRENGTH))
     .force('collide', d3.forceCollide<Datum>((d) => getRadius(d) + RADIUS * 2).iterations(2))
     .force('x', d3.forceX().strength(CENTER_STRENGTH))
@@ -230,7 +234,7 @@ function initGraph(svgDom: SVGSVGElement, {
       .attr('font-size', `${radius}px`);
   }
 
-  function addListeners(n: d3.Selection<SVGGElement, Datum, SVGGElement, unknown>) {
+  function addListeners(n: CourseGroup) {
     // drag nodes around
     const drag = d3.drag<SVGGElement, Datum>()
       .on('start', (event) => {
@@ -256,6 +260,11 @@ function initGraph(svgDom: SVGSVGElement, {
       .on('mouseover', function (event, d) {
         setRadius(this, getRadius(d) + RADIUS * 2);
         onHover(d.id);
+        if (pulsing) {
+          // stop pulsing animation
+          pulsing.on('end', null);
+          pulsing = null;
+        }
       })
       .on('mouseout', function (event, d) {
         setRadius(this, getRadius(d));
@@ -287,16 +296,24 @@ function initGraph(svgDom: SVGSVGElement, {
 
   svg.call(zoom);
 
+  let pulsing: d3.Transition<SVGCircleElement, Datum, SVGGElement, unknown> | null = null;
+
   function resetZoom() {
     svg.transition()
       .duration(T_DURATION)
       .call(zoom.transform, d3.zoomIdentity);
   }
 
+  /** Gets called whenever nodes are updated */
   function restartSimulation() {
     sim.nodes(node.data());
     sim.force<d3.ForceLink<Datum, LinkDatum>>('link')!.links(link.data());
     sim.alpha(1).restart();
+    setSubjects([...new Set(node.data().map((d) => d.subject))]);
+
+    if (node.size() === 1) {
+      pulsing = pulse(node);
+    }
   }
 
   function remove(ids: string[]) {
@@ -388,9 +405,6 @@ function initGraph(svgDom: SVGSVGElement, {
       );
 
     restartSimulation();
-
-    // set unique subjects
-    setSubjects([...new Set(nodes.map((d) => d.subject))]);
   }
 
   return {
@@ -402,4 +416,19 @@ function initGraph(svgDom: SVGSVGElement, {
     resetZoom,
     setFlip,
   };
+}
+
+// Define the pulse animation function
+function pulse(c: CourseGroup) {
+  return c.selectChild<SVGCircleElement>('circle')
+    .transition('pulse')
+    .duration(1000) // Set duration of each pulse
+    // Increase the radius of the circle
+    .attr('r', (d) => getRadius(d) + RADIUS * 2)
+    // Transition back to the original radius
+    .transition()
+    .duration(1000)
+    .attr('r', getRadius)
+    // Repeat the pulse animation indefinitely
+    .on('end', () => pulse(c));
 }

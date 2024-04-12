@@ -35,7 +35,7 @@ if (isDevelopment) {
   sitePaths.push({ href: 'http://localhost:4000', name: 'Emulators' });
 }
 
-export const paths: readonly Path[] = sitePaths;
+export const PATHS: readonly Path[] = sitePaths;
 
 
 export const MESSAGES = {
