@@ -11,7 +11,7 @@ export function CuteSwitch({ enabled, onChange }: {
       checked={enabled}
       onChange={onChange}
       className={classNames(
-        enabled ? 'bg-blue-primary' : 'bg-blue-secondary',
+        enabled ? 'bg-blue-primary/80' : 'bg-blue-secondary/80',
         'relative inline-flex items-center h-[28px] w-[64px]',
         'border-2 border-transparent rounded-full cursor-pointer',
         'transition-colors ease-in-out duration-500',

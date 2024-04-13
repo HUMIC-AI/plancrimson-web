@@ -2,7 +2,7 @@ import { CourseCard } from '@/components/Course/CourseCard';
 import Layout from '@/components/Layout/Layout';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import ExpandCardsProvider from '@/src/context/expandCards';
-import { fetchAtOffset } from '@/src/features/classCache';
+import { getRandomCourse, useTotalCourses } from '@/src/features/classCache';
 import { ExtendedClass } from '@/src/lib';
 import Schema from '@/src/schema';
 import { ChoiceRank } from '@/src/types';
@@ -29,7 +29,7 @@ export default function () {
 
 function Wrapper({ userId }: { userId: string }) {
   const elapsed = useElapsed(500, []);
-  const total = useTotal();
+  const total = useTotalCourses();
 
   if (!total) {
     return elapsed ? <LoadingBars /> : null;
@@ -91,16 +91,6 @@ function SurprisePage({
       ) : <LoadingBars />}
     </div>
   );
-}
-
-function useTotal() {
-  const [total, setTotal] = useState<number>();
-  useEffect(() => {
-    fetchAtOffset(0)
-      .then((res) => setTotal(res.total))
-      .catch((err) => console.error(err));
-  }, []);
-  return total;
 }
 
 function useListener(userId: string, total: number) {
@@ -177,8 +167,4 @@ function useListener(userId: string, total: number) {
   };
 }
 
-async function getRandomCourse(total: number) {
-  const offset = Math.floor(Math.random() * total);
-  const data = await fetchAtOffset(offset);
-  return data.results[0];
-}
+

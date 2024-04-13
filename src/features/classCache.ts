@@ -5,6 +5,7 @@ import {
 import type { ExtendedClass, IndexName } from '@/src/lib';
 import { allTruthy } from '@/src/lib';
 import { getMeiliApiKey, getMeiliHost } from '@/src/context/meili';
+import { useState, useEffect } from 'react';
 import type { AppDispatch, RootState } from '../store';
 import { isDevelopment } from '../utils/utils';
 
@@ -44,7 +45,7 @@ export const selectClassCache: (state: RootState) => ClassCache = (state: RootSt
 export const selectInitialized: (state: RootState) => boolean = (state: RootState) => state.classCache.initialized;
 
 export async function fetchAtOffset(offset: number): Promise<{
-  results: [ExtendedClass];
+  course: ExtendedClass;
   total: number;
 }> {
   const apiKey = await getMeiliApiKey();
@@ -55,7 +56,10 @@ export async function fetchAtOffset(offset: number): Promise<{
     },
   });
   const data = await response.json();
-  return data;
+  return {
+    course: data.results[0],
+    total: data.total,
+  };
 }
 
 // api key is required except in development
@@ -119,4 +123,34 @@ export function loadCourses(
 
     return fetchedClasses;
   };
+}
+
+export async function getRandomCourse(total: number) {
+  const offset = Math.floor(Math.random() * total);
+  const data = await fetchAtOffset(offset);
+  return data.course;
+}
+
+export function useTotalCourses() {
+  const [total, setTotal] = useState<number>();
+  useEffect(() => {
+    fetchAtOffset(0)
+      .then((res) => setTotal(res.total))
+      .catch((err) => console.error(err));
+  }, []);
+  return total;
+}
+
+export function useRandomCourse() {
+  const total = useTotalCourses();
+  const [course, setCourse] = useState<ExtendedClass>();
+  useEffect(() => {
+    // only set random course once
+    if (total && !course) {
+      getRandomCourse(total)
+        .then((res) => setCourse(res))
+        .catch((err) => console.error(err));
+    }
+  }, [course, total]);
+  return course;
 }

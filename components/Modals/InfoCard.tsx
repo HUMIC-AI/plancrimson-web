@@ -19,7 +19,7 @@ function InfoCardComponent({
       className="primary w-full rounded-xl text-left lg:rounded-2xl"
       ref={ref}
     >
-      <div className="border-none p-6 text-primary">
+      <div className="border-none p-6">
         {isDialog ? (
           <Dialog.Title as="h3" className="text-xl font-bold">
             {title}

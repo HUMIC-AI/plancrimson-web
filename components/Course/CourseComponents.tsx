@@ -64,10 +64,10 @@ export const Location: React.FC<CourseProps> = function ({ course }) {
 
 const dayLetters = 'MTWRFSU';
 
-const WeekDisplay: React.FC<{ pattern: string; index?: number }> = function ({
+export function WeekDisplay({
   pattern,
   index,
-}) {
+}: { pattern: string; index?: number }) {
   const daysInSchedule = pattern.split(' ');
   return (
     <>
@@ -95,21 +95,22 @@ const WeekDisplay: React.FC<{ pattern: string; index?: number }> = function ({
       )}
     </>
   );
-};
+}
 
-export const DaysOfWeek: React.FC<CourseProps> = function ({ course }) {
+export function DaysOfWeek({ course }: CourseProps) {
   const days = course.IS_SCL_MEETING_PAT;
-  if (typeof days === 'object') {
-    return (
-      <>
-        {days.map((pattern, i) => (
-          <WeekDisplay key={pattern} pattern={pattern} index={i} />
-        ))}
-      </>
-    );
+  if (typeof days === 'string') {
+    return <WeekDisplay pattern={days} />;
   }
-  return <WeekDisplay pattern={days} />;
-};
+  if (!Array.isArray(days)) return null;
+  return (
+    <>
+      {days.map((pattern, i) => (
+        <WeekDisplay key={pattern} pattern={pattern} index={i} />
+      ))}
+    </>
+  );
+}
 
 export const ClassTime: React.FC<CourseProps> = function ({
   course,

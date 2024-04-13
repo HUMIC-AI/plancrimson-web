@@ -2,16 +2,18 @@ import * as d3 from 'd3';
 import {
   useEffect, useRef,
 } from 'react';
+import { getAnalytics, logEvent } from 'firebase/analytics';
 import { CourseBrief } from '../ClassesCloudPage/useData';
 import {
   Subject,
+  choose,
   cos,
   getSubjectColor, getUpcomingSemester,
 } from '../../src/lib';
 import { useMeiliClient } from '../../src/context/meili';
 import { useModal } from '../../src/context/modal';
-import { createLocal } from '../../src/features/schedules';
 import { useAppDispatch } from '../../src/utils/hooks';
+import { Schedules } from '../../src/features';
 
 export type DatumBase = CourseBrief & {
   pca: number[];
@@ -26,6 +28,8 @@ export type LinkDatum = {
   source: Datum;
   target: Datum;
 };
+
+export type StringLink = { source: string; target: string; };
 
 export type Simulation = d3.Simulation<Datum, LinkDatum>;
 
@@ -42,28 +46,19 @@ export type InitGraphPropsRequired = InitGraphProps & {
   courses: CourseBrief[];
 };
 
-export type GraphState = ReturnType<typeof initGraph>;
-
 export type CourseGroup = d3.Selection<SVGGElement, Datum, SVGGElement, unknown>;
 
-const RADIUS = 4;
-const T_DURATION = 150;
-const MAX_LINK_STRENGTH = 0.3;
-const CHARGE_STRENGTH = -100;
-const CENTER_STRENGTH = 1e-2;
-
-const getLinkStrength = ({ source, target }: LinkDatum) => (MAX_LINK_STRENGTH * (cos(source.pca, target.pca) + 1)) / 2;
-
 // a scale of five emojis from least to most happy
-const EMOJI_SCALE = ['😢', '😐', '😊', '😁', '🤩'];
+export const EMOJI_SCALE = ['😢', '😐', '😊', '😁', '🤩'];
+export const WORKLOAD_SCALE = ['😌', '😐', '😰', '😱', '💀'];
+const getEmoji = (d: Datum) => EMOJI_SCALE[Math.floor((d.meanRating! ** 2) / 5 - 1e-6)];
 
 const getColor = (d: DatumBase) => getSubjectColor(d.subject, {
   saturation: (d.meanRating ? d.meanRating : 3) / 5,
   opacity: (d.meanHours ? d.meanHours : 3) / 5,
 });
-const getRadius = (d: CourseBrief) => RADIUS * (d.meanClassSize ? Math.sqrt(d.meanClassSize) : Math.sqrt(20));
 const stringify = (d: string | { id: string }) => (typeof d === 'string' ? d : d.id);
-const sameLink = (l: LinkDatum, d: LinkDatum) => {
+const sameLink = (l: LinkDatum | StringLink, d: LinkDatum | StringLink) => {
   const lsrc = stringify(l.source);
   const ltrg = stringify(l.target);
   const dsrc = stringify(d.source);
@@ -72,27 +67,29 @@ const sameLink = (l: LinkDatum, d: LinkDatum) => {
 };
 
 export type GraphHook = {
-  graph?: ReturnType<typeof initGraph>;
+  graph?: Graph;
   ref: React.RefObject<SVGSVGElement>;
 };
 
-export function useUpdateGraph(props: InitGraphProps): GraphHook {
+export function useUpdateGraph({
+  courses, onFix, onHover, positions, setSubjects,
+}: InitGraphProps): GraphHook {
   const dispatch = useAppDispatch();
   const { client } = useMeiliClient();
   const { showCourse } = useModal();
 
   const ref = useRef<SVGSVGElement>(null);
-  const graphRef = useRef<ReturnType<typeof initGraph>>();
+  const graphRef = useRef<Graph>();
 
   useEffect(() => {
     // only initialize graph once
-    if (graphRef.current || !props.positions || !props.courses || !ref.current) return;
+    if (graphRef.current || !positions || !courses || !ref.current) return;
 
     console.info('initializing graph');
 
-    graphRef.current = initGraph(ref.current, props as InitGraphPropsRequired);
+    graphRef.current = new Graph(ref.current, positions, courses, onHover, onFix, setSubjects);
 
-    dispatch(createLocal({
+    dispatch(Schedules.createLocal({
       id: 'GRAPH_SCHEDULE',
       title: 'Graph Schedule',
       createdAt: new Date().toISOString(),
@@ -101,7 +98,15 @@ export function useUpdateGraph(props: InitGraphProps): GraphHook {
       classes: [],
       ...getUpcomingSemester(),
     }));
-  }, [dispatch, client, showCourse, props]);
+
+    // add initial course
+    setTimeout(() => {
+      dispatch(Schedules.addCourses({
+        scheduleId: 'GRAPH_SCHEDULE',
+        courses: [choose(courses).id],
+      }));
+    }, 500);
+  }, [dispatch, client, showCourse, positions, courses, onHover, onFix, setSubjects]);
 
   // stop simulation when unmounting
   useEffect(() => () => {
@@ -117,318 +122,372 @@ export function useUpdateGraph(props: InitGraphProps): GraphHook {
   };
 }
 
-function initGraph(svgDom: SVGSVGElement, {
-  positions, courses, onHover, onFix, setSubjects,
-}: InitGraphPropsRequired) {
-  const svg = d3.select(svgDom);
+type CircleTransition = d3.Transition<SVGCircleElement, null, SVGGElement, unknown>;
 
-  // these get initialized later in the component by the user
-  const sim = d3
-    .forceSimulation()
-    .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(getLinkStrength))
-    .force('charge', d3.forceManyBody().strength(CHARGE_STRENGTH))
-    .force('collide', d3.forceCollide<Datum>((d) => getRadius(d) + RADIUS * 2).iterations(2))
-    .force('x', d3.forceX().strength(CENTER_STRENGTH))
-    .force('y', d3.forceY().strength(CENTER_STRENGTH));
+type TextTransition = d3.Transition<SVGTextElement, null, SVGGElement, unknown>;
 
-  const linkGroup = svg.append('g')
-    .attr('stroke', '#999')
-    .attr('stroke-opacity', 0.6);
+class Graph {
+  public sim: Simulation;
 
-  let link = linkGroup.selectAll<SVGLineElement, LinkDatum>('line');
+  public flip = false;
 
-  const nodeGroup = svg.append('g')
-    .attr('stroke', '#fff')
-    .attr('stroke-width', 1.5)
-    .attr('cursor', 'grab');
+  private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
 
-  let node = nodeGroup.selectAll<SVGGElement, Datum>('g.course');
+  private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
 
-  let fixedId: string | null = null;
-  let highlightedIds: string[] = [];
+  private fixedId: string | null = null;
 
-  function renderHighlights() {
-    return node
-      .select('circle')
-      .transition()
-      .duration(T_DURATION)
-      .attr('stroke-opacity', (d) => {
-        if (fixedId === d.id) return 4;
-        if (highlightedIds.includes(d.id)) return 2;
-        return 0;
+  private highlightedIds: string[] = [];
+
+  private nodeGroup: d3.Selection<SVGGElement, unknown, null, unknown>;
+
+  private node: d3.Selection<SVGGElement, Datum, SVGGElement, unknown>;
+
+  private linkGroup: d3.Selection<SVGGElement, unknown, null, unknown>;
+
+  private link: d3.Selection<SVGLineElement, LinkDatum, SVGGElement, unknown>;
+
+  private static readonly RADIUS = 10;
+
+  private static readonly T_DURATION = 150;
+
+  private static readonly MAX_LINK_STRENGTH = 0.3;
+
+  private static readonly CHARGE_STRENGTH = -100;
+
+  private static readonly CENTER_STRENGTH = 0.05;
+
+  private static readonly PULSE_DURATION = 750;
+
+  constructor(
+    svgDom: SVGSVGElement,
+    public readonly positions: number[][],
+    public readonly courses: CourseBrief[],
+    public onHover: (id: string | null) => void,
+    public onFix: (id: string | null) => void,
+    public setSubjects: (subjects: Subject[]) => void,
+  ) {
+    this.svg = d3.select(svgDom);
+
+    // these get initialized later in the component by the user
+    this.sim = d3
+      .forceSimulation<Datum>()
+      .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(Graph.getLinkStrength))
+      .force('charge', d3.forceManyBody().strength(Graph.CHARGE_STRENGTH))
+      .force('collide', d3.forceCollide<Datum>((d) => Graph.getRadius(d) + Graph.RADIUS * 2).iterations(2))
+      // .force('x', d3.forceX().strength(Graph.CENTER_STRENGTH))
+      // .force('y', d3.forceY().strength(Graph.CENTER_STRENGTH))
+      .force('center', d3.forceCenter());
+
+    this.linkGroup = this.svg.append('g')
+      .attr('stroke', 'rgb(var(--color-primary))')
+      .attr('stroke-opacity', 0.6)
+      .attr('stroke-width', 1.5);
+
+    this.link = this.linkGroup.selectAll<SVGLineElement, LinkDatum>('line');
+
+    // set initial node properties here
+    // properties get transitioned later
+    this.nodeGroup = this.svg.append('g')
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'central')
+      .attr('fill', 'rgb(var(--color-primary))')
+      .attr('stroke', 'rgb(var(--color-primary))')
+      .attr('cursor', 'grab');
+
+    this.node = this.nodeGroup.selectAll<SVGGElement, Datum>('g');
+
+    // update node positions
+    this.sim.on('tick', this.ticked.bind(this));
+
+    this.svg
+      .on('click contextmenu', (event) => {
+        event.preventDefault();
+        this.setFixedId(null);
       });
+
+    const width = svgDom.width.baseVal.value;
+    const height = svgDom.height.baseVal.value;
+
+    this.zoom = d3.zoom<SVGSVGElement, unknown>()
+      .extent([[0, 0], [width, height]])
+      .scaleExtent([1, 8])
+      .on('zoom', (event) => {
+        this.linkGroup.attr('transform', event.transform);
+        this.nodeGroup.attr('transform', event.transform);
+      });
+
+    this.svg.call(this.zoom);
   }
 
-  function highlight(subject: Subject | null) {
-    console.debug('highlighting subject', subject);
-    const ids = node.data().filter((d) => d.subject === subject).map((d) => d.id);
-    highlightedIds = ids;
-    renderHighlights();
+  private static addCircle(enter: CourseGroup) {
+    enter.append('circle')
+      .attr('fill', getColor)
+      .attr('r', 0)
+      .attr('stroke-opacity', 0);
+
+    // add emoji to each group to indicate mean rating
+    enter.filter((d) => typeof d.meanRating === 'number')
+      .append('text')
+      .style('pointer-events', 'none')
+      .attr('font-size', 0)
+      .text(getEmoji);
+
+    enter.each(function (d) {
+      Graph.transitionRadius(this, Graph.getRadius(d));
+    });
   }
 
-  const setFixedId = (id: string | null) => {
-    console.debug('fixing node', id);
-    id = fixedId === id ? null : id;
-    onFix(id);
-    fixedId = id;
-    renderHighlights();
-  };
-
-  const ticked = () => {
-    link
+  private ticked() {
+    this.link
       .attr('x1', (d) => d.source.x)
       .attr('y1', (d) => d.source.y)
       .attr('x2', (d) => d.target.x)
       .attr('y2', (d) => d.target.y);
 
-    node
+    this.node
       .attr('transform', (d) => `translate(${d.x},${d.y})`);
-  };
+  }
 
-  // update node positions
-  sim.on('tick', ticked);
+  public setFlip(flip: boolean) {
+    this.flip = flip;
+  }
 
-  let flip = false;
+  public reset() {
+    console.debug('resetting graph');
+    this.highlightSubject(null);
+    this.setFixedId(null);
+    this.setSubjects([]);
+    this.removeNodes(this.currentData.map((d) => d.id));
+  }
 
-  svg
-    .on('click', (event) => {
-      event.preventDefault();
-      setFixedId(null);
-    })
-    .on('contextmenu', (event) => {
-      event.preventDefault();
-      setFixedId(null);
-    });
+  public resetZoom() {
+    this.svg.transition('svg-zoom')
+      .duration(Graph.T_DURATION)
+      .call(this.zoom.transform, d3.zoomIdentity);
+  }
 
-  function addNewNeighbours(d: Datum) {
-    const nodes: Datum[] = positions.filter((_, i) => !node.data().some((g) => g.i === i))
+  public setFixedId(id: string | null) {
+    console.debug('fixing node', id);
+    // deselect a currently selected node
+    id = this.fixedId === id ? null : id;
+    this.onFix(id);
+    this.fixedId = id;
+    this.renderHighlights();
+  }
+
+  private addNewNeighbours(d: Datum) {
+    const nodes: Datum[] = this.positions.filter((_, i) => !this.currentData.some((g) => g.i === i))
       .map((pca, i) => ({ d: cos(d.pca, pca), i }))
-      .sort((a, b) => (flip ? -1 : +1) * (b.d - a.d))
+      .sort((a, b) => (this.flip ? -1 : +1) * (b.d - a.d))
       .slice(0, 5)
       .map(({ i }) => ({
-        ...courses[i],
-        pca: positions[i],
-        x: d.x + Math.random() * RADIUS * 4 - RADIUS * 2,
-        y: d.y + Math.random() * RADIUS * 4 - RADIUS * 2,
+        ...this.courses[i],
+        pca: this.positions[i],
+        x: d.x + Math.random() * Graph.RADIUS * 4 - Graph.RADIUS * 2,
+        y: d.y + Math.random() * Graph.RADIUS * 4 - Graph.RADIUS * 2,
       }));
 
     const links = nodes.map((t) => ({ source: d.id, target: t.id }));
-    update(nodes, links);
+    this.appendNodes(nodes, links);
   }
 
-  function setFlip(f: boolean) {
-    flip = f;
+  private renderHighlights() {
+    return this.node
+      .select('circle')
+      .transition('highlight-t')
+      .duration(Graph.T_DURATION)
+      .attr('stroke-width', this.getStrokeWidth.bind(this))
+      .attr('stroke-opacity', (d) => (this.getStrokeWidth(d) > 0 ? 1 : 0));
   }
 
-  function setRadius(g: SVGGElement, radius: number) {
+  private getStrokeWidth(d: Datum) {
+    if (this.fixedId === d.id) return 8;
+    if (this.highlightedIds.includes(d.id)) return 6;
+    return 0;
+  }
+
+  private static transitionRadius(g: SVGGElement, radius: number, duration = Graph.T_DURATION): readonly [CircleTransition, TextTransition] {
     const group = d3.select<SVGGElement, Datum>(g);
 
-    group.selectChild('circle')
-      .transition()
-      .duration(T_DURATION)
+    const circleTransition = group.selectChildren<SVGCircleElement, null>('circle')
+      .transition('radius-t')
+      .duration(duration)
       .attr('r', radius);
 
-    group.selectChild('text')
-      .transition()
-      .duration(T_DURATION)
+    const textTransition = group.selectChildren<SVGTextElement, null>('text')
+      .transition('radius-t')
+      .duration(duration)
       .attr('font-size', `${radius}px`);
-  }
 
-  function addListeners(n: CourseGroup) {
-    // drag nodes around
-    const drag = d3.drag<SVGGElement, Datum>()
-      .on('start', (event) => {
-        if (!event.active) sim.alphaTarget(0.3).restart();
-        event.subject.fx = event.subject.x;
-        event.subject.fy = event.subject.y;
-        nodeGroup.attr('cursor', 'grabbing');
-      })
-      .on('drag', (event) => {
-        event.subject.fx = event.x;
-        event.subject.fy = event.y;
-      })
-      .on('end', (event) => {
-        if (!event.active) sim.alphaTarget(0);
-        event.subject.fx = null;
-        event.subject.fy = null;
-        nodeGroup.attr('cursor', 'grab');
-      });
-
-    n
-      .call(drag)
-      // expand node on hover
-      .on('mouseover', function (event, d) {
-        setRadius(this, getRadius(d) + RADIUS * 2);
-        onHover(d.id);
-        if (pulsing) {
-          // stop pulsing animation
-          pulsing.on('end', null);
-          pulsing = null;
-        }
-      })
-      .on('mouseout', function (event, d) {
-        setRadius(this, getRadius(d));
-        onHover(null);
-      })
-      .on('click', (event, d) => {
-        event.preventDefault();
-        event.stopPropagation();
-        addNewNeighbours(d);
-        setFixedId(d.id);
-      })
-      .on('contextmenu', (event, d) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setFixedId(d.id);
-      });
-  }
-
-  const width = svgDom.width.baseVal.value;
-  const height = svgDom.height.baseVal.value;
-
-  const zoom = d3.zoom<SVGSVGElement, unknown>()
-    .extent([[0, 0], [width, height]])
-    .scaleExtent([1, 8])
-    .on('zoom', (event) => {
-      linkGroup.attr('transform', event.transform);
-      nodeGroup.attr('transform', event.transform);
-    });
-
-  svg.call(zoom);
-
-  let pulsing: d3.Transition<SVGCircleElement, Datum, SVGGElement, unknown> | null = null;
-
-  function resetZoom() {
-    svg.transition()
-      .duration(T_DURATION)
-      .call(zoom.transform, d3.zoomIdentity);
+    return [circleTransition, textTransition] as const;
   }
 
   /** Gets called whenever nodes are updated */
-  function restartSimulation() {
-    sim.nodes(node.data());
-    sim.force<d3.ForceLink<Datum, LinkDatum>>('link')!.links(link.data());
-    sim.alpha(1).restart();
-    setSubjects([...new Set(node.data().map((d) => d.subject))]);
+  private updateNodes() {
+    // tell simulation about new nodes and links
+    this.sim.nodes(this.currentData);
+    this.sim.force<d3.ForceLink<Datum, LinkDatum>>('link')!.links(this.link.data());
+    this.sim.alpha(1).restart();
 
-    if (node.size() === 1) {
-      pulsing = pulse(node);
+    // callback
+    this.setSubjects([...new Set(this.currentData.map((d) => d.subject))]);
+
+    if (this.node.size() === 1) {
+      // add a "click me" label
+      console.debug('adding click me');
+      this.node.selectChildren('text.click-me').remove();
+      this.node.append('text')
+        .classed('click-me', true)
+        .attr('pointer-events', 'none')
+        .attr('font-size', 0)
+        .attr('opacity', 1)
+        .text('Click me!');
+
+      this.pulse(this.node);
     }
   }
 
-  function remove(ids: string[]) {
-    console.debug('removing nodes', ids.length);
-
-    const nodes = node.data().filter((d) => !ids.some((id) => id === d.id));
-    node = node.data(nodes, (d) => d.id);
-    node.exit()
-      .transition()
-      .duration(T_DURATION)
-      .attr('r', 0)
-      .remove();
-
-    // remove links that are no longer connected
-    const links = link.data().filter(({ source, target }) => !ids.some(
-      (id) => id === stringify(source) || id === stringify(target),
-    ));
-    link = link.data(links);
-    link.exit()
-      .transition()
-      .duration(T_DURATION)
-      .attr('stroke-opacity', 0)
-      .remove();
-
-    restartSimulation();
-  }
-
-  function reset() {
-    console.debug('resetting graph');
-    highlight(null);
-    setFixedId(null);
-    setSubjects([]);
-    remove(node.data().map((d) => d.id));
+  get currentData() {
+    return this.node.data();
   }
 
   /**
    * Main update function for entering nodes into the graph.
    * Use {@link DatumBase} since we don't need to initialize x and y.
    */
-  function update(nodes: DatumBase[], idLinks: { source: string; target: string; }[]) {
-    console.debug('updating graph', nodes.length, idLinks.length);
+  public appendNodes(nodesToAdd: DatumBase[], idLinks: StringLink[]) {
+    console.debug('updating graph', nodesToAdd.length, idLinks.length);
 
-    // copy existing nodes and links
-    nodes = node.data().concat(
-      nodes.filter((d) => !node.data().some((n) => n.id === d.id))
-        .map((d) => ({ ...d }) as Datum),
-    );
+    const [nodes, links] = this.deduplicate(nodesToAdd, idLinks);
 
-    const links = link.data().concat(
-      idLinks.filter((d) => !link.data().some((l) => sameLink(l, d as unknown as LinkDatum)))
-        .map((d) => ({ ...d }) as unknown as LinkDatum),
-    );
-
-    link = link
+    this.link = this.link
       .data(links, (d) => `${stringify(d.source)}:${stringify(d.target)}`)
       .join('line');
 
-    node = node
+    this.node = this.node
       .data(nodes as Datum[], (d) => d.id)
-      .join(
-        (enter) => enter.append('g')
-          .classed('course', true)
-          // add circle to each group
-          .call((n) => n.append('circle')
-            .attr('fill', getColor)
-            .attr('stroke', 'black')
-            .attr('stroke-width', 1.5)
-            .attr('stroke-opacity', 0)
-            .attr('r', 0)
-            .transition()
-            .duration(T_DURATION)
-            .attr('r', getRadius))
-          // add event listeners to each group
-          .call(addListeners)
-          .call((n) => n
-            // add emoji to each group to indicate mean rating
-            .select(function (d) {
-              if (typeof d.meanRating === 'number') return this;
-              return null;
-            })
-            .append('text')
-            .attr('text-anchor', 'middle')
-            .attr('dominant-baseline', 'central')
-            .attr('font-size', getRadius)
-            .attr('fill', 'black')
-            .style('pointer-events', 'none')
-            // some rescaling since average rating is quite high
-            .text((d) => EMOJI_SCALE[Math.floor((d.meanRating! ** 2) / 5 - 1e-6)])),
-      );
+      .join((enter) => enter.append('g')
+        .call(Graph.addCircle)
+        .call(this.addListeners.bind(this)));
 
-    restartSimulation();
+    this.updateNodes();
   }
 
-  return {
-    sim,
-    update,
-    highlight,
-    remove,
-    reset,
-    resetZoom,
-    setFlip,
-  };
+  private deduplicate(nodesToAdd: DatumBase[], idLinks: StringLink[]) {
+    // copy existing nodes and links
+    const nodes = this.currentData.concat(
+      // append new nodes that are not already in the graph
+      nodesToAdd.filter((d) => !this.currentData.some((n) => n.id === d.id))
+        .map((d) => ({ ...d }) as Datum),
+    );
+
+    const links = this.link.data().concat(
+      idLinks.filter((d) => !this.link.data().some((l) => sameLink(l, d)))
+        .map((d) => ({ ...d }) as unknown as LinkDatum),
+    );
+
+    return [nodes, links] as const;
+  }
+
+  private addListeners(n: CourseGroup) {
+    // drag nodes around
+    const drag = d3.drag<SVGGElement, Datum>()
+      .on('start', (event) => {
+        if (!event.active) this.sim.alphaTarget(0.3).restart();
+        event.subject.fx = event.subject.x;
+        event.subject.fy = event.subject.y;
+        this.nodeGroup.attr('cursor', 'grabbing');
+      })
+      .on('drag', (event) => {
+        event.subject.fx = event.x;
+        event.subject.fy = event.y;
+      })
+      .on('end', (event) => {
+        if (!event.active) this.sim.alphaTarget(0);
+        event.subject.fx = null;
+        event.subject.fy = null;
+        this.nodeGroup.attr('cursor', 'grab');
+      });
+
+    const graph = this;
+
+    n
+      .call(drag)
+      // expand node on hover
+      .on('mouseover', function (event, d) {
+        Graph.transitionRadius(this, Graph.getRadius(d) + Graph.RADIUS * 2);
+        graph.onHover(d.id);
+        d3.select(this).selectChildren('text.click-me')
+          .transition()
+          .duration(Graph.PULSE_DURATION)
+          .attr('opacity', 0)
+          .remove();
+      })
+      .on('mouseout', function (event, d) {
+        Graph.transitionRadius(this, Graph.getRadius(d));
+        graph.onHover(null);
+      })
+      .on('click', (event, d) => {
+        event.preventDefault();
+        event.stopPropagation();
+        logEvent(getAnalytics(), 'explore_neighbours', {
+          course: d,
+        });
+        graph.addNewNeighbours(d);
+        // graph.setFixedId(d.id);
+      })
+      .on('contextmenu', (event, d) => {
+        event.preventDefault();
+        event.stopPropagation();
+        graph.setFixedId(d.id);
+      });
+  }
+
+  public highlightSubject(subject: Subject | null) {
+    console.debug('highlighting subject', this, subject);
+    const ids = this.currentData.filter((d) => d.subject === subject).map((d) => d.id);
+    this.highlightedIds = ids;
+    this.renderHighlights();
+  }
+
+  public removeNodes(ids: string[]) {
+    console.debug('removing nodes', ids.length);
+
+    const nodes = this.currentData.filter((d) => !ids.some((id) => id === d.id));
+    this.node = this.node.data(nodes, (d) => d.id);
+    this.node.exit()
+      .transition('radius-t')
+      .duration(Graph.T_DURATION)
+      .attr('r', 0)
+      .remove();
+
+    // remove links that are no longer connected
+    const links = this.link.data().filter(({ source, target }) => !ids.some(
+      (id) => id === stringify(source) || id === stringify(target),
+    ));
+    this.link = this.link.data(links);
+    this.link.exit()
+      .transition('link-t')
+      .duration(Graph.T_DURATION)
+      .attr('stroke-opacity', 0)
+      .remove();
+
+    this.updateNodes();
+  }
+
+  private pulse(c: CourseGroup, grow = true) {
+    const [circleTransition] = Graph.transitionRadius(c.node()!, Graph.getRadius(c.datum()) + (grow ? Graph.RADIUS : 0), Graph.PULSE_DURATION);
+    circleTransition.on('end', () => this.pulse(c, !grow));
+  }
+
+  private static getLinkStrength({ source, target }: LinkDatum) {
+    return (Graph.MAX_LINK_STRENGTH * (cos(source.pca, target.pca) + 1)) / 2;
+  }
+
+  private static getRadius(d: CourseBrief) {
+    return Graph.RADIUS * (d.meanClassSize ? Math.sqrt(d.meanClassSize) : Math.sqrt(20));
+  }
 }
 
-// Define the pulse animation function
-function pulse(c: CourseGroup) {
-  return c.selectChild<SVGCircleElement>('circle')
-    .transition('pulse')
-    .duration(1000) // Set duration of each pulse
-    // Increase the radius of the circle
-    .attr('r', (d) => getRadius(d) + RADIUS * 2)
-    // Transition back to the original radius
-    .transition()
-    .duration(1000)
-    .attr('r', getRadius)
-    // Repeat the pulse animation indefinitely
-    .on('end', () => pulse(c));
-}
+export type GraphState = Graph;

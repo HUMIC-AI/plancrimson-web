@@ -11,17 +11,14 @@ import Attribute from '../AttributeMenu/Attribute';
  */
 export function SmallAttributeMenuDropdown() {
   return (
-    <div className="relative">
+    <div className="relative h-full">
       <Menu as={Fragment}>
         {({ open }) => (
           <>
-            <Menu.Button className="inset-y-0 right-0 flex items-center">
-              {open ? (
-                <FaTimes className="h-5 w-5 text-gray-dark" />
-              ) : (
-                <FaBars className="h-5 w-5 text-gray-dark" />
-              )}
+            <Menu.Button className="secondary interactive h-full rounded p-2">
+              {open ? <FaTimes /> : <FaBars />}
             </Menu.Button>
+
             <Menu.Items
               unmount={false}
               className={classNames(
