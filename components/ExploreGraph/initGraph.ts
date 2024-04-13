@@ -142,8 +142,9 @@ export function useUpdateGraph({
     if (graphRef.current) {
       console.info('stopping graph');
       graphRef.current.sim.stop();
+      dispatch(Schedules.deleteSchedule(GRAPH_SCHEDULE));
     }
-  }, []);
+  }, [dispatch]);
 
   return {
     graph: graphRef.current,
@@ -532,6 +533,7 @@ class Graph {
             .attr('opacity', 0)
             .remove();
 
+          // should also end the pulsing animation
           graph.node.each(function (g) {
             if (g.id !== d.id) {
               Graph.transitionRadius(this, Graph.getRadius(g));

@@ -135,7 +135,9 @@ export const setPublic = (payload: PublicPayload) => async (dispatch: AppDispatc
 };
 
 export const deleteSchedule = (id: string) => async (dispatch: AppDispatch) => {
-  await deleteDoc(Firestore.schedule(id));
+  if (id !== GRAPH_SCHEDULE) {
+    await deleteDoc(Firestore.schedule(id));
+  }
   return dispatch(schedulesSlice.actions.deleteSchedule(id));
 };
 
