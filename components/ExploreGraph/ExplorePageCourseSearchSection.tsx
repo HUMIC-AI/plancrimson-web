@@ -11,7 +11,7 @@ export function ExplorePageCourseSearchSection() {
     <SearchStateProvider oneCol defaultState={defaultState} ignoreUrl>
       <AuthRequiredInstantSearchProvider indexName="courses" hitsPerPage={4}>
         {/* static positioning!!! happy */}
-        <div className="space-y-4 py-6">
+        <div className="space-y-4 rounded-xl py-6 transition-colors hover:bg-secondary/50">
           <SearchBox scheduleChooser={false} showSmallAttributeMenu />
           <div className="rounded-xl border border-primary bg-secondary/80 p-2">
             <SortingAndRefinementsGrid indexName="courses" />
