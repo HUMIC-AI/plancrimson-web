@@ -15,6 +15,7 @@ import type {
   ListOfScheduleIdOrSemester, ScheduleId, ScheduleIdOrSemester, ScheduleMap, WithId,
 } from '../types';
 import Schema from '../schema';
+import { GRAPH_SCHEDULE } from '../features/schedules';
 
 export function isScheduleId(s: ScheduleIdOrSemester): s is ScheduleId {
   return typeof s === 'string';
@@ -41,7 +42,7 @@ export function getPreviousSchedule(schedules: ScheduleMap, scheduleId: string) 
 }
 
 export function sortSchedulesBySemester(schedules: ScheduleMap) {
-  return Object.values(schedules).sort(compareSemesters);
+  return Object.values(schedules).filter((s) => s.id !== GRAPH_SCHEDULE).sort(compareSemesters);
 }
 
 export function getAllClassIds(schedules: { classes?: string[] }[]): string[] {

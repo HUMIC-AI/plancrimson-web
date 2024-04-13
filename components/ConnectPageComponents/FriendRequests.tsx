@@ -3,6 +3,7 @@ import { Auth } from '@/src/features';
 import { useElapsed } from '@/src/utils/hooks';
 import Firestore from '@/src/schema';
 import { UserProfile, WithId } from '@/src/types';
+import { getAnalytics, logEvent } from 'firebase/analytics';
 import ProfileList from './ProfileList';
 import { useFriends } from './friendUtils';
 
@@ -59,6 +60,7 @@ export function IncomingRequestButtons({ profile }: { profile: WithId<UserProfil
       <button
         type="button"
         onClick={() => {
+          logEvent(getAnalytics(), 'connect_accept_request', { from: profile.id, to: userId });
           updateDoc(ref, { accepted: true })
             .catch((err) => console.error('error accepting request', err));
         }}
@@ -69,6 +71,7 @@ export function IncomingRequestButtons({ profile }: { profile: WithId<UserProfil
       <button
         type="button"
         onClick={() => {
+          logEvent(getAnalytics(), 'connect_reject_request', { from: profile.id, to: userId });
           deleteDoc(ref)
             .catch((err) => console.error('error rejecting request', err));
         }}

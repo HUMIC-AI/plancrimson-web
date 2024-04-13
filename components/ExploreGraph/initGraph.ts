@@ -158,6 +158,10 @@ class Graph {
 
   private fixedId: string | null = null;
 
+  private width: number;
+
+  private height: number;
+
   private highlightedIds: string[] = [];
 
   private nodeGroup: d3.Selection<SVGGElement, unknown, null, unknown>;
@@ -232,11 +236,11 @@ class Graph {
         this.setFixedId(null);
       });
 
-    const width = svgDom.width.baseVal.value;
-    const height = svgDom.height.baseVal.value;
+    this.width = svgDom.width.baseVal.value;
+    this.height = svgDom.height.baseVal.value;
 
     this.zoom = d3.zoom<SVGSVGElement, unknown>()
-      .extent([[0, 0], [width, height]])
+      .extent([[0, 0], [this.width, this.height]])
       .scaleExtent([1, 4])
       .on('zoom', (event) => {
         this.linkGroup.attr('transform', event.transform);
@@ -244,7 +248,11 @@ class Graph {
       });
 
     this.svg.call(this.zoom);
-    this.svg.call(this.zoom.transform, d3.zoomIdentity.scale(1.5));
+    this.svg.call(this.zoom.transform, this.defaultZoom);
+  }
+
+  get defaultZoom() {
+    return d3.zoomIdentity.translate(-this.width / 4, 0).scale(1.5);
   }
 
   get rating() {
@@ -295,8 +303,8 @@ class Graph {
 
   public resetZoom() {
     this.svg.transition('svg-zoom')
-      .duration(Graph.T_DURATION)
-      .call(this.zoom.transform, d3.zoomIdentity);
+      .duration(Graph.PULSE_DURATION)
+      .call(this.zoom.transform, this.defaultZoom);
   }
 
   public setRatingType(ratingType: RatingType) {
@@ -311,6 +319,14 @@ class Graph {
     id = this.fixedId === id ? null : id;
     this.onFix(id);
     this.fixedId = id;
+
+    const fixedNode = this.currentData.find((d) => d.id === this.fixedId);
+    if (fixedNode) {
+      this.svg.transition('svg-zoom')
+        .duration(Graph.PULSE_DURATION)
+        .call(this.zoom.transform, this.defaultZoom.translate(-fixedNode.x, -fixedNode.y));
+    }
+
     this.renderHighlights();
   }
 

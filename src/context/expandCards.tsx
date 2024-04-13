@@ -1,6 +1,7 @@
 import {
   PropsWithChildren, createContext, useContext, useMemo, useState,
 } from 'react';
+import { getAnalytics, logEvent } from 'firebase/analytics';
 import { throwMissingContext } from '../utils/utils';
 
 const CARD_STYLES = ['text', 'collapsed', 'expanded'] as const;
@@ -30,7 +31,9 @@ export default function ExpandCardsProvider({
   const context = useMemo(() => ({
     expandCards,
     toggleExpand: () => {
-      setExpandCards(CARD_STYLES[(CARD_STYLES.indexOf(expandCards) + 1) % CARD_STYLES.length]);
+      const newStyle = CARD_STYLES[(CARD_STYLES.indexOf(expandCards) + 1) % CARD_STYLES.length];
+      logEvent(getAnalytics(), 'toggle_expand_cards', { oldStyle: expandCards, newStyle });
+      setExpandCards(newStyle);
     },
     setExpand: (style: CardStyle) => {
       if (!readonly) {

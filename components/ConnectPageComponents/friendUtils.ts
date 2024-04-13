@@ -6,6 +6,7 @@ import { WithId, FriendRequest } from '@/src/types';
 import { useProfiles } from '@/src/utils/hooks';
 import { useState, useEffect, useMemo } from 'react';
 import Schema from '@/src/schema';
+import { getAnalytics, logEvent } from 'firebase/analytics';
 
 /**
  * Send a friend request from one user to another
@@ -13,6 +14,7 @@ import Schema from '@/src/schema';
  * @param to the uid of the user to send a friend request to
  */
 export function sendFriendRequest(from: string, to: string) {
+  logEvent(getAnalytics(), 'connect_send_request', { from, to });
   return setDoc(Schema.friendRequest(from, to), {
     from,
     to,
@@ -22,6 +24,7 @@ export function sendFriendRequest(from: string, to: string) {
 
 
 export function unfriend(from: string, to: string) {
+  logEvent(getAnalytics(), 'connect_unfriend', { from, to });
   return Promise.allSettled([
     deleteDoc(Schema.friendRequest(from, to)),
     deleteDoc(Schema.friendRequest(to, from)),

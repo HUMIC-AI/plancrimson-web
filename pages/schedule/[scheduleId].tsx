@@ -4,8 +4,6 @@ import Layout from '@/components/Layout/Layout';
 import Calendar from '@/components/SemesterSchedule/Calendar';
 import { ErrorMessage } from '@/components/Layout/ErrorMessage';
 import { useSchedule } from '@/src/utils/schedules';
-import { useEffect } from 'react';
-import { getAnalytics, logEvent } from 'firebase/analytics';
 
 export default function SchedulePage() {
   return (
@@ -15,21 +13,12 @@ export default function SchedulePage() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Wrapper({ userId }: { userId: string; }) {
   const router = useRouter();
   const scheduleId = router.query.scheduleId as string;
   const { schedule, error } = useSchedule(scheduleId);
   const elapsed = useElapsed(500, []);
-
-  useEffect(() => {
-    if (userId && schedule) {
-      logEvent(getAnalytics(), 'page_view', {
-        page_location: router.asPath,
-        page_path: router.pathname,
-        schedule,
-      });
-    }
-  }, [schedule, router, userId]);
 
   if (error) {
     return <ErrorMessage>{error}</ErrorMessage>;
