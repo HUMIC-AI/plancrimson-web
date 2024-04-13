@@ -6,7 +6,7 @@ import { Requirement } from '@/src/requirements/util';
 import {
   ClassCache, Profile, Schedules,
 } from '@/src/features';
-import AddCoursesButton from '@/components/AddCoursesButton';
+import AddCoursesButton from '@/components/SemesterSchedule/AddCoursesButton';
 import { getClassIdsOfSchedule } from '@/src/features/schedules';
 import { CourseCard } from '../../Course/CourseCard';
 import { ToggleButton } from '../../Course/ToggleButton';

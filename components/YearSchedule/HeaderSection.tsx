@@ -13,7 +13,7 @@ import { downloadJson } from '@/src/utils/utils';
 import type { DownloadPlan, ListOfScheduleIdOrSemester } from '@/src/types';
 import { isListOfScheduleIds } from '@/src/utils/schedules';
 import { getClassIdsOfSchedule } from '@/src/features/schedules';
-import UploadForm from '../UploadForm';
+import UploadForm from './UploadForm';
 import CardExpandToggler from './CardExpandToggler';
 import { WithResizeRef } from './PlanningSection';
 

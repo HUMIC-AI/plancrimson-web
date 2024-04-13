@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import type { BaseSchedule } from '@/src/types';
 import { PropsWithChildren } from 'react';
 
-const DynamicCourseSearchModal = dynamic(() => import('./Modals/CourseSearchModal'));
+const DynamicCourseSearchModal = dynamic(() => import('../Modals/CourseSearchModal'));
 
 type Props = {
   schedule: BaseSchedule;

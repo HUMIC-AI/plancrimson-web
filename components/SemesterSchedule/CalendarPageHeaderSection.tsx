@@ -2,15 +2,15 @@ import React, { useMemo } from 'react';
 import { createEvents, EventAttributes } from 'ics';
 import { downloadJson } from '@/src/utils/utils';
 import { BaseSchedule } from '@/src/types';
-import AddCoursesButton from '../AddCoursesButton';
+import AddCoursesButton from './AddCoursesButton';
 import { SearchStateProvider, useDefaultSearchState } from '../../src/context/searchState';
 import { ChosenScheduleContext, ChosenScheduleContextType } from '../../src/context/selectedSchedule';
-import { AuthRequiredInstantSearchProvider } from '../AuthRequiredInstantSearchProvider';
+import { AuthRequiredInstantSearchProvider } from '../Utils/AuthRequiredInstantSearchProvider';
 import { WithMeili } from '../Layout/WithMeili';
 import { Auth } from '../../src/features';
 import SearchBox from '../SearchComponents/SearchBox/SearchBox';
 import Hits from '../SearchComponents/Hits';
-import { ScheduleSyncer } from '../ScheduleSyncer';
+import { ScheduleSyncer } from '../Utils/ScheduleSyncer';
 import { isOldSemester } from '../../src/lib';
 
 type Props = {

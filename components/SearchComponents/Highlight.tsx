@@ -1,7 +1,7 @@
 import { connectHighlight } from 'react-instantsearch-dom';
 import type { HighlightProps } from 'react-instantsearch-core';
 import useClientOrDemo from './ClientOrDemo';
-import { useHasInstantSearch } from '../AuthRequiredInstantSearchProvider';
+import { useHasInstantSearch } from '../Utils/AuthRequiredInstantSearchProvider';
 
 type Provided = Pick<HighlightProps, 'highlight'>;
 

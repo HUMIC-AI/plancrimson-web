@@ -12,7 +12,7 @@ import CustomModal from '../Modals/CustomModal';
 import { Footer } from '../Layout/Footer';
 import Layout, { HeadMeta } from '../Layout/Layout';
 import { Navbar } from '../Layout/Navbar';
-import { ScheduleSyncer } from '../ScheduleSyncer';
+import { ScheduleSyncer } from '../Utils/ScheduleSyncer';
 import RequirementsSection from './RequirementsSection';
 import { useValidateSchedule } from './useValidateSchedule';
 import { WithMeili } from '../Layout/WithMeili';

@@ -1,6 +1,6 @@
 import { Disclosure } from '@headlessui/react';
 import { FaAngleDoubleRight } from 'react-icons/fa';
-import { AuthRequiredInstantSearchProvider } from '../AuthRequiredInstantSearchProvider';
+import { AuthRequiredInstantSearchProvider } from '../Utils/AuthRequiredInstantSearchProvider';
 import { SearchStateProvider, useDefaultSearchState } from '../../src/context/searchState';
 import SearchBox from '../SearchComponents/SearchBox/SearchBox';
 import Hits from '../SearchComponents/Hits';

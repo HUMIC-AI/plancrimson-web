@@ -5,9 +5,9 @@ import useSearchState, { createUrl } from '@/src/context/searchState';
 import { Auth } from '@/src/features';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { useMeiliClient } from '@/src/context/meili';
-import { ErrorMessage } from './Layout/ErrorMessage';
-import type { IndexName } from '../src/lib';
-import { MESSAGES } from '../src/utils/config';
+import { ErrorMessage } from '../Layout/ErrorMessage';
+import type { IndexName } from '../../src/lib';
+import { MESSAGES } from '../../src/utils/config';
 
 const HasInstantSearchContext = createContext<boolean>(false);
 

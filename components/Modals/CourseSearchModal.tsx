@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { SearchStateProvider, useDefaultSearchState } from '@/src/context/searchState';
 import { ChosenScheduleContext } from '@/src/context/selectedSchedule';
-import { AuthRequiredInstantSearchProvider } from '@/components/AuthRequiredInstantSearchProvider';
+import { AuthRequiredInstantSearchProvider } from '@/components/Utils/AuthRequiredInstantSearchProvider';
 import { Semester, isOldSemester } from '@/src/lib';
 import { Auth } from '@/src/features';
 import SearchBox from '../SearchComponents/SearchBox/SearchBox';

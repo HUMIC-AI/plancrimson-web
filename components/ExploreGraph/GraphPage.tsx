@@ -1,13 +1,13 @@
 import { useMemo, useRef, useState } from 'react';
-import Layout from '../../components/Layout/Layout';
+import Layout from '../Layout/Layout';
 import { Auth } from '../../src/features';
-import { WithMeili } from '../../components/Layout/WithMeili';
+import { WithMeili } from '../Layout/WithMeili';
 import { ChosenScheduleContext, ChosenScheduleContextType } from '../../src/context/selectedSchedule';
 import { breakpoints, useBreakpoint } from '../../src/utils/styles';
-import { HoveredCourseInfo } from '../../components/ExploreGraph/HoveredCourseInfo';
-import { ExplorePageCourseSearchSection } from '../../components/ExploreGraph/ExplorePageCourseSearchSection';
-import { ExploreGraph } from '../../components/ExploreGraph/ExploreGraph';
-import { signInUser } from '../../components/Layout/useSyncAuth';
+import { HoveredCourseInfo } from './HoveredCourseInfo';
+import { ExplorePageCourseSearchSection } from './ExplorePageCourseSearchSection';
+import { ExploreGraph } from './ExploreGraph';
+import { signInUser } from '../Layout/useSyncAuth';
 
 export function GraphPage() {
   const userId = Auth.useAuthProperty('uid');

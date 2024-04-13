@@ -1,3 +1,3 @@
-import { GraphPage } from './GraphPage';
+import { GraphPage } from '../../components/ExploreGraph/GraphPage';
 
 export default GraphPage;

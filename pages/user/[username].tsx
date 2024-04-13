@@ -25,7 +25,7 @@ import { ErrorMessage } from '@/components/Layout/ErrorMessage';
 import ExpandCardsProvider from '@/src/context/expandCards';
 import Schema from '@/src/schema';
 import { compareSemesters } from '@/src/lib';
-import { ScheduleSyncer } from '@/components/ScheduleSyncer';
+import { ScheduleSyncer } from '@/components/Utils/ScheduleSyncer';
 import { ClassCache } from '@/src/features';
 import { getAllClassIds } from '@/src/utils/schedules';
 import { useMeiliClient } from '@/src/context/meili';
