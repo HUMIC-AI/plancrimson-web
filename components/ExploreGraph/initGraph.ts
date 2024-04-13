@@ -36,8 +36,7 @@ export type NodeId = string | { id: string };
 export type Simulation = d3.Simulation<Datum, LinkDatum>;
 
 export type InitGraphProps = {
-  onHover: (id: string | null) => void;
-  onFix: (id: string | null) => void;
+  setHover: (id: string | null) => void;
   scheduleId?: string | null;
 };
 
@@ -78,7 +77,7 @@ const sameLink = (l: LinkDatum | StringLink, d: LinkDatum | StringLink) => {
  * GRAPH_SCHEDULE and the graph's internal nodes and links.
  */
 export function useUpdateGraph({
-  onFix, onHover, scheduleId = null,
+  setHover, scheduleId = null,
 }: InitGraphProps) {
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
 
@@ -105,8 +104,7 @@ export function useUpdateGraph({
       positions,
       courses,
       scheduleId,
-      onHover,
-      onFix,
+      setHover,
       setSubjects,
       ratingType,
       setRatingType,
@@ -129,7 +127,7 @@ export function useUpdateGraph({
       : fixedClasses;
 
     graphRef.current.appendNodes(initialNodes.map((id) => graphRef.current!.toDatum(id)!).filter(Boolean), []);
-  }, [courses, dispatch, fixedClasses, onFix, onHover, positions, ratingType, scheduleId]);
+  }, [courses, dispatch, fixedClasses, setHover, positions, ratingType, scheduleId]);
 
   // whenever GRAPH_SCHEDULE is updated, update the graph nodes
   useEffect(() => {
@@ -213,8 +211,7 @@ class Graph {
     public readonly positions: number[][],
     public readonly courses: CourseBrief[],
     public readonly fixedScheduleId: string | null,
-    private onHover: (id: string | null) => void,
-    private onFix: (id: string | null) => void,
+    private setHover: (id: string | null) => void,
     private setSubjects: (subjects: Subject[]) => void,
     private ratingField: RatingType,
     private setRatingField: (ratingField: RatingType) => void,
@@ -334,7 +331,10 @@ class Graph {
     console.debug('fixing node', id);
     // deselect a currently selected node
     id = this.fixedId === id ? null : id;
-    this.onFix(id);
+
+    if (id) this.setHover(id);
+    else if (this.fixedId) this.setHover(null);
+
     this.fixedId = id;
 
     const fixedNode = this.currentData.find((d) => d.id === this.fixedId);
@@ -544,7 +544,7 @@ class Graph {
         console.debug('mousing over');
 
         Graph.transitionRadius(this, Graph.getRadius(d) + Graph.RADIUS * 2);
-        graph.onHover(d.id);
+        if (!graph.fixedId) graph.setHover(d.id);
         graph.tooltip.classed('hidden', false)
           .text(d.subject + d.catalog)
           .style('left', `${event.clientX}px`)
@@ -557,7 +557,6 @@ class Graph {
       })
       .on('mouseout', function (event, d) {
         Graph.transitionRadius(this, Graph.getRadius(d));
-        graph.onHover(null);
         graph.tooltip.classed('hidden', true);
       })
       .on('click', (event, d) => {
@@ -567,7 +566,6 @@ class Graph {
           course: d,
         });
         graph.addNewNeighbours(d);
-        // graph.setFixedId(d.id);
       })
       .on('contextmenu', (event, d) => {
         event.preventDefault();
@@ -633,6 +631,7 @@ class Graph {
 
   public restart() {
     this.state = 'init';
+    this.setHover(null);
   }
 }
 

@@ -6,13 +6,11 @@ import { Buttons } from './ExploreGraphButtons';
  * A 2D d3 force graph of different courses.
  */
 export function ExploreGraph({
-  onHover,
-  onFix,
+  setHover,
   panelRef,
   scheduleId,
 }: {
-  onHover: (id: string | null) => void;
-  onFix: (id: string | null) => void;
+  setHover: (id: string | null) => void;
   panelRef: React.RefObject<HTMLDivElement>;
   scheduleId?: string;
 }) {
@@ -20,7 +18,7 @@ export function ExploreGraph({
   const {
     graph, ref, tooltipRef, subjects,
   } = useUpdateGraph({
-    onHover, onFix, scheduleId,
+    setHover, scheduleId,
   });
 
   const width = 800;

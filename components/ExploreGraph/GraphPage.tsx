@@ -15,7 +15,6 @@ import { SidebarPanel } from './CollapsibleSidebar';
 export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
   const userId = Auth.useAuthProperty('uid');
   const [hoveredClassId, setHoveredClassId] = useState<string | null>(null);
-  const [fixedClassId, setFixedClassId] = useState<string | null>(null);
   const courseInfoRef = useRef<HTMLDivElement>(null);
 
   const chosenScheduleContext = useMemo((): ChosenScheduleContextType => ({
@@ -53,8 +52,7 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
           {userId ? (
             <ExploreGraph
               scheduleId={scheduleId}
-              onHover={(id) => id && setHoveredClassId(id)}
-              onFix={setFixedClassId}
+              setHover={setHoveredClassId}
               panelRef={courseInfoRef}
             />
           ) : <NoGraphMessage />}
@@ -62,7 +60,7 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
             <ExplorePageCourseSearchSection />
           </SidebarPanel>
           <SidebarPanel ref={courseInfoRef} side="right" defaultOpen>
-            <HoveredCourseInfo courseId={fixedClassId ?? hoveredClassId} />
+            <HoveredCourseInfo courseId={hoveredClassId} />
           </SidebarPanel>
         </ChosenScheduleContext.Provider>
       </WithMeili>
