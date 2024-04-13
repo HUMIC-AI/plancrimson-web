@@ -5,6 +5,7 @@ import { SearchStateProvider, useDefaultSearchState } from '../../src/context/se
 import SearchBox from '../SearchComponents/SearchBox/SearchBox';
 import Hits from '../SearchComponents/Hits';
 import { classNames } from '../../src/utils/styles';
+import { SortingAndRefinementsGrid } from '../SearchComponents/CurrentRefinements';
 
 export function ExplorePageCourseSearchSection() {
   const defaultState = useDefaultSearchState();
@@ -24,6 +25,9 @@ export function ExplorePageCourseSearchSection() {
             <SearchStateProvider oneCol defaultState={defaultState} ignoreUrl>
               <AuthRequiredInstantSearchProvider indexName="courses" hitsPerPage={4}>
                 <SearchBox scheduleChooser={false} showSmallAttributeMenu />
+                <div className="rounded border border-primary bg-secondary/80 p-2">
+                  <SortingAndRefinementsGrid indexName="courses" />
+                </div>
                 <div className="relative flex-1">
                   <div className="absolute inset-0 overflow-auto">
                     <Hits />

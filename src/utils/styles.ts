@@ -8,13 +8,7 @@ export const breakpoints = {
 };
 
 export function classNames(...classes: (string | boolean | null | undefined)[]) {
-  return classes
-    .filter(Boolean)
-    .join(' ')
-    .replace(
-      'hover-blue',
-      'shadow rounded bg-black hover:bg-opacity-50 text-white transition-colors',
-    );
+  return classes.filter(Boolean).join(' ');
 }
 
 

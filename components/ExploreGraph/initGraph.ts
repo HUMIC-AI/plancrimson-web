@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import {
-  useEffect, useRef,
+  useEffect, useRef, useState,
 } from 'react';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { CourseBrief } from '../ClassesCloudPage/useData';
@@ -38,7 +38,6 @@ export type InitGraphProps = {
   courses: CourseBrief[] | null;
   onHover: (id: string | null) => void;
   onFix: (id: string | null) => void;
-  setSubjects: (subjects: Subject[]) => void;
 };
 
 export type InitGraphPropsRequired = InitGraphProps & {
@@ -48,14 +47,21 @@ export type InitGraphPropsRequired = InitGraphProps & {
 
 export type CourseGroup = d3.Selection<SVGGElement, Datum, SVGGElement, unknown>;
 
+export type RatingType = 'meanRating' | 'meanHours';
+
 // a scale of five emojis from least to most happy
-export const EMOJI_SCALE = ['😢', '😐', '😊', '😁', '🤩'];
-export const WORKLOAD_SCALE = ['😌', '😐', '😰', '😱', '💀'];
-const getEmoji = (d: Datum) => EMOJI_SCALE[Math.floor((d.meanRating! ** 2) / 5 - 1e-6)];
+export const EMOJI_SCALES: Record<RatingType, [string, string, string, string, string]> = {
+  meanRating: ['😢', '😐', '😊', '😁', '🤩'],
+  // meanHours: ['😌', '😐', '😰', '😱', '💀'],
+  meanHours: ['🥱', '😎', '😐', '😰', '💀'],
+};
 
 const getColor = (d: DatumBase) => getSubjectColor(d.subject, {
-  saturation: (d.meanRating ? d.meanRating : 3) / 5,
-  opacity: (d.meanHours ? d.meanHours : 3) / 5,
+  // saturation: (d.meanRating ? d.meanRating : 3) / 5,
+  // opacity: (d.meanHours ? d.meanHours : 3) / 5,
+  saturation: 0.7,
+  lightness: 0.7,
+  opacity: 0.8,
 });
 const stringify = (d: string | { id: string }) => (typeof d === 'string' ? d : d.id);
 const sameLink = (l: LinkDatum | StringLink, d: LinkDatum | StringLink) => {
@@ -69,14 +75,18 @@ const sameLink = (l: LinkDatum | StringLink, d: LinkDatum | StringLink) => {
 export type GraphHook = {
   graph?: Graph;
   ref: React.RefObject<SVGSVGElement>;
+  subjects: Subject[];
 };
 
 export function useUpdateGraph({
-  courses, onFix, onHover, positions, setSubjects,
+  courses, onFix, onHover, positions,
 }: InitGraphProps): GraphHook {
   const dispatch = useAppDispatch();
   const { client } = useMeiliClient();
   const { showCourse } = useModal();
+
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [ratingType, setRatingType] = useState<RatingType>('meanRating');
 
   const ref = useRef<SVGSVGElement>(null);
   const graphRef = useRef<Graph>();
@@ -87,7 +97,7 @@ export function useUpdateGraph({
 
     console.info('initializing graph');
 
-    graphRef.current = new Graph(ref.current, positions, courses, onHover, onFix, setSubjects);
+    graphRef.current = new Graph(ref.current, positions, courses, onHover, onFix, setSubjects, ratingType, setRatingType);
 
     dispatch(Schedules.createLocal({
       id: 'GRAPH_SCHEDULE',
@@ -106,7 +116,7 @@ export function useUpdateGraph({
         courses: [choose(courses).id],
       }));
     }, 500);
-  }, [dispatch, client, showCourse, positions, courses, onHover, onFix, setSubjects]);
+  }, [dispatch, client, showCourse, positions, courses, onHover, onFix, setSubjects, ratingType]);
 
   // stop simulation when unmounting
   useEffect(() => () => {
@@ -119,6 +129,7 @@ export function useUpdateGraph({
   return {
     graph: graphRef.current,
     ref,
+    subjects,
   };
 }
 
@@ -163,9 +174,11 @@ class Graph {
     svgDom: SVGSVGElement,
     public readonly positions: number[][],
     public readonly courses: CourseBrief[],
-    public onHover: (id: string | null) => void,
-    public onFix: (id: string | null) => void,
-    public setSubjects: (subjects: Subject[]) => void,
+    private onHover: (id: string | null) => void,
+    private onFix: (id: string | null) => void,
+    private setSubjects: (subjects: Subject[]) => void,
+    private ratingField: RatingType,
+    private setRatingField: (ratingField: RatingType) => void,
   ) {
     this.svg = d3.select(svgDom);
 
@@ -220,7 +233,11 @@ class Graph {
     this.svg.call(this.zoom);
   }
 
-  private static addCircle(enter: CourseGroup) {
+  get rating() {
+    return this.ratingField;
+  }
+
+  private addCircle(enter: CourseGroup) {
     enter.append('circle')
       .attr('fill', getColor)
       .attr('r', 0)
@@ -229,9 +246,10 @@ class Graph {
     // add emoji to each group to indicate mean rating
     enter.filter((d) => typeof d.meanRating === 'number')
       .append('text')
+      .classed('emoji', true)
       .style('pointer-events', 'none')
       .attr('font-size', 0)
-      .text(getEmoji);
+      .text(this.getEmoji.bind(this));
 
     enter.each(function (d) {
       Graph.transitionRadius(this, Graph.getRadius(d));
@@ -265,6 +283,12 @@ class Graph {
     this.svg.transition('svg-zoom')
       .duration(Graph.T_DURATION)
       .call(this.zoom.transform, d3.zoomIdentity);
+  }
+
+  public setRatingType(ratingType: RatingType) {
+    this.ratingField = ratingType;
+    this.setRatingField(ratingType);
+    this.node.select('text.emoji').text(this.getEmoji.bind(this));
   }
 
   public setFixedId(id: string | null) {
@@ -368,7 +392,7 @@ class Graph {
     this.node = this.node
       .data(nodes as Datum[], (d) => d.id)
       .join((enter) => enter.append('g')
-        .call(Graph.addCircle)
+        .call(this.addCircle.bind(this))
         .call(this.addListeners.bind(this)));
 
     this.updateNodes();
@@ -474,6 +498,13 @@ class Graph {
       .remove();
 
     this.updateNodes();
+  }
+
+  private getEmoji(d: Datum) {
+    const v = this.ratingField === 'meanHours'
+      ? 5 * (d.meanHours! / 20)
+      : 5 * ((d.meanRating! ** 2) / 25);
+    return EMOJI_SCALES[this.ratingField][Math.max(0, Math.min(4, Math.floor(v)))];
   }
 
   private pulse(c: CourseGroup, grow = true) {

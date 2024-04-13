@@ -1,5 +1,4 @@
 import React, { Fragment } from 'react';
-import { FaTimes } from 'react-icons/fa';
 import { connectCurrentRefinements } from 'react-instantsearch-dom';
 import type { CurrentRefinementsProvided, Refinement } from 'react-instantsearch-core';
 import {
@@ -9,10 +8,10 @@ import {
   compareItems,
   compareWeekdays,
 } from '@/src/lib';
-import { classNames } from '@/src/utils/styles';
 import { alertSignIn } from './SearchBox/searchUtils';
 import useClientOrDemo from './ClientOrDemo';
 import SortBy from './SortBy';
+import { GridButtons } from './GridButtons';
 
 type Provided = Pick<CurrentRefinementsProvided, 'items' | 'refine'>;
 
@@ -32,36 +31,20 @@ function CurrentRefinementsComponent({
 
   const refinementElements = uniqueRefinements.map(([id, items]) => (
     <Fragment key={id}>
-      <h4 className="w-min md:whitespace-nowrap">
-        {adjustAttr(id)}
-        :
-      </h4>
-
-      <ul className="flex h-min flex-wrap items-center gap-2">
-        {items
+      <GridButtons
+        title={adjustAttr(id)}
+        showRemove
+        items={items
           .sort(
             id === 'DAY_OF_WEEK'
               ? compareWeekdays
               : compareItems,
-          )
-          .map(({ label, value }) => {
-            const name = (label in TERM_TO_SEASON) ? `${TERM_TO_SEASON[label]?.season} ${TERM_TO_SEASON[label]?.year}` : label;
-            return (
-              <button
-                key={label}
-                type="button"
-                name={name}
-                className={classNames(
-                  'py-1 px-2 hover-blue rounded flex items-center text-sm',
-                )}
-                onClick={() => refine(value)}
-              >
-                {name}
-                <FaTimes className="ml-2" />
-              </button>
-            );
-          })}
-      </ul>
+          ).map(({ label, value }) => ({
+            label: (label in TERM_TO_SEASON) ? `${TERM_TO_SEASON[label]?.season} ${TERM_TO_SEASON[label]?.year}` : label,
+            selected: true,
+            onClick: () => refine(value),
+          }))}
+      />
     </Fragment>
   ));
 
@@ -86,7 +69,7 @@ export default function CurrentRefinements() {
 
 export function SortingAndRefinementsGrid({ indexName }: { indexName: IndexName; }) {
   return (
-    <div className="grid grid-cols-[auto_1fr] items-center gap-4">
+    <div className="grid grid-cols-[auto_1fr] items-center gap-2">
       <SortBy indexName={indexName} />
       <CurrentRefinements />
     </div>

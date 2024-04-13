@@ -56,7 +56,7 @@
   }
 
   .bordered {
-    @apply box-border rounded-lg border-2 border-gray-primary/0 hover:border-gray-primary/50 hover:shadow-md motion-reduce:hover:shadow-none;
+    @apply box-border rounded-lg border-2 border-gray-primary/0 hover:border-gray-primary/60 hover:shadow-md motion-reduce:hover:shadow-none;
   }
 
   .primary {

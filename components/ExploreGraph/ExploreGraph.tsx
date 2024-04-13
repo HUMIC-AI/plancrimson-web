@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useCourseEmbeddingData } from '../ClassesCloudPage/useData';
 import { Schedules } from '../../src/features';
 import { useAppSelector } from '../../src/utils/hooks';
 import { DatumBase, useUpdateGraph } from './initGraph';
-import { Subject } from '../../src/lib';
 import { Buttons } from './ExploreGraphButtons';
 
 /**
@@ -20,13 +19,12 @@ export function ExploreGraph({
   panelRef: React.RefObject<HTMLDivElement>;
 }) {
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
-  const [subjects, setSubjects] = useState<Subject[]>([]);
   const chosenSchedule = useAppSelector(Schedules.selectSchedule('GRAPH_SCHEDULE'));
   const prevIds = useRef<string[]>();
 
   // create the graph
-  const { graph, ref } = useUpdateGraph({
-    positions, courses, onHover, onFix, setSubjects,
+  const { graph, ref, subjects } = useUpdateGraph({
+    positions, courses, onHover, onFix,
   });
 
   const width = 800;

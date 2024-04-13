@@ -9,7 +9,7 @@ import { UserMenu } from './UserMenu';
 import { Path, PATHS } from '../../src/utils/config';
 
 export function Navbar({
-  className = 'bg-secondary/90 text-primary',
+  className = 'bg-secondary/80 text-primary',
 }: {
   className?: string;
 }) {
