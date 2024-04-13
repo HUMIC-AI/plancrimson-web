@@ -1,11 +1,6 @@
-import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useCourseEmbeddingData } from '../ClassesCloudPage/useData';
-import { Schedules } from '../../src/features';
-import { useAppSelector } from '../../src/utils/hooks';
-import { DatumBase, useUpdateGraph } from './initGraph';
+import { useUpdateGraph } from './initGraph';
 import { Buttons } from './ExploreGraphButtons';
-import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 
 /**
  * A 2D d3 force graph of different courses.
@@ -21,40 +16,15 @@ export function ExploreGraph({
   panelRef: React.RefObject<HTMLDivElement>;
   scheduleId?: string;
 }) {
-  const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
-  const chosenSchedule = useAppSelector(Schedules.selectSchedule(GRAPH_SCHEDULE));
-  const prevIds = useRef<string[]>();
-
   // create the graph
   const {
     graph, ref, tooltipRef, subjects,
   } = useUpdateGraph({
-    positions, courses, onHover, onFix, scheduleId,
+    onHover, onFix, scheduleId,
   });
 
   const width = 800;
   const height = 800;
-
-  useEffect(() => {
-    if (!graph || !chosenSchedule?.classes || !courses || !positions) return;
-
-    const nodes: DatumBase[] = chosenSchedule.classes.map((id) => {
-      const courseBrief = courses.find((c) => c.id === id)!;
-      return {
-        ...courseBrief,
-        pca: positions[courseBrief.i],
-      } as DatumBase;
-    });
-
-    graph.appendNodes(nodes, []);
-    if (prevIds.current) {
-      const removed = prevIds.current.filter((id) => !chosenSchedule.classes!.includes(id));
-      if (removed.length > 0) {
-        graph.removeNodes(removed);
-      }
-    }
-    prevIds.current = [...chosenSchedule.classes];
-  }, [chosenSchedule?.classes, courses, graph, positions]);
 
   return (
     <div className="absolute inset-0">

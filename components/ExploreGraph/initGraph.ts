@@ -1,9 +1,9 @@
 import * as d3 from 'd3';
 import {
-  useEffect, useMemo, useRef, useState,
+  useEffect, useRef, useState,
 } from 'react';
 import { getAnalytics, logEvent } from 'firebase/analytics';
-import { CourseBrief } from '../ClassesCloudPage/useData';
+import { CourseBrief, useCourseEmbeddingData } from '../ClassesCloudPage/useData';
 import {
   Subject,
   choose,
@@ -12,7 +12,7 @@ import {
 } from '../../src/lib';
 import { useAppDispatch, useAppSelector } from '../../src/utils/hooks';
 import { Schedules } from '../../src/features';
-import { GRAPH_SCHEDULE } from '../../src/features/schedules';
+import { GRAPH_SCHEDULE, useClasses } from '../../src/features/schedules';
 
 export type DatumBase = CourseBrief & {
   pca: number[];
@@ -31,14 +31,14 @@ export type LinkDatum = {
 
 export type StringLink = { source: string; target: string; };
 
+export type NodeId = string | { id: string };
+
 export type Simulation = d3.Simulation<Datum, LinkDatum>;
 
 export type InitGraphProps = {
-  positions: number[][] | null;
-  courses: CourseBrief[] | null;
   onHover: (id: string | null) => void;
   onFix: (id: string | null) => void;
-  scheduleId?: string;
+  scheduleId?: string | null;
 };
 
 export type InitGraphPropsRequired = InitGraphProps & {
@@ -64,7 +64,7 @@ const getColor = (d: DatumBase) => getSubjectColor(d.subject, {
   lightness: 0.7,
   opacity: 0.95,
 });
-const stringify = (d: string | { id: string }) => (typeof d === 'string' ? d : d.id);
+const stringify = (d: NodeId) => (typeof d === 'string' ? d : d.id);
 const sameLink = (l: LinkDatum | StringLink, d: LinkDatum | StringLink) => {
   const lsrc = stringify(l.source);
   const ltrg = stringify(l.target);
@@ -73,21 +73,29 @@ const sameLink = (l: LinkDatum | StringLink, d: LinkDatum | StringLink) => {
   return (lsrc === dsrc && ltrg === dtrg) || (lsrc === dtrg && ltrg === dsrc);
 };
 
+/**
+ * Need to be careful with two way synchronization between redux store
+ * GRAPH_SCHEDULE and the graph's internal nodes and links.
+ */
 export function useUpdateGraph({
-  courses, onFix, onHover, positions, scheduleId,
+  onFix, onHover, scheduleId = null,
 }: InitGraphProps) {
+  const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
+
   const dispatch = useAppDispatch();
-  const fixedClasses = useFixedClasses(scheduleId);
+  const graphSchedule = useAppSelector(Schedules.selectSchedule(GRAPH_SCHEDULE));
+  const fixedClasses = useClasses(scheduleId);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [ratingType, setRatingType] = useState<RatingType>('meanRating');
 
+  // refs for fine grained control
   const ref = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLParagraphElement>(null);
   const graphRef = useRef<Graph>();
 
   useEffect(() => {
-    // only initialize graph once
-    if (graphRef.current || !positions || !courses || !ref.current || !tooltipRef.current || !fixedClasses) return;
+    // only initialize graph once all data is included
+    if (graphRef.current || !positions || !courses || !fixedClasses || !ref.current || !tooltipRef.current) return;
 
     console.info('initializing graph');
 
@@ -96,12 +104,14 @@ export function useUpdateGraph({
       tooltipRef.current,
       positions,
       courses,
-      fixedClasses,
+      scheduleId,
       onHover,
       onFix,
       setSubjects,
       ratingType,
       setRatingType,
+      (ids: string[]) => dispatch(Schedules.addCourses({ scheduleId: GRAPH_SCHEDULE, courseIds: ids })),
+      (ids: string[]) => dispatch(Schedules.removeCourses({ scheduleId: GRAPH_SCHEDULE, courseIds: ids })),
     );
 
     dispatch(Schedules.createLocal({
@@ -114,14 +124,20 @@ export function useUpdateGraph({
       ...getUpcomingSemester(),
     }));
 
-    // add initial course
-    setTimeout(() => {
-      dispatch(Schedules.addCourses({
-        scheduleId: GRAPH_SCHEDULE,
-        courses: fixedClasses.length > 0 ? fixedClasses : [choose(courses).id],
-      }));
-    }, 500);
-  }, [courses, dispatch, fixedClasses, onFix, onHover, positions, ratingType]);
+    const initialNodes = fixedClasses.length === 0
+      ? [choose(courses).id]
+      : fixedClasses;
+
+    graphRef.current.appendNodes(initialNodes.map((id) => graphRef.current!.toDatum(id)!).filter(Boolean), []);
+  }, [courses, dispatch, fixedClasses, onFix, onHover, positions, ratingType, scheduleId]);
+
+  // whenever GRAPH_SCHEDULE is updated, update the graph nodes
+  useEffect(() => {
+    if (!graphRef.current || !graphSchedule?.classes || !fixedClasses || !courses || !positions) return;
+    const nodes = [...graphSchedule.classes, ...fixedClasses].map((id) => graphRef.current!.toDatum(id)!).filter(Boolean);
+    graphRef.current.appendNodes(nodes, []);
+    graphRef.current.removeNodes(graphRef.current.getNodesNotIn(nodes).map((n) => n.id));
+  }, [courses, fixedClasses, graphSchedule?.classes, positions]);
 
   // stop simulation when unmounting
   useEffect(() => () => {
@@ -143,6 +159,13 @@ type CircleTransition = d3.Transition<SVGCircleElement, null, SVGGElement, unkno
 
 type TextTransition = d3.Transition<SVGTextElement, null, SVGGElement, unknown>;
 
+/**
+ * The entire d3 graph visualization.
+ * appendNodes and removeNodes should be used to update the graph.
+ * These will also call the `onAppendCourses` and `onRemoveCourses` callbacks.
+ * These callbacks synchronize the nodes with the redux store (specifically
+ * the schedule with id {@link GRAPH_SCHEDULE}).
+ */
 class Graph {
   public sim: Simulation;
 
@@ -189,12 +212,14 @@ class Graph {
     tooltipDom: HTMLParagraphElement,
     public readonly positions: number[][],
     public readonly courses: CourseBrief[],
-    private readonly fixedClasses: string[],
+    public readonly fixedScheduleId: string | null,
     private onHover: (id: string | null) => void,
     private onFix: (id: string | null) => void,
     private setSubjects: (subjects: Subject[]) => void,
     private ratingField: RatingType,
     private setRatingField: (ratingField: RatingType) => void,
+    private onAppendCourses: (ids: string[]) => void,
+    private onRemoveCourses: (ids: string[]) => void,
   ) {
     this.svg = d3.select(svgDom);
     this.tooltip = d3.select(tooltipDom);
@@ -293,14 +318,6 @@ class Graph {
     this.flip = flip;
   }
 
-  public reset() {
-    console.debug('resetting graph');
-    this.highlightSubject(null);
-    this.setFixedId(null);
-    this.setSubjects([]);
-    this.removeNodes(this.currentData.map((d) => d.id).filter((id) => !this.fixedClasses.includes(id)));
-  }
-
   public resetZoom() {
     this.svg.transition('svg-zoom')
       .duration(Graph.PULSE_DURATION)
@@ -381,7 +398,7 @@ class Graph {
   }
 
   /** Gets called whenever nodes are updated */
-  private updateNodes() {
+  private updateNodesInternal() {
     // tell simulation about new nodes and links
     this.sim.nodes(this.currentData);
     this.sim.force<d3.ForceLink<Datum, LinkDatum>>('link')!.links(this.link.data());
@@ -390,8 +407,12 @@ class Graph {
     // update link properties after strings are populated
     this.link.attr('stroke-width', (d) => 0.5 + Graph.RADIUS * getLinkOpacity(d));
 
-    // callback
+    // callbacks
     this.setSubjects([...new Set(this.currentData.map((d) => d.subject))]);
+
+    if (!this.currentData.some((d) => d.id === this.fixedId)) {
+      this.setFixedId(null);
+    }
 
     if (this.state === 'init') {
       // add a "click me" label
@@ -431,37 +452,44 @@ class Graph {
   public appendNodes(nodesToAdd: DatumBase[], idLinks: StringLink[]) {
     console.debug('updating graph', nodesToAdd.length, idLinks.length);
 
-    const [nodes, links] = this.deduplicate(nodesToAdd, idLinks);
+    nodesToAdd = this.getNewNodes(nodesToAdd);
+    idLinks = this.getNewLinks(idLinks);
 
-    if (nodes.length === 0 && links.length === 0) return;
+    if (nodesToAdd.length === 0 && idLinks.length === 0) return;
 
     this.link = this.link
-      .data(links, (d) => `${stringify(d.source)}:${stringify(d.target)}`)
+      .data(this.link.data().concat(idLinks.map((d) => ({ ...d }) as unknown as LinkDatum)), (d) => `${stringify(d.source)}:${stringify(d.target)}`)
       .join('line');
 
     this.node = this.node
-      .data(nodes as Datum[], (d) => d.id)
+      .data(this.currentData.concat(nodesToAdd.map((d) => ({ ...d }) as Datum)), (d) => d.id)
       .join((enter) => enter.append('g')
         .call(this.addCircle.bind(this))
         .call(this.addListeners.bind(this)));
 
-    this.updateNodes();
+    // callback
+    this.onAppendCourses(nodesToAdd.map((d) => d.id));
+
+    this.updateNodesInternal();
   }
 
-  private deduplicate(nodesToAdd: DatumBase[], idLinks: StringLink[]) {
-    // copy existing nodes and links
-    const nodes = this.currentData.concat(
-      // append new nodes that are not already in the graph
-      nodesToAdd.filter((d) => !this.currentData.some((n) => n.id === d.id))
-        .map((d) => ({ ...d }) as Datum),
-    );
+  public getNewNodes<T extends NodeId>(nodes: T[]) {
+    return nodes.filter((d) => !this.currentData.some((n) => n.id === stringify(d)));
+  }
 
-    const links = this.link.data().concat(
-      idLinks.filter((d) => !this.link.data().some((l) => sameLink(l, d)))
-        .map((d) => ({ ...d }) as unknown as LinkDatum),
-    );
+  /** Return current nodes that are not present in the provided list */
+  public getNodesNotIn<T extends NodeId>(nodes: T[]) {
+    return this.currentData.filter((d) => !nodes.some((n) => stringify(n) === d.id));
+  }
 
-    return [nodes, links] as const;
+  private getNewLinks(links: StringLink[]) {
+    return links.filter((d) => !this.link.data().some((l) => sameLink(l, d)));
+  }
+
+  public getLinksWithoutNodes<T extends NodeId>(ids: T[]) {
+    return this.link.data().filter(({ source, target }) => !ids.some(
+      (id) => id === stringify(source) || id === stringify(target),
+    ));
   }
 
   /**
@@ -555,10 +583,12 @@ class Graph {
     this.renderHighlights();
   }
 
-  public removeNodes(ids: string[]) {
-    console.debug('removing nodes', ids.length);
+  public removeNodes(idsToRemove: string[]) {
+    console.debug('removing nodes', idsToRemove.length);
 
-    const nodes = this.currentData.filter((d) => !ids.some((id) => id === d.id));
+    if (idsToRemove.length === 0) return;
+
+    const nodes = this.getNodesNotIn(idsToRemove);
     this.node = this.node.data(nodes, (d) => d.id);
     this.node.exit()
       .transition('radius-t')
@@ -567,9 +597,7 @@ class Graph {
       .remove();
 
     // remove links that are no longer connected
-    const links = this.link.data().filter(({ source, target }) => !ids.some(
-      (id) => id === stringify(source) || id === stringify(target),
-    ));
+    const links = this.getLinksWithoutNodes(idsToRemove);
     this.link = this.link.data(links);
     this.link.exit()
       .transition('link-t')
@@ -577,7 +605,9 @@ class Graph {
       .attr('stroke-opacity', 0)
       .remove();
 
-    this.updateNodes();
+    this.onRemoveCourses(idsToRemove);
+
+    this.updateNodesInternal();
   }
 
   private getEmoji(d: Datum) {
@@ -594,15 +624,19 @@ class Graph {
   private static getRadius(d: CourseBrief) {
     return Graph.RADIUS * (d.meanClassSize ? Math.sqrt(d.meanClassSize) : Math.sqrt(20));
   }
+
+  public toDatum(id: string) {
+    const course = this.courses.find((c) => c.id === id);
+    if (!course) return null;
+    return { ...course, pca: this.positions[course.i] } as DatumBase;
+  }
+
+  public restart() {
+    this.state = 'init';
+  }
 }
 
 export type GraphState = Graph;
-
-function useFixedClasses(scheduleId?: string) {
-  const fixedSchedule = useAppSelector(Schedules.selectSchedule(scheduleId));
-  const fixedClasses = useMemo(() => (scheduleId ? fixedSchedule?.classes : []), [scheduleId, fixedSchedule]);
-  return fixedClasses;
-}
 
 function getLinkOpacity({ source, target }: LinkDatum) {
   return (cos(source.pca, target.pca) + 1) / 2;

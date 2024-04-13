@@ -53,7 +53,7 @@ export function CourseCardToggleButton({
     }
 
     return dispatch(Schedules.addCourses({
-      courses: [getClassId(course)],
+      courseIds: [getClassId(course)],
       scheduleId: chosenSchedule.id,
     }));
   }, [chosenSchedule, classYear, course, classCache, dispatch]);

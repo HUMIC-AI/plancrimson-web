@@ -4,15 +4,17 @@ import {
 } from 'firebase/firestore';
 import { Semester } from '@/src/lib';
 import { v4 as uuidv4 } from 'uuid';
+import { useMemo } from 'react';
 import Firestore from '../schema';
 import type { AppDispatch, RootState } from '../store';
 import type {
   ScheduleMap, ScheduleId, LocalSchedule, FirestoreSchedule, BaseSchedule,
 } from '../types';
+import { useAppSelector } from '../utils/hooks';
 
 const initialState: ScheduleMap = {};
 
-type CoursesPayload = { courses: string[]; scheduleId: string };
+type CoursesPayload = { courseIds: string[]; scheduleId: string };
 
 type PublicPayload = { scheduleId: string, public: boolean };
 
@@ -41,8 +43,8 @@ export const schedulesSlice = createSlice({
     },
 
     setCourses(state, action: PayloadAction<CoursesPayload>) {
-      const { scheduleId, courses } = action.payload;
-      state[scheduleId].classes = courses;
+      const { scheduleId, courseIds } = action.payload;
+      state[scheduleId].classes = courseIds;
     },
 
     deleteSchedule(state, action: PayloadAction<string>) {
@@ -105,7 +107,7 @@ export const removeCourses = (payload: { scheduleId: string, courseIds: string[]
     const existing = getState().schedules[scheduleId].classes || [];
     return dispatch(schedulesSlice.actions.setCourses({
       scheduleId,
-      courses: existing.filter((classId) => !courseIds.includes(classId)),
+      courseIds: existing.filter((classId) => !courseIds.includes(classId)),
     }));
   }
 
@@ -119,7 +121,7 @@ export const removeCourses = (payload: { scheduleId: string, courseIds: string[]
   } else {
     await updateDoc(snap.ref, { classes: deleteField() });
   }
-  return dispatch(schedulesSlice.actions.setCourses({ scheduleId, courses: classes }));
+  return dispatch(schedulesSlice.actions.setCourses({ scheduleId, courseIds: classes }));
 };
 
 export const renameSchedule = ({ scheduleId, title }: { scheduleId: string, title: string }) => async (dispatch: AppDispatch) => {
@@ -137,12 +139,12 @@ export const deleteSchedule = (id: string) => async (dispatch: AppDispatch) => {
   return dispatch(schedulesSlice.actions.deleteSchedule(id));
 };
 
-export const addCourses = ({ scheduleId, courses: coursesToAdd }: CoursesPayload) => async (dispatch: AppDispatch, getState: () => RootState) => {
+export const addCourses = ({ scheduleId, courseIds: coursesToAdd }: CoursesPayload) => async (dispatch: AppDispatch, getState: () => RootState) => {
   if (scheduleId === GRAPH_SCHEDULE) {
     const existing = getState().schedules[scheduleId].classes || [];
     return dispatch(schedulesSlice.actions.setCourses({
       scheduleId,
-      courses: [...existing, ...coursesToAdd],
+      courseIds: [...existing, ...coursesToAdd],
     }));
   }
 
@@ -156,7 +158,7 @@ export const addCourses = ({ scheduleId, courses: coursesToAdd }: CoursesPayload
     }
   });
   await updateDoc(snap.ref, { classes: courses });
-  return dispatch(schedulesSlice.actions.setCourses({ scheduleId, courses }));
+  return dispatch(schedulesSlice.actions.setCourses({ scheduleId, courseIds: courses }));
 };
 
 export const getDefaultSchedule = ({ season, year }: Semester, uid: string) => ({
@@ -175,3 +177,14 @@ export const toLocalSchedule = (schedule: FirestoreSchedule): LocalSchedule => (
 
 // a convenience function for getting the classes array from a schedule
 export const getClassIdsOfSchedule = (schedule?: { classes?: string[] }) => schedule?.classes ?? [];
+
+/**
+ * Get the classes of a given schedule.
+ * Returns undefined if scheduleId is provided but the data is still loading.
+ * If scheduleId is null, returns an empty array.
+ */
+export function useClasses(scheduleId: string | null) {
+  const fixedSchedule = useAppSelector(selectSchedule(scheduleId));
+  const fixedClasses = useMemo(() => (scheduleId ? fixedSchedule?.classes : []), [scheduleId, fixedSchedule]);
+  return fixedClasses;
+}

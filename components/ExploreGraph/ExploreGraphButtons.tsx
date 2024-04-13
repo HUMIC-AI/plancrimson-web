@@ -1,17 +1,15 @@
 import { Fragment, useState } from 'react';
-import { Schedules } from '../../src/features';
-import { useAppDispatch } from '../../src/utils/hooks';
 import { EMOJI_SCALES, GraphState } from './initGraph';
 import { CuteSwitch } from '../Utils/CuteSwitch';
-import { Subject, getSubjectColor } from '../../src/lib';
-import { GRAPH_SCHEDULE } from '../../src/features/schedules';
+import { Subject, choose, getSubjectColor } from '../../src/lib';
 import { classNames } from '../../src/utils/styles';
+import { useClasses } from '../../src/features/schedules';
 
 export function Buttons({
   graph, subjects,
 }: { graph: GraphState; subjects: Subject[]; }) {
-  const dispatch = useAppDispatch();
   const [flip, setToggleFlip] = useState(false);
+  const fixedClasses = useClasses(graph.fixedScheduleId);
 
   return (
     <div className={classNames(
@@ -46,8 +44,15 @@ export function Buttons({
         type="button"
         className="button bg-primary/80 text-secondary"
         onClick={() => {
-          graph.reset();
-          dispatch(Schedules.clearSchedule(GRAPH_SCHEDULE));
+          if (!fixedClasses) return;
+          if (fixedClasses.length > 0) {
+            graph.restart();
+            graph.removeNodes(graph.getNodesNotIn(fixedClasses).map((s) => s.id));
+          } else {
+            graph.removeNodes(graph.currentData.map((s) => s.id));
+            graph.restart();
+            graph.appendNodes([graph.toDatum(choose(graph.courses).id)!], []);
+          }
         }}
       >
         Reset

@@ -108,7 +108,7 @@ function ScheduleRow({ schedule, course }: { schedule: BaseSchedule; course: Ext
         alert('This course is not being offered in this semester!');
       } else {
         dispatch(Schedules.addCourses({
-          courses: [getClassId(course)],
+          courseIds: [getClassId(course)],
           scheduleId: schedule.id,
         }));
       }
