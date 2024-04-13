@@ -232,8 +232,7 @@ class Graph {
       .force('center', d3.forceCenter());
 
     this.linkGroup = this.svg.append('g')
-      .attr('stroke', 'rgb(var(--color-primary))')
-      .attr('stroke-opacity', 0.5)
+      .attr('stroke-opacity', 0.7)
       .attr('stroke-linecap', 'round');
 
     this.link = this.linkGroup.selectAll<SVGLineElement, LinkDatum>('line');
@@ -459,7 +458,8 @@ class Graph {
 
     this.link = this.link
       .data(this.link.data().concat(idLinks.map((d) => ({ ...d }) as unknown as LinkDatum)), (d) => `${stringify(d.source)}:${stringify(d.target)}`)
-      .join('line');
+      .join((enter) => enter.append('line')
+        .attr('stroke', this.flip ? 'rgb(var(--color-blue-primary))' : 'rgb(var(--color-gray-primary))'));
 
     this.node = this.node
       .data(this.currentData.concat(nodesToAdd.map((d) => ({ ...d }) as Datum)), (d) => d.id)
