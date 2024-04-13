@@ -39,7 +39,7 @@ export default function ClassesCloudPage({ children, withMeili, ...props }: Prop
         // should be visible if not logged in
         headerStyles={userId
           ? 'absolute inset-x-0 z-10 bg-gray-secondary/40 hover:bg-gray-secondary/80 text-primary transition-colors'
-          : 'bg-gray-secondary/90 text-primary'}
+          : 'bg-gray-secondary/80 text-primary'}
         verify="meili"
         containerStyles="bg-black text-primary flex min-h-screen flex-col"
       >

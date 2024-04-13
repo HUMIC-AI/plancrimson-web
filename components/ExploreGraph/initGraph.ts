@@ -62,7 +62,7 @@ const getColor = (d: DatumBase) => getSubjectColor(d.subject, {
   // opacity: (d.meanHours ? d.meanHours : 3) / 5,
   saturation: 0.7,
   lightness: 0.7,
-  opacity: 0.8,
+  opacity: 0.95,
 });
 const stringify = (d: string | { id: string }) => (typeof d === 'string' ? d : d.id);
 const sameLink = (l: LinkDatum | StringLink, d: LinkDatum | StringLink) => {
@@ -207,8 +207,8 @@ class Graph {
 
     this.linkGroup = this.svg.append('g')
       .attr('stroke', 'rgb(var(--color-primary))')
-      .attr('stroke-opacity', 0.6)
-      .attr('stroke-width', 1.5);
+      .attr('stroke-opacity', 0.5)
+      .attr('stroke-linecap', 'round');
 
     this.link = this.linkGroup.selectAll<SVGLineElement, LinkDatum>('line');
 
@@ -244,7 +244,7 @@ class Graph {
       });
 
     this.svg.call(this.zoom);
-    // this.svg.call(this.zoom.scaleTo, 2);
+    this.svg.call(this.zoom.transform, d3.zoomIdentity.scale(1.5));
   }
 
   get rating() {
@@ -371,6 +371,9 @@ class Graph {
     this.sim.force<d3.ForceLink<Datum, LinkDatum>>('link')!.links(this.link.data());
     this.sim.alpha(1).restart();
 
+    // update link properties after strings are populated
+    this.link.attr('stroke-width', (d) => 0.5 + Graph.RADIUS * getLinkOpacity(d));
+
     // callback
     this.setSubjects([...new Set(this.currentData.map((d) => d.subject))]);
 
@@ -382,6 +385,7 @@ class Graph {
         .classed('click-me', true)
         .attr('pointer-events', 'none')
         .attr('font-size', 0)
+        .attr('font-weight', 300)
         .attr('opacity', 1)
         .text('Click me!');
 
@@ -567,8 +571,8 @@ class Graph {
     return EMOJI_SCALES[this.ratingField][Math.max(0, Math.min(4, Math.floor(v)))];
   }
 
-  private static getLinkStrength({ source, target }: LinkDatum) {
-    return (Graph.MAX_LINK_STRENGTH * (cos(source.pca, target.pca) + 1)) / 2;
+  private static getLinkStrength(link: LinkDatum) {
+    return Graph.MAX_LINK_STRENGTH * getLinkOpacity(link);
   }
 
   private static getRadius(d: CourseBrief) {
@@ -582,4 +586,8 @@ function useFixedClasses(scheduleId?: string) {
   const fixedSchedule = useAppSelector(Schedules.selectSchedule(scheduleId));
   const fixedClasses = useMemo(() => (scheduleId ? fixedSchedule?.classes : []), [scheduleId, fixedSchedule]);
   return fixedClasses;
+}
+
+function getLinkOpacity({ source, target }: LinkDatum) {
+  return (cos(source.pca, target.pca) + 1) / 2;
 }

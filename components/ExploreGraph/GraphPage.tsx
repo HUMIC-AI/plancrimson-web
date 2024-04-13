@@ -61,7 +61,7 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
           <SidebarPanel side="left">
             <ExplorePageCourseSearchSection />
           </SidebarPanel>
-          <SidebarPanel ref={courseInfoRef} side="right">
+          <SidebarPanel ref={courseInfoRef} side="right" defaultOpen>
             <HoveredCourseInfo courseId={fixedClassId ?? hoveredClassId} />
           </SidebarPanel>
         </ChosenScheduleContext.Provider>

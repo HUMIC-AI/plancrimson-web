@@ -52,31 +52,6 @@ export function HoveredCourseInfo({ courseId }: {
           and see what happens!
         </p>
       ),
-      content: (
-        <div className="space-y-2 p-6">
-          <p>
-            The
-            {' '}
-            <strong>size</strong>
-            {' '}
-            of each dot indicates the typical number of students.
-          </p>
-          <p>
-            The
-            {' '}
-            <strong>emoji</strong>
-            {' '}
-            indicates the average rating.
-          </p>
-          <p>
-            The
-            {' '}
-            <strong>opacity</strong>
-            {' '}
-            indicates the workload. (More opaque means more work!)
-          </p>
-        </div>
-      ),
     };
 
     return modalProps;
