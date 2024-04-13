@@ -10,6 +10,7 @@ import { ExploreGraph } from './ExploreGraph';
 import { signInUser } from '../Layout/useSyncAuth';
 import { ScheduleSyncer } from '../Utils/ScheduleSyncer';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
+import { SidebarPanel } from './CollapsibleSidebar';
 
 export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
   const userId = Auth.useAuthProperty('uid');
@@ -41,7 +42,7 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
   return (
     <Layout
       title="Graph"
-      className="relative w-full flex-1 bg-secondary"
+      className="relative w-full flex-1 overflow-hidden bg-secondary"
       headerStyles="bg-secondary/50 text-primary absolute inset-x-0 z-10 hover:bg-secondary/80 transition-colors"
     >
       <WithMeili userId={userId}>
@@ -57,8 +58,12 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
               panelRef={courseInfoRef}
             />
           ) : <NoGraphMessage />}
-          <ExplorePageCourseSearchSection />
-          <HoveredCourseInfo ref={courseInfoRef} courseId={fixedClassId ?? hoveredClassId} />
+          <SidebarPanel side="left">
+            <ExplorePageCourseSearchSection />
+          </SidebarPanel>
+          <SidebarPanel ref={courseInfoRef} side="right">
+            <HoveredCourseInfo courseId={fixedClassId ?? hoveredClassId} />
+          </SidebarPanel>
         </ChosenScheduleContext.Provider>
       </WithMeili>
     </Layout>

@@ -16,6 +16,7 @@ import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 
 export type DatumBase = CourseBrief & {
   pca: number[];
+  catalog: string;
 };
 
 export type Datum = DatumBase & {
@@ -72,30 +73,36 @@ const sameLink = (l: LinkDatum | StringLink, d: LinkDatum | StringLink) => {
   return (lsrc === dsrc && ltrg === dtrg) || (lsrc === dtrg && ltrg === dsrc);
 };
 
-export type GraphHook = {
-  graph?: Graph;
-  ref: React.RefObject<SVGSVGElement>;
-  subjects: Subject[];
-};
-
 export function useUpdateGraph({
   courses, onFix, onHover, positions, scheduleId,
-}: InitGraphProps): GraphHook {
+}: InitGraphProps) {
   const dispatch = useAppDispatch();
   const fixedClasses = useFixedClasses(scheduleId);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [ratingType, setRatingType] = useState<RatingType>('meanRating');
 
   const ref = useRef<SVGSVGElement>(null);
+  const tooltipRef = useRef<HTMLParagraphElement>(null);
   const graphRef = useRef<Graph>();
 
   useEffect(() => {
     // only initialize graph once
-    if (graphRef.current || !positions || !courses || !ref.current || !fixedClasses) return;
+    if (graphRef.current || !positions || !courses || !ref.current || !tooltipRef.current || !fixedClasses) return;
 
     console.info('initializing graph');
 
-    graphRef.current = new Graph(ref.current, positions, courses, fixedClasses, onHover, onFix, setSubjects, ratingType, setRatingType);
+    graphRef.current = new Graph(
+      ref.current,
+      tooltipRef.current,
+      positions,
+      courses,
+      fixedClasses,
+      onHover,
+      onFix,
+      setSubjects,
+      ratingType,
+      setRatingType,
+    );
 
     dispatch(Schedules.createLocal({
       id: GRAPH_SCHEDULE,
@@ -127,6 +134,7 @@ export function useUpdateGraph({
   return {
     graph: graphRef.current,
     ref,
+    tooltipRef,
     subjects,
   };
 }
@@ -144,6 +152,8 @@ class Graph {
 
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
 
+  private tooltip: d3.Selection<HTMLParagraphElement, unknown, null, undefined>;
+
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
 
   private fixedId: string | null = null;
@@ -158,7 +168,7 @@ class Graph {
 
   private link: d3.Selection<SVGLineElement, LinkDatum, SVGGElement, unknown>;
 
-  private static readonly RADIUS = 8;
+  private static readonly RADIUS = 5;
 
   private static readonly T_DURATION = 150;
 
@@ -172,6 +182,7 @@ class Graph {
 
   constructor(
     svgDom: SVGSVGElement,
+    tooltipDom: HTMLParagraphElement,
     public readonly positions: number[][],
     public readonly courses: CourseBrief[],
     private readonly fixedClasses: string[],
@@ -182,6 +193,7 @@ class Graph {
     private setRatingField: (ratingField: RatingType) => void,
   ) {
     this.svg = d3.select(svgDom);
+    this.tooltip = d3.select(tooltipDom);
 
     // these get initialized later in the component by the user
     this.sim = d3
@@ -225,13 +237,14 @@ class Graph {
 
     this.zoom = d3.zoom<SVGSVGElement, unknown>()
       .extent([[0, 0], [width, height]])
-      .scaleExtent([1, 8])
+      .scaleExtent([1, 4])
       .on('zoom', (event) => {
         this.linkGroup.attr('transform', event.transform);
         this.nodeGroup.attr('transform', event.transform);
       });
 
     this.svg.call(this.zoom);
+    // this.svg.call(this.zoom.scaleTo, 2);
   }
 
   get rating() {
@@ -311,7 +324,7 @@ class Graph {
         pca: this.positions[i],
         x: d.x + Math.random() * Graph.RADIUS * 4 - Graph.RADIUS * 2,
         y: d.y + Math.random() * Graph.RADIUS * 4 - Graph.RADIUS * 2,
-      }));
+      }) as Datum);
 
     const links = nodes.map((t) => ({ source: d.id, target: t.id }));
     this.appendNodes(nodes, links);
@@ -431,6 +444,9 @@ class Graph {
     return [nodes, links] as const;
   }
 
+  /**
+   * Add event listeners to each node
+   */
   private addListeners(n: CourseGroupSelection) {
     // drag nodes around
     const drag = d3.drag<SVGGElement, Datum>()
@@ -443,6 +459,8 @@ class Graph {
       .on('drag', (event) => {
         event.subject.fx = event.x;
         event.subject.fy = event.y;
+        this.tooltip.style('left', `${event.sourceEvent.clientX}px`)
+          .style('top', `${event.sourceEvent.clientY}px`);
       })
       .on('end', (event) => {
         if (!event.active) this.sim.alphaTarget(0);
@@ -475,12 +493,24 @@ class Graph {
           graph.state = 'ready';
         }
 
+        console.debug('mousing over');
+
         Graph.transitionRadius(this, Graph.getRadius(d) + Graph.RADIUS * 2);
         graph.onHover(d.id);
+        graph.tooltip.classed('hidden', false)
+          .text(d.subject + d.catalog)
+          .style('left', `${event.clientX}px`)
+          .style('top', `${event.clientY}px`);
+      })
+      .on('mousemove', (event) => {
+        graph.tooltip
+          .style('left', `${event.clientX}px`)
+          .style('top', `${event.clientY}px`);
       })
       .on('mouseout', function (event, d) {
         Graph.transitionRadius(this, Graph.getRadius(d));
         graph.onHover(null);
+        graph.tooltip.classed('hidden', true);
       })
       .on('click', (event, d) => {
         event.preventDefault();

@@ -13,7 +13,7 @@ export function Buttons({
   const [flip, setToggleFlip] = useState(false);
 
   return (
-    <div className="absolute right-full top-6 mr-2 flex flex-col items-end justify-center space-y-2">
+    <div className="absolute right-full top-20 mr-4 flex flex-col items-end justify-center space-y-2">
       <div className="rounded-lg border border-primary bg-secondary/80 p-1.5">
         <button
           type="button"

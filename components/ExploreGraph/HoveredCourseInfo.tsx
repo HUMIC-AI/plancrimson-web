@@ -1,6 +1,5 @@
 import {
-  Ref,
-  forwardRef, useEffect, useMemo, useState,
+  useEffect, useMemo, useState,
 } from 'react';
 import { ExtendedClass } from '../../src/lib';
 import { ClassCache } from '../../src/features';
@@ -9,9 +8,9 @@ import { InfoCard, InfoCardProps } from '../Modals/InfoCard';
 import { getCourseModalContent } from '../Modals/CourseCardModal';
 import { useMeiliClient } from '../../src/context/meili';
 
-export const HoveredCourseInfo = forwardRef(({ courseId }: {
+export function HoveredCourseInfo({ courseId }: {
   courseId: string | null;
-}, ref: Ref<HTMLDivElement>) => {
+}) {
   const dispatch = useAppDispatch();
   const { client } = useMeiliClient();
   const [course, setCourse] = useState<ExtendedClass>();
@@ -83,11 +82,5 @@ export const HoveredCourseInfo = forwardRef(({ courseId }: {
     return modalProps;
   }, [course]);
 
-  return (
-    <div className="absolute bottom-0 right-0 top-16 w-full max-w-xs md:right-4 md:max-w-sm" ref={ref}>
-      <div className="absolute inset-0 overflow-auto pb-6">
-        <InfoCard isDialog={false} noExit {...props} />
-      </div>
-    </div>
-  );
-});
+  return <InfoCard isDialog={false} noExit {...props} />;
+}

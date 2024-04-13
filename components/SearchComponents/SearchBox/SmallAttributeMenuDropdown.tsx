@@ -23,7 +23,7 @@ export function SmallAttributeMenuDropdown() {
               unmount={false}
               className={classNames(
                 'absolute z-20 mt-2 right-0 w-48 p-2 dark-gradient rounded-md',
-                'flex flex-col space-y-2 text-white',
+                'space-y-2 text-white',
               )}
             >
               {meiliAttributes.filterableAttributes.map((attr) => (
@@ -36,10 +36,10 @@ export function SmallAttributeMenuDropdown() {
                   />
                 </Menu.Item>
               ))}
-              <span className="p-1 text-xs text-white">
+              <p className="p-1 text-xs text-white">
                 If filters are not showing up, clear your search and try
                 again.
-              </span>
+              </p>
             </Menu.Items>
           </>
         )}

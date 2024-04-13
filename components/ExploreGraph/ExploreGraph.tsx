@@ -26,7 +26,9 @@ export function ExploreGraph({
   const prevIds = useRef<string[]>();
 
   // create the graph
-  const { graph, ref, subjects } = useUpdateGraph({
+  const {
+    graph, ref, tooltipRef, subjects,
+  } = useUpdateGraph({
     positions, courses, onHover, onFix, scheduleId,
   });
 
@@ -41,7 +43,7 @@ export function ExploreGraph({
       return {
         ...courseBrief,
         pca: positions[courseBrief.i],
-      };
+      } as DatumBase;
     });
 
     graph.appendNodes(nodes, []);
@@ -64,6 +66,11 @@ export function ExploreGraph({
         viewBox={`${-width / 2} ${-height / 2} ${width} ${height}`}
         className="h-full w-full"
         preserveAspectRatio="xMidYMid meet"
+      />
+      {/* tooltip */}
+      <p
+        ref={tooltipRef}
+        className="secondary pointer-events-none absolute hidden -translate-x-1/2 translate-y-8 rounded px-1 text-sm"
       />
       {/* use a portal here since buttons depend on graph state but need to be rendered elsewhere */}
       {panelRef.current && graph && createPortal(<Buttons
