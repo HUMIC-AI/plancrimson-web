@@ -25,7 +25,7 @@ export function ExplorePageCourseSearchSection() {
             <SearchStateProvider oneCol defaultState={defaultState} ignoreUrl>
               <AuthRequiredInstantSearchProvider indexName="courses" hitsPerPage={4}>
                 <SearchBox scheduleChooser={false} showSmallAttributeMenu />
-                <div className="rounded border border-primary bg-secondary/80 p-2">
+                <div className="rounded-xl border border-primary bg-secondary/80 p-2">
                   <SortingAndRefinementsGrid indexName="courses" />
                 </div>
                 <div className="relative flex-1">

@@ -7,7 +7,7 @@ import { Menu } from '@headlessui/react';
 import { Term, semesterToTerm, termToSemester } from '@/src/lib';
 import { useCallback, useState } from 'react';
 import {
-  FaCog, FaEdit, FaEyeSlash, FaGlobe,
+  FaCog, FaEdit, FaEyeSlash, FaGlobe, FaShareAlt,
 } from 'react-icons/fa';
 import FadeTransition from '@/components/Utils/FadeTransition';
 import { ScheduleIdOrSemester } from '@/src/types';
@@ -104,6 +104,16 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
               <HideScheduleButton s={s} />
               {semesterFormat !== 'sample' && schedule && (
               <>
+                <MenuButton
+                  href={{
+                    pathname: '/explore/[scheduleId]',
+                    query: {
+                      scheduleId: schedule.id,
+                    },
+                  }}
+                  Icon={FaShareAlt}
+                  title="Explore"
+                />
                 <DeleteScheduleButton scheduleId={schedule.id} />
                 <DuplicateScheduleButton scheduleId={schedule.id} />
                 <ClearScheduleButton scheduleId={schedule.id} />

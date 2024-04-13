@@ -11,7 +11,7 @@ import {
   ClassCache, Planner, Profile, Schedules,
 } from '@/src/features';
 import { getAnalytics, logEvent } from 'firebase/analytics';
-import { getClassIdsOfSchedule } from '@/src/features/schedules';
+import { GRAPH_SCHEDULE, getClassIdsOfSchedule } from '@/src/features/schedules';
 
 export function CourseCardToggleButton({
   chosenScheduleId, course,
@@ -27,28 +27,30 @@ export function CourseCardToggleButton({
   const addClass = useCallback(() => {
     if (!chosenSchedule || !classYear || !course) return;
 
-    const viability = checkViable({
-      cls: course,
-      schedule: chosenSchedule,
-      classCache,
-      classYear,
-    });
+    if (chosenSchedule.id !== GRAPH_SCHEDULE) {
+      const viability = checkViable({
+        cls: course,
+        schedule: chosenSchedule,
+        classCache,
+        classYear,
+      });
 
-    if (viability.viability === 'No') {
-      alert(viability.reason);
-      return;
+      if (viability.viability === 'No') {
+        alert(viability.reason);
+        return;
+      }
+
+      if (viability.viability === 'Unlikely') {
+        const yn = confirm(`${viability.reason} Continue anyways?`);
+        if (!yn) return;
+      }
+
+      logEvent(getAnalytics(), 'add_class', {
+        subject: course.SUBJECT,
+        catalogNumber: course.CATALOG_NBR,
+        term: semesterToTerm(chosenSchedule),
+      });
     }
-
-    if (viability.viability === 'Unlikely') {
-      const yn = confirm(`${viability.reason} Continue anyways?`);
-      if (!yn) return;
-    }
-
-    logEvent(getAnalytics(), 'add_class', {
-      subject: course.SUBJECT,
-      catalogNumber: course.CATALOG_NBR,
-      term: semesterToTerm(chosenSchedule),
-    });
 
     return dispatch(Schedules.addCourses({
       courses: [getClassId(course)],

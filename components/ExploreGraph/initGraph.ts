@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import {
-  useEffect, useRef, useState,
+  useEffect, useMemo, useRef, useState,
 } from 'react';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { CourseBrief } from '../ClassesCloudPage/useData';
@@ -10,10 +10,9 @@ import {
   cos,
   getSubjectColor, getUpcomingSemester,
 } from '../../src/lib';
-import { useMeiliClient } from '../../src/context/meili';
-import { useModal } from '../../src/context/modal';
-import { useAppDispatch } from '../../src/utils/hooks';
+import { useAppDispatch, useAppSelector } from '../../src/utils/hooks';
 import { Schedules } from '../../src/features';
+import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 
 export type DatumBase = CourseBrief & {
   pca: number[];
@@ -38,6 +37,7 @@ export type InitGraphProps = {
   courses: CourseBrief[] | null;
   onHover: (id: string | null) => void;
   onFix: (id: string | null) => void;
+  scheduleId?: string;
 };
 
 export type InitGraphPropsRequired = InitGraphProps & {
@@ -45,15 +45,15 @@ export type InitGraphPropsRequired = InitGraphProps & {
   courses: CourseBrief[];
 };
 
-export type CourseGroup = d3.Selection<SVGGElement, Datum, SVGGElement, unknown>;
+export type CourseGroupSelection = d3.Selection<SVGGElement, Datum, SVGGElement, unknown>;
 
 export type RatingType = 'meanRating' | 'meanHours';
 
 // a scale of five emojis from least to most happy
 export const EMOJI_SCALES: Record<RatingType, [string, string, string, string, string]> = {
-  meanRating: ['😢', '😐', '😊', '😁', '🤩'],
+  meanRating: ['🫣', '😬', '😊', '😍', '🤩'],
   // meanHours: ['😌', '😐', '😰', '😱', '💀'],
-  meanHours: ['🥱', '😎', '😐', '😰', '💀'],
+  meanHours: ['🥱', '😎', '🧐', '😰', '💀'],
 };
 
 const getColor = (d: DatumBase) => getSubjectColor(d.subject, {
@@ -79,12 +79,10 @@ export type GraphHook = {
 };
 
 export function useUpdateGraph({
-  courses, onFix, onHover, positions,
+  courses, onFix, onHover, positions, scheduleId,
 }: InitGraphProps): GraphHook {
   const dispatch = useAppDispatch();
-  const { client } = useMeiliClient();
-  const { showCourse } = useModal();
-
+  const fixedClasses = useFixedClasses(scheduleId);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [ratingType, setRatingType] = useState<RatingType>('meanRating');
 
@@ -93,14 +91,14 @@ export function useUpdateGraph({
 
   useEffect(() => {
     // only initialize graph once
-    if (graphRef.current || !positions || !courses || !ref.current) return;
+    if (graphRef.current || !positions || !courses || !ref.current || !fixedClasses) return;
 
     console.info('initializing graph');
 
-    graphRef.current = new Graph(ref.current, positions, courses, onHover, onFix, setSubjects, ratingType, setRatingType);
+    graphRef.current = new Graph(ref.current, positions, courses, fixedClasses, onHover, onFix, setSubjects, ratingType, setRatingType);
 
     dispatch(Schedules.createLocal({
-      id: 'GRAPH_SCHEDULE',
+      id: GRAPH_SCHEDULE,
       title: 'Graph Schedule',
       createdAt: new Date().toISOString(),
       ownerUid: 'GRAPH_USER',
@@ -112,11 +110,11 @@ export function useUpdateGraph({
     // add initial course
     setTimeout(() => {
       dispatch(Schedules.addCourses({
-        scheduleId: 'GRAPH_SCHEDULE',
-        courses: [choose(courses).id],
+        scheduleId: GRAPH_SCHEDULE,
+        courses: fixedClasses.length > 0 ? fixedClasses : [choose(courses).id],
       }));
     }, 500);
-  }, [dispatch, client, showCourse, positions, courses, onHover, onFix, setSubjects, ratingType]);
+  }, [courses, dispatch, fixedClasses, onFix, onHover, positions, ratingType]);
 
   // stop simulation when unmounting
   useEffect(() => () => {
@@ -142,6 +140,8 @@ class Graph {
 
   public flip = false;
 
+  private state: 'init' | 'wait' | 'ready' = 'init';
+
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
 
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
@@ -152,13 +152,13 @@ class Graph {
 
   private nodeGroup: d3.Selection<SVGGElement, unknown, null, unknown>;
 
-  private node: d3.Selection<SVGGElement, Datum, SVGGElement, unknown>;
+  private node: CourseGroupSelection;
 
   private linkGroup: d3.Selection<SVGGElement, unknown, null, unknown>;
 
   private link: d3.Selection<SVGLineElement, LinkDatum, SVGGElement, unknown>;
 
-  private static readonly RADIUS = 10;
+  private static readonly RADIUS = 8;
 
   private static readonly T_DURATION = 150;
 
@@ -174,6 +174,7 @@ class Graph {
     svgDom: SVGSVGElement,
     public readonly positions: number[][],
     public readonly courses: CourseBrief[],
+    private readonly fixedClasses: string[],
     private onHover: (id: string | null) => void,
     private onFix: (id: string | null) => void,
     private setSubjects: (subjects: Subject[]) => void,
@@ -188,8 +189,8 @@ class Graph {
       .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(Graph.getLinkStrength))
       .force('charge', d3.forceManyBody().strength(Graph.CHARGE_STRENGTH))
       .force('collide', d3.forceCollide<Datum>((d) => Graph.getRadius(d) + Graph.RADIUS * 2).iterations(2))
-      // .force('x', d3.forceX().strength(Graph.CENTER_STRENGTH))
-      // .force('y', d3.forceY().strength(Graph.CENTER_STRENGTH))
+      .force('x', d3.forceX().strength(Graph.CENTER_STRENGTH))
+      .force('y', d3.forceY().strength(Graph.CENTER_STRENGTH))
       .force('center', d3.forceCenter());
 
     this.linkGroup = this.svg.append('g')
@@ -237,7 +238,7 @@ class Graph {
     return this.ratingField;
   }
 
-  private addCircle(enter: CourseGroup) {
+  private addCircle(enter: CourseGroupSelection) {
     enter.append('circle')
       .attr('fill', getColor)
       .attr('r', 0)
@@ -276,7 +277,7 @@ class Graph {
     this.highlightSubject(null);
     this.setFixedId(null);
     this.setSubjects([]);
-    this.removeNodes(this.currentData.map((d) => d.id));
+    this.removeNodes(this.currentData.map((d) => d.id).filter((id) => !this.fixedClasses.includes(id)));
   }
 
   public resetZoom() {
@@ -331,6 +332,9 @@ class Graph {
     return 0;
   }
 
+  /**
+   * Transition the radius of nodes in the selection
+   */
   private static transitionRadius(g: SVGGElement, radius: number, duration = Graph.T_DURATION): readonly [CircleTransition, TextTransition] {
     const group = d3.select<SVGGElement, Datum>(g);
 
@@ -357,7 +361,7 @@ class Graph {
     // callback
     this.setSubjects([...new Set(this.currentData.map((d) => d.subject))]);
 
-    if (this.node.size() === 1) {
+    if (this.state === 'init') {
       // add a "click me" label
       console.debug('adding click me');
       this.node.selectChildren('text.click-me').remove();
@@ -368,8 +372,19 @@ class Graph {
         .attr('opacity', 1)
         .text('Click me!');
 
-      this.pulse(this.node);
+      const pulse = this.pulse.bind(this);
+
+      this.node.each(function (d) {
+        pulse(this, Graph.getRadius(d), true);
+      });
+
+      this.state = 'wait';
     }
+  }
+
+  private pulse(c: SVGGElement, radius: number, grow = true) {
+    const [circleTransition] = Graph.transitionRadius(c, radius + (grow ? Graph.RADIUS : 0), Graph.PULSE_DURATION);
+    circleTransition.on('end', () => this.pulse(c, radius, !grow));
   }
 
   get currentData() {
@@ -384,6 +399,8 @@ class Graph {
     console.debug('updating graph', nodesToAdd.length, idLinks.length);
 
     const [nodes, links] = this.deduplicate(nodesToAdd, idLinks);
+
+    if (nodes.length === 0 && links.length === 0) return;
 
     this.link = this.link
       .data(links, (d) => `${stringify(d.source)}:${stringify(d.target)}`)
@@ -414,7 +431,7 @@ class Graph {
     return [nodes, links] as const;
   }
 
-  private addListeners(n: CourseGroup) {
+  private addListeners(n: CourseGroupSelection) {
     // drag nodes around
     const drag = d3.drag<SVGGElement, Datum>()
       .on('start', (event) => {
@@ -440,13 +457,26 @@ class Graph {
       .call(drag)
       // expand node on hover
       .on('mouseover', function (event, d) {
+        // if we're waiting for user to interact and they do,
+        // remove the "click me" label and reset radii
+        if (graph.state === 'wait') {
+          graph.node.selectChildren('text.click-me')
+            .transition()
+            .duration(Graph.PULSE_DURATION)
+            .attr('opacity', 0)
+            .remove();
+
+          graph.node.each(function (g) {
+            if (g.id !== d.id) {
+              Graph.transitionRadius(this, Graph.getRadius(g));
+            }
+          });
+
+          graph.state = 'ready';
+        }
+
         Graph.transitionRadius(this, Graph.getRadius(d) + Graph.RADIUS * 2);
         graph.onHover(d.id);
-        d3.select(this).selectChildren('text.click-me')
-          .transition()
-          .duration(Graph.PULSE_DURATION)
-          .attr('opacity', 0)
-          .remove();
       })
       .on('mouseout', function (event, d) {
         Graph.transitionRadius(this, Graph.getRadius(d));
@@ -507,11 +537,6 @@ class Graph {
     return EMOJI_SCALES[this.ratingField][Math.max(0, Math.min(4, Math.floor(v)))];
   }
 
-  private pulse(c: CourseGroup, grow = true) {
-    const [circleTransition] = Graph.transitionRadius(c.node()!, Graph.getRadius(c.datum()) + (grow ? Graph.RADIUS : 0), Graph.PULSE_DURATION);
-    circleTransition.on('end', () => this.pulse(c, !grow));
-  }
-
   private static getLinkStrength({ source, target }: LinkDatum) {
     return (Graph.MAX_LINK_STRENGTH * (cos(source.pca, target.pca) + 1)) / 2;
   }
@@ -522,3 +547,9 @@ class Graph {
 }
 
 export type GraphState = Graph;
+
+function useFixedClasses(scheduleId?: string) {
+  const fixedSchedule = useAppSelector(Schedules.selectSchedule(scheduleId));
+  const fixedClasses = useMemo(() => (scheduleId ? fixedSchedule?.classes : []), [scheduleId, fixedSchedule]);
+  return fixedClasses;
+}

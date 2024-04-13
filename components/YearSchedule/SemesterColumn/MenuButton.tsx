@@ -1,13 +1,14 @@
 import { Menu } from '@headlessui/react';
 import Link from 'next/link';
 import { PropsWithChildren } from 'react';
+import type { UrlObject } from 'url';
 
 type WrapperProps = {
   onClick: () => void;
   href?: never;
 } | {
   onClick?: never;
-  href: string;
+  href: string | UrlObject;
 };
 
 type Props = ({

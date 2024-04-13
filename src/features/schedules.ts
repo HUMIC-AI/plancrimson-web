@@ -22,12 +22,14 @@ function unionSchedulesSlice(state: any, action: PayloadAction<LocalSchedule[]>)
   });
 }
 
+export const GRAPH_SCHEDULE = 'GRAPH_SCHEDULE' as const;
+
 export const schedulesSlice = createSlice({
   name: 'schedules',
   initialState,
   reducers: {
     overwriteSchedules(state, action: PayloadAction<LocalSchedule[]>) {
-      Object.keys(state).forEach((key) => delete state[key]);
+      Object.keys(state).forEach((key) => key !== GRAPH_SCHEDULE && delete state[key]);
       unionSchedulesSlice(state, action);
     },
 
@@ -99,7 +101,7 @@ export const createDefaultSchedule = ({ season, year }: Semester, uid: string) =
 
 export const removeCourses = (payload: { scheduleId: string, courseIds: string[] }) => async (dispatch: AppDispatch, getState: () => RootState) => {
   const { scheduleId, courseIds } = payload;
-  if (scheduleId === 'GRAPH_SCHEDULE') {
+  if (scheduleId === GRAPH_SCHEDULE) {
     const existing = getState().schedules[scheduleId].classes || [];
     return dispatch(schedulesSlice.actions.setCourses({
       scheduleId,
@@ -136,7 +138,7 @@ export const deleteSchedule = (id: string) => async (dispatch: AppDispatch) => {
 };
 
 export const addCourses = ({ scheduleId, courses: coursesToAdd }: CoursesPayload) => async (dispatch: AppDispatch, getState: () => RootState) => {
-  if (scheduleId === 'GRAPH_SCHEDULE') {
+  if (scheduleId === GRAPH_SCHEDULE) {
     const existing = getState().schedules[scheduleId].classes || [];
     return dispatch(schedulesSlice.actions.setCourses({
       scheduleId,

@@ -8,8 +8,10 @@ import { HoveredCourseInfo } from './HoveredCourseInfo';
 import { ExplorePageCourseSearchSection } from './ExplorePageCourseSearchSection';
 import { ExploreGraph } from './ExploreGraph';
 import { signInUser } from '../Layout/useSyncAuth';
+import { ScheduleSyncer } from '../Utils/ScheduleSyncer';
+import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 
-export function GraphPage() {
+export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
   const userId = Auth.useAuthProperty('uid');
   const [hoveredClassId, setHoveredClassId] = useState<string | null>(null);
   const [fixedClassId, setFixedClassId] = useState<string | null>(null);
@@ -17,7 +19,7 @@ export function GraphPage() {
 
   const chosenScheduleContext = useMemo((): ChosenScheduleContextType => ({
     chooseSchedule: () => null,
-    chosenScheduleId: 'GRAPH_SCHEDULE',
+    chosenScheduleId: GRAPH_SCHEDULE,
   }), []);
 
   const isLg = useBreakpoint(breakpoints.lg);
@@ -43,10 +45,13 @@ export function GraphPage() {
       headerStyles="bg-secondary/50 text-primary absolute inset-x-0 z-10 hover:bg-secondary/80 transition-colors"
     >
       <WithMeili userId={userId}>
+        {userId && <ScheduleSyncer userId={userId} scheduleId={scheduleId} />}
+
         <ChosenScheduleContext.Provider value={chosenScheduleContext}>
           {/* three main components: the background graph, the left search bar, the right course info */}
           {userId ? (
             <ExploreGraph
+              scheduleId={scheduleId}
               onHover={(id) => id && setHoveredClassId(id)}
               onFix={setFixedClassId}
               panelRef={courseInfoRef}

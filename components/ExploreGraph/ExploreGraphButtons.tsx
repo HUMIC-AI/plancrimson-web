@@ -4,6 +4,7 @@ import { useAppDispatch } from '../../src/utils/hooks';
 import { EMOJI_SCALES, GraphState } from './initGraph';
 import { CuteSwitch } from '../Utils/CuteSwitch';
 import { Subject, getSubjectColor } from '../../src/lib';
+import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 
 export function Buttons({
   graph, subjects,
@@ -36,7 +37,7 @@ export function Buttons({
         className="button bg-primary/80 text-secondary"
         onClick={() => {
           graph.reset();
-          dispatch(Schedules.clearSchedule('GRAPH_SCHEDULE'));
+          dispatch(Schedules.clearSchedule(GRAPH_SCHEDULE));
         }}
       >
         Reset
