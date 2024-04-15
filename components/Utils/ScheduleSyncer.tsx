@@ -17,9 +17,8 @@ import { getAllClassIds } from '@/src/utils/schedules';
  * Load these schedules into the Redux store and also load all courses from all schedules into the Redux "class cache".
  * Expects access to the MeiliSearch client through React Context.
  */
-export function ScheduleSyncer({ userId, scheduleId }: {
+export function ScheduleSyncer({ userId }: {
   userId: string;
-  scheduleId?: string;
 }) {
   const dispatch = useAppDispatch();
   const { client } = useMeiliClient();

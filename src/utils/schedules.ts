@@ -2,7 +2,7 @@ import {
   onSnapshot, query, where,
 } from 'firebase/firestore';
 import {
-  useEffect, useState,
+  useEffect, useMemo, useState,
 } from 'react';
 import {
   compareSemesters, Semester,
@@ -123,4 +123,16 @@ export function useSharedCourses(friendIds: string[] | undefined, courseId?: str
   }, [client, courseId, dispatch, friendIds]);
 
   return schedules;
+}
+
+
+/**
+ * Get the classes of a given schedule.
+ * Returns undefined if scheduleId is provided but the data is still loading.
+ * If scheduleId is null, returns an empty array.
+ */
+export function useClasses(scheduleId: string | null) {
+  const { schedule } = useSchedule(scheduleId);
+  const fixedClasses = useMemo(() => (scheduleId ? schedule?.classes : []), [schedule?.classes, scheduleId]);
+  return fixedClasses;
 }

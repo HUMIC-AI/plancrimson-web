@@ -4,13 +4,11 @@ import {
 } from 'firebase/firestore';
 import { Semester } from '@/src/lib';
 import { v4 as uuidv4 } from 'uuid';
-import { useMemo } from 'react';
 import Firestore from '../schema';
 import type { AppDispatch, RootState } from '../store';
 import type {
   ScheduleMap, ScheduleId, LocalSchedule, FirestoreSchedule, BaseSchedule,
 } from '../types';
-import { useAppSelector } from '../utils/hooks';
 
 const initialState: ScheduleMap = {};
 
@@ -179,14 +177,3 @@ export const toLocalSchedule = (schedule: FirestoreSchedule): LocalSchedule => (
 
 // a convenience function for getting the classes array from a schedule
 export const getClassIdsOfSchedule = (schedule?: { classes?: string[] }) => schedule?.classes ?? [];
-
-/**
- * Get the classes of a given schedule.
- * Returns undefined if scheduleId is provided but the data is still loading.
- * If scheduleId is null, returns an empty array.
- */
-export function useClasses(scheduleId: string | null) {
-  const fixedSchedule = useAppSelector(selectSchedule(scheduleId));
-  const fixedClasses = useMemo(() => (scheduleId ? fixedSchedule?.classes : []), [scheduleId, fixedSchedule]);
-  return fixedClasses;
-}

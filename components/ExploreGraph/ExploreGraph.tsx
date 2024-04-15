@@ -12,7 +12,7 @@ export function ExploreGraph({
 }: {
   setHover: (id: string | null) => void;
   panelRef: React.RefObject<HTMLDivElement>;
-  scheduleId?: string;
+  scheduleId: string;
 }) {
   // create the graph
   const {

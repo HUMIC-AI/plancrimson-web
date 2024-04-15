@@ -3,7 +3,7 @@ import { EMOJI_SCALES, GraphState } from './initGraph';
 import { CuteSwitch } from '../Utils/CuteSwitch';
 import { Subject, choose, getSubjectColor } from '../../src/lib';
 import { classNames } from '../../src/utils/styles';
-import { useClasses } from '../../src/features/schedules';
+import { useClasses } from '../../src/utils/schedules';
 
 export function Buttons({
   graph, subjects,

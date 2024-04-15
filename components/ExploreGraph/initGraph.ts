@@ -12,7 +12,8 @@ import {
 } from '../../src/lib';
 import { useAppDispatch, useAppSelector } from '../../src/utils/hooks';
 import { Schedules } from '../../src/features';
-import { GRAPH_SCHEDULE, useClasses } from '../../src/features/schedules';
+import { useClasses } from '../../src/utils/schedules';
+import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 
 export type DatumBase = CourseBrief & {
   pca: number[];
@@ -37,7 +38,7 @@ export type Simulation = d3.Simulation<Datum, LinkDatum>;
 
 export type InitGraphProps = {
   setHover: (id: string | null) => void;
-  scheduleId?: string | null;
+  scheduleId: string | null;
 };
 
 export type InitGraphPropsRequired = InitGraphProps & {
@@ -77,7 +78,7 @@ const sameLink = (l: LinkDatum | StringLink, d: LinkDatum | StringLink) => {
  * GRAPH_SCHEDULE and the graph's internal nodes and links.
  */
 export function useUpdateGraph({
-  setHover, scheduleId = null,
+  setHover, scheduleId,
 }: InitGraphProps) {
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
 
@@ -536,6 +537,10 @@ class Graph {
           // should also end the pulsing animation
           graph.node.each(function (g) {
             if (g.id !== d.id) {
+              // interrupt current transitions
+              const group = d3.select(this);
+              group.selectChildren('circle').interrupt('radius-t');
+              group.selectChildren('text').interrupt('radius-t');
               Graph.transitionRadius(this, Graph.getRadius(g));
             }
           });
