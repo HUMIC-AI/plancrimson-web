@@ -14,6 +14,8 @@ import { useAppDispatch, useAppSelector } from '../../src/utils/hooks';
 import { Schedules } from '../../src/features';
 import { useClasses } from '../../src/utils/schedules';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
+import { useModal } from '../../src/context/modal';
+import { EMOJI_SCALES, GraphInstructions, RatingType } from './HoveredCourseInfo';
 
 export type DatumBase = CourseBrief & {
   pca: number[];
@@ -48,15 +50,6 @@ export type InitGraphPropsRequired = InitGraphProps & {
 
 export type CourseGroupSelection = d3.Selection<SVGGElement, Datum, SVGGElement, unknown>;
 
-export type RatingType = 'meanRating' | 'meanHours';
-
-// a scale of five emojis from least to most happy
-export const EMOJI_SCALES: Record<RatingType, [string, string, string, string, string]> = {
-  meanRating: ['🫣', '😬', '😊', '😍', '🤩'],
-  // meanHours: ['😌', '😐', '😰', '😱', '💀'],
-  meanHours: ['🥱', '😎', '🧐', '😰', '💀'],
-};
-
 const getColor = (d: DatumBase) => getSubjectColor(d.subject, {
   // saturation: (d.meanRating ? d.meanRating : 3) / 5,
   // opacity: (d.meanHours ? d.meanHours : 3) / 5,
@@ -81,6 +74,7 @@ export function useUpdateGraph({
   setHover, scheduleId,
 }: InitGraphProps) {
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
+  const { showContents, setOpen } = useModal();
 
   const dispatch = useAppDispatch();
   const graphSchedule = useAppSelector(Schedules.selectSchedule(GRAPH_SCHEDULE));
@@ -99,6 +93,15 @@ export function useUpdateGraph({
 
     console.info('initializing graph');
 
+    const showInstructions = () => showContents({
+      title: 'Course Explorer',
+      content: <GraphInstructions direction="row" />,
+      close: () => {
+        setOpen(false);
+        graphRef.current!.setState('ready');
+      },
+    });
+
     graphRef.current = new Graph(
       ref.current,
       tooltipRef.current,
@@ -109,6 +112,7 @@ export function useUpdateGraph({
       setSubjects,
       ratingType,
       setRatingType,
+      showInstructions,
       (ids: string[]) => dispatch(Schedules.addCourses({ scheduleId: GRAPH_SCHEDULE, courseIds: ids })),
       (ids: string[]) => dispatch(Schedules.removeCourses({ scheduleId: GRAPH_SCHEDULE, courseIds: ids })),
     );
@@ -128,7 +132,7 @@ export function useUpdateGraph({
       : fixedClasses;
 
     graphRef.current.appendNodes(initialNodes.map((id) => graphRef.current!.toDatum(id)!).filter(Boolean), []);
-  }, [courses, dispatch, fixedClasses, setHover, positions, ratingType, scheduleId]);
+  }, [courses, dispatch, fixedClasses, positions, ratingType, scheduleId, setHover, setOpen, showContents]);
 
   // whenever GRAPH_SCHEDULE is updated, update the graph nodes
   useEffect(() => {
@@ -166,12 +170,12 @@ type TextTransition = d3.Transition<SVGTextElement, null, SVGGElement, unknown>;
  * These callbacks synchronize the nodes with the redux store (specifically
  * the schedule with id {@link GRAPH_SCHEDULE}).
  */
-class Graph {
+export class Graph {
   public sim: Simulation;
 
   public flip = false;
 
-  private state: 'init' | 'wait' | 'ready' = 'init';
+  private state: 'init' | 'wait' | 'info' | 'ready' = 'init';
 
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
 
@@ -217,6 +221,7 @@ class Graph {
     private setSubjects: (subjects: Subject[]) => void,
     private ratingField: RatingType,
     private setRatingField: (ratingField: RatingType) => void,
+    private showInstructions: () => void,
     private onAppendCourses: (ids: string[]) => void,
     private onRemoveCourses: (ids: string[]) => void,
   ) {
@@ -416,24 +421,7 @@ class Graph {
     }
 
     if (this.state === 'init') {
-      // add a "click me" label
-      console.debug('adding click me');
-      this.node.selectChildren('text.click-me').remove();
-      this.node.append('text')
-        .classed('click-me', true)
-        .attr('pointer-events', 'none')
-        .attr('font-size', 0)
-        .attr('font-weight', 300)
-        .attr('opacity', 1)
-        .text('Click me!');
-
-      const pulse = this.pulse.bind(this);
-
-      this.node.each(function (d) {
-        pulse(this, Graph.getRadius(d), true);
-      });
-
-      this.state = 'wait';
+      this.setState('wait');
     }
   }
 
@@ -528,24 +516,7 @@ class Graph {
         // if we're waiting for user to interact and they do,
         // remove the "click me" label and reset radii
         if (graph.state === 'wait') {
-          graph.node.selectChildren('text.click-me')
-            .transition()
-            .duration(Graph.PULSE_DURATION)
-            .attr('opacity', 0)
-            .remove();
-
-          // should also end the pulsing animation
-          graph.node.each(function (g) {
-            if (g.id !== d.id) {
-              // interrupt current transitions
-              const group = d3.select(this);
-              group.selectChildren('circle').interrupt('radius-t');
-              group.selectChildren('text').interrupt('radius-t');
-              Graph.transitionRadius(this, Graph.getRadius(g));
-            }
-          });
-
-          graph.state = 'ready';
+          return graph.setState('info');
         }
 
         console.debug('mousing over');
@@ -626,7 +597,7 @@ class Graph {
     return Graph.MAX_LINK_STRENGTH * getLinkOpacity(link);
   }
 
-  private static getRadius(d: CourseBrief) {
+  public static getRadius(d: CourseBrief) {
     return Graph.RADIUS * (d.meanClassSize ? Math.sqrt(d.meanClassSize) : Math.sqrt(20));
   }
 
@@ -636,13 +607,52 @@ class Graph {
     return { ...course, pca: this.positions[course.i] } as DatumBase;
   }
 
-  public restart() {
-    this.state = 'init';
-    this.setHover(null);
+  public setState(state: Graph['state']) {
+    if (state === 'init') {
+      this.setHover(null);
+    } else if (state === 'wait') {
+      // add a "click me" label
+      console.debug('adding click me');
+      this.node.selectChildren('text.click-me').remove();
+      this.node.append('text')
+        .classed('click-me', true)
+        .attr('pointer-events', 'none')
+        .attr('font-size', 0)
+        .attr('font-weight', 300)
+        .attr('opacity', 1)
+        .text('Click me!');
+
+      const pulse = this.pulse.bind(this);
+
+      this.node.each(function (d) {
+        pulse(this, Graph.getRadius(d), true);
+      });
+    } else if (state === 'info') {
+      // fade out click me text
+      this.node.selectChildren('text.click-me')
+        .transition()
+        .duration(Graph.PULSE_DURATION)
+        .attr('opacity', 0)
+        .remove();
+
+      // interrupt current transitions
+      this.node.selectAll('circle, text').interrupt('radius-t');
+
+      this.node.select('circle')
+        .transition('radius-t')
+        .duration(Graph.PULSE_DURATION)
+        .attr('r', Graph.getRadius);
+
+      this.node.select('text.emoji')
+        .transition('radius-t')
+        .duration(Graph.PULSE_DURATION)
+        .attr('font-size', (d) => `${Graph.getRadius(d)}px`)
+        .on('end', this.showInstructions);
+    }
+
+    this.state = state;
   }
 }
-
-export type GraphState = Graph;
 
 function getLinkOpacity({ source, target }: LinkDatum) {
   return (cos(source.pca, target.pca) + 1) / 2;

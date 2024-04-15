@@ -1,13 +1,14 @@
 import { Fragment, useState } from 'react';
-import { EMOJI_SCALES, GraphState } from './initGraph';
+import { Graph } from './Graph';
 import { CuteSwitch } from '../Utils/CuteSwitch';
 import { Subject, choose, getSubjectColor } from '../../src/lib';
 import { classNames } from '../../src/utils/styles';
 import { useClasses } from '../../src/utils/schedules';
+import { EMOJI_SCALES } from './HoveredCourseInfo';
 
 export function Buttons({
   graph, subjects,
-}: { graph: GraphState; subjects: Subject[]; }) {
+}: { graph: Graph; subjects: Subject[]; }) {
   const [flip, setToggleFlip] = useState(false);
   const fixedClasses = useClasses(graph.fixedScheduleId);
 
@@ -46,11 +47,11 @@ export function Buttons({
         onClick={() => {
           if (!fixedClasses) return;
           if (fixedClasses.length > 0) {
-            graph.restart();
+            graph.setState('init');
             graph.removeNodes(graph.getNodesNotIn(fixedClasses).map((s) => s.id));
           } else {
             graph.removeNodes(graph.currentData.map((s) => s.id));
-            graph.restart();
+            graph.setState('init');
             graph.appendNodes([graph.toDatum(choose(graph.courses).id)!], []);
           }
         }}

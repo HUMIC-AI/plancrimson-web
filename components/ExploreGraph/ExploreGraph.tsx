@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import { useUpdateGraph } from './initGraph';
+import { useUpdateGraph } from './Graph';
 import { Buttons } from './ExploreGraphButtons';
 
 /**
