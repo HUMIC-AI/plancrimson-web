@@ -49,9 +49,11 @@ export function Buttons({
           if (fixedClasses.length > 0) {
             graph.setState('init');
             graph.removeNodes(graph.getNodesNotIn(fixedClasses).map((s) => s.id));
+            graph.setState('wait');
           } else {
             graph.removeNodes(graph.currentData.map((s) => s.id));
             graph.setState('init');
+            // this sets state to wait
             graph.appendNodes([graph.toDatum(choose(graph.courses).id)!], []);
           }
         }}
