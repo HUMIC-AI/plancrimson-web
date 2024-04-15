@@ -7,21 +7,17 @@ import {
 } from '@/src/lib';
 import { useAppSelector } from '@/src/utils/hooks';
 import { ClassCache, Settings } from '@/src/features';
-import { BaseSchedule } from '@/src/types';
 import { CalendarHeaderSection } from './CalendarPageHeaderSection';
 import { CalendarBody } from './CalendarBody';
-
-type CalendarProps = {
-  schedule: BaseSchedule;
-};
-
+import { useChosenSchedule } from '../../src/context/selectedSchedule';
 
 /**
  * Main calendar view of the Calendar page.
  */
-export default function Calendar({ schedule }: CalendarProps) {
+export default function Calendar() {
   const classCache = useAppSelector(ClassCache.selectClassCache);
-  const classes = allTruthy(schedule.classes ? schedule.classes.map((classId) => classCache[classId]) : []);
+  const schedule = useChosenSchedule();
+  const classes = allTruthy(schedule?.classes ? schedule.classes.map((classId) => classCache[classId]) : []);
 
   const customTimes = useAppSelector(Settings.selectCustomTimes);
 
@@ -50,8 +46,8 @@ export default function Calendar({ schedule }: CalendarProps) {
   const events = [...courseEvents, ...sections.flatMap((s) => s.events)];
 
   return (
-    <div className="flex flex-col md:absolute md:inset-4 md:flex-row md:space-x-4">
-      <CalendarHeaderSection events={events} schedule={schedule} />
+    <div className="flex flex-col justify-around md:absolute md:inset-4 md:flex-row md:space-x-4 lg:space-x-12">
+      <CalendarHeaderSection events={events} />
       <CalendarBody classes={[...extendedClasses, ...sections.flatMap((s) => s.tbas)]} events={events} />
     </div>
   );

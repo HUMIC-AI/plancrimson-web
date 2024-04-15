@@ -57,7 +57,7 @@ export function getSemesterBeforeEarliest(schedules: ScheduleMap): Semester {
   return { season, year };
 }
 
-export function useSchedule(scheduleId: string) {
+export function useSchedule(scheduleId?: string | null) {
   const dispatch = useAppDispatch();
 
   const [schedule, setSchedule] = useState<BaseSchedule>();

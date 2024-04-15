@@ -2,11 +2,13 @@
 import React from 'react';
 import { DateArray, EventAttributes } from 'ics';
 import { getOverlap, toPercent } from '@/src/lib';
+import { FaTimesCircle } from 'react-icons/fa';
 import { classNames } from '../../src/utils/styles';
 import { useModal } from '../../src/context/modal';
 import { useAppDispatch } from '../../src/utils/hooks';
-import { ClassCache } from '../../src/features';
+import { ClassCache, Schedules } from '../../src/features';
 import { useMeiliClient } from '../../src/context/meili';
+import useChosenScheduleContext from '../../src/context/selectedSchedule';
 
 type EventTilesProps = {
   events: (EventAttributes & ({ end?: DateArray; isSection?: string; }))[];
@@ -16,6 +18,7 @@ type EventTilesProps = {
 export function CalendarDayEventTilesColumn({ events, showSections }: EventTilesProps) {
   const overlapCounter: Record<string, number> = {};
   const dispatch = useAppDispatch();
+  const { chosenScheduleId } = useChosenScheduleContext();
   const { client } = useMeiliClient();
   const { showCourse } = useModal();
 
@@ -48,7 +51,7 @@ export function CalendarDayEventTilesColumn({ events, showSections }: EventTiles
         return (
           <div
             key={ev.uid}
-            className="absolute z-10 rounded hover:z-20"
+            className="group/tile absolute z-10 rounded hover:z-20"
             style={{
               top: `${toPercent(ev.start)}%`,
               bottom: `${100 - toPercent(ev.end!)}%`,
@@ -59,7 +62,7 @@ export function CalendarDayEventTilesColumn({ events, showSections }: EventTiles
           >
             <div className={classNames('absolute inset-y-1 inset-x-2 overflow-auto text-xs', textColor)}>
               <button
-                className="interactive font-semibold md:text-base"
+                className="interactive text-left font-semibold md:text-base"
                 type="button"
                 onClick={() => dispatch(ClassCache.loadCourses(client, [ev.productId!]))
                   .then(([course]) => showCourse(course))
@@ -78,6 +81,17 @@ export function CalendarDayEventTilesColumn({ events, showSections }: EventTiles
               )}
               <p className="italic">{ev.location?.trim() || 'Room TBD'}</p>
             </div>
+            <button
+              type="button"
+              className="absolute right-2 top-2 opacity-0 transition-opacity group-hover/tile:opacity-100 group-hover/tile:hover:opacity-50"
+              onClick={() => dispatch(Schedules.removeCourses({
+                scheduleId: chosenScheduleId!,
+                courseIds: [ev.productId!],
+              }))}
+            >
+              <span className="sr-only">Remove</span>
+              <FaTimesCircle size={16} />
+            </button>
           </div>
         );
       })}

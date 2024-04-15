@@ -62,7 +62,7 @@ function DisclosureChildren({
 
       <FadeTransition unmount={false}>
         <Disclosure.Panel unmount={false}>
-          <div className="origin-top-right rounded-b-lg border-x border-b border-gray-primary p-2">
+          <div className="origin-top-right rounded-b-lg border-x border-b border-gray-primary p-2 text-left">
             <RefinementList
               attribute={attribute}
               operator={operator}

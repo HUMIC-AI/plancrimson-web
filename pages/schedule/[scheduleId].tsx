@@ -4,6 +4,8 @@ import Layout from '@/components/Layout/Layout';
 import Calendar from '@/components/SemesterSchedule/Calendar';
 import { ErrorMessage } from '@/components/Layout/ErrorMessage';
 import { useSchedule } from '@/src/utils/schedules';
+import { useMemo } from 'react';
+import { ChosenScheduleContext, ChosenScheduleContextType } from '../../src/context/selectedSchedule';
 
 export default function SchedulePage() {
   return (
@@ -20,6 +22,11 @@ function Wrapper({ userId }: { userId: string; }) {
   const { schedule, error } = useSchedule(scheduleId);
   const elapsed = useElapsed(500, []);
 
+  const chosenScheduleContext = useMemo<ChosenScheduleContextType>(() => ({
+    chosenScheduleId: scheduleId,
+    chooseSchedule: () => null,
+  }), [scheduleId]);
+
   if (error) {
     return <ErrorMessage>{error}</ErrorMessage>;
   }
@@ -28,5 +35,9 @@ function Wrapper({ userId }: { userId: string; }) {
     return elapsed ? <ErrorMessage>Could not find schedule</ErrorMessage> : null;
   }
 
-  return <Calendar schedule={schedule} />;
+  return (
+    <ChosenScheduleContext.Provider value={chosenScheduleContext}>
+      <Calendar />
+    </ChosenScheduleContext.Provider>
+  );
 }

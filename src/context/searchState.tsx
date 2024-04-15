@@ -158,6 +158,6 @@ const useSearchState = () => useContext(SearchStateContext);
 
 export default useSearchState;
 
-export function useDefaultSearchState(semester?: Semester) {
+export function useDefaultSearchState(semester?: Semester | null) {
   return useMemo(() => getDefaultSearchStateForSemester(semester ?? getUpcomingSemester()), [semester]);
 }

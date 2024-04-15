@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import React, {
   createContext, Dispatch, PropsWithChildren, useContext, useMemo,
 } from 'react';
+import { useSchedule } from '../utils/schedules';
 
 export interface ChosenScheduleContextType {
   chosenScheduleId: string | null;
@@ -43,5 +44,11 @@ export function ChosenScheduleProvider({ children }: PropsWithChildren<{}>) {
 }
 
 const useChosenScheduleContext = () => useContext(ChosenScheduleContext);
+
+export function useChosenSchedule() {
+  const { chosenScheduleId } = useChosenScheduleContext();
+  const { schedule } = useSchedule(chosenScheduleId);
+  return schedule;
+}
 
 export default useChosenScheduleContext;
