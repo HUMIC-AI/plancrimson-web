@@ -2,12 +2,11 @@ import {
   Auth, Planner, Schedules, Settings,
 } from '@/src/features';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
-import { classNames } from '@/src/utils/styles';
 import { Menu } from '@headlessui/react';
 import { Term, semesterToTerm, termToSemester } from '@/src/lib';
 import { useCallback, useState } from 'react';
 import {
-  FaCog, FaEdit, FaEyeSlash, FaGlobe, FaShareAlt,
+  FaEdit, FaEyeSlash, FaGlobe, FaShareAlt,
 } from 'react-icons/fa';
 import FadeTransition from '@/components/Utils/FadeTransition';
 import { ScheduleIdOrSemester } from '@/src/types';
@@ -37,92 +36,59 @@ export default function HeaderSection({ s }: { s: ScheduleIdOrSemester }) {
 
   return (
     <Menu as="div" className="relative flex flex-col items-center p-2">
-      {({ open }) => (
-        <>
-          <div className="group/column relative">
-            {(schedule && editing) ? (
-              <EditNameForm
-                title={schedule.title}
-                setEditing={setEditing}
-                handleSubmit={(title) => (title
-                  ? dispatch(Schedules.renameSchedule({ scheduleId: schedule.id, title }))
-                  : Promise.reject(new Error('Invalid title')))
-                  .catch((err) => {
-                    console.error('Error renaming schedule', err);
-                    alert('Error renaming schedule');
-                  })}
-              />
-            ) : (
-              <TitleComponent
-                scheduleId={schedule ? schedule.id : null}
-                chooseSchedule={chooseSchedule}
-                idList={idList}
-              />
-            )}
+      <div className="group/column relative">
+        {(schedule && editing) ? (
+          <EditNameForm
+            title={schedule.title}
+            setEditing={setEditing}
+            handleSubmit={(title) => (title
+              ? dispatch(Schedules.renameSchedule({ scheduleId: schedule.id, title }))
+              : Promise.reject(new Error('Invalid title')))
+              .catch((err) => {
+                console.error('Error renaming schedule', err);
+                alert('Error renaming schedule');
+              })}
+          />
+        ) : (
+          <TitleComponent
+            scheduleId={schedule ? schedule.id : null}
+            chooseSchedule={chooseSchedule}
+            idList={idList}
+          />
+        )}
+      </div>
 
-            {schedule && (
-              <div className={classNames(
-                'absolute right-full top-1/2 -translate-y-1/2',
-                'opacity-0 transition-opacity group-hover/column:opacity-100',
-                'flex items-center justify-center',
-              )}
-              >
-                <button
-                  type="button"
-                  className="interactive"
-                  onClick={() => dispatch(Schedules.setPublic({ scheduleId: schedule.id, public: !schedule.public }))}
-                  title={schedule.public ? 'Make private' : 'Make public'}
-                >
-                  {schedule.public ? (
-                    <FaGlobe />
-                  ) : (
-                    <FaEyeSlash />
-                  )}
-                </button>
-              </div>
-            )}
-
-            <div className={classNames(
-              'absolute left-full top-1/2 -translate-y-1/2',
-              'flex items-center justify-center',
-              !open && 'opacity-0 transition-opacity group-hover/column:opacity-100',
-            )}
-            >
-              <Menu.Button className="interactive focus:outline-none">
-                <span className="sr-only">Settings</span>
-                <FaCog />
-              </Menu.Button>
-            </div>
-          </div>
-
-          {/* items of the menu positioned absolutely */}
-          <FadeTransition>
-            <Menu.Items className="menu-dropdown absolute top-full z-10">
-              {semesterFormat !== 'sample' && schedule && (
-              <MenuButton onClick={() => { setEditing(true); }} Icon={FaEdit} title="Rename" />
-              )}
-              <HideScheduleButton s={s} />
-              {semesterFormat !== 'sample' && schedule && (
-              <>
-                <MenuButton
-                  href={{
-                    pathname: '/explore/[scheduleId]',
-                    query: {
-                      scheduleId: schedule.id,
-                    },
-                  }}
-                  Icon={FaShareAlt}
-                  title="Explore"
-                />
-                <DeleteScheduleButton scheduleId={schedule.id} />
-                <DuplicateScheduleButton scheduleId={schedule.id} />
-                <ClearScheduleButton scheduleId={schedule.id} />
-              </>
-              )}
-            </Menu.Items>
-          </FadeTransition>
-        </>
-      )}
+      {/* items of the menu positioned absolutely */}
+      <FadeTransition>
+        <Menu.Items className="menu-dropdown absolute top-full z-10">
+          {semesterFormat !== 'sample' && schedule && (
+          <MenuButton onClick={() => { setEditing(true); }} Icon={FaEdit} title="Rename" />
+          )}
+          <HideScheduleButton s={s} />
+          {semesterFormat !== 'sample' && schedule && (
+          <>
+            <MenuButton
+              href={{
+                pathname: '/explore/[scheduleId]',
+                query: {
+                  scheduleId: schedule.id,
+                },
+              }}
+              Icon={FaShareAlt}
+              title="Explore"
+            />
+            <DeleteScheduleButton scheduleId={schedule.id} />
+            <DuplicateScheduleButton scheduleId={schedule.id} />
+            <ClearScheduleButton scheduleId={schedule.id} />
+            <MenuButton
+              onClick={() => dispatch(Schedules.setPublic({ scheduleId: schedule.id, public: !schedule.public }))}
+              title={schedule.public ? 'Make private' : 'Make public'}
+              Icon={schedule.public ? FaEyeSlash : FaGlobe}
+            />
+          </>
+          )}
+        </Menu.Items>
+      </FadeTransition>
     </Menu>
   );
 }

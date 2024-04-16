@@ -10,6 +10,7 @@ import { ExploreGraph } from './ExploreGraph';
 import { signInUser } from '../Layout/useSyncAuth';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 import { SidebarPanel } from './CollapsibleSidebar';
+import { ScheduleSyncer } from '../Utils/ScheduleSyncer';
 
 export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
   const userId = Auth.useAuthProperty('uid');
@@ -44,11 +45,12 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
       headerStyles="bg-secondary/50 text-primary absolute inset-x-0 z-10 hover:bg-secondary/80 transition-colors"
     >
       <WithMeili userId={userId}>
+        {userId && <ScheduleSyncer userId={userId} />}
         <ChosenScheduleContext.Provider value={chosenScheduleContext}>
           {/* three main components: the background graph, the left search bar, the right course info */}
           {userId ? (
             <ExploreGraph
-              scheduleId={scheduleId}
+              scheduleId={scheduleId ?? null}
               setHover={setHoveredClassId}
               panelRef={courseInfoRef}
             />

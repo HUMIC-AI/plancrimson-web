@@ -93,14 +93,19 @@ export function useUpdateGraph({
 
     console.info('initializing graph');
 
-    const showInstructions = () => showContents({
-      title: 'Course Explorer',
-      content: <GraphInstructions direction="row" />,
-      close: () => {
-        setOpen(false);
-        graphRef.current!.setState('ready');
-      },
-    });
+    const showInstructions = () => {
+      const seen = localStorage.getItem('graphInstructions');
+      if (seen) return graphRef.current!.setState('ready');
+      localStorage.setItem('graphInstructions', 'true');
+      showContents({
+        title: 'Course Explorer',
+        content: <GraphInstructions direction="row" />,
+        close: () => {
+          setOpen(false);
+          graphRef.current!.setState('ready');
+        },
+      });
+    };
 
     graphRef.current = new Graph(
       ref.current,
@@ -519,6 +524,9 @@ export class Graph {
           return graph.setState('info');
         }
 
+        // don't react if info modal is open
+        if (graph.state === 'info') return;
+
         console.debug('mousing over');
 
         Graph.transitionRadius(this, Graph.getRadius(d) + Graph.RADIUS * 2);
@@ -641,13 +649,13 @@ export class Graph {
       this.node.select('circle')
         .transition('radius-t')
         .duration(Graph.PULSE_DURATION)
-        .attr('r', Graph.getRadius);
+        .attr('r', Graph.getRadius)
+        .on('end interrupt', this.showInstructions);
 
       this.node.select('text.emoji')
         .transition('radius-t')
         .duration(Graph.PULSE_DURATION)
-        .attr('font-size', (d) => `${Graph.getRadius(d)}px`)
-        .on('end', this.showInstructions);
+        .attr('font-size', (d) => `${Graph.getRadius(d)}px`);
     }
 
     this.state = state;
