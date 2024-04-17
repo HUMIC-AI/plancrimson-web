@@ -2,14 +2,14 @@ import {
   useEffect, useMemo, useState,
 } from 'react';
 import { useRouter } from 'next/router';
-import { CURRENT_COURSES_TERMS, ExtendedClass, semesterToTerm } from '../../src/lib';
-import { ClassCache, Schedules } from '../../src/features';
-import { useAppDispatch, useAppSelector } from '../../src/utils/hooks';
+import { ExtendedClass } from '../../src/lib';
+import { Auth, ClassCache } from '../../src/features';
+import { useAppDispatch } from '../../src/utils/hooks';
 import { InfoCard } from '../Modals/InfoCard';
 import { getCourseModalContent } from '../Modals/CourseCardModal';
 import { useMeiliClient } from '../../src/context/meili';
 import { classNames } from '../../src/utils/styles';
-import { sortSchedulesBySemester } from '../../src/utils/schedules';
+import { useAvailableScheduleIds } from '../../src/utils/schedules';
 import { TitleComponent } from '../YearSchedule/SemesterColumn/TitleComponent';
 
 export type RatingType = 'meanRating' | 'meanHours';
@@ -57,10 +57,11 @@ export function HoveredCourseInfo({ courseId }: {
 
 export function GraphInstructions({ direction }: { direction: 'row' | 'column' }) {
   const router = useRouter();
-  const schedules = useAppSelector(Schedules.selectSchedules);
+  const userId = Auth.useAuthProperty('uid');
   const scheduleId = (router.query.scheduleId ?? null) as string | null;
   const r = 40;
   const size = r * 3;
+  const availableScheduleIds = useAvailableScheduleIds();
 
   return (
     <div className={classNames(
@@ -118,7 +119,7 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
         </li>
       </ul>
 
-      {direction === 'column' && (
+      {direction === 'column' && userId && (
         <div className="primary relative mx-auto">
           <TitleComponent
             chooseSchedule={(id) => id && router.replace({
@@ -126,7 +127,7 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
               query: { scheduleId: id },
             })}
             // show currently available schedules
-            idList={sortSchedulesBySemester(schedules).filter((s) => CURRENT_COURSES_TERMS.includes(semesterToTerm(s))).map((s) => s.id)}
+            idList={availableScheduleIds}
             scheduleId={scheduleId}
             showSettings={false}
             showCreate={false}

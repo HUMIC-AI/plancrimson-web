@@ -5,10 +5,10 @@ import {
   useEffect, useMemo, useState,
 } from 'react';
 import {
-  compareSemesters, Semester,
+  compareSemesters, CURRENT_COURSES_TERMS, Semester, semesterToTerm,
 } from '@/src/lib';
-import { ClassCache } from '../features';
-import { alertUnexpectedError, useAppDispatch } from './hooks';
+import { ClassCache, Schedules } from '../features';
+import { alertUnexpectedError, useAppDispatch, useAppSelector } from './hooks';
 import { useMeiliClient } from '../context/meili';
 import type {
   BaseSchedule,
@@ -138,4 +138,12 @@ export function useClasses(scheduleId: string | null) {
   const { schedule } = useSchedule(scheduleId);
   const fixedClasses = useMemo(() => (scheduleId ? schedule?.classes : []), [schedule?.classes, scheduleId]);
   return fixedClasses;
+}
+
+export function useAvailableScheduleIds() {
+  const schedules = useAppSelector(Schedules.selectSchedules);
+  const availableScheduleIds = useMemo(() => sortSchedulesBySemester(schedules)
+    .filter((s) => CURRENT_COURSES_TERMS.includes(semesterToTerm(s)))
+    .map((s) => s.id), [schedules]);
+  return availableScheduleIds;
 }

@@ -7,7 +7,6 @@ import { breakpoints, useBreakpoint } from '../../src/utils/styles';
 import { HoveredCourseInfo } from './HoveredCourseInfo';
 import { ExplorePageCourseSearchSection } from './ExplorePageCourseSearchSection';
 import { ExploreGraph } from './ExploreGraph';
-import { signInUser } from '../Layout/useSyncAuth';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 import { SidebarPanel } from './CollapsibleSidebar';
 import { ScheduleSyncer } from '../Utils/ScheduleSyncer';
@@ -43,13 +42,11 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
         {userId && <ScheduleSyncer userId={userId} />}
         <ScheduleIdProvider id={GRAPH_SCHEDULE}>
           {/* three main components: the background graph, the left search bar, the right course info */}
-          {userId ? (
-            <ExploreGraph
-              scheduleId={scheduleId ?? null}
-              setHover={setHoveredClassId}
-              panelRef={courseInfoRef}
-            />
-          ) : <NoGraphMessage />}
+          <ExploreGraph
+            scheduleId={scheduleId ?? null}
+            setHover={setHoveredClassId}
+            panelRef={courseInfoRef}
+          />
           <SidebarPanel side="left">
             <ExplorePageCourseSearchSection />
           </SidebarPanel>
@@ -60,17 +57,5 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
         </SidebarPanel>
       </WithMeili>
     </Layout>
-  );
-}
-
-function NoGraphMessage() {
-  return (
-    <button
-      type="button"
-      onClick={() => signInUser().catch((err) => console.error(err))}
-      className="interactive secondary absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg px-4 py-2 font-medium"
-    >
-      Sign in to explore the graph!
-    </button>
   );
 }

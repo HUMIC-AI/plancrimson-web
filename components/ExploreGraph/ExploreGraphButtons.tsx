@@ -47,12 +47,12 @@ export function Buttons({
         onClick={() => {
           if (!fixedClasses) return;
           if (fixedClasses.length > 0) {
-            graph.setState('init');
+            graph.setPhase('init');
             graph.removeNodes(graph.getNodesNotIn(fixedClasses).map((s) => s.id));
-            graph.setState('wait');
+            graph.setPhase('wait');
           } else {
             graph.removeNodes(graph.currentData.map((s) => s.id));
-            graph.setState('init');
+            graph.setPhase('init');
             // this sets state to wait
             graph.appendNodes([graph.toDatum(choose(graph.courses).id)!], []);
           }

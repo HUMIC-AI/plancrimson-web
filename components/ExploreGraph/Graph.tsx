@@ -10,12 +10,13 @@ import {
   cos,
   getSubjectColor, getUpcomingSemester,
 } from '../../src/lib';
-import { useAppDispatch, useAppSelector } from '../../src/utils/hooks';
-import { Schedules } from '../../src/features';
+import { alertUnexpectedError, useAppDispatch, useAppSelector } from '../../src/utils/hooks';
+import { Auth, Schedules } from '../../src/features';
 import { useClasses } from '../../src/utils/schedules';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 import { useModal } from '../../src/context/modal';
 import { EMOJI_SCALES, GraphInstructions, RatingType } from './HoveredCourseInfo';
+import { signInUser } from '../Layout/useSyncAuth';
 
 export type DatumBase = CourseBrief & {
   pca: number[];
@@ -75,6 +76,7 @@ export function useUpdateGraph({
 }: InitGraphProps) {
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
   const { showContents, setOpen } = useModal();
+  const userId = Auth.useAuthProperty('uid');
 
   const dispatch = useAppDispatch();
   const graphSchedule = useAppSelector(Schedules.selectSchedule(GRAPH_SCHEDULE));
@@ -94,16 +96,29 @@ export function useUpdateGraph({
     console.info('initializing graph');
 
     const showInstructions = () => {
-      const seen = localStorage.getItem('graphInstructions');
-      if (seen) return graphRef.current!.setState('ready');
-      localStorage.setItem('graphInstructions', 'true');
+      const seen = userId && localStorage.getItem('graphInstructions');
+      console.info('showing graph instructions', seen);
+      if (seen) return graphRef.current!.setPhase('ready');
+      const close = () => {
+        setOpen(false);
+        localStorage.setItem('graphInstructions', 'true');
+        graphRef.current!.setPhase('ready');
+      };
       showContents({
         title: 'Course Explorer',
-        content: <GraphInstructions direction="row" />,
-        close: () => {
-          setOpen(false);
-          graphRef.current!.setState('ready');
-        },
+        content: userId ? <GraphInstructions direction="row" /> : (
+          <div className="flex items-center justify-center p-6">
+            <button
+              type="button"
+              onClick={() => signInUser().then(close).catch(alertUnexpectedError)}
+              className="button secondary"
+            >
+              Sign in to explore the graph!
+            </button>
+          </div>
+        ),
+        noExit: !userId,
+        close,
       });
     };
 
@@ -137,7 +152,7 @@ export function useUpdateGraph({
       : fixedClasses;
 
     graphRef.current.appendNodes(initialNodes.map((id) => graphRef.current!.toDatum(id)!).filter(Boolean), []);
-  }, [courses, dispatch, fixedClasses, positions, ratingType, scheduleId, setHover, setOpen, showContents]);
+  }, [courses, dispatch, fixedClasses, positions, ratingType, scheduleId, setHover, setOpen, showContents, userId]);
 
   // whenever GRAPH_SCHEDULE is updated, update the graph nodes
   useEffect(() => {
@@ -180,7 +195,7 @@ export class Graph {
 
   public flip = false;
 
-  private state: 'init' | 'wait' | 'info' | 'ready' = 'init';
+  private phase: 'init' | 'wait' | 'info' | 'ready' = 'init';
 
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
 
@@ -428,8 +443,8 @@ export class Graph {
       this.focusCourse(null);
     }
 
-    if (this.state === 'init') {
-      this.setState('wait');
+    if (this.phase === 'init') {
+      this.setPhase('wait');
     }
   }
 
@@ -523,12 +538,12 @@ export class Graph {
       .on('mouseover', function (event, d) {
         // if we're waiting for user to interact and they do,
         // remove the "click me" label and reset radii
-        if (graph.state === 'wait') {
-          return graph.setState('info');
+        if (graph.phase === 'wait') {
+          return graph.setPhase('info');
         }
 
         // don't react if info modal is open
-        if (graph.state === 'info') return;
+        if (graph.phase === 'info') return;
 
         console.debug('mousing over');
 
@@ -621,10 +636,10 @@ export class Graph {
     return { ...course, pca: this.positions[course.i] } as DatumBase;
   }
 
-  public setState(state: Graph['state']) {
-    if (state === 'init') {
+  public setPhase(newPhase: Graph['phase']) {
+    if (newPhase === 'init') {
       this.setHover(null);
-    } else if (state === 'wait') {
+    } else if (newPhase === 'wait') {
       // add a "click me" label
       console.debug('adding click me');
       this.node.selectChildren('text.click-me').remove();
@@ -641,7 +656,7 @@ export class Graph {
       this.node.each(function (d) {
         pulse(this, Graph.getRadius(d), true);
       });
-    } else if (state === 'info') {
+    } else if (newPhase === 'info') {
       // fade out click me text
       this.node.selectChildren('text.click-me')
         .transition()
@@ -664,7 +679,7 @@ export class Graph {
         .attr('font-size', (d) => `${Graph.getRadius(d)}px`);
     }
 
-    this.state = state;
+    this.phase = newPhase;
   }
 }
 
