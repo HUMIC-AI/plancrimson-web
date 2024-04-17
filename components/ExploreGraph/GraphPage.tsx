@@ -47,6 +47,8 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
             setHover={setHoveredClassId}
             panelRef={courseInfoRef}
           />
+
+          {/* left sidebar (add courses to graph schedule) */}
           <SidebarPanel side="left">
             <ExplorePageCourseSearchSection />
           </SidebarPanel>

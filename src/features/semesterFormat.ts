@@ -3,7 +3,7 @@ import type { Term } from '@/src/lib';
 import type { SampleSchedule } from '../requirements/util';
 import type { RootState } from '../store';
 
-interface SemesterFormat {
+export interface SemesterFormat {
   format: 'all' | 'selected' | 'sample' | null;
   sampleSchedule: SampleSchedule | null;
   showAttributes: boolean;

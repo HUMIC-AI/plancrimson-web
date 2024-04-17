@@ -3,6 +3,9 @@ import React, {
 } from 'react';
 import { useRouter } from 'next/router';
 import { useSchedule } from '../utils/schedules';
+import { useAppSelector } from '../utils/hooks';
+import { Schedules } from '../features';
+import { GRAPH_SCHEDULE } from '../features/schedules';
 
 export const ScheduleIdContext = createContext<string | null>(null);
 
@@ -16,10 +19,11 @@ export function ScheduleIdProvider({ id, children }: PropsWithChildren<{ id: str
 
 export function useChosenSchedule() {
   const id = useContext(ScheduleIdContext)!;
+  const graphSchedule = useAppSelector(Schedules.selectSchedule(GRAPH_SCHEDULE));
   const { schedule, error } = useSchedule(id);
   return {
     id,
-    schedule,
+    schedule: id === GRAPH_SCHEDULE ? graphSchedule : schedule,
     error,
   };
 }
