@@ -49,7 +49,7 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
           />
 
           {/* left sidebar (add courses to graph schedule) */}
-          <SidebarPanel side="left">
+          <SidebarPanel side="left" defaultOpen>
             <ExplorePageCourseSearchSection />
           </SidebarPanel>
         </ScheduleIdProvider>

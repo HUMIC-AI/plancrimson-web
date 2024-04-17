@@ -3,7 +3,7 @@ import React from 'react';
 export function LoadingBars() {
   return (
     <ul className="w-full space-y-4">
-      {new Array(5).fill(null).map((_, i) => (
+      {Array.from({ length: 5 }).map((_, i) => (
         <li
           key={i}
           className="animate-pulse rounded bg-blue-light"

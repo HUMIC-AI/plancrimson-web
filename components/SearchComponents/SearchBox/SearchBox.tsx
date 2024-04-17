@@ -11,7 +11,11 @@ import { SearchBar } from './SearchBar';
 import useClientOrDemo from '../ClientOrDemo';
 
 // eslint-disable-next-line react/no-unused-prop-types
-type Exposed = { scheduleChooser?: boolean; showSmallAttributeMenu?: boolean; };
+type Exposed = {
+  scheduleChooser?: boolean;
+  showSmallAttributeMenu?: boolean;
+  showStats?: boolean;
+};
 
 type SearchBoxProps = SearchBoxProvided & Exposed;
 
@@ -24,6 +28,7 @@ function SearchBoxComponent({
   refine = alertSignIn,
   currentRefinement = 'Search now',
   showSmallAttributeMenu,
+  showStats,
 }: SearchBoxProps) {
   const schedules = useAppSelector(Schedules.selectSchedules);
   const { id } = useChosenSchedule();
@@ -37,6 +42,7 @@ function SearchBoxComponent({
           refine={refine}
           currentRefinement={currentRefinement}
           showSmallAttributeMenu={showSmallAttributeMenu}
+          showStats={showStats}
         />
       </div>
 

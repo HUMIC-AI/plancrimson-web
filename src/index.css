@@ -82,7 +82,7 @@
 
 @layer components {
   .button {
-    @apply interactive bordered px-2 py-1 font-medium text-sm;
+    @apply interactive bordered px-2 py-1 font-medium;
   }
 
   .menu-button {

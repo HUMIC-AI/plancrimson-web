@@ -2,22 +2,27 @@ import { AuthRequiredInstantSearchProvider } from '../Utils/AuthRequiredInstantS
 import { SearchStateProvider, useDefaultSearchState } from '../../src/context/searchState';
 import SearchBox from '../SearchComponents/SearchBox/SearchBox';
 import Hits from '../SearchComponents/Hits';
-import { SortingAndRefinementsGrid } from '../SearchComponents/CurrentRefinements';
+import CurrentRefinements from '../SearchComponents/CurrentRefinements';
+import CourseCardStyleProvider from '../../src/context/expandCards';
 
-export function ExplorePageCourseSearchSection() {
+export function ExplorePageCourseSearchSection({ showSortGrid = false }: { showSortGrid?: boolean; }) {
   const defaultState = useDefaultSearchState();
 
   return (
     <SearchStateProvider oneCol defaultState={defaultState} ignoreUrl>
       <AuthRequiredInstantSearchProvider indexName="courses" hitsPerPage={4}>
-        {/* static positioning!!! happy */}
-        <div className="space-y-4 rounded-xl py-6 transition-colors hover:bg-secondary/50">
-          <SearchBox scheduleChooser={false} showSmallAttributeMenu />
-          <div className="rounded-xl border border-primary bg-secondary/80 p-2">
-            <SortingAndRefinementsGrid indexName="courses" />
+        <CourseCardStyleProvider defaultStyle="collapsed">
+          {/* static positioning!!! happy */}
+          <div className="space-y-4 rounded-xl py-6 text-xs transition-colors hover:bg-secondary/50">
+            <SearchBox scheduleChooser={false} showSmallAttributeMenu showStats={false} />
+            {showSortGrid && (
+              <div className="grid grid-cols-[auto_1fr] items-center gap-2">
+                <CurrentRefinements />
+              </div>
+            )}
+            <Hits concise />
           </div>
-          <Hits />
-        </div>
+        </CourseCardStyleProvider>
       </AuthRequiredInstantSearchProvider>
     </SearchStateProvider>
   );

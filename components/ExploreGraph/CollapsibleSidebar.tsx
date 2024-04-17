@@ -9,9 +9,9 @@ export const SidebarPanel = forwardRef(({ children, side, defaultOpen }: PropsWi
     {({ open }) => (
       <div className={classNames(
         // 4rem is the height of the header
-        'absolute top-16 w-full max-w-xs md:max-w-sm',
+        'absolute top-16 w-full',
         'transition-transform duration-200',
-        side === 'left' ? 'left-0' : 'right-0',
+        side === 'left' ? 'left-0 max-w-[12rem] xl:max-w-xs' : 'right-0 max-w-xs md:max-w-sm',
         open
           ? (side === 'left' ? 'translate-x-4' : '-translate-x-4')
           : (side === 'left' ? '-translate-x-full' : 'translate-x-full'),
@@ -27,7 +27,7 @@ export const SidebarPanel = forwardRef(({ children, side, defaultOpen }: PropsWi
         <Disclosure.Button
           className={classNames(
             // 13px makes it match up with the search bar menu button
-            'secondary absolute top-6 rounded p-[0.8125rem]',
+            'secondary absolute top-6 rounded p-[0.6875rem]',
             'interactive duration-200',
             open && 'rotate-180',
             side === 'left' ? 'left-full ml-4' : 'right-full mr-4',

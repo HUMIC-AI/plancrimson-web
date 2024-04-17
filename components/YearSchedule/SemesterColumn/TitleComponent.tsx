@@ -56,7 +56,7 @@ export function TitleComponent({
             {title}
           </TitleLink>
 
-          <Listbox.Button className={classNames('round interactive select-none transition duration-500', open && 'rotate-180')}>
+          <Listbox.Button className={classNames('interactive select-none duration-500', open && 'rotate-180')}>
             <FaChevronDown />
           </Listbox.Button>
 

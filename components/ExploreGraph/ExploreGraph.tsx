@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom';
-import { useUpdateGraph } from './Graph';
+import { useUpdateGraph } from './useUpdateGraph';
 import { Buttons } from './ExploreGraphButtons';
+import { LoadingBars } from '../Layout/LoadingPage';
 
 /**
  * A 2D d3 force graph of different courses.
@@ -16,13 +17,23 @@ export function ExploreGraph({
 }) {
   // create the graph
   const {
-    graph, ref, tooltipRef, subjects,
+    graph, ref, tooltipRef, subjects, elapsed,
   } = useUpdateGraph({
     setHover, scheduleId,
   });
 
   const width = 800;
   const height = 800;
+
+  if (!elapsed) {
+    return (
+      <div className="absolute inset-0">
+        <div className="absolute left-1/2 top-1/2 m-auto w-full max-w-xl -translate-x-1/2 -translate-y-1/2">
+          <LoadingBars />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute inset-0">

@@ -102,7 +102,14 @@ export const CourseCard = forwardRef(({
 
   return (
     // move the shadow outside to avoid it getting hidden
-    <div className="overflow-hidden rounded-xl border border-gray-secondary shadow-xl" ref={ref}>
+    <div
+      className={classNames(
+        'overflow-hidden rounded-xl border border-gray-secondary',
+        style === 'expanded' && 'shadow-xl',
+        style === 'collapsed' && 'shadow-md',
+      )}
+      ref={ref}
+    >
       <div
         className={classNames(
           'relative text-left h-full',
@@ -156,7 +163,7 @@ export const CourseCard = forwardRef(({
               </span>
             </p>
 
-            <p className={classNames(isExpanded || 'text-sm', 'font-medium')}>
+            <p className={classNames(!isExpanded && 'text-sm', 'font-medium')}>
               <Highlight
                 attribute="Title"
                 hit={course}
@@ -164,7 +171,7 @@ export const CourseCard = forwardRef(({
             </p>
 
             {hideTerm || (
-            <p className="text-sm">
+            <p className={classNames(isExpanded && 'text-sm')}>
               {semester.season}
               {' '}
               {semester.year}

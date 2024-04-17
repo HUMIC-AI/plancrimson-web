@@ -14,10 +14,11 @@ import { SmallAttributeMenuDropdown } from './SmallAttributeMenuDropdown';
 export type SearchBoxProps = SearchBoxProvided & {
   scheduleChooser?: boolean;
   showSmallAttributeMenu?: boolean;
+  showStats?: boolean;
 };
 
 export function SearchBar({
-  currentRefinement, refine, isSearchStalled, scheduleChooser = true, showSmallAttributeMenu,
+  currentRefinement, refine, isSearchStalled, scheduleChooser = true, showSmallAttributeMenu, showStats = true,
 }: SearchBoxProps) {
   const dispatch = useAppDispatch();
   const schedules = useAppSelector(Schedules.selectSchedules);
@@ -76,11 +77,13 @@ export function SearchBar({
       {/* end box containing search bar and attribute menu */}
 
       {/* caption text */}
+      {showStats && (
       <div className="flex flex-wrap space-x-2 text-xs">
         {isSearchStalled && <span>Loading...</span>}
         <Stats />
         <StateResults />
       </div>
+      )}
       {/* end caption text */}
     </div>
   );

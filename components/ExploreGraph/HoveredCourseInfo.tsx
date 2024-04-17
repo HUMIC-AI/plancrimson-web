@@ -59,8 +59,7 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
   const router = useRouter();
   const userId = Auth.useAuthProperty('uid');
   const scheduleId = (router.query.scheduleId ?? null) as string | null;
-  const r = 40;
-  const size = r * 3;
+  const r = 80;
   const availableScheduleIds = useAvailableScheduleIds();
 
   return (
@@ -69,11 +68,21 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
       direction === 'column' ? 'flex-col-reverse space-y-4' : 'flex-row space-x-4',
     )}
     >
-      <svg className="shrink-0" width={size} height={size} viewBox={`${-size / 2} ${-size / 2} ${size} ${size}`}>
+      {/* draw an svg labelling parts of circle */}
+      <svg className="shrink-0" width={r * 4} height={r * 2} viewBox={`${-r} ${-r * (3 / 2)} ${r * 5} ${r * 3}`} fontSize={r / 3} strokeWidth={2}>
         <circle r={r} fill="red" />
         <text textAnchor="middle" dominantBaseline="central" fontSize={r}>
           {EMOJI_SCALES.meanRating[4]}
         </text>
+
+        <line x1={r / 3} y1={-r / 3} x2={r} y2={-r / 2} stroke="black" />
+        <text x={r} y={-r / 2}>QReport rating</text>
+
+        <line x1={-6} y1={r / 3} x2={6} y2={r / 3} stroke="black" />
+        <line x1={-6} y1={r} x2={6} y2={r} stroke="black" />
+        <line x1={0} y1={r / 3} x2={0} y2={r} stroke="black" />
+
+        <text dominantBaseline="central" x={r / 8} y={((r / 3) + r) / 2}>Class size</text>
       </svg>
 
       <ul className="list-disc space-y-2">
@@ -85,29 +94,13 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
           represents a course.
         </li>
         <li>
-          <strong>Size</strong>
-          {' '}
-          indicates the number of students.
-        </li>
-        <li>
-          The
-          {' '}
-          <strong>emoji</strong>
-          {' '}
-          indicates the average rating.
-        </li>
-        <li>
           <strong>Click</strong>
           {' '}
-          a course to browse
+          to browse
           {' '}
           <em>similar</em>
           {' '}
-          ones. Or enable
-          {' '}
-          <strong>add opposites</strong>
-          {' '}
-          and see what happens!
+          courses.
         </li>
         <li>
           <strong>Right-click</strong>

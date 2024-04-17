@@ -1,22 +1,12 @@
 import * as d3 from 'd3';
-import {
-  useEffect, useRef, useState,
-} from 'react';
 import { getAnalytics, logEvent } from 'firebase/analytics';
-import { CourseBrief, useCourseEmbeddingData } from '../ClassesCloudPage/useData';
+import { CourseBrief } from '../ClassesCloudPage/useData';
 import {
   Subject,
-  choose,
   cos,
-  getSubjectColor, getUpcomingSemester,
+  getSubjectColor,
 } from '../../src/lib';
-import { alertUnexpectedError, useAppDispatch, useAppSelector } from '../../src/utils/hooks';
-import { Auth, Schedules } from '../../src/features';
-import { useClasses } from '../../src/utils/schedules';
-import { GRAPH_SCHEDULE } from '../../src/features/schedules';
-import { useModal } from '../../src/context/modal';
-import { EMOJI_SCALES, GraphInstructions, RatingType } from './HoveredCourseInfo';
-import { signInUser } from '../Layout/useSyncAuth';
+import { EMOJI_SCALES, RatingType } from './HoveredCourseInfo';
 
 export type DatumBase = CourseBrief & {
   pca: number[];
@@ -66,118 +56,6 @@ const sameLink = (l: LinkDatum | StringLink, d: LinkDatum | StringLink) => {
   const dtrg = stringify(d.target);
   return (lsrc === dsrc && ltrg === dtrg) || (lsrc === dtrg && ltrg === dsrc);
 };
-
-/**
- * Need to be careful with two way synchronization between redux store
- * GRAPH_SCHEDULE and the graph's internal nodes and links.
- */
-export function useUpdateGraph({
-  setHover, scheduleId,
-}: InitGraphProps) {
-  const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
-  const { showContents, setOpen } = useModal();
-  const userId = Auth.useAuthProperty('uid');
-
-  const dispatch = useAppDispatch();
-  const graphSchedule = useAppSelector(Schedules.selectSchedule(GRAPH_SCHEDULE));
-  const fixedClasses = useClasses(scheduleId);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [ratingType, setRatingType] = useState<RatingType>('meanRating');
-
-  // refs for fine grained control
-  const ref = useRef<SVGSVGElement>(null);
-  const tooltipRef = useRef<HTMLParagraphElement>(null);
-  const graphRef = useRef<Graph>();
-
-  useEffect(() => {
-    // only initialize graph once all data is included
-    if (graphRef.current || !positions || !courses || !fixedClasses || !ref.current || !tooltipRef.current) return;
-
-    console.info('initializing graph');
-
-    const showInstructions = () => {
-      const seen = userId && localStorage.getItem('graphInstructions');
-      console.info('showing graph instructions', seen);
-      if (seen) return graphRef.current!.setPhase('ready');
-      const close = () => {
-        setOpen(false);
-        localStorage.setItem('graphInstructions', 'true');
-        graphRef.current!.setPhase('ready');
-      };
-      showContents({
-        title: 'Course Explorer',
-        content: userId ? <GraphInstructions direction="row" /> : (
-          <div className="flex items-center justify-center p-6">
-            <button
-              type="button"
-              onClick={() => signInUser().then(close).catch(alertUnexpectedError)}
-              className="button secondary"
-            >
-              Sign in to explore the graph!
-            </button>
-          </div>
-        ),
-        noExit: !userId,
-        close,
-      });
-    };
-
-    graphRef.current = new Graph(
-      ref.current,
-      tooltipRef.current,
-      positions,
-      courses,
-      scheduleId,
-      setHover,
-      setSubjects,
-      ratingType,
-      setRatingType,
-      showInstructions,
-      (ids: string[]) => dispatch(Schedules.addCourses({ scheduleId: GRAPH_SCHEDULE, courseIds: ids })),
-      (ids: string[]) => dispatch(Schedules.removeCourses({ scheduleId: GRAPH_SCHEDULE, courseIds: ids })),
-    );
-
-    dispatch(Schedules.createLocal({
-      id: GRAPH_SCHEDULE,
-      title: 'Graph Schedule',
-      createdAt: new Date().toISOString(),
-      ownerUid: 'GRAPH_USER',
-      public: false,
-      classes: [],
-      ...getUpcomingSemester(),
-    }));
-
-    const initialNodes = fixedClasses.length === 0
-      ? [choose(courses).id]
-      : fixedClasses;
-
-    graphRef.current.appendNodes(initialNodes.map((id) => graphRef.current!.toDatum(id)!).filter(Boolean), []);
-  }, [courses, dispatch, fixedClasses, positions, ratingType, scheduleId, setHover, setOpen, showContents, userId]);
-
-  // whenever GRAPH_SCHEDULE is updated, update the graph nodes
-  useEffect(() => {
-    if (!graphRef.current || !graphSchedule?.classes || !fixedClasses || !courses || !positions) return;
-    const nodes = [...graphSchedule.classes, ...fixedClasses].map((id) => graphRef.current!.toDatum(id)!).filter(Boolean);
-    graphRef.current.appendNodes(nodes, []);
-    graphRef.current.removeNodes(graphRef.current.getNodesNotIn(nodes).map((n) => n.id));
-  }, [courses, fixedClasses, graphSchedule?.classes, positions]);
-
-  // stop simulation when unmounting
-  useEffect(() => () => {
-    if (graphRef.current) {
-      console.info('stopping graph');
-      graphRef.current.sim.stop();
-      dispatch(Schedules.deleteSchedule(GRAPH_SCHEDULE));
-    }
-  }, [dispatch]);
-
-  return {
-    graph: graphRef.current,
-    ref,
-    tooltipRef,
-    subjects,
-  };
-}
 
 type CircleTransition = d3.Transition<SVGCircleElement, null, SVGGElement, unknown>;
 
@@ -229,6 +107,8 @@ export class Graph {
   private static readonly MAX_LINK_STRENGTH = 0.3;
 
   private static readonly CHARGE_STRENGTH = -100;
+
+  private static readonly NUM_NEIGHBOURS = 3;
 
   private static readonly CENTER_STRENGTH = 0.05;
 
@@ -376,11 +256,14 @@ export class Graph {
     this.renderHighlights();
   }
 
-  private addNewNeighbours(d: Datum) {
-    const nodes: Datum[] = this.positions.filter((_, i) => !this.currentData.some((g) => g.i === i))
+  private addNewNeighbours(d: Datum, numNeighbours = Graph.NUM_NEIGHBOURS) {
+    const nodes: Datum[] = this.positions.filter((_, i) => {
+      const course = this.courses[i] as DatumBase;
+      return !this.currentData.some(({ catalog, subject }) => catalog === course.catalog && subject === course.subject);
+    })
       .map((pca, i) => ({ d: cos(d.pca, pca), i }))
       .sort((a, b) => (this.flip ? -1 : +1) * (b.d - a.d))
-      .slice(0, 5)
+      .slice(0, numNeighbours)
       .map(({ i }) => ({
         ...this.courses[i],
         pca: this.positions[i],
@@ -472,13 +355,14 @@ export class Graph {
     this.link = this.link
       .data(this.link.data().concat(idLinks.map((d) => ({ ...d }) as unknown as LinkDatum)), (d) => `${stringify(d.source)}:${stringify(d.target)}`)
       .join((enter) => enter.append('line')
-        .attr('stroke', this.flip ? 'rgb(var(--color-blue-primary))' : 'rgb(var(--color-gray-primary))'));
+        .attr('stroke', this.flip ? 'rgb(var(--color-blue-primary))' : 'rgb(var(--color-gray-primary))')
+        .call(this.addLineEventListeners.bind(this)));
 
     this.node = this.node
       .data(this.currentData.concat(nodesToAdd.map((d) => ({ ...d }) as Datum)), (d) => d.id)
       .join((enter) => enter.append('g')
         .call(this.addCircle.bind(this))
-        .call(this.addListeners.bind(this)));
+        .call(this.addNodeEventListeners.bind(this)));
 
     // callback
     this.onAppendCourses(nodesToAdd.map((d) => d.id));
@@ -505,10 +389,20 @@ export class Graph {
     ));
   }
 
+  private moveTooltip(x: number, y: number) {
+    this.tooltip
+      .style('left', `${x}px`)
+      .style('top', `${y}px`);
+  }
+
+  private hideTooltip() {
+    this.tooltip.classed('hidden', true);
+  }
+
   /**
    * Add event listeners to each node
    */
-  private addListeners(n: CourseGroupSelection) {
+  private addNodeEventListeners(n: CourseGroupSelection) {
     // drag nodes around
     const drag = d3.drag<SVGGElement, Datum>()
       .on('start', (event) => {
@@ -520,8 +414,7 @@ export class Graph {
       .on('drag', (event) => {
         event.subject.fx = event.x;
         event.subject.fy = event.y;
-        this.tooltip.style('left', `${event.sourceEvent.clientX}px`)
-          .style('top', `${event.sourceEvent.clientY}px`);
+        this.moveTooltip(event.sourceEvent.clientX, event.sourceEvent.clientY);
       })
       .on('end', (event) => {
         if (!event.active) this.sim.alphaTarget(0);
@@ -552,19 +445,14 @@ export class Graph {
           graph.setHover(d.id);
           graph.focusedCourse = { id: d.id, reason: 'hover' };
         }
-        graph.tooltip.classed('hidden', false)
-          .text(d.subject + d.catalog)
-          .style('left', `${event.clientX}px`)
-          .style('top', `${event.clientY}px`);
+        graph.showTooltipAt(d.subject + d.catalog, event.clientX, event.clientY);
       })
       .on('mousemove', (event) => {
-        graph.tooltip
-          .style('left', `${event.clientX}px`)
-          .style('top', `${event.clientY}px`);
+        graph.moveTooltip(event.clientX, event.clientY);
       })
       .on('mouseout', function (event, d) {
         Graph.transitionRadius(this, Graph.getRadius(d));
-        graph.tooltip.classed('hidden', true);
+        graph.hideTooltip();
       })
       .on('click', (event, d) => {
         event.preventDefault();
@@ -578,6 +466,28 @@ export class Graph {
         event.preventDefault();
         event.stopPropagation();
         graph.focusCourse(d.id);
+      });
+  }
+
+  private showTooltipAt(text: string, x: number, y: number) {
+    this.tooltip
+      .classed('hidden', false)
+      .text(text);
+    this.moveTooltip(x, y);
+  }
+
+  private addLineEventListeners(l: d3.Selection<SVGLineElement, LinkDatum, SVGGElement, unknown>) {
+    const graph = this;
+    l
+      .on('mouseover', (event, d) => {
+        const percent = Math.round(getLinkOpacity(d) * 100);
+        graph.showTooltipAt(`${percent}%`, event.clientX, event.clientY);
+      })
+      .on('mousemove', (event) => {
+        graph.moveTooltip(event.clientX, event.clientY);
+      })
+      .on('mouseout', () => {
+        graph.hideTooltip();
       });
   }
 
@@ -657,6 +567,7 @@ export class Graph {
         pulse(this, Graph.getRadius(d), true);
       });
     } else if (newPhase === 'info') {
+      // triggered when user hovers over a "click me" node
       // fade out click me text
       this.node.selectChildren('text.click-me')
         .transition()
