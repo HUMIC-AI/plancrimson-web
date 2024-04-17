@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SearchStateProvider, useDefaultSearchState } from '@/src/context/searchState';
 import { ScheduleIdProvider } from '@/src/context/selectedSchedule';
 import { AuthRequiredInstantSearchProvider } from '@/components/Utils/AuthRequiredInstantSearchProvider';
@@ -24,9 +24,17 @@ export default function CourseSearchModal({ selected, semester }: {
   const defaultState = useDefaultSearchState(semester);
   const term = semesterToTerm(semester);
   const indexName = CURRENT_ARCHIVE_TERMS.includes(term) ? 'archive' : (CURRENT_COURSES_TERMS.includes(term) ? 'courses' : null);
+  const [ignore, setIgnore] = useState(false);
 
-  if (indexName === null) {
-    return <p className="p-6">Sorry, we don&apos;t have course data for this semester!</p>;
+  if (indexName === null && !ignore) {
+    return (
+      <div className="flex flex-col space-y-2 p-6">
+        <p>
+          Sorry, we don&apos;t have course data for this semester!
+        </p>
+        <button type="button" className="button secondary" onClick={() => setIgnore(true)}>Ignore</button>
+      </div>
+    );
   }
 
   return (
@@ -35,7 +43,7 @@ export default function CourseSearchModal({ selected, semester }: {
       <SearchStateProvider oneCol defaultState={defaultState} ignoreUrl>
         <ScheduleIdProvider id={selected}>
           <AuthRequiredInstantSearchProvider
-            indexName={indexName}
+            indexName={indexName ?? 'courses'}
             hitsPerPage={4}
           >
             <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-secondary p-6 shadow-lg">
