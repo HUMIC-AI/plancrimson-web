@@ -10,6 +10,7 @@ import { alertSignIn } from './SearchBox/searchUtils';
 import { CourseCard } from '../Course/CourseCard';
 import useClientOrDemo from './ClientOrDemo';
 import { MoreHitsButton } from './MoreHitsButton';
+import { useElapsed } from '../../src/utils/hooks';
 
 const sampleHits = sampleCourses as ExtendedClass[];
 
@@ -26,6 +27,7 @@ function HitsComponent({
   // refinePrevious = alertSignIn,
 }: Provided) {
   const { oneCol } = useSearchState();
+  const elapsed = useElapsed(750, []);
 
   return (
     <div className="flex flex-col items-center space-y-4">
@@ -37,10 +39,13 @@ function HitsComponent({
       <CardExpandToggler />
 
       {hits.length === 0 ? (
-        // <div className="animate-pulse py-2 px-4 rounded-full bg-gray-light">
-        //   Loading results...
-        // </div>
-        <span>No results found. Try filtering by different properties.</span>
+        elapsed
+          ? <span>No results found. Try filtering by different properties.</span>
+          : (
+            <div className="animate-pulse rounded-full bg-gray-light px-4 py-2">
+              Loading results...
+            </div>
+          )
       ) : (
         <div className={oneCol
           ? 'flex w-full flex-col items-stretch space-y-4'

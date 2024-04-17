@@ -9,6 +9,7 @@ import { Auth } from '@/src/features';
 import SearchBox from '../SearchComponents/SearchBox/SearchBox';
 import Hits from '../SearchComponents/Hits';
 import { WithMeili } from '../Layout/WithMeili';
+import CourseCardStyleProvider from '../../src/context/expandCards';
 
 
 /**
@@ -25,7 +26,7 @@ export default function CourseSearchModal({ selected, semester }: {
   const indexName = CURRENT_ARCHIVE_TERMS.includes(term) ? 'archive' : (CURRENT_COURSES_TERMS.includes(term) ? 'courses' : null);
 
   if (indexName === null) {
-    return <p>Sorry, we don&apos;t have course data for this semester!</p>;
+    return <p className="p-6">Sorry, we don&apos;t have course data for this semester!</p>;
   }
 
   return (
@@ -39,7 +40,9 @@ export default function CourseSearchModal({ selected, semester }: {
           >
             <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-secondary p-6 shadow-lg">
               <SearchBox scheduleChooser={false} showSmallAttributeMenu />
-              <Hits />
+              <CourseCardStyleProvider defaultStyle="collapsed">
+                <Hits />
+              </CourseCardStyleProvider>
             </div>
           </AuthRequiredInstantSearchProvider>
         </ScheduleIdProvider>

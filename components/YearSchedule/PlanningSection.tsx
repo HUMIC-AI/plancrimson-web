@@ -19,6 +19,7 @@ import { ListOfScheduleIdOrSemester } from '@/src/types';
 import { DragObservers, useObserver } from './SemesterColumn/DragObservers';
 import { DragAndDropProvider } from './SemesterColumn/DragAndDrop';
 import SemesterColumn from './SemesterColumn/SemesterColumn';
+import CourseCardStyleProvider from '../../src/context/expandCards';
 
 export interface WithResizeRef {
   resizeRef: React.MutableRefObject<HTMLDivElement>;
@@ -81,14 +82,16 @@ export function SemestersList({
               </button>
             )}
 
-            {showColumns.map((column) => (
-              <SemesterColumn
-                key={isScheduleIds ? column as string : semesterToTerm(column as Semester)}
-                s={column}
-                colWidth={colWidth}
-                highlightedRequirement={highlightedRequirement}
-              />
-            ))}
+            <CourseCardStyleProvider defaultStyle="collapsed">
+              {showColumns.map((column) => (
+                <SemesterColumn
+                  key={isScheduleIds ? column as string : semesterToTerm(column as Semester)}
+                  s={column}
+                  colWidth={colWidth}
+                  highlightedRequirement={highlightedRequirement}
+                />
+              ))}
+            </CourseCardStyleProvider>
 
             {/* when dragging, drag over this area to scroll right */}
             <div ref={rightScrollRef} />

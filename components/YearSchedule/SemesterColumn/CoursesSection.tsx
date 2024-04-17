@@ -53,7 +53,7 @@ export function SemesterColumnBody({ highlightedRequirement }: {
         </div>
         )}
 
-        {initialized ? getClassIdsOfSchedule(schedule).map((id) => (id && classCache[id] ? (
+        {initialized ? schedule && getClassIdsOfSchedule(schedule).map((id) => (id && classCache[id] ? (
           <CourseCard
             key={id}
             course={classCache[id]}
@@ -77,7 +77,7 @@ export function SemesterColumnBody({ highlightedRequirement }: {
               : 'Loading course data...'}
           </div>
         ))) : (
-          <p>Loading course data...</p>
+          <p className="animate-pulse">Loading course data...</p>
         )}
       </div>
     </div>
