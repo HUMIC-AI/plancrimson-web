@@ -121,14 +121,15 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
       {direction === 'column' && (
         <div className="primary relative mx-auto">
           <TitleComponent
-            chooseSchedule={(id) => router.replace({
-              pathname: router.pathname,
+            chooseSchedule={(id) => id && router.replace({
+              pathname: '/explore/[scheduleId]',
               query: { scheduleId: id },
             })}
             // show currently available schedules
             idList={sortSchedulesBySemester(schedules).filter((s) => CURRENT_COURSES_TERMS.includes(semesterToTerm(s))).map((s) => s.id)}
             scheduleId={scheduleId}
             showSettings={false}
+            showCreate={false}
           />
         </div>
       )}

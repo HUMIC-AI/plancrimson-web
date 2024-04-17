@@ -13,18 +13,19 @@ export type TitleComponentProps = {
   idList: ScheduleId[];
   chooseSchedule: (scheduleId: ScheduleId | null) => void;
   showSettings?: boolean;
+  showCreate?: boolean;
 };
 
 /**
  * Part of the {@link SemesterColumnHeader} component.
  */
 export function TitleComponent({
-  scheduleId, idList, chooseSchedule, showSettings = true,
+  scheduleId, idList, chooseSchedule, showSettings = true, showCreate = true,
 }: TitleComponentProps) {
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const schedules = useAppSelector(Schedules.selectSchedules);
   const termSchedules = useMemo(() => idList.map((id) => schedules[id]), [idList, schedules]);
-  const title = (scheduleId && schedules[scheduleId]?.title) ?? 'Loading...';
+  const title = scheduleId ? schedules[scheduleId]?.title ?? 'Loading...' : 'Select a schedule';
 
   // don't show the dropdown if all schedules are being shown
   if (semesterFormat === 'all') {
@@ -62,13 +63,22 @@ export function TitleComponent({
           <FadeTransition>
             <Listbox.Options className="menu-dropdown absolute left-1/2 top-full z-10 mt-2 w-max -translate-x-1/2 divide-y">
               {termSchedules.map((schedule) => (
-                <Listbox.Option key={schedule.id} value={schedule.id} className="menu-button select-none first:rounded-t">
+                <Listbox.Option
+                  key={schedule.id}
+                  value={schedule.id}
+                  className={classNames(
+                    'menu-button select-none first:rounded-t',
+                    !showCreate && 'last:rounded-b',
+                  )}
+                >
                   {schedule.title}
                 </Listbox.Option>
               ))}
+              {showCreate && (
               <Listbox.Option value={null} className="menu-button select-none rounded-b">
                 Create new
               </Listbox.Option>
+              )}
             </Listbox.Options>
           </FadeTransition>
         </>

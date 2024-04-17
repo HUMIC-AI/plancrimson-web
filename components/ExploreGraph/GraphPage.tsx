@@ -53,10 +53,11 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
           <SidebarPanel side="left">
             <ExplorePageCourseSearchSection />
           </SidebarPanel>
-          <SidebarPanel ref={courseInfoRef} side="right" defaultOpen>
-            <HoveredCourseInfo courseId={hoveredClassId} />
-          </SidebarPanel>
         </ScheduleIdProvider>
+
+        <SidebarPanel ref={courseInfoRef} side="right" defaultOpen>
+          <HoveredCourseInfo courseId={hoveredClassId} />
+        </SidebarPanel>
       </WithMeili>
     </Layout>
   );

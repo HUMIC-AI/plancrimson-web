@@ -188,7 +188,10 @@ export class Graph {
 
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
 
-  private fixedId: string | null = null;
+  private focusedCourse: {
+    id: string | null;
+    reason: 'hover' | 'fix';
+  } = { id: null, reason: 'hover' };
 
   private width: number;
 
@@ -266,7 +269,7 @@ export class Graph {
     this.svg
       .on('click contextmenu', (event) => {
         event.preventDefault();
-        this.setFixedId(null);
+        this.focusCourse(null);
       });
 
     this.width = svgDom.width.baseVal.value;
@@ -338,17 +341,17 @@ export class Graph {
     this.node.select('text.emoji').text(this.getEmoji.bind(this));
   }
 
-  public setFixedId(id: string | null) {
+  public focusCourse(id: string | null) {
     console.debug('fixing node', id);
     // deselect a currently selected node
-    id = this.fixedId === id ? null : id;
+    id = this.focusedCourse.id === id && this.focusedCourse.reason === 'fix' ? null : id;
 
     if (id) this.setHover(id);
-    else if (this.fixedId) this.setHover(null);
+    else if (this.focusedCourse) this.setHover(null);
 
-    this.fixedId = id;
+    this.focusedCourse = { id, reason: 'fix' };
 
-    const fixedNode = this.currentData.find((d) => d.id === this.fixedId);
+    const fixedNode = this.currentData.find((d) => d.id === this.focusedCourse.id);
     if (fixedNode) {
       this.svg.transition('svg-zoom')
         .duration(Graph.PULSE_DURATION)
@@ -384,7 +387,7 @@ export class Graph {
   }
 
   private getStrokeWidth(d: Datum) {
-    if (this.fixedId === d.id) return 8;
+    if (this.focusedCourse.id === d.id && this.focusedCourse.reason === 'fix') return 8;
     if (this.highlightedIds.includes(d.id)) return 6;
     return 0;
   }
@@ -421,8 +424,8 @@ export class Graph {
     // callbacks
     this.setSubjects([...new Set(this.currentData.map((d) => d.subject))]);
 
-    if (!this.currentData.some((d) => d.id === this.fixedId)) {
-      this.setFixedId(null);
+    if (!this.currentData.some((d) => d.id === this.focusedCourse.id)) {
+      this.focusCourse(null);
     }
 
     if (this.state === 'init') {
@@ -530,7 +533,10 @@ export class Graph {
         console.debug('mousing over');
 
         Graph.transitionRadius(this, Graph.getRadius(d) + Graph.RADIUS * 2);
-        if (!graph.fixedId) graph.setHover(d.id);
+        if (graph.focusedCourse.id === null || graph.focusedCourse.reason === 'hover') {
+          graph.setHover(d.id);
+          graph.focusedCourse = { id: d.id, reason: 'hover' };
+        }
         graph.tooltip.classed('hidden', false)
           .text(d.subject + d.catalog)
           .style('left', `${event.clientX}px`)
@@ -556,7 +562,7 @@ export class Graph {
       .on('contextmenu', (event, d) => {
         event.preventDefault();
         event.stopPropagation();
-        graph.setFixedId(d.id);
+        graph.focusCourse(d.id);
       });
   }
 
