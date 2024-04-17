@@ -18,7 +18,7 @@ type Props = {
 
 export function CalendarHeaderSection({ events }: Props) {
   const userId = Auth.useAuthProperty('uid');
-  const schedule = useChosenSchedule();
+  const { schedule } = useChosenSchedule();
   const defaultState = useDefaultSearchState(schedule);
 
   const indexName = isOldSemester(schedule) ? 'archive' : 'courses';

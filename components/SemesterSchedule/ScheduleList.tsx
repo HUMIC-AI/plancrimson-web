@@ -6,7 +6,7 @@ import { ClassCache } from '@/src/features';
 import { useAppSelector, useProfiles } from '@/src/utils/hooks';
 import type { BaseSchedule, UserProfile, WithId } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
-import { useExpandCards } from '@/src/context/expandCards';
+import { useCourseCardStyle } from '@/src/context/expandCards';
 import CardExpandToggler from '../YearSchedule/CardExpandToggler';
 
 export type ScheduleListProps = {
@@ -21,7 +21,7 @@ export function ScheduleSection({
 }: ScheduleListProps) {
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const initialized = useAppSelector(ClassCache.selectInitialized);
-  const { expandCards } = useExpandCards();
+  const { style: expandCards } = useCourseCardStyle();
 
   // make a singleton list of the owner's uid so that we can use it as a dependency
   const ownerUid = useMemo(() => [schedule.ownerUid], [schedule.ownerUid]);

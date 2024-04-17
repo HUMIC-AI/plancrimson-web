@@ -11,10 +11,10 @@ import { ButtonTitle } from './ButtonTitle';
 import { StyledOption } from './StyledOption';
 import { ChooserOption } from './ChooserOption';
 import { MESSAGES } from '../../src/utils/config';
+import { useChooseSchedule } from '../../src/context/selectedSchedule';
 
 export interface ScheduleChooserProps {
   chosenScheduleId: string | null;
-  chooseSchedule: React.Dispatch<string | null>;
   scheduleIds: string[];
   season?: Season;
   year?: number;
@@ -48,7 +48,6 @@ export default function ScheduleChooser({
   chosenScheduleId,
   season,
   year,
-  chooseSchedule,
   direction,
   showTerm = 'auto',
   parentWidth,
@@ -57,6 +56,7 @@ export default function ScheduleChooser({
 }: ScheduleChooserProps) {
   const userId = Auth.useAuthProperty('uid');
   const dispatch = useAppDispatch();
+  const chooseSchedule = useChooseSchedule();
 
   // if we're showing all schedules, don't render a dropdown menu
   // instead just have the title be clickable to select

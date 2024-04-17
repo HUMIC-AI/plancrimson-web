@@ -57,6 +57,9 @@ export function getSemesterBeforeEarliest(schedules: ScheduleMap): Semester {
   return { season, year };
 }
 
+/**
+ * Listen to the Firestore document of the given schedule.
+ */
 export function useSchedule(scheduleId?: string | null) {
   const dispatch = useAppDispatch();
 

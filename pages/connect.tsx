@@ -4,7 +4,7 @@ import { SearchBar } from '@/components/ConnectPageComponents/SearchBar';
 import { useFriends, useIds } from '@/components/ConnectPageComponents/friendUtils';
 import { useLunrIndex } from '@/components/ConnectPageComponents/useLunrIndex';
 import Layout from '@/components/Layout/Layout';
-import ExpandCardsProvider from '@/src/context/expandCards';
+import CourseCardStyleProvider from '@/src/context/expandCards';
 import { useIncludeSemesters } from '@/src/context/includeSemesters';
 import { useMeiliClient } from '@/src/context/meili';
 import { ClassCache } from '@/src/features';
@@ -27,11 +27,11 @@ export default function () {
   return (
     <Layout title="Friends" verify="meili">
       {({ userId }) => (
-        <ExpandCardsProvider defaultStyle="text" readonly>
+        <CourseCardStyleProvider defaultStyle="text" readonly>
           <div className="mx-auto sm:max-w-2xl">
             <FriendsPage userId={userId} />
           </div>
-        </ExpandCardsProvider>
+        </CourseCardStyleProvider>
       )}
     </Layout>
   );
@@ -39,7 +39,7 @@ export default function () {
 
 function FriendsPage({ userId }: { userId: string }) {
   const dispatch = useAppDispatch();
-  const { client } = useMeiliClient();
+  const { client, error } = useMeiliClient();
   const { friends, incomingPending } = useFriends(userId);
   const friendIds = useIds(friends);
   const allSemesters = useMemo(() => getDefaultSemesters(getCurrentDefaultClassYear(), 6).slice(1, -1), []);
@@ -56,6 +56,11 @@ function FriendsPage({ userId }: { userId: string }) {
 
   const searchMore = useCallback(async (term: Term) => {
     if (!friends) return;
+
+    if (error) {
+      alertUnexpectedError(error);
+      return;
+    }
 
     const { year, season } = termToSemester(term);
 
@@ -91,10 +96,12 @@ function FriendsPage({ userId }: { userId: string }) {
       },
     }));
 
-    await dispatch(ClassCache.loadCourses(client, getAllClassIds(newSchedules)));
+    if (client) {
+      await dispatch(ClassCache.loadCourses(client, getAllClassIds(newSchedules)));
+    }
 
     return snap.size;
-  }, [allSchedules, client, dispatch, friends, includeSemesters.length]);
+  }, [allSchedules, client, dispatch, error, friends, includeSemesters.length]);
 
   useEffect(() => {
     const promises = includeSemesters.filter((semester) => !(semester in allSchedules)).map(searchMore);

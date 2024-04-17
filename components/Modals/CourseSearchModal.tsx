@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { SearchStateProvider, useDefaultSearchState } from '@/src/context/searchState';
-import { ChosenScheduleContext } from '@/src/context/selectedSchedule';
+import { ScheduleIdProvider } from '@/src/context/selectedSchedule';
 import { AuthRequiredInstantSearchProvider } from '@/components/Utils/AuthRequiredInstantSearchProvider';
 import { Semester, isOldSemester } from '@/src/lib';
 import { Auth } from '@/src/features';
@@ -18,7 +18,6 @@ export default function CourseSearchModal({ selected, semester }: {
   semester: Semester;
 }) {
   const uid = Auth.useAuthProperty('uid');
-  const context = useMemo(() => ({ chosenScheduleId: selected, chooseSchedule() {} }), [selected]);
   const defaultState = useDefaultSearchState(semester);
   const indexName = isOldSemester(semester) ? 'archive' : 'courses';
 
@@ -26,7 +25,7 @@ export default function CourseSearchModal({ selected, semester }: {
     // create a new search state provider to override the one in "pages/_app.tsx"
     <WithMeili userId={uid!}>
       <SearchStateProvider oneCol defaultState={defaultState} ignoreUrl>
-        <ChosenScheduleContext.Provider value={context}>
+        <ScheduleIdProvider id={selected}>
           <AuthRequiredInstantSearchProvider
             indexName={indexName}
             hitsPerPage={4}
@@ -38,7 +37,7 @@ export default function CourseSearchModal({ selected, semester }: {
               </div>
             </div>
           </AuthRequiredInstantSearchProvider>
-        </ChosenScheduleContext.Provider>
+        </ScheduleIdProvider>
       </SearchStateProvider>
     </WithMeili>
   );

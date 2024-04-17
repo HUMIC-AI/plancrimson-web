@@ -1,8 +1,8 @@
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import Layout from '../Layout/Layout';
 import { Auth } from '../../src/features';
 import { WithMeili } from '../Layout/WithMeili';
-import { ChosenScheduleContext, ChosenScheduleContextType } from '../../src/context/selectedSchedule';
+import { ScheduleIdProvider } from '../../src/context/selectedSchedule';
 import { breakpoints, useBreakpoint } from '../../src/utils/styles';
 import { HoveredCourseInfo } from './HoveredCourseInfo';
 import { ExplorePageCourseSearchSection } from './ExplorePageCourseSearchSection';
@@ -16,11 +16,6 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
   const userId = Auth.useAuthProperty('uid');
   const [hoveredClassId, setHoveredClassId] = useState<string | null>(null);
   const courseInfoRef = useRef<HTMLDivElement>(null);
-
-  const chosenScheduleContext = useMemo((): ChosenScheduleContextType => ({
-    chooseSchedule: () => null,
-    chosenScheduleId: GRAPH_SCHEDULE,
-  }), []);
 
   const isLg = useBreakpoint(breakpoints.lg);
 
@@ -46,7 +41,7 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
     >
       <WithMeili userId={userId}>
         {userId && <ScheduleSyncer userId={userId} />}
-        <ChosenScheduleContext.Provider value={chosenScheduleContext}>
+        <ScheduleIdProvider id={GRAPH_SCHEDULE}>
           {/* three main components: the background graph, the left search bar, the right course info */}
           {userId ? (
             <ExploreGraph
@@ -61,7 +56,7 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
           <SidebarPanel ref={courseInfoRef} side="right" defaultOpen>
             <HoveredCourseInfo courseId={hoveredClassId} />
           </SidebarPanel>
-        </ChosenScheduleContext.Provider>
+        </ScheduleIdProvider>
       </WithMeili>
     </Layout>
   );

@@ -1,19 +1,19 @@
 import React from 'react';
 import { FaExpand, FaExpandAlt, FaExpandArrowsAlt } from 'react-icons/fa';
-import { useExpandCards } from '@/src/context/expandCards';
+import { useCourseCardStyle } from '@/src/context/expandCards';
 
 export default function CardExpandToggler() {
-  const { expandCards, toggleExpand } = useExpandCards();
+  const { style, toggleStyle } = useCourseCardStyle();
 
   return (
     <button
       type="button"
-      onClick={() => toggleExpand()}
+      onClick={toggleStyle}
       className="interactive secondary-gray flex items-center justify-center rounded-full p-1"
     >
-      {expandCards === 'text' && <FaExpand />}
-      {expandCards === 'collapsed' && <FaExpandArrowsAlt />}
-      {expandCards === 'expanded' && <FaExpandAlt />}
+      {style === 'text' && <FaExpand />}
+      {style === 'collapsed' && <FaExpandArrowsAlt />}
+      {style === 'expanded' && <FaExpandAlt />}
     </button>
   );
 }

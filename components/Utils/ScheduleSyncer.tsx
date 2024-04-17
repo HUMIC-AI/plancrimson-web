@@ -38,7 +38,7 @@ export function ScheduleSyncer({ userId }: {
     } catch (err) {
       alertUnexpectedError(err);
     }
-  }, [client, dispatch]);
+  }, [dispatch, client]);
 
   useEffect(() => {
     const q = query(Schema.Collection.schedules(), where('ownerUid', '==', userId));

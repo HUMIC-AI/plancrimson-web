@@ -1,24 +1,21 @@
 import React, { useMemo } from 'react';
-import { FaPlus, FaTimes } from 'react-icons/fa';
+import { FaPlus } from 'react-icons/fa';
 import { findConflicts, allTruthy } from '@/src/lib';
-import { useAppDispatch, useAppSelector, useElapsed } from '@/src/utils/hooks';
+import { useAppSelector, useElapsed } from '@/src/utils/hooks';
 import { Requirement } from '@/src/requirements/util';
 import {
-  ClassCache, Profile, Schedules,
+  ClassCache, Profile,
 } from '@/src/features';
 import AddCoursesButton from '@/components/SemesterSchedule/AddCoursesButton';
 import { getClassIdsOfSchedule } from '@/src/features/schedules';
 import { CourseCard } from '../../Course/CourseCard';
-import { ToggleButton } from '../../Course/ToggleButton';
+import { useChosenSchedule } from '../../../src/context/selectedSchedule';
+import { RemoveClassButton } from '../../Course/ToggleButton';
 
-type Props = {
-  scheduleId: string;
+export function SemesterColumnBody({ highlightedRequirement }: {
   highlightedRequirement: Requirement | undefined;
-};
-
-export function PlanningPageCoursesSection({ scheduleId, highlightedRequirement }: Props) {
-  const dispatch = useAppDispatch();
-  const schedule = useAppSelector(Schedules.selectSchedule(scheduleId));
+}) {
+  const { schedule, id: scheduleId } = useChosenSchedule();
   const profile = useAppSelector(Profile.selectUserProfile);
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const initialized = useAppSelector(ClassCache.selectInitialized);
@@ -28,7 +25,7 @@ export function PlanningPageCoursesSection({ scheduleId, highlightedRequirement 
   );
   const elapsed = useElapsed(3000, []);
 
-  if (!schedule) {
+  if (!schedule && elapsed) {
     console.error(`Schedule ${scheduleId} not found`);
     return null;
   }
@@ -47,19 +44,20 @@ export function PlanningPageCoursesSection({ scheduleId, highlightedRequirement 
   return (
     <div className="h-max flex-1 overflow-auto p-4">
       <div className="flex min-h-[12rem] flex-col items-stretch space-y-4">
+        {schedule && (
         <div className="mx-auto">
           <AddCoursesButton schedule={schedule}>
             <FaPlus className="mr-2" />
             Add courses
           </AddCoursesButton>
         </div>
+        )}
 
         {initialized ? getClassIdsOfSchedule(schedule).map((id) => (id && classCache[id] ? (
           <CourseCard
             key={id}
             course={classCache[id]}
             highlight={doHighlight(id)}
-            chosenScheduleId={schedule.id}
             warnings={warnings(id)}
           />
         ) : (
@@ -73,15 +71,7 @@ export function PlanningPageCoursesSection({ scheduleId, highlightedRequirement 
                     {id.slice(0, 12)}
                     ... not found
                   </span>
-                  <ToggleButton
-                    name="Remove class from schedule"
-                    onClick={() => dispatch(Schedules.removeCourses({
-                      courseIds: [id],
-                      scheduleId,
-                    }))}
-                  >
-                    <FaTimes />
-                  </ToggleButton>
+                  <RemoveClassButton classId={id} />
                 </div>
               )
               : 'Loading course data...'}

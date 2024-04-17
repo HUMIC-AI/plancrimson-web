@@ -1,6 +1,6 @@
 import { FaAngleDoubleRight } from 'react-icons/fa';
 import React from 'react';
-import useChosenScheduleContext from '@/src/context/selectedSchedule';
+import { useChosenSchedule } from '@/src/context/selectedSchedule';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { Planner, Schedules } from '@/src/features';
 import { sortSchedulesBySemester } from '@/src/utils/schedules';
@@ -22,7 +22,7 @@ export function SearchBar({
   const dispatch = useAppDispatch();
   const schedules = useAppSelector(Schedules.selectSchedules);
   const showAttributes = useAppSelector(Planner.selectShowAttributes);
-  const { chooseSchedule, chosenScheduleId } = useChosenScheduleContext();
+  const { id: chosenScheduleId } = useChosenSchedule();
   const isLg = useBreakpoint(breakpoints.lg);
 
   const doShowSmallMenu = typeof showSmallAttributeMenu === 'undefined'
@@ -64,7 +64,6 @@ export function SearchBar({
           <div className="hidden sm:block">
             <ScheduleChooser
               scheduleIds={sortSchedulesBySemester(schedules).map((schedule) => schedule.id)}
-              chooseSchedule={chooseSchedule}
               chosenScheduleId={chosenScheduleId}
               direction="left"
               showDropdown

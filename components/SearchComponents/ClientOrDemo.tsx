@@ -13,12 +13,12 @@ export default function useClientOrDemo<Provided, Exposed>(
   Component: ComponentType<Provided & Exposed>,
 ) {
   const userId = Auth.useAuthProperty('uid');
-  const { client } = useMeiliClient();
+  const meili = useMeiliClient();
 
   // needs to be its own memoed component to preserve component state
   const ShowComponent: ComponentType<Exposed> = useMemo(
-    () => (client && userId ? connector(Component) : Component as ComponentType<Exposed>),
-    [client, userId, Component, connector],
+    () => (meili?.client && userId ? connector(Component) : Component as ComponentType<Exposed>),
+    [Component, connector, meili?.client, userId],
   );
 
   return ShowComponent;

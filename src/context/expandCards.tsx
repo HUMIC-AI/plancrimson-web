@@ -8,45 +8,45 @@ const CARD_STYLES = ['text', 'collapsed', 'expanded'] as const;
 
 type CardStyle = typeof CARD_STYLES[number];
 
-type ExpandCardsContextType = {
-  expandCards: CardStyle;
-  toggleExpand: () => void;
-  setExpand: (style: CardStyle) => void;
+type CourseCardStyleContextType = {
+  style: CardStyle;
+  toggleStyle: () => void;
+  setStyle: (style: CardStyle) => void;
 };
 
-const ExpandCardsContext = createContext<ExpandCardsContextType>({
-  expandCards: 'expanded',
-  toggleExpand: throwMissingContext,
-  setExpand: throwMissingContext,
+const CourseCardStyleContext = createContext<CourseCardStyleContextType>({
+  style: 'expanded',
+  toggleStyle: throwMissingContext,
+  setStyle: throwMissingContext,
 });
 
-export default function ExpandCardsProvider({
+export default function CourseCardStyleProvider({
   children, defaultStyle = 'expanded', readonly = false,
 }: PropsWithChildren<{
   defaultStyle?: CardStyle;
   readonly?: boolean;
 }>) {
-  const [expandCards, setExpandCards] = useState<CardStyle>(defaultStyle);
+  const [style, setCourseCardStyle] = useState<CardStyle>(defaultStyle);
 
-  const context = useMemo(() => ({
-    expandCards,
-    toggleExpand: () => {
-      const newStyle = CARD_STYLES[(CARD_STYLES.indexOf(expandCards) + 1) % CARD_STYLES.length];
-      logEvent(getAnalytics(), 'toggle_expand_cards', { oldStyle: expandCards, newStyle });
-      setExpandCards(newStyle);
+  const context: CourseCardStyleContextType = useMemo(() => ({
+    style,
+    toggleStyle: () => {
+      const newStyle = CARD_STYLES[(CARD_STYLES.indexOf(style) + 1) % CARD_STYLES.length];
+      logEvent(getAnalytics(), 'toggle_expand_cards', { oldStyle: style, newStyle });
+      setCourseCardStyle(newStyle);
     },
-    setExpand: (style: CardStyle) => {
+    setStyle: (s: CardStyle) => {
       if (!readonly) {
-        setExpandCards(style);
+        setCourseCardStyle(s);
       }
     },
-  }), [expandCards, readonly]);
+  }), [style, readonly]);
 
   return (
-    <ExpandCardsContext.Provider value={context}>
+    <CourseCardStyleContext.Provider value={context}>
       {children}
-    </ExpandCardsContext.Provider>
+    </CourseCardStyleContext.Provider>
   );
 }
 
-export const useExpandCards = () => useContext(ExpandCardsContext);
+export const useCourseCardStyle = () => useContext(CourseCardStyleContext);

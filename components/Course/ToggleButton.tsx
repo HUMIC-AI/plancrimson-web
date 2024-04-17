@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { FaTimes, FaPlus } from 'react-icons/fa';
 import {
   ExtendedClass,
@@ -12,12 +12,16 @@ import {
 } from '@/src/features';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { GRAPH_SCHEDULE, getClassIdsOfSchedule } from '@/src/features/schedules';
+import { useChosenSchedule } from '../../src/context/selectedSchedule';
 
-export function CourseCardToggleButton({
-  chosenScheduleId, course,
-}: { chosenScheduleId: string; course: ExtendedClass; }) {
+/**
+ * A button that toggles a class in and out of a schedule.
+ * @param scheduleId the schedule to add the class to
+ * @param course the class to add
+ */
+export function CourseCardToggleButton({ course }: { course: ExtendedClass; }) {
   const dispatch = useAppDispatch();
-  const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
+  const { schedule } = useChosenSchedule();
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const classYear = useAppSelector(Profile.selectClassYear);
   const classCache = useAppSelector(ClassCache.selectClassCache);
@@ -25,12 +29,12 @@ export function CourseCardToggleButton({
   // adds a class to the selected schedule.
   // linked to plus button in top right corner.
   const addClass = useCallback(() => {
-    if (!chosenSchedule || !classYear || !course) return;
+    if (!schedule || !classYear || !course) return;
 
-    if (chosenSchedule.id !== GRAPH_SCHEDULE) {
+    if (schedule.id !== GRAPH_SCHEDULE) {
       const viability = checkViable({
         cls: course,
-        schedule: chosenSchedule,
+        schedule,
         classCache,
         classYear,
       });
@@ -48,58 +52,53 @@ export function CourseCardToggleButton({
       logEvent(getAnalytics(), 'add_class', {
         subject: course.SUBJECT,
         catalogNumber: course.CATALOG_NBR,
-        term: semesterToTerm(chosenSchedule),
+        term: semesterToTerm(schedule),
       });
     }
 
     return dispatch(Schedules.addCourses({
       courseIds: [getClassId(course)],
-      scheduleId: chosenSchedule.id,
+      scheduleId: schedule.id,
     }));
-  }, [chosenSchedule, classYear, course, classCache, dispatch]);
+  }, [schedule, classYear, course, classCache, dispatch]);
 
-  if (!chosenSchedule) return null;
+  if (!schedule) return null;
 
-  const isInSchedule = getClassIdsOfSchedule(chosenSchedule).includes(course.id);
+  const isInSchedule = getClassIdsOfSchedule(schedule).includes(course.id);
 
   if (semesterFormat === 'sample' || !isInSchedule) {
     return (
-      <ToggleButton
+      <button
+        type="button"
         name="Add class to schedule"
         onClick={addClass}
+        className="secondary interactive round"
       >
         <FaPlus />
-      </ToggleButton>
+      </button>
     );
   }
 
   return (
-    <ToggleButton
-      name="Remove class from schedule"
-      onClick={() => dispatch(Schedules.removeCourses({
-        courseIds: [course.id],
-        scheduleId: chosenSchedule.id,
-      }))}
-    >
-      <FaTimes />
-    </ToggleButton>
+    <RemoveClassButton classId={course.id} />
   );
 }
+export function RemoveClassButton({ classId }: { classId: string }) {
+  const dispatch = useAppDispatch();
+  const { id } = useChosenSchedule();
 
-export function ToggleButton({
-  children, onClick, name,
-}: PropsWithChildren<{
-  onClick: () => void;
-  name: string;
-}>) {
-  return (
+  return id ? (
     <button
       type="button"
-      name={name}
-      onClick={onClick}
+      name="Remove class from schedule"
+      onClick={() => dispatch(Schedules.removeCourses({
+        courseIds: [classId],
+        scheduleId: id,
+      }))}
       className="secondary interactive round"
     >
-      {children}
+      <FaTimes />
     </button>
-  );
+  ) : null;
 }
+

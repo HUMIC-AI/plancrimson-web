@@ -4,7 +4,7 @@ import {
 import Layout from '@/components/Layout/Layout';
 import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
 import { useModal } from '@/src/context/modal';
-import { Subject, getClassId } from '@/src/lib';
+import { Subject } from '@/src/lib';
 import { alertUnexpectedError, useAppDispatch } from '@/src/utils/hooks';
 import { Auth, ClassCache } from '@/src/features';
 import { useMeiliClient } from '@/src/context/meili';
@@ -94,7 +94,7 @@ function ClassesCloud({
 
   // refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const currentHoverRef = useRef<number | null>(null);
+  const hoveredCourseIdRef = useRef<number | null>(null);
   const sceneRef = useRef<THREE.Scene>();
   const pointsRef = useRef<THREE.Points>();
 
@@ -133,8 +133,8 @@ function ClassesCloud({
 
       if (raycaster && pointsRef.current) {
         raycaster.update(pointsRef.current, mouseTracker!.mouse, camera);
-        if (raycaster.currentIntersect !== currentHoverRef.current) {
-          currentHoverRef.current = raycaster.currentIntersect;
+        if (raycaster.currentIntersect !== hoveredCourseIdRef.current) {
+          hoveredCourseIdRef.current = raycaster.currentIntersect;
         }
       }
 
@@ -147,13 +147,13 @@ function ClassesCloud({
       scene.children.forEach((child) => scene.remove(child));
       sceneRef.current = undefined;
       pointsRef.current = undefined;
-      currentHoverRef.current = null;
+      hoveredCourseIdRef.current = null;
       if (orbitControls) orbitControls.dispose();
       if (mouseTracker) mouseTracker.dispose();
       renderer.dispose();
       disposeResizeListener();
     };
-  }, [sceneUtils]);
+  }, [autoRotate, controls, interactive, particleSize, sceneUtils]);
 
   useEffect(() => {
     if (!sceneUtils || !positions || !courses) return;
@@ -184,17 +184,13 @@ function ClassesCloud({
         onMouseUp={() => {
           clearTimeout(clickTimeout.current);
 
-          if (isClick.current) {
-            const idx = currentHoverRef.current;
-            if (idx !== null && courses) {
-              const key = courses[idx].id;
-              const courseId = getClassId(key);
-              dispatch(ClassCache.loadCourses(client, [courseId]))
-                .then(([course]) => {
-                  showCourse(course);
-                })
-                .catch(alertUnexpectedError);
-            }
+          if (isClick.current && client && hoveredCourseIdRef.current !== null && courses !== null) {
+            const courseId = courses[hoveredCourseIdRef.current].id;
+            dispatch(ClassCache.loadCourses(client, [courseId]))
+              .then(([course]) => {
+                showCourse(course);
+              })
+              .catch(alertUnexpectedError);
           }
 
           isClick.current = false;

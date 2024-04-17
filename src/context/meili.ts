@@ -2,13 +2,13 @@ import { getDoc } from 'firebase/firestore';
 import {
   createContext, useContext,
 } from 'react';
-import type { InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
 import Firestore from '../schema';
 import { isDevelopment } from '../utils/utils';
 
-export type { InstantMeiliSearchInstance };
+export type InstantMeiliSearchInstance = {};
 
-// See the MeiliProvider component.
+// See the {@link MeiliProvider} component.
+// these utilities are in a separate file to exclude meilisearch from the main bundle
 
 /**
  * @returns The hostname of the Meilisearch instance, without a trailing slash.
@@ -34,13 +34,15 @@ export async function getMeiliApiKey() {
   return key;
 }
 
+export interface MeiliContextType {
+  client?: InstantMeiliSearchInstance;
+  error?: string;
+}
+
 /**
  * Undefined means there is no context.
  * A null client means that the context is loading.
  */
-export const MeiliContext = createContext<{
-  client?: InstantMeiliSearchInstance | null;
-  error?: string;
-}>({});
+export const MeiliContext = createContext<MeiliContextType>({});
 
 export const useMeiliClient = () => useContext(MeiliContext);

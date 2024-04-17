@@ -1,10 +1,9 @@
-import type { InstantMeiliSearchInstance } from '@meilisearch/instant-meilisearch';
 import {
   createSlice, PayloadAction,
 } from '@reduxjs/toolkit';
 import type { ExtendedClass, IndexName } from '@/src/lib';
 import { allTruthy } from '@/src/lib';
-import { getMeiliApiKey, getMeiliHost } from '@/src/context/meili';
+import { getMeiliApiKey, getMeiliHost, InstantMeiliSearchInstance } from '@/src/context/meili';
 import { useState, useEffect } from 'react';
 import type { AppDispatch, RootState } from '../store';
 import { isDevelopment } from '../utils/utils';

@@ -2,7 +2,9 @@ import { instantMeiliSearch, type InstantMeiliSearchInstance } from '@meilisearc
 import {
   useState, useEffect, type PropsWithChildren, useMemo,
 } from 'react';
-import { getMeiliApiKey, getMeiliHost, MeiliContext } from '@/src/context/meili';
+import {
+  getMeiliApiKey, getMeiliHost, MeiliContext, MeiliContextType,
+} from '@/src/context/meili';
 
 /**
  * Provides the React context for the MeiliSearch client.
@@ -36,8 +38,9 @@ export default function MeiliProvider({
       });
   }, [userId]);
 
-  const context = useMemo(() => ({
-    client, error,
+  const context = useMemo<MeiliContextType>(() => ({
+    client,
+    error,
   }), [client, error]);
 
   return (

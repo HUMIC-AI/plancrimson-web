@@ -25,11 +25,11 @@ export function HoveredCourseInfo({ courseId }: {
   courseId: string | null;
 }) {
   const dispatch = useAppDispatch();
-  const { client } = useMeiliClient();
+  const { client, error } = useMeiliClient();
   const [course, setCourse] = useState<ExtendedClass>();
 
   useEffect(() => {
-    if (!courseId) {
+    if (!courseId || !client || error) {
       setCourse(undefined);
       return;
     }
@@ -41,7 +41,7 @@ export function HoveredCourseInfo({ courseId }: {
       .catch((e) => {
         console.error(e);
       });
-  }, [courseId, client, dispatch]);
+  }, [client, courseId, dispatch, error]);
 
   const props = useMemo(() => (
     course

@@ -5,9 +5,10 @@ import { classNames } from '@/src/utils/styles';
 import { Season, semesterToTerm } from '@/src/lib';
 import { isScheduleId } from '@/src/utils/schedules';
 import SemesterColumnHeader from './SemesterColumnHeader';
-import { PlanningPageCoursesSection } from './CoursesSection';
+import { SemesterColumnBody } from './CoursesSection';
 import { useDragAndDropContext } from './DragAndDrop';
 import { useScheduleFromScheduleIdOrSemester } from './useScheduleFromScheduleIdOrSemester';
+import { ScheduleIdProvider } from '../../../src/context/selectedSchedule';
 
 const VIABILITY_COLORS: Record<Viability, string> = {
   Yes: 'bg-blue-primary',
@@ -57,10 +58,11 @@ export default function SemesterColumn({
         <SemesterColumnHeader s={s} />
 
         {schedule && (
-        <PlanningPageCoursesSection
-          scheduleId={schedule.id}
-          highlightedRequirement={highlightedRequirement}
-        />
+          <ScheduleIdProvider id={schedule.id}>
+            <SemesterColumnBody
+              highlightedRequirement={highlightedRequirement}
+            />
+          </ScheduleIdProvider>
         )}
       </div>
     </div>

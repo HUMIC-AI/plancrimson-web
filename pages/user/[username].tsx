@@ -22,7 +22,7 @@ import { BioSection } from '@/components/ConnectPageComponents/EditBioForm';
 import { useProfile, useFriendStatus, FriendStatus } from '@/components/ConnectPageComponents/useProfile';
 import { IncomingRequestButtons, IncomingRequestList } from '@/components/ConnectPageComponents/FriendRequests';
 import { ErrorMessage } from '@/components/Layout/ErrorMessage';
-import ExpandCardsProvider from '@/src/context/expandCards';
+import CourseCardStyleProvider from '@/src/context/expandCards';
 import Schema from '@/src/schema';
 import { compareSemesters } from '@/src/lib';
 import { ScheduleSyncer } from '@/components/Utils/ScheduleSyncer';
@@ -47,9 +47,9 @@ export default function () {
   return (
     <Layout title={username ?? 'User'} className="mx-auto w-full max-w-screen-md flex-1 p-8" verify="meili">
       {({ userId }) => (
-        <ExpandCardsProvider defaultStyle="collapsed">
+        <CourseCardStyleProvider defaultStyle="collapsed">
           <Wrapper userId={userId} />
-        </ExpandCardsProvider>
+        </CourseCardStyleProvider>
       )}
     </Layout>
   );
@@ -92,9 +92,11 @@ function UserPage({ pageProfile, userId }: { userId: string, pageProfile: WithId
     return onSnapshot(query(Schema.Collection.schedules(), ...constraints), (snap) => {
       const newSchedules = snap.docs.map((doc) => doc.data());
       setSchedules(newSchedules.sort(compareSemesters));
-      dispatch(ClassCache.loadCourses(client, getAllClassIds(newSchedules)))
-        .then(() => console.info('Loaded new courses from snapshot'))
-        .catch(alertUnexpectedError);
+      if (client) {
+        dispatch(ClassCache.loadCourses(client, getAllClassIds(newSchedules)))
+          .then(() => console.info('Loaded new courses from snapshot'))
+          .catch(alertUnexpectedError);
+      }
     }, alertUnexpectedError);
   }, [pageProfile, friendStatus, dispatch, client]);
 

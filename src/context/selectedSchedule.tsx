@@ -1,54 +1,39 @@
-import { useRouter } from 'next/router';
 import React, {
-  createContext, Dispatch, PropsWithChildren, useContext, useMemo,
+  createContext, PropsWithChildren, useCallback, useContext,
 } from 'react';
+import { useRouter } from 'next/router';
 import { useSchedule } from '../utils/schedules';
 
-export interface ChosenScheduleContextType {
-  chosenScheduleId: string | null;
-  chooseSchedule: Dispatch<string | null>;
-}
+export const ScheduleIdContext = createContext<string | null>(null);
 
-/**
- * Passes down a global chosen schedule for use with deeply nested Instantsearch components.
- */
-export const ChosenScheduleContext = createContext<ChosenScheduleContextType>({
-  chooseSchedule: () => null,
-  chosenScheduleId: null,
-});
-
-export function ChosenScheduleProvider({ children }: PropsWithChildren<{}>) {
-  const { query, pathname, replace } = useRouter();
-  const { selected: chosenScheduleId } = query;
-
-  const context = useMemo<ChosenScheduleContextType>(
-    () => ({
-      chosenScheduleId: typeof chosenScheduleId === 'string' ? chosenScheduleId : null,
-      // see https://nextjs.org/docs/api-reference/next/link#with-url-object
-      chooseSchedule(scheduleId) {
-        if (scheduleId) {
-          replace({ pathname, query: { selected: scheduleId } });
-        } else {
-          replace(pathname);
-        }
-      },
-    }),
-    [chosenScheduleId, replace, pathname],
-  );
-
+export function ScheduleIdProvider({ id, children }: PropsWithChildren<{ id: string | null }>) {
   return (
-    <ChosenScheduleContext.Provider value={context}>
+    <ScheduleIdContext.Provider value={id}>
       {children}
-    </ChosenScheduleContext.Provider>
+    </ScheduleIdContext.Provider>
   );
 }
-
-const useChosenScheduleContext = () => useContext(ChosenScheduleContext);
 
 export function useChosenSchedule() {
-  const { chosenScheduleId } = useChosenScheduleContext();
-  const { schedule } = useSchedule(chosenScheduleId);
-  return schedule;
+  const id = useContext(ScheduleIdContext)!;
+  const { schedule, error } = useSchedule(id);
+  return {
+    id,
+    schedule,
+    error,
+  };
 }
 
-export default useChosenScheduleContext;
+export function useChooseSchedule() {
+  const router = useRouter();
+
+  const chooseSchedule = useCallback((id: string | null) => {
+    const { selected, ...query } = router.query;
+    router.replace({
+      pathname: router.pathname,
+      query: id ? { ...query, selected: id } : query,
+    }, undefined, { shallow: true });
+  }, [router]);
+
+  return chooseSchedule;
+}

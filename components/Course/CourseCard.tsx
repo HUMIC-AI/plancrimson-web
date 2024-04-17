@@ -9,12 +9,9 @@ import {
   ExtendedClass, departmentImages, getSemester, semesterToTerm,
 } from '@/src/lib';
 import { useModal } from '@/src/context/modal';
-import { alertUnexpectedError, useAppSelector } from '@/src/utils/hooks';
-import {
-  Schedules,
-} from '@/src/features';
+import { alertUnexpectedError } from '@/src/utils/hooks';
 import { classNames } from '@/src/utils/styles';
-import { useExpandCards } from '@/src/context/expandCards';
+import { useCourseCardStyle } from '@/src/context/expandCards';
 import Tooltip from '../Utils/Tooltip';
 import { ClassSizeRating, HoursRating, StarRating } from './RatingIndicators';
 import { useDragAndDropContext } from '../YearSchedule/SemesterColumn/DragAndDrop';
@@ -23,13 +20,13 @@ import { Highlight } from '../SearchComponents/Highlight';
 import {
   Instructors, DaysOfWeek, Location, ClassTime,
 } from './CourseComponents';
+import { useChosenSchedule } from '../../src/context/selectedSchedule';
 
 type Department = keyof typeof departmentImages;
 
 // see below
 type CourseCardProps = {
   course: ExtendedClass;
-  chosenScheduleId?: string | null;
   highlight?: boolean;
   warnings?: string;
   hideTerm?: boolean;
@@ -40,20 +37,18 @@ type CourseCardProps = {
  * Renders a given small expandable course card on the planning page or in the search page.
  * Should be *pure* and only use data from the provided course (and not reference the {@link ClassCache})
  * @param course the course to summarize in this card
- * @param chosenScheduleId the current chosen schedule. Used for various button interactions.
  * @param highlight whether to highlight this class. Used in the requirements checker. default false
  * @param warnings an optional list of warnings, eg time collisions with other classes
  */
 export const CourseCard = forwardRef(({
   course,
-  chosenScheduleId = null,
   highlight = false,
   warnings,
   hideTerm = false,
   hideRatings = false,
 }: CourseCardProps, ref: Ref<HTMLDivElement>) => {
-  const { expandCards } = useExpandCards();
-  const chosenSchedule = useAppSelector(Schedules.selectSchedule(chosenScheduleId));
+  const { style } = useCourseCardStyle();
+  const { schedule } = useChosenSchedule();
   const { showCourse } = useModal();
   const drag = useDragAndDropContext();
 
@@ -68,21 +63,21 @@ export const CourseCard = forwardRef(({
   const onDragStart: DragEventHandler<unknown> | undefined = drag.enabled ? (ev) => {
     ev.dataTransfer.dropEffect = 'move';
 
-    if (!chosenSchedule?.title) {
+    if (!schedule?.title) {
       alertUnexpectedError(new Error('Selected schedule has no ID'));
     } else {
       drag.setDragStatus({
         dragging: true,
         data: {
           classId: course.id,
-          originScheduleId: chosenSchedule.id,
+          originScheduleId: schedule.id,
           originTerm: semesterToTerm(semester),
         },
       });
     }
   } : undefined;
 
-  if (expandCards === 'text') {
+  if (style === 'text') {
     return (
       <div
         className="flex items-center justify-between"
@@ -98,15 +93,12 @@ export const CourseCard = forwardRef(({
           {course.SUBJECT + course.CATALOG_NBR}
         </button>
 
-        <CourseCardToggleButton
-          chosenScheduleId={chosenScheduleId!}
-          course={course}
-        />
+        <CourseCardToggleButton course={course} />
       </div>
     );
   }
 
-  const isExpanded = expandCards === 'expanded';
+  const isExpanded = style === 'expanded';
 
   return (
     // move the shadow outside to avoid it getting hidden
@@ -160,10 +152,7 @@ export const CourseCard = forwardRef(({
                 </Tooltip>
                 )}
 
-                <CourseCardToggleButton
-                  chosenScheduleId={chosenScheduleId!}
-                  course={course}
-                />
+                <CourseCardToggleButton course={course} />
               </span>
             </p>
 

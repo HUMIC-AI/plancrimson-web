@@ -1,6 +1,6 @@
 import React from 'react';
 import { connectSearchBox } from 'react-instantsearch-dom';
-import useChosenScheduleContext from '@/src/context/selectedSchedule';
+import { useChosenSchedule } from '@/src/context/selectedSchedule';
 import { useAppSelector } from '@/src/utils/hooks';
 import { sortSchedulesBySemester } from '@/src/utils/schedules';
 import { Schedules } from '@/src/features';
@@ -26,7 +26,7 @@ function SearchBoxComponent({
   showSmallAttributeMenu,
 }: SearchBoxProps) {
   const schedules = useAppSelector(Schedules.selectSchedules);
-  const { chooseSchedule: selectSchedule, chosenScheduleId: selectedSchedule } = useChosenScheduleContext();
+  const { id } = useChosenSchedule();
 
   return (
     <div className="flex flex-col items-start space-y-4">
@@ -44,8 +44,7 @@ function SearchBoxComponent({
       <div className="relative sm:hidden">
         <ScheduleChooser
           scheduleIds={sortSchedulesBySemester(schedules).map((schedule) => schedule.id)}
-          chooseSchedule={selectSchedule}
-          chosenScheduleId={selectedSchedule}
+          chosenScheduleId={id}
           direction="right"
           showDropdown
         />

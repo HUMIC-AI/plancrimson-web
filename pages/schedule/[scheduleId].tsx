@@ -4,8 +4,7 @@ import Layout from '@/components/Layout/Layout';
 import Calendar from '@/components/SemesterSchedule/Calendar';
 import { ErrorMessage } from '@/components/Layout/ErrorMessage';
 import { useSchedule } from '@/src/utils/schedules';
-import { useMemo } from 'react';
-import { ChosenScheduleContext, ChosenScheduleContextType } from '../../src/context/selectedSchedule';
+import { ScheduleIdProvider } from '../../src/context/selectedSchedule';
 
 export default function SchedulePage() {
   return (
@@ -22,11 +21,6 @@ function Wrapper({ userId }: { userId: string; }) {
   const { schedule, error } = useSchedule(scheduleId);
   const elapsed = useElapsed(500, []);
 
-  const chosenScheduleContext = useMemo<ChosenScheduleContextType>(() => ({
-    chosenScheduleId: scheduleId,
-    chooseSchedule: () => null,
-  }), [scheduleId]);
-
   if (error) {
     return <ErrorMessage>{error}</ErrorMessage>;
   }
@@ -36,8 +30,8 @@ function Wrapper({ userId }: { userId: string; }) {
   }
 
   return (
-    <ChosenScheduleContext.Provider value={chosenScheduleContext}>
+    <ScheduleIdProvider id={scheduleId}>
       <Calendar />
-    </ChosenScheduleContext.Provider>
+    </ScheduleIdProvider>
   );
 }

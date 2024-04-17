@@ -1,7 +1,7 @@
 import Layout from '../../components/Layout/Layout';
 import { LoadingBars } from '../../components/Layout/LoadingPage';
 import { SurprisePage } from '../../components/SurprisePage/SurprisePage';
-import ExpandCardsProvider from '../../src/context/expandCards';
+import CourseCardStyleProvider from '../../src/context/expandCards';
 import { useTotalCourses } from '../../src/features/classCache';
 import { useElapsed } from '../../src/utils/hooks';
 
@@ -12,9 +12,9 @@ export default function () {
   return (
     <Layout title="Friends" verify="meili">
       {({ userId }) => (
-        <ExpandCardsProvider defaultStyle="expanded" readonly>
+        <CourseCardStyleProvider defaultStyle="expanded" readonly>
           <Wrapper userId={userId} />
-        </ExpandCardsProvider>
+        </CourseCardStyleProvider>
       )}
     </Layout>
   );

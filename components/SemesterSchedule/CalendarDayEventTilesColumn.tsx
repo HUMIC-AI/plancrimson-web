@@ -5,10 +5,10 @@ import { getOverlap, toPercent } from '@/src/lib';
 import { FaTimesCircle } from 'react-icons/fa';
 import { classNames } from '../../src/utils/styles';
 import { useModal } from '../../src/context/modal';
-import { useAppDispatch } from '../../src/utils/hooks';
+import { alertUnexpectedError, useAppDispatch } from '../../src/utils/hooks';
 import { ClassCache, Schedules } from '../../src/features';
 import { useMeiliClient } from '../../src/context/meili';
-import useChosenScheduleContext from '../../src/context/selectedSchedule';
+import { useChosenSchedule } from '../../src/context/selectedSchedule';
 
 type EventTilesProps = {
   events: (EventAttributes & ({ end?: DateArray; isSection?: string; }))[];
@@ -18,8 +18,8 @@ type EventTilesProps = {
 export function CalendarDayEventTilesColumn({ events, showSections }: EventTilesProps) {
   const overlapCounter: Record<string, number> = {};
   const dispatch = useAppDispatch();
-  const { chosenScheduleId } = useChosenScheduleContext();
-  const { client } = useMeiliClient();
+  const { id: chosenScheduleId } = useChosenSchedule();
+  const { client, error } = useMeiliClient();
   const { showCourse } = useModal();
 
   return (
@@ -64,12 +64,12 @@ export function CalendarDayEventTilesColumn({ events, showSections }: EventTiles
               <button
                 className="interactive text-left font-semibold md:text-base"
                 type="button"
-                onClick={() => dispatch(ClassCache.loadCourses(client, [ev.productId!]))
+                onClick={() => (error ? alertUnexpectedError(error) : client && dispatch(ClassCache.loadCourses(client, [ev.productId!]))
                   .then(([course]) => showCourse(course))
                   .catch((err) => {
                     console.error(err);
                     alert('Error loading course');
-                  })}
+                  }))}
               >
                 {label}
               </button>

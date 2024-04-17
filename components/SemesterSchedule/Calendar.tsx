@@ -16,7 +16,7 @@ import { useChosenSchedule } from '../../src/context/selectedSchedule';
  */
 export default function Calendar() {
   const classCache = useAppSelector(ClassCache.selectClassCache);
-  const schedule = useChosenSchedule();
+  const { schedule } = useChosenSchedule();
   const classes = allTruthy(schedule?.classes ? schedule.classes.map((classId) => classCache[classId]) : []);
 
   const customTimes = useAppSelector(Settings.selectCustomTimes);

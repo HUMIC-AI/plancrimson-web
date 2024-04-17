@@ -5,7 +5,6 @@ import {
   sampleCourses, ExtendedClass,
 } from '@/src/lib';
 import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
-import useChosenScheduleContext from '@/src/context/selectedSchedule';
 import useSearchState from '@/src/context/searchState';
 import { alertSignIn } from './SearchBox/searchUtils';
 import { CourseCard } from '../Course/CourseCard';
@@ -27,7 +26,6 @@ function HitsComponent({
   // refinePrevious = alertSignIn,
 }: Provided) {
   const { oneCol } = useSearchState();
-  const { chosenScheduleId } = useChosenScheduleContext();
 
   return (
     <div className="flex flex-col items-center space-y-4">
@@ -49,11 +47,7 @@ function HitsComponent({
           : 'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4'}
         >
           {hits.map((hit) => (
-            <CourseCard
-              key={hit.id}
-              course={hit}
-              chosenScheduleId={chosenScheduleId}
-            />
+            <CourseCard key={hit.id} course={hit} />
           ))}
         </div>
       )}

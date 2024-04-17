@@ -7,9 +7,9 @@ import React, { useEffect } from 'react';
 import { SearchStateProvider, useDefaultSearchState } from '@/src/context/searchState';
 import store from '@/src/store';
 import { ModalProvider } from '@/src/context/modal';
-import { ChosenScheduleProvider } from '@/src/context/selectedSchedule';
+import { ScheduleIdProvider } from '@/src/context/selectedSchedule';
 import { useSyncAuth, useSyncUserSettings } from '@/components/Layout/useSyncAuth';
-import ExpandCardsProvider from '@/src/context/expandCards';
+import CourseCardStyleProvider from '@/src/context/expandCards';
 import IncludeSemestersProvider from '@/src/context/includeSemesters';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { useRouter } from 'next/router';
@@ -42,13 +42,13 @@ function AppWrapper({ Component, pageProps }: AppProps) {
 
   return (
     <SearchStateProvider defaultState={defaultState}>
-      <ExpandCardsProvider>
-        <ChosenScheduleProvider>
+      <CourseCardStyleProvider>
+        <ScheduleIdProvider id={typeof router.query.selected === 'string' ? router.query.selected : null}>
           <IncludeSemestersProvider>
             <Component {...pageProps} />
           </IncludeSemestersProvider>
-        </ChosenScheduleProvider>
-      </ExpandCardsProvider>
+        </ScheduleIdProvider>
+      </CourseCardStyleProvider>
     </SearchStateProvider>
   );
 }
