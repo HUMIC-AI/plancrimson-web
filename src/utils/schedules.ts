@@ -136,7 +136,11 @@ export function useSharedCourses(friendIds: string[] | undefined, courseId?: str
  */
 export function useClasses(scheduleId: string | null) {
   const { schedule } = useSchedule(scheduleId);
-  const fixedClasses = useMemo(() => (scheduleId ? schedule?.classes : []), [schedule?.classes, scheduleId]);
+  const fixedClasses = useMemo(() => {
+    if (!scheduleId) return [];
+    if (!schedule) return undefined;
+    return schedule.classes ?? [];
+  }, [schedule, scheduleId]);
   return fixedClasses;
 }
 

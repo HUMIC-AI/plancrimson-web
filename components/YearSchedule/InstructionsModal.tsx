@@ -1,6 +1,7 @@
 import { useModal } from '@/src/context/modal';
 import { useMounted } from '@/src/utils/hooks';
 import { useEffect } from 'react';
+import { FaCog } from 'react-icons/fa';
 
 export function InstructionsModal() {
   const mounted = useMounted();
@@ -25,15 +26,14 @@ function InstructionsModalComponent() {
       content: (
         <div className="space-y-2 p-4">
           <p>
-            <span className="font-bold">Hover over the title</span>
+            Click on the
             {' '}
-            of a schedule to access additional options, such as making it
+            <FaCog className="mb-0.5 inline" />
+            {' '}
+            icon to access additional options, such as making a schedule
             {' '}
             <span className="font-bold">public</span>
             , duplicating it, or deleting it.
-          </p>
-          <p>
-            Use the buttons at the top of the page to choose which schedules get displayed.
           </p>
           <p>
             You can create
@@ -42,6 +42,9 @@ function InstructionsModalComponent() {
             {' '}
             per semester.
             Use these to categorize your classes or to plan out different paths.
+          </p>
+          <p>
+            Use the buttons at the top of the page to choose which schedules get displayed.
           </p>
           <p>
             Visit the other pages to explore a web of courses and meet future classmates. Enjoy!
