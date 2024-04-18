@@ -81,8 +81,10 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
         <line x1={-6} y1={r / 3} x2={6} y2={r / 3} stroke="black" />
         <line x1={-6} y1={r} x2={6} y2={r} stroke="black" />
         <line x1={0} y1={r / 3} x2={0} y2={r} stroke="black" />
-
         <text dominantBaseline="central" x={r / 8} y={((r / 3) + r) / 2}>Class size</text>
+
+        <line x1={r * (2 / 3)} y1={0} x2={r + r / 4} y2={r / 6} stroke="black" />
+        <text x={r + r / 4} y={r / 6} dominantBaseline="central">Subject</text>
       </svg>
 
       <ul className="list-inside list-disc space-y-2">
@@ -91,16 +93,12 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
           {' '}
           <strong>circle</strong>
           {' '}
-          represents a course.
+          is a course.
         </li>
         <li>
           <strong>Click</strong>
           {' '}
-          to browse
-          {' '}
-          <em>similar</em>
-          {' '}
-          courses.
+          to browse courses.
         </li>
         <li>
           <strong>Right-click</strong>

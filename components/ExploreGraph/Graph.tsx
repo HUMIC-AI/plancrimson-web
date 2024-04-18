@@ -601,7 +601,7 @@ export class Graph {
         .attr('font-size', 0)
         .attr('font-weight', 300)
         .attr('opacity', 1)
-        .text('Click me!');
+        .text('Hover me!');
 
       const pulse = this.pulse.bind(this);
 
@@ -634,7 +634,8 @@ export class Graph {
   private addInfoLabel(trigger: CourseGroupSelection) {
     const r = 100;
 
-    const group = trigger.append('g');
+    const group = trigger.append('g')
+      .attr('stroke', 'black');
 
     const [t] = Graph.transitionRadius(trigger.node()!, r, Graph.PULSE_DURATION, true);
 
@@ -645,8 +646,7 @@ export class Graph {
         .attr('x1', r / 3)
         .attr('y1', -r / 3)
         .attr('x2', r)
-        .attr('y2', -r / 2)
-        .attr('stroke', 'black');
+        .attr('y2', -r / 2);
 
       group
         .append('text')
@@ -661,30 +661,41 @@ export class Graph {
         .attr('x1', -6)
         .attr('y1', r / 3)
         .attr('x2', 6)
-        .attr('y2', r / 3)
-        .attr('stroke', 'black');
+        .attr('y2', r / 3);
 
       group
         .append('line')
         .attr('x1', -6)
         .attr('y1', r)
         .attr('x2', 6)
-        .attr('y2', r)
-        .attr('stroke', 'black');
+        .attr('y2', r);
 
       group
         .append('line')
         .attr('x1', 0)
         .attr('y1', r / 3)
         .attr('x2', 0)
-        .attr('y2', r)
-        .attr('stroke', 'black');
+        .attr('y2', r);
 
       group
         .append('text')
         .attr('x', 0)
         .attr('y', ((r / 3) + r) / 2)
-        .text('Class size');
+        .text('# students');
+
+      group
+        .append('line')
+        .attr('x1', r * (2 / 3))
+        .attr('y1', 0)
+        .attr('x2', r + r / 4)
+        .attr('y2', r / 6);
+
+      group
+        .append('text')
+        .attr('text-anchor', 'start')
+        .attr('x', r + r / 4)
+        .attr('y', r / 6)
+        .text('Subject');
     });
 
     // delete group on mouseout
