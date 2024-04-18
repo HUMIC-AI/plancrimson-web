@@ -13,12 +13,11 @@ import {
 } from '../../src/lib';
 import { alertUnexpectedError } from '../../src/utils/hooks';
 
-export type DatumBase = CourseBrief & {
+export type DatumWithoutPosition = CourseBrief & {
   pca: number[];
-  catalog: string;
 };
 
-export type Datum = DatumBase & {
+export type Datum = DatumWithoutPosition & {
   x: number;
   y: number;
 };
@@ -26,6 +25,7 @@ export type Datum = DatumBase & {
 export type LinkDatum = {
   source: Datum;
   target: Datum;
+  mode: 'Add similar' | 'Add opposite';
 };
 
 export type StringLink = { source: string; target: string; };
@@ -50,7 +50,7 @@ export const EMOJI_SCALES: Record<RatingField, [string, string, string, string, 
   meanHours: ['🥱', '😎', '🧐', '😰', '💀'],
 };
 
-const getColor = (d: DatumBase) => getSubjectColor(d.subject, {
+const getColor = (d: DatumWithoutPosition) => getSubjectColor(d.subject, {
   // saturation: (d.meanRating ? d.meanRating : 3) / 5,
   // opacity: (d.meanHours ? d.meanHours : 3) / 5,
   saturation: 0.7,
@@ -78,6 +78,8 @@ export const toolIcons: Record<GraphTool, JSX.Element> = {
   Erase: <FaEraser />,
 };
 
+export type GraphPhase = 'init' | 'wait' | 'info' | 'ready';
+
 /**
  * The entire d3 graph visualization.
  * appendNodes and removeNodes should be used to update the graph.
@@ -92,7 +94,7 @@ export class Graph {
 
   public mode: GraphTool = 'Add similar';
 
-  private phaseInternal: 'init' | 'wait' | 'info' | 'ready' = 'init';
+  private phaseInternal: GraphPhase = 'init';
 
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
 
@@ -125,11 +127,11 @@ export class Graph {
 
   private static readonly T_DURATION = 150;
 
-  private static readonly MAX_LINK_STRENGTH = 0.3;
+  private static readonly MAX_LINK_STRENGTH = 0.2;
 
   private static readonly CHARGE_STRENGTH = -100;
 
-  private static readonly NUM_NEIGHBOURS = 3;
+  private static readonly NUM_NEIGHBOURS = 2;
 
   private static readonly HOVERED_LINK_WIDTH = 25;
 
@@ -137,7 +139,7 @@ export class Graph {
 
   private static readonly PULSE_DURATION = 750;
 
-  private isExplaining = false;
+  private stillExplaining = false;
 
   constructor(
     svgDom: SVGSVGElement,
@@ -154,6 +156,7 @@ export class Graph {
     private showInstructions: null | (() => void),
     private reactAppendCourses: (ids: string[]) => void,
     private reactRemoveCourses: (ids: string[]) => void,
+    private reactSetPhase: Dispatch<SetStateAction<GraphPhase>>,
   ) {
     this.svg = d3.select(svgDom);
     this.tooltip = d3.select(tooltipDom);
@@ -170,7 +173,8 @@ export class Graph {
 
     this.linkGroup = this.svg.append('g')
       .attr('stroke-opacity', 0.7)
-      .attr('stroke-linecap', 'round');
+      .attr('stroke-linecap', 'round')
+      .attr('cursor', 'help');
 
     this.link = this.linkGroup.selectAll<SVGLineElement, LinkDatum>('line');
 
@@ -191,7 +195,7 @@ export class Graph {
       .on('click contextmenu', (event) => {
         event.preventDefault();
         this.focusCourse(null);
-        if (!this.isExplaining) {
+        if (!this.stillExplaining) {
           this.clearExplanation();
         }
       });
@@ -215,7 +219,6 @@ export class Graph {
     return this.phaseInternal;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   get defaultZoom() {
     return d3.zoomIdentity.translate(-this.width / 8, 0).scale(1.5);
   }
@@ -225,8 +228,10 @@ export class Graph {
   }
 
   public clearExplanation() {
-    this.isExplaining = false;
+    this.stillExplaining = false;
+    const shouldCloseExplanation = this.isExplanationOpen;
     this.explanationComparingIds = [];
+    if (shouldCloseExplanation) this.reactSetExplanation(null);
     this.renderHighlights();
   }
 
@@ -295,6 +300,12 @@ export class Graph {
 
     this.focusedCourse = { id, reason: 'fix' };
 
+    // replace a link explanation
+    if (!this.stillExplaining && this.isExplanationOpen) {
+      this.clearExplanation();
+    }
+
+    // zoom into the focused course
     const fixedNode = this.currentData.find((d) => d.id === this.focusedCourse.id);
     if (fixedNode) {
       this.svg.transition('svg-zoom')
@@ -305,20 +316,37 @@ export class Graph {
     this.renderHighlights();
   }
 
+  private static getNewPosition(d: Datum, course: CourseBrief) {
+    const theta = Math.random() * 2 * Math.PI;
+    const r = Graph.getRadius(course) + Graph.getRadius(d) + Math.random() * Graph.RADIUS;
+    return {
+      x: d.x + r * Math.cos(theta),
+      y: d.y + r * Math.sin(theta),
+    };
+  }
+
+  private inGraph(d: CourseBrief) {
+    return this.currentData.some((n) => n.catalog === d.catalog && n.subject === d.subject);
+  }
+
+  get availableCourses() {
+    return this.courses.filter((d) => !this.inGraph(d));
+  }
+
   private addNewNeighbours(d: Datum, numNeighbours = Graph.NUM_NEIGHBOURS) {
-    const nodes: Datum[] = this.positions.filter((_, i) => {
-      const course = this.courses[i] as DatumBase;
-      return !this.currentData.some(({ catalog, subject }) => catalog === course.catalog && subject === course.subject);
-    })
-      .map((pca, i) => ({ d: cos(d.pca, pca), i }))
-      .sort((a, b) => (this.mode === 'Add opposite' ? -1 : +1) * (b.d - a.d))
-      .slice(0, numNeighbours)
-      .map(({ i }) => ({
-        ...this.courses[i],
-        pca: this.positions[i],
-        x: d.x + Math.random() * Graph.RADIUS * 4 - Graph.RADIUS * 2,
-        y: d.y + Math.random() * Graph.RADIUS * 4 - Graph.RADIUS * 2,
-      }) as Datum);
+    const neighbours: (CourseBrief & { distance: number })[] = this.availableCourses
+      .map((course) => ({
+        ...course,
+        distance: cos(d.pca, this.positions[course.i]),
+      }))
+      .sort((a, b) => (this.mode === 'Add opposite' ? -1 : +1) * (b.distance - a.distance))
+      .slice(0, numNeighbours);
+
+    const nodes: Datum[] = neighbours.map(({ distance, ...course }) => ({
+      ...course,
+      pca: this.positions[course.i],
+      ...Graph.getNewPosition(d, course),
+    }));
 
     const links = nodes.map((t) => ({ source: d.id, target: t.id }));
     this.appendNodes(nodes, links);
@@ -374,7 +402,10 @@ export class Graph {
     this.sim.alpha(1).restart();
 
     // update link properties after strings are populated
-    this.link.attr('stroke-width', Graph.getLinkWidth);
+    this.link
+      .attr('stroke-width', Graph.getLinkWidth)
+      .attr('stroke-opacity', Graph.getLinkOpacity)
+      .attr('stroke', Graph.getLinkColor);
 
     // callbacks
     this.reactSetSubjects([...new Set(this.currentData.map((d) => d.subject))]);
@@ -389,7 +420,7 @@ export class Graph {
   }
 
   private static getLinkWidth(d: LinkDatum) {
-    return 0.5 + 2 * Graph.RADIUS * getLinkOpacity(d);
+    return 0.5 + 2 * Graph.RADIUS * Graph.getLinkOpacity(d);
   }
 
   private pulse(c: SVGGElement, radius: number, grow = true) {
@@ -403,9 +434,9 @@ export class Graph {
 
   /**
    * Main update function for entering nodes into the graph.
-   * Use {@link DatumBase} since we don't need to initialize x and y.
+   * Use {@link DatumWithoutPosition} since we don't need to initialize x and y.
    */
-  public appendNodes(nodesToAdd: DatumBase[], idLinks: StringLink[]) {
+  public appendNodes(nodesToAdd: DatumWithoutPosition[], idLinks: StringLink[]) {
     console.debug('updating graph', nodesToAdd.length, idLinks.length);
 
     nodesToAdd = this.getNewNodes(nodesToAdd);
@@ -416,7 +447,7 @@ export class Graph {
     this.link = this.link
       .data(this.link.data().concat(idLinks.map((d) => ({ ...d }) as unknown as LinkDatum)), (d) => `${stringify(d.source)}:${stringify(d.target)}`)
       .join((enter) => enter.append('line')
-        .attr('stroke', this.mode === 'Add opposite' ? 'rgb(var(--color-blue-primary))' : 'rgb(var(--color-gray-primary))')
+        .attr('stroke', Graph.getLinkColor)
         .call(this.addLinkEventListeners.bind(this)));
 
     this.node = this.node
@@ -431,6 +462,10 @@ export class Graph {
     this.updateNodesInternal();
   }
 
+  private static getLinkColor(d: LinkDatum) {
+    return d.mode === 'Add opposite' ? 'rgb(var(--color-blue-primary))' : 'rgb(var(--color-gray-primary))';
+  }
+
   public getNewNodes<T extends NodeId>(nodes: T[]) {
     return nodes.filter((d) => !this.currentData.some((n) => n.id === stringify(d)));
   }
@@ -441,7 +476,8 @@ export class Graph {
   }
 
   private getNewLinks(links: StringLink[]) {
-    return links.filter((d) => !this.link.data().some((l) => sameLink(l, d)));
+    return links.filter((d) => !this.link.data().some((l) => sameLink(l, d)))
+      .map((d) => ({ ...d, mode: this.mode }));
   }
 
   public getLinksWithoutNodes<T extends NodeId>(ids: T[]) {
@@ -466,18 +502,18 @@ export class Graph {
   private addNodeEventListeners(n: CourseGroupSelection) {
     // drag nodes around
     const drag = d3.drag<SVGGElement, Datum>()
-      .on('start', (event) => {
+      .on('start.basic', (event) => {
         if (!event.active) this.sim.alphaTarget(0.3).restart();
         event.subject.fx = event.subject.x;
         event.subject.fy = event.subject.y;
         this.nodeGroup.attr('cursor', 'grabbing');
       })
-      .on('drag', (event) => {
+      .on('drag.basic', (event) => {
         event.subject.fx = event.x;
         event.subject.fy = event.y;
         this.moveTooltip(event.sourceEvent.clientX, event.sourceEvent.clientY);
       })
-      .on('end', (event) => {
+      .on('end.basic', (event) => {
         if (!event.active) this.sim.alphaTarget(0);
         event.subject.fx = null;
         event.subject.fy = null;
@@ -489,7 +525,7 @@ export class Graph {
     n
       .call(drag)
       // expand node on hover
-      .on('mouseover', function (event, d) {
+      .on('mouseover.basic', function (event, d) {
         // if we're waiting for user to interact and they do,
         // remove the "click me" label and reset radii
         if (graph.phaseInternal === 'wait') {
@@ -497,11 +533,13 @@ export class Graph {
         }
 
         // don't react if info demonstration is open or we are comparing courses
-        if (graph.phaseInternal === 'info' || graph.explanationComparingIds.length > 0) return;
+        if (graph.phaseInternal === 'info' || graph.isExplanationOpen) return;
 
         console.debug('mousing over');
 
         Graph.transitionRadius(this, Graph.getRadius(d) + Graph.RADIUS * 2);
+
+        // set focused course
         if (graph.focusedCourse.id === null || graph.focusedCourse.reason === 'hover') {
           graph.reactSetHover(d.id);
           graph.focusedCourse = { id: d.id, reason: 'hover' };
@@ -509,14 +547,14 @@ export class Graph {
         }
         graph.showTooltipAt(d.subject + d.catalog, event.clientX, event.clientY);
       })
-      .on('mousemove', (event) => {
+      .on('mousemove.basic', (event) => {
         graph.moveTooltip(event.clientX, event.clientY);
       })
-      .on('mouseout', function (event, d) {
+      .on('mouseout.basic', function (event, d) {
         Graph.transitionRadius(this, Graph.getRadius(d));
         graph.hideTooltip();
       })
-      .on('click', (event, d) => {
+      .on('click.basic', (event, d) => {
         event.preventDefault();
         event.stopPropagation();
         if (this.mode === 'Erase') {
@@ -528,11 +566,15 @@ export class Graph {
           graph.addNewNeighbours(d);
         }
       })
-      .on('contextmenu', (event, d) => {
+      .on('contextmenu.basic', (event, d) => {
         event.preventDefault();
         event.stopPropagation();
         graph.focusCourse(d.id);
       });
+  }
+
+  private static removeNodeEventListeners(n: CourseGroupSelection) {
+    return n.on('.basic', null);
   }
 
   private showTooltipAt(text: string, x: number, y: number) {
@@ -545,28 +587,28 @@ export class Graph {
   private addLinkEventListeners(l: d3.Selection<SVGLineElement, LinkDatum, SVGGElement, unknown>) {
     const graph = this;
     l
-      .on('mouseover', function (event, d) {
-        const percent = Math.round(getLinkOpacity(d) * 100);
+      .on('mouseover.basic', function (event, d) {
+        const percent = Math.round(Graph.getLinkOpacity(d) * 100);
         graph.showTooltipAt(`${percent}%`, event.clientX, event.clientY);
         d3.select(this)
           .transition('link-t')
           .duration(Graph.T_DURATION)
           .attr('stroke-width', Graph.HOVERED_LINK_WIDTH);
       })
-      .on('mousemove', (event) => {
+      .on('mousemove.basic', (event) => {
         graph.moveTooltip(event.clientX, event.clientY);
       })
-      .on('mouseout', function () {
+      .on('mouseout.basic', function () {
         graph.hideTooltip();
         d3.select<SVGLineElement, LinkDatum>(this)
           .transition('link-t')
           .duration(Graph.T_DURATION)
           .attr('stroke-width', Graph.getLinkWidth);
       })
-      .on('click', (event, d) => {
+      .on('click.basic', (event, d) => {
         event.stopPropagation();
-        if (this.isExplaining) return;
-        this.isExplaining = true;
+        if (this.stillExplaining) return;
+        this.stillExplaining = true;
         const courses = [{ ...d.source }, { ...d.target }];
         this.reactSetExplanation({ courses, text: null });
         this.explanationComparingIds = [d.source.id, d.target.id];
@@ -575,10 +617,14 @@ export class Graph {
         this.askRelationship(d)
           .then((text) => {
             this.reactSetExplanation({ courses, text });
-            this.isExplaining = false;
+            this.stillExplaining = false;
           })
           .catch(alertUnexpectedError);
       });
+  }
+
+  get isExplanationOpen() {
+    return this.explanationComparingIds.length > 0;
   }
 
   private async askRelationship({ source: { id: srcId }, target: { id: tgtId } }: LinkDatum): Promise<string> {
@@ -639,7 +685,7 @@ export class Graph {
   }
 
   private static getLinkStrength(link: LinkDatum) {
-    return Graph.MAX_LINK_STRENGTH * getLinkOpacity(link);
+    return Graph.MAX_LINK_STRENGTH * Graph.getLinkOpacity(link);
   }
 
   public static getRadius(d: CourseBrief) {
@@ -649,7 +695,7 @@ export class Graph {
   public toDatum(id: string) {
     const course = this.courses.find((c) => c.id === id);
     if (!course) return null;
-    return { ...course, pca: this.positions[course.i] } as DatumBase;
+    return { ...course, pca: this.positions[course.i] } as DatumWithoutPosition;
   }
 
   public setPhase(newPhase: Graph['phaseInternal'], id?: string) {
@@ -693,15 +739,19 @@ export class Graph {
     }
 
     this.phaseInternal = newPhase;
+    this.reactSetPhase(newPhase);
   }
 
   private addInfoLabel(trigger: CourseGroupSelection) {
     const r = 100;
 
     const group = trigger.append('g')
+      .attr('pointer-events', 'none')
       .attr('stroke', 'black');
 
     const [t] = Graph.transitionRadius(trigger.node()!, r, Graph.PULSE_DURATION, true);
+
+    Graph.removeNodeEventListeners(trigger);
 
     t.on('end.info', () => {
       // add info labels to the node
@@ -723,9 +773,9 @@ export class Graph {
       group
         .append('line')
         .attr('x1', -6)
-        .attr('y1', r / 3)
+        .attr('y1', 0)
         .attr('x2', 6)
-        .attr('y2', r / 3);
+        .attr('y2', 0);
 
       group
         .append('line')
@@ -737,7 +787,7 @@ export class Graph {
       group
         .append('line')
         .attr('x1', 0)
-        .attr('y1', r / 3)
+        .attr('y1', 0)
         .attr('x2', 0)
         .attr('y2', r);
 
@@ -760,18 +810,33 @@ export class Graph {
         .attr('x', r + r / 4)
         .attr('y', r / 6)
         .text('Subject');
-    });
 
-    // delete group on mouseout
-    trigger
-      .on('mouseout.info click.info', () => {
+      group
+        .append('text')
+        .attr('text-anchor', 'middle')
+        .attr('x', 0)
+        .attr('y', r + r / 4)
+        .text('Click to explore');
+
+      // add listeners to remove group on mouseout
+      trigger.on('mouseout.info click.info', () => {
         trigger.select('g').remove();
-        Graph.transitionRadius(trigger.node()!, Graph.getRadius(trigger.datum()), Graph.T_DURATION, true);
+        const n = trigger.datum();
+        const [transition] = Graph.transitionRadius(trigger.node()!, Graph.getRadius(n), Graph.T_DURATION, true);
+        transition.on('end.info', () => {
+          this.addNewNeighbours(n);
+          // wait to avoid double click trigger
+          setTimeout(this.addNodeEventListeners.bind(this, trigger), 1000);
+        });
         this.setPhase('ready');
-      }, { once: true });
-  }
-}
 
-function getLinkOpacity({ source, target }: LinkDatum) {
-  return (cos(source.pca, target.pca) + 1) / 2;
+        // only run this listener once
+        trigger.on('.info', null);
+      });
+    });
+  }
+
+  private static getLinkOpacity({ source, target }: LinkDatum) {
+    return (cos(source.pca, target.pca) + 1) / 2;
+  }
 }

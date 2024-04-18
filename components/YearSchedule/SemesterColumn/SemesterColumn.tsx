@@ -6,9 +6,12 @@ import { Season, semesterToTerm } from '@/src/lib';
 import { isScheduleId } from '@/src/utils/schedules';
 import SemesterColumnHeader from './SemesterColumnHeader';
 import { SemesterColumnBody } from './CoursesSection';
-import { useDragAndDropContext } from './DragAndDrop';
+import { useCourseDragContext } from './DragCourseMoveSchedulesProvider';
 import { useScheduleFromScheduleIdOrSemester } from './useScheduleFromScheduleIdOrSemester';
 import { ScheduleIdProvider } from '../../../src/context/selectedSchedule';
+import { checkViable } from '../../../src/searchSchedule';
+import { useAppSelector } from '../../../src/utils/hooks';
+import { ClassCache, Profile } from '../../../src/features';
 
 const VIABILITY_COLORS: Record<Viability, string> = {
   Yes: 'bg-blue-primary',
@@ -32,7 +35,7 @@ export default function SemesterColumn({
   highlightedRequirement,
   colWidth,
 }: Props) {
-  const drag = useDragAndDropContext();
+  const drag = useCourseDragContext();
   const { schedule, semester } = useScheduleFromScheduleIdOrSemester(s);
   const colorStyles = useStylesForSchedule(schedule, isScheduleId(s) ? (schedule ? schedule.season : null) : s.season);
 
@@ -46,13 +49,13 @@ export default function SemesterColumn({
     >
       <div
         className="absolute inset-0 flex flex-col"
-        onDragOver={drag.enabled ? (ev) => {
+        onDragOver={drag ? (ev) => {
           ev.preventDefault();
           ev.dataTransfer.dropEffect = 'move';
         } : undefined}
-        onDrop={drag.enabled && schedule ? (ev) => {
+        onDrop={drag && schedule ? (ev) => {
           ev.preventDefault();
-          drag.handleDrop(schedule.id, semester && semesterToTerm(semester));
+          drag.handleDrop({ scheduleId: schedule.id, term: semester && semesterToTerm(semester) });
         } : undefined}
       >
         <SemesterColumnHeader s={s} />
@@ -71,10 +74,17 @@ export default function SemesterColumn({
 
 
 function useStylesForSchedule(schedule: BaseSchedule | null, season: Season | null) {
-  const drag = useDragAndDropContext();
+  const drag = useCourseDragContext();
+  const profile = useAppSelector(Profile.selectUserProfile);
+  const classCache = useAppSelector(ClassCache.selectClassCache);
 
-  if (drag.enabled && drag.dragStatus.dragging) {
-    const validDrop = schedule && drag.dragStatus.data.originScheduleId !== schedule.id && drag.checkViableDrop(schedule.id);
+  if (drag && drag.dragStatus.dragging) {
+    const validDrop = schedule && drag.dragStatus.data.originScheduleId !== schedule.id && checkViable({
+      cls: classCache[drag.dragStatus.data.classId],
+      classCache,
+      schedule,
+      classYear: profile.classYear!,
+    });
 
     if (!validDrop) {
       return 'bg-gray-light cursor-not-allowed';

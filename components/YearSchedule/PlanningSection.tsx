@@ -17,7 +17,7 @@ import {
 } from '@/src/utils/schedules';
 import { ListOfScheduleIdOrSemester } from '@/src/types';
 import { DragObservers, useObserver } from './SemesterColumn/DragObservers';
-import { DragAndDropProvider } from './SemesterColumn/DragAndDrop';
+import { DragCourseMoveSchedulesProvider } from './SemesterColumn/DragCourseMoveSchedulesProvider';
 import SemesterColumn from './SemesterColumn/SemesterColumn';
 import CourseCardStyleProvider from '../../src/context/CourseCardStyleProvider';
 
@@ -62,7 +62,7 @@ export function SemestersList({
     : columns.filter((column) => !(semesterToTerm(column) in hiddenTerms));
 
   return (
-    <DragAndDropProvider>
+    <DragCourseMoveSchedulesProvider>
       <div className="relative mt-4 flex-1">
         <div className="absolute inset-0 overflow-scroll" ref={semestersContainerRef}>
           <div className="mx-auto flex h-full w-max overflow-hidden rounded-lg">
@@ -104,6 +104,6 @@ export function SemestersList({
           semestersContainerRef={semestersContainerRef}
         />
       </div>
-    </DragAndDropProvider>
+    </DragCourseMoveSchedulesProvider>
   );
 }

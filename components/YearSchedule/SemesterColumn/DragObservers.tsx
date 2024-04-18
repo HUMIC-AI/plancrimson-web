@@ -3,7 +3,7 @@ import {
 } from 'react';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import FadeTransition from '@/components/Utils/FadeTransition';
-import { useDragAndDropContext } from './DragAndDrop';
+import { useCourseDragContext } from './DragCourseMoveSchedulesProvider';
 
 export function useObserver(resizeRef: MutableRefObject<HTMLDivElement>) {
   const leftScrollRef = useRef<HTMLDivElement>(null!);
@@ -67,9 +67,9 @@ export function DragObservers({
   rightIntersecting: boolean
   semestersContainerRef: MutableRefObject<HTMLDivElement>
 }) {
-  const drag = useDragAndDropContext();
+  const drag = useCourseDragContext();
 
-  if (!drag.enabled || !drag.dragStatus.dragging) return null;
+  if (!drag?.dragStatus.dragging) return null;
 
   return (
     <>

@@ -6,43 +6,32 @@ import { getAnalytics, logEvent } from 'firebase/analytics';
 import {
   PropsWithChildren, createContext, useCallback, useContext, useMemo, useState,
 } from 'react';
+import { DragContext, DragStatus } from '../../../src/context/dragAndDrop';
 
-export type DragStatus =
-  | {
-    dragging: false;
-  }
-  | {
-    dragging: true;
-    data: {
-      classId: string;
-      originScheduleId: string;
-      originTerm: Term;
-    };
-  };
+interface DragMoveCourseData {
+  classId: string;
+  originScheduleId: string;
+  originTerm: Term;
+}
 
-export type DragContext = {
-  enabled: false;
-} | {
-  enabled: true;
-  dragStatus: DragStatus;
-  setDragStatus: (status: DragStatus) => void;
-  checkViableDrop: (scheduleId: string) => ReturnType<typeof checkViable> | null;
-  handleDrop: (scheduleId: string, term: Term | null) => void;
-};
+interface CourseDropArgs {
+  scheduleId: string;
+  term: Term | null;
+}
 
-const DragAndDropContext = createContext<DragContext>({
-  enabled: false,
-});
+type CourseDragContextType = DragContext<DragMoveCourseData, CourseDropArgs>;
 
-export const useDragAndDropContext = () => useContext(DragAndDropContext);
+const CourseDragContext = createContext<CourseDragContextType | null>(null);
 
-export function DragAndDropProvider({ children }: PropsWithChildren<{}>) {
+export const useCourseDragContext = () => useContext(CourseDragContext);
+
+export function DragCourseMoveSchedulesProvider({ children }: PropsWithChildren<{}>) {
   const dispatch = useAppDispatch();
   const profile = useAppSelector(Profile.selectUserProfile);
   const classCache = useAppSelector(ClassCache.selectClassCache);
   const schedules = useAppSelector(Schedules.selectSchedules);
 
-  const [dragStatus, setDragStatus] = useState<DragStatus>({
+  const [dragStatus, setDragStatus] = useState<DragStatus<DragMoveCourseData>>({
     dragging: false,
   });
 
@@ -63,7 +52,7 @@ export function DragAndDropProvider({ children }: PropsWithChildren<{}>) {
   /**
    * @param scheduleId the schedule that the currently held course was dropped on
    */
-  const handleDrop = useCallback((scheduleId: string, term: Term | null) => {
+  const handleDrop = useCallback(({ scheduleId, term }: CourseDropArgs) => {
     setDragStatus({ dragging: false });
 
     const viableDrop = checkViableDrop(scheduleId);
@@ -89,20 +78,19 @@ export function DragAndDropProvider({ children }: PropsWithChildren<{}>) {
     }
   }, [checkViableDrop, dragStatus, classCache, dispatch]);
 
-  const value = useMemo(
+  const value = useMemo<CourseDragContextType>(
     () => ({
       enabled: true,
       dragStatus,
       setDragStatus,
-      checkViableDrop,
       handleDrop,
     }),
-    [dragStatus, setDragStatus, checkViableDrop, handleDrop],
+    [dragStatus, setDragStatus, handleDrop],
   );
 
   return (
-    <DragAndDropContext.Provider value={value}>
+    <CourseDragContext.Provider value={value}>
       {children}
-    </DragAndDropContext.Provider>
+    </CourseDragContext.Provider>
   );
 }

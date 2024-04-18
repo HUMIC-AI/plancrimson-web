@@ -20,7 +20,7 @@ export function ScheduleIdProvider({ id, children }: PropsWithChildren<{ id: str
 export function useChosenSchedule() {
   const id = useContext(ScheduleIdContext)!;
   const graphSchedule = useAppSelector(Schedules.selectSchedule(GRAPH_SCHEDULE));
-  const { schedule, error } = useSchedule(id);
+  const { schedule, error } = useSchedule(id === GRAPH_SCHEDULE ? null : id);
   return {
     id,
     schedule: id === GRAPH_SCHEDULE ? graphSchedule : schedule,

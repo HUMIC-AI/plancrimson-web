@@ -26,7 +26,9 @@ export function useUpdateGraph({
 }: {
   scheduleId: string | null;
 }) {
-  const { setHoveredClassId: setHover, setExplanation, explanation } = useGraphContext();
+  const {
+    setHoveredClassId: setHover, setExplanation, explanation, setPhase,
+  } = useGraphContext();
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
   const { showContents, setOpen } = useModal();
   const userId = Auth.useAuthProperty('uid');
@@ -88,6 +90,7 @@ export function useUpdateGraph({
       showInstructions,
       (ids: string[]) => dispatch(Schedules.addCourses({ scheduleId: GRAPH_SCHEDULE, courseIds: ids })),
       (ids: string[]) => dispatch(Schedules.removeCourses({ scheduleId: GRAPH_SCHEDULE, courseIds: ids })),
+      setPhase,
     );
 
     dispatch(Schedules.createLocal({
@@ -106,7 +109,7 @@ export function useUpdateGraph({
 
     graphRef.current.appendNodes(initialNodes.map((id) => graphRef.current!.toDatum(id)!).filter(Boolean), []);
   // bruh
-  }, [client, courses, dispatch, elapsed, fixedClasses, positions, ratingType, scheduleId, setExplanation, setHover, setOpen, showContents, userId]);
+  }, [client, courses, dispatch, elapsed, fixedClasses, positions, ratingType, scheduleId, setExplanation, setHover, setOpen, setPhase, showContents, userId]);
 
   // whenever GRAPH_SCHEDULE is updated, update the graph nodes
   useEffect(() => {

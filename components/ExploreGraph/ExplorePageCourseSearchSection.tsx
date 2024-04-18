@@ -20,7 +20,7 @@ export function ExplorePageCourseSearchSection({ showSortGrid = false }: { showS
                 <CurrentRefinements />
               </div>
             )}
-            <Hits concise />
+            <Hits concise hideToggle />
           </div>
         </CourseCardStyleProvider>
       </AuthRequiredInstantSearchProvider>

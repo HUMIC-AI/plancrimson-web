@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import React, {
-  DragEventHandler, Ref, forwardRef, useMemo,
+  DragEventHandler, Ref, forwardRef, useMemo, useCallback,
 } from 'react';
 import {
   FaExclamationTriangle,
@@ -9,24 +9,25 @@ import {
   ExtendedClass, departmentImages, getSemester, semesterToTerm,
 } from '@/src/lib';
 import { useModal } from '@/src/context/modal';
-import { alertUnexpectedError } from '@/src/utils/hooks';
+import { alertUnexpectedError, useAppDispatch } from '@/src/utils/hooks';
 import { classNames } from '@/src/utils/styles';
 import { useCourseCardStyle } from '@/src/context/CourseCardStyleProvider';
 import Tooltip from '../Utils/Tooltip';
 import { ClassSizeRating, HoursRating, StarRating } from './RatingIndicators';
-import { useDragAndDropContext } from '../YearSchedule/SemesterColumn/DragAndDrop';
+import { useCourseDragContext } from '../YearSchedule/SemesterColumn/DragCourseMoveSchedulesProvider';
 import { CourseCardToggleButton } from './ToggleButton';
 import { Highlight } from '../SearchComponents/Highlight';
 import {
   Instructors, DaysOfWeek, Location, ClassTime,
 } from './CourseComponents';
 import { useChosenSchedule } from '../../src/context/selectedSchedule';
+import { Schedules } from '../../src/features';
 
 type Department = keyof typeof departmentImages;
 
-// see below
 type CourseCardProps = {
   course: ExtendedClass;
+  addViaTitleClick?: boolean;
   highlight?: boolean;
   warnings?: string;
   hideTerm?: boolean;
@@ -37,11 +38,15 @@ type CourseCardProps = {
  * Renders a given small expandable course card on the planning page or in the search page.
  * Should be *pure* and only use data from the provided course (and not reference the {@link ClassCache})
  * @param course the course to summarize in this card
+ * @param addViaTitleClick whether to hide the toggle button. default false
  * @param highlight whether to highlight this class. Used in the requirements checker. default false
- * @param warnings an optional list of warnings, eg time collisions with other classes
+ * @param warnings an optional warning, eg time collisions with other classes
+ * @param hideTerm whether to hide the term (semester and year) of the course. default false
+ * @param hideRatings whether to hide the ratings of the course. default false
  */
 export const CourseCard = forwardRef(({
   course,
+  addViaTitleClick = false,
   highlight = false,
   warnings,
   hideTerm = false,
@@ -49,8 +54,8 @@ export const CourseCard = forwardRef(({
 }: CourseCardProps, ref: Ref<HTMLDivElement>) => {
   const { style } = useCourseCardStyle();
   const { schedule } = useChosenSchedule();
-  const { showCourse } = useModal();
-  const drag = useDragAndDropContext();
+  const drag = useCourseDragContext();
+  const handleClickTitle = useHandleClickTitle(addViaTitleClick, course);
 
   const [semester, department] = useMemo(
     () => [
@@ -60,13 +65,13 @@ export const CourseCard = forwardRef(({
     [course],
   );
 
-  const onDragStart: DragEventHandler<unknown> | undefined = drag.enabled ? (ev) => {
+  const onDragStart: DragEventHandler<unknown> | undefined = drag ? (ev) => {
     ev.dataTransfer.dropEffect = 'move';
 
     if (!schedule?.title) {
       alertUnexpectedError(new Error('Selected schedule has no ID'));
     } else {
-      drag.setDragStatus({
+      drag?.setDragStatus({
         dragging: true,
         data: {
           classId: course.id,
@@ -81,19 +86,19 @@ export const CourseCard = forwardRef(({
     return (
       <div
         className="flex items-center justify-between"
-        draggable={drag.enabled}
+        draggable={drag !== null}
         onDragStart={onDragStart}
         ref={ref}
       >
         <button
           type="button"
-          onClick={() => showCourse(course)}
+          onClick={handleClickTitle}
           className="transition-opacity hover:opacity-50"
         >
           {course.SUBJECT + course.CATALOG_NBR}
         </button>
 
-        <CourseCardToggleButton course={course} />
+        {!addViaTitleClick && <CourseCardToggleButton course={course} />}
       </div>
     );
   }
@@ -114,7 +119,7 @@ export const CourseCard = forwardRef(({
         className={classNames(
           'relative text-left h-full',
         )}
-        draggable={drag.enabled}
+        draggable={drag !== null}
         onDragStart={onDragStart}
       >
         {/* header component */}
@@ -122,7 +127,7 @@ export const CourseCard = forwardRef(({
           className={classNames(
             'p-2 from-gray-secondary via-secondary bg-gradient-to-br',
             isExpanded && (highlight ? 'to-blue-primary' : 'to-blue-secondary'),
-            drag.enabled && 'cursor-move',
+            drag && 'cursor-move',
             isExpanded && 'relative',
           )}
         >
@@ -140,7 +145,11 @@ export const CourseCard = forwardRef(({
           {/* relative so it appears above the image */}
           <div className="relative space-y-1">
             <p className="flex items-center justify-between">
-              <button type="button" className="interactive border-b text-left font-bold text-blue-primary" onClick={() => showCourse(course)}>
+              <button
+                type="button"
+                className="interactive border-b text-left font-bold text-blue-primary"
+                onClick={handleClickTitle}
+              >
                 <Highlight
                   attribute="SUBJECT"
                   hit={course}
@@ -159,7 +168,7 @@ export const CourseCard = forwardRef(({
                 </Tooltip>
                 )}
 
-                <CourseCardToggleButton course={course} />
+                {!addViaTitleClick && <CourseCardToggleButton course={course} />}
               </span>
             </p>
 
@@ -215,3 +224,22 @@ export const CourseCard = forwardRef(({
     </div>
   );
 });
+
+function useHandleClickTitle(addViaTitleClick: boolean, course: ExtendedClass) {
+  const dispatch = useAppDispatch();
+  const { showCourse } = useModal();
+  const { id: scheduleId } = useChosenSchedule();
+
+  const handleClick = useCallback(() => {
+    if (addViaTitleClick) {
+      dispatch(Schedules.addCourses({
+        courseIds: [course.id],
+        scheduleId,
+      }));
+    } else {
+      showCourse(course);
+    }
+  }, [course, dispatch, addViaTitleClick, scheduleId, showCourse]);
+
+  return handleClick;
+}

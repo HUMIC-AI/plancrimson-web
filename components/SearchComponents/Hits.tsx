@@ -20,6 +20,7 @@ type Provided = InfiniteHitsProvided<ExtendedClass>;
 
 type Exposed = {
   concise?: boolean;
+  hideToggle?: boolean;
 };
 
 /**
@@ -32,6 +33,7 @@ function HitsComponent({
   refineNext = alertSignIn,
   // refinePrevious = alertSignIn,
   concise,
+  hideToggle,
 }: Provided & Exposed) {
   const { oneCol } = useSearchState();
   const { style } = useCourseCardStyle();
@@ -63,7 +65,7 @@ function HitsComponent({
         )}
         >
           {hits.map((hit) => (
-            <CourseCard key={hit.id} course={hit} hideRatings={concise} />
+            <CourseCard key={hit.id} course={hit} hideRatings={concise} addViaTitleClick={hideToggle} />
           ))}
         </div>
       )}

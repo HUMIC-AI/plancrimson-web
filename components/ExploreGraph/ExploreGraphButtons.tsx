@@ -16,7 +16,8 @@ export function Buttons({
   return graph.phase === 'ready' ? (
     <div className="absolute right-full top-16 mr-4 text-right text-sm">
       <Disclosure>
-        <Disclosure.Button className="interactive ml-auto p-1 align-middle">
+        <Disclosure.Button className="interactive ml-auto flex items-center p-1">
+          <span className="mr-1 font-semibold">Options</span>
           <FaCog size={20} />
         </Disclosure.Button>
         <Disclosure.Panel className="mt-1 flex flex-col items-stretch space-y-1 rounded transition-colors hover:bg-gray-secondary/50">

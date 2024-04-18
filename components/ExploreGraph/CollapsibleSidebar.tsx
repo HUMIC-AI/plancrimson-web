@@ -11,7 +11,7 @@ export const SidebarPanel = forwardRef(({ children, side, defaultOpen }: PropsWi
         // 4rem is the height of the header
         'absolute top-16 w-full',
         'transition-transform duration-200',
-        side === 'left' ? 'left-0 max-w-[12rem] xl:max-w-xs' : 'right-0 max-w-xs md:max-w-sm',
+        side === 'left' ? 'left-0 max-w-[12rem]' : 'right-0 max-w-xs md:max-w-sm',
         open
           ? (side === 'left' ? 'translate-x-4' : '-translate-x-4')
           : (side === 'left' ? '-translate-x-full' : 'translate-x-full'),

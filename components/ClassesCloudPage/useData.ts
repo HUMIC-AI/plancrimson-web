@@ -28,6 +28,7 @@ export type CourseBrief = {
   i: number;
   id: string;
   subject: Subject;
+  catalog: string;
   meanClassSize: number | null;
   meanHours: number | null;
   meanRating: number | null;
