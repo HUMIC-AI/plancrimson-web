@@ -11,6 +11,7 @@ import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 import { SidebarPanel } from './CollapsibleSidebar';
 import { ScheduleSyncer } from '../Utils/ScheduleSyncer';
 import { GraphProvider } from '../../src/context/GraphProvider';
+import { GraphDragDropProvider } from '../../src/context/DragCourseMoveSchedulesProvider';
 
 export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
   const userId = Auth.useAuthProperty('uid');
@@ -40,22 +41,24 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
       <WithMeili userId={userId}>
         {userId && <ScheduleSyncer userId={userId} />}
         <GraphProvider>
-          <ScheduleIdProvider id={GRAPH_SCHEDULE}>
-            {/* three main components: the background graph, the left search bar, the right course info */}
-            <ExploreGraph
-              scheduleId={scheduleId ?? null}
-              panelRef={courseInfoRef}
-            />
+          <GraphDragDropProvider>
+            <ScheduleIdProvider id={GRAPH_SCHEDULE}>
+              {/* three main components: the background graph, the left search bar, the right course info */}
+              <ExploreGraph
+                scheduleId={scheduleId ?? null}
+                panelRef={courseInfoRef}
+              />
 
-            {/* left sidebar (add courses to graph schedule) */}
-            <SidebarPanel side="left" defaultOpen>
-              <ExplorePageCourseSearchSection />
+              {/* left sidebar (add courses to graph schedule) */}
+              <SidebarPanel side="left" defaultOpen>
+                <ExplorePageCourseSearchSection />
+              </SidebarPanel>
+            </ScheduleIdProvider>
+
+            <SidebarPanel ref={courseInfoRef} side="right" defaultOpen>
+              <HoveredCourseInfo />
             </SidebarPanel>
-          </ScheduleIdProvider>
-
-          <SidebarPanel ref={courseInfoRef} side="right" defaultOpen>
-            <HoveredCourseInfo />
-          </SidebarPanel>
+          </GraphDragDropProvider>
         </GraphProvider>
       </WithMeili>
     </Layout>

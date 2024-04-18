@@ -52,7 +52,7 @@
   }
 
   .interactive {
-    @apply transition duration-150 hover:opacity-50 focus:opacity-50;
+    @apply transition duration-150 hover:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-primary;
   }
 
   .bordered {
@@ -82,7 +82,7 @@
 
 @layer components {
   .button {
-    @apply interactive bordered px-2 py-1 font-medium;
+    @apply interactive bordered px-2 py-1 font-medium text-sm;
   }
 
   .menu-button {

@@ -6,7 +6,7 @@ import { Season, semesterToTerm } from '@/src/lib';
 import { isScheduleId } from '@/src/utils/schedules';
 import SemesterColumnHeader from './SemesterColumnHeader';
 import { SemesterColumnBody } from './CoursesSection';
-import { useCourseDragContext } from './DragCourseMoveSchedulesProvider';
+import { useCourseDragContext } from '../../../src/context/DragCourseMoveSchedulesProvider';
 import { useScheduleFromScheduleIdOrSemester } from './useScheduleFromScheduleIdOrSemester';
 import { ScheduleIdProvider } from '../../../src/context/selectedSchedule';
 import { checkViable } from '../../../src/searchSchedule';

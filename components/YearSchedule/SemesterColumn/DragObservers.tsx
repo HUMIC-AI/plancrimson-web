@@ -3,7 +3,7 @@ import {
 } from 'react';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import FadeTransition from '@/components/Utils/FadeTransition';
-import { useCourseDragContext } from './DragCourseMoveSchedulesProvider';
+import { useCourseDragContext } from '../../../src/context/DragCourseMoveSchedulesProvider';
 
 export function useObserver(resizeRef: MutableRefObject<HTMLDivElement>) {
   const leftScrollRef = useRef<HTMLDivElement>(null!);

@@ -6,7 +6,21 @@ import { getAnalytics, logEvent } from 'firebase/analytics';
 import {
   PropsWithChildren, createContext, useCallback, useContext, useMemo, useState,
 } from 'react';
-import { DragContext, DragStatus } from '../../../src/context/dragAndDrop';
+
+type DragStatus<T> =
+  | {
+    dragging: false;
+  }
+  | {
+    dragging: true;
+    data: T;
+  };
+
+interface DragContext<DragData, DropArgs> {
+  dragStatus: DragStatus<DragData>;
+  setDragStatus: (status: DragStatus<DragData>) => void;
+  handleDrop: (drop: DropArgs) => void;
+}
 
 interface DragMoveCourseData {
   classId: string;
@@ -90,6 +104,26 @@ export function DragCourseMoveSchedulesProvider({ children }: PropsWithChildren<
 
   return (
     <CourseDragContext.Provider value={value}>
+      {children}
+    </CourseDragContext.Provider>
+  );
+}
+
+export function GraphDragDropProvider({ children }: PropsWithChildren<{}>) {
+  const dispatch = useAppDispatch();
+  const [dragStatus, setDragStatus] = useState<DragStatus<DragMoveCourseData>>({ dragging: false });
+
+  const context = useMemo<CourseDragContextType>(() => ({
+    dragStatus,
+    setDragStatus,
+    handleDrop: ({ scheduleId }) => dragStatus.dragging && dispatch(Schedules.addCourses({
+      scheduleId,
+      courseIds: [dragStatus.data.classId],
+    })),
+  }), [dispatch, dragStatus]);
+
+  return (
+    <CourseDragContext.Provider value={context}>
       {children}
     </CourseDragContext.Provider>
   );

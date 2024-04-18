@@ -17,7 +17,7 @@ import {
 } from '@/src/utils/schedules';
 import { ListOfScheduleIdOrSemester } from '@/src/types';
 import { DragObservers, useObserver } from './SemesterColumn/DragObservers';
-import { DragCourseMoveSchedulesProvider } from './SemesterColumn/DragCourseMoveSchedulesProvider';
+import { DragCourseMoveSchedulesProvider } from '../../src/context/DragCourseMoveSchedulesProvider';
 import SemesterColumn from './SemesterColumn/SemesterColumn';
 import CourseCardStyleProvider from '../../src/context/CourseCardStyleProvider';
 

@@ -14,7 +14,7 @@ import { classNames } from '@/src/utils/styles';
 import { useCourseCardStyle } from '@/src/context/CourseCardStyleProvider';
 import Tooltip from '../Utils/Tooltip';
 import { ClassSizeRating, HoursRating, StarRating } from './RatingIndicators';
-import { useCourseDragContext } from '../YearSchedule/SemesterColumn/DragCourseMoveSchedulesProvider';
+import { useCourseDragContext } from '../../src/context/DragCourseMoveSchedulesProvider';
 import { CourseCardToggleButton } from './ToggleButton';
 import { Highlight } from '../SearchComponents/Highlight';
 import {

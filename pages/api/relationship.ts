@@ -22,10 +22,10 @@ export default async function handler(
           role: 'user',
           content: `Could you please describe the relationship between these two courses?
 
-Course 1: ${src.HU_SUBJ_CATLG_NBR}: ${src.Title} (taught by ${src.IS_SCL_DESCR_IS_SCL_DESCRL})
+${src.HU_SUBJ_CATLG_NBR}: ${src.Title} (taught by ${src.IS_SCL_DESCR_IS_SCL_DESCRL})
 ${src.textDescription}
 
-Course 2: ${tgt.HU_SUBJ_CATLG_NBR}: ${tgt.Title} (taught by ${tgt.IS_SCL_DESCR_IS_SCL_DESCRL})
+${tgt.HU_SUBJ_CATLG_NBR}: ${tgt.Title} (taught by ${tgt.IS_SCL_DESCR_IS_SCL_DESCRL})
 ${tgt.textDescription}`,
         },
       ],

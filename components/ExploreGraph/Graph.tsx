@@ -166,7 +166,7 @@ export class Graph {
       .forceSimulation<Datum>()
       .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(Graph.getLinkStrength))
       .force('charge', d3.forceManyBody().strength(Graph.CHARGE_STRENGTH))
-      .force('collide', d3.forceCollide<Datum>((d) => Graph.getRadius(d) + Graph.RADIUS * 2))
+      .force('collide', d3.forceCollide<Datum>((d) => Graph.getRadius(d) + Graph.RADIUS * 3))
       .force('x', d3.forceX().strength(Graph.CENTER_STRENGTH))
       .force('y', d3.forceY().strength(Graph.CENTER_STRENGTH))
       .force('center', d3.forceCenter());
@@ -325,12 +325,16 @@ export class Graph {
     };
   }
 
-  private inGraph(d: CourseBrief) {
+  private titleInGraph(d: Pick<CourseBrief, 'catalog' | 'subject'>) {
     return this.currentData.some((n) => n.catalog === d.catalog && n.subject === d.subject);
   }
 
+  public idInGraph(id: string) {
+    return this.currentData.some((n) => n.id === id);
+  }
+
   get availableCourses() {
-    return this.courses.filter((d) => !this.inGraph(d));
+    return this.courses.filter((d) => !this.titleInGraph(d));
   }
 
   private addNewNeighbours(d: Datum, numNeighbours = Graph.NUM_NEIGHBOURS) {
@@ -404,7 +408,7 @@ export class Graph {
     // update link properties after strings are populated
     this.link
       .attr('stroke-width', Graph.getLinkWidth)
-      .attr('stroke-opacity', Graph.getLinkOpacity)
+      // .attr('stroke-opacity', Graph.getLinkOpacity)
       .attr('stroke', Graph.getLinkColor);
 
     // callbacks
@@ -795,7 +799,7 @@ export class Graph {
         .append('text')
         .attr('x', 0)
         .attr('y', ((r / 3) + r) / 2)
-        .text('# students');
+        .text('Number of students');
 
       group
         .append('line')

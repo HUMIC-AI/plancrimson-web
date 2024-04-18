@@ -12,13 +12,23 @@ export function Buttons({
 }: { graph: Graph; subjects: Subject[]; }) {
   const [myTool, setMyTool] = useState(graph.mode);
   const fixedClasses = useClasses(graph.fixedScheduleId);
+  const [hovered, setHovered] = useState(localStorage.getItem('graphButtonHovered') === 'true');
 
   return graph.phase === 'ready' ? (
     <div className="absolute right-full top-16 mr-4 text-right text-sm">
       <Disclosure>
-        <Disclosure.Button className="interactive ml-auto flex items-center p-1">
+        <Disclosure.Button
+          className={classNames(
+            'interactive secondary ml-auto flex items-center rounded px-2 py-1',
+            !hovered && 'animate-ping',
+          )}
+          onMouseEnter={() => {
+            setHovered(true);
+            localStorage.setItem('graphButtonHovered', 'true');
+          }}
+        >
           <span className="mr-1 font-semibold">Options</span>
-          <FaCog size={20} />
+          <FaCog size={18} />
         </Disclosure.Button>
         <Disclosure.Panel className="mt-1 flex flex-col items-stretch space-y-1 rounded transition-colors hover:bg-gray-secondary/50">
           <div className="flex justify-between">

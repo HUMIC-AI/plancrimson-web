@@ -2,6 +2,8 @@ import { createPortal } from 'react-dom';
 import { useUpdateGraph } from './useUpdateGraph';
 import { Buttons } from './ExploreGraphButtons';
 import { LoadingBars } from '../Layout/LoadingPage';
+import { GRAPH_SCHEDULE } from '../../src/features/schedules';
+import { useCourseDragContext } from '../../src/context/DragCourseMoveSchedulesProvider';
 
 /**
  * A 2D d3 force graph of different courses.
@@ -14,6 +16,7 @@ export function ExploreGraph({
   scheduleId: string | null;
 }) {
   // create the graph
+  const { dragStatus, handleDrop } = useCourseDragContext()!;
   const {
     graph, ref, tooltipRef, subjects, elapsed,
   } = useUpdateGraph({ scheduleId });
@@ -31,6 +34,8 @@ export function ExploreGraph({
     );
   }
 
+  const allowDrop = dragStatus.dragging && graph && !graph.idInGraph(dragStatus.data.classId);
+
   return (
     <div className="absolute inset-0">
       <svg
@@ -41,6 +46,12 @@ export function ExploreGraph({
         viewBox={`${-width / 2} ${-height / 2} ${width} ${height}`}
         className="h-full w-full"
         preserveAspectRatio="xMidYMid meet"
+        // this listener is necessary for the drag and drop to work
+        // default behaviour stops dropping so we need to prevent it
+        // see https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/Drag_operations#specifying_drop_targets
+        onDragStart={(e) => allowDrop && e.preventDefault()}
+        onDragOver={(e) => allowDrop && e.preventDefault()}
+        onDrop={() => handleDrop({ scheduleId: GRAPH_SCHEDULE, term: null })}
       />
 
       {/* tooltip */}
