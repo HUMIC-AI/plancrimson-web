@@ -3,7 +3,7 @@ import {
   Evaluation,
   getEvaluationId,
 } from '@/src/lib';
-import EvaluationComponent from './EvaluationComponent';
+import { EvaluationComponent } from './EvaluationComponent';
 
 type Props = {
   evaluations: Evaluation[];

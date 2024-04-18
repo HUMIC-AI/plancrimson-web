@@ -52,7 +52,7 @@
   }
 
   .interactive {
-    @apply transition duration-150 hover:opacity-50;
+    @apply transition duration-150 hover:opacity-50 focus:opacity-50;
   }
 
   .bordered {

@@ -2,7 +2,7 @@ import {
   getFirestore, onSnapshot, query, collection, where, FirestoreError,
 } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
-import { Evaluation, Season, compareSemesters } from '@/src/lib';
+import { Evaluation, compareSemesters } from '@/src/lib';
 
 /**
  * Fetches from Firestore all the evaluations for a given course.
@@ -35,29 +35,28 @@ function useRawEvaluations(courseName: string) {
   return [evaluations, error] as const;
 }
 
-export function useEvaluations(courseName: string) {
-  const [evaluations, error] = useRawEvaluations(courseName);
-  const allEvals = useMemo(() => evaluations && getEvaluations(evaluations), [evaluations]);
+export function useEvaluations(subject: string, catalogNumber: string) {
+  // the evaluations always include the space between the subject and catalog number
+  const [evaluations, error] = useRawEvaluations(`${subject.trim()} ${catalogNumber.trim()}`);
+  const allEvals = useMemo(() => evaluations && getUniqueEvaluations(evaluations), [evaluations]);
   return [allEvals, error] as const;
 }
 
 
 const keysToMatch = ['year', 'season', 'courseName'] as const;
 
-function getEvaluations(evaluations: Evaluation[]) {
+function getUniqueEvaluations(evaluations: Evaluation[]) {
   // basically a set of existing evaluations for this term
   const unique: (Evaluation | Evaluation[])[] = [];
 
-  evaluations.forEach((evl) => {
+  evaluations.forEach((evaluation) => {
     const isUnique = unique.find((e) => (
       Array.isArray(e)
-        ? e.some((ev) => ev.url === evl.url)
-        : e.url === evl.url
+        ? e.some((ev) => ev.url === evaluation.url)
+        : e.url === evaluation.url
     ));
 
     if (isUnique) return;
-
-    const evaluation = fixYearSeason(evl);
 
     const foundIndex = unique.findIndex((e) => {
       if (Array.isArray(e)) {
@@ -83,16 +82,4 @@ function getEvaluations(evaluations: Evaluation[]) {
     .map((e) => (Array.isArray(e) ? e[0] : e))
     .sort(compareSemesters)
     .reverse();
-}
-
-function fixYearSeason(evaluation: Evaluation) {
-  // i accidentally switched year and season for the old reports
-  // TODO remember to change this back after uploading data
-  const [year, season]: [number, Season] = evaluation.year === 1
-    ? [parseInt(evaluation.season, 10), 'Fall']
-    : evaluation.year === 2
-      ? [parseInt(evaluation.season, 10) + 1, 'Spring']
-      : [evaluation.year, evaluation.season];
-
-  return { ...evaluation, year, season };
 }

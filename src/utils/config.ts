@@ -9,13 +9,13 @@ export type Path = {
 export type Parent = {
   name: string;
   children: Path[];
-}
+};
 
 const sitePaths: (Path | Parent)[] = [
   {
     name: 'Explore',
     children: [
-      { href: '/explore', name: 'graph' },
+      { href: '/explore', name: 'Graph' },
       { href: '/explore/undergrad', name: 'Undergrad' },
       { href: '/explore/grad', name: 'Grad' },
       { href: '/explore/all', name: 'All' },

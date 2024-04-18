@@ -16,7 +16,7 @@ const TABS = ['Description', 'Evaluations', 'Plan', 'Social'];
  * @param course the active course in the modal
  */
 export default function CourseCardTabs({ course }: { course: ExtendedClass }) {
-  const [evaluations, error] = useEvaluations(course.SUBJECT + course.CATALOG_NBR);
+  const [evaluations, error] = useEvaluations(course.SUBJECT, course.CATALOG_NBR);
 
   return (
     <Tab.Group
