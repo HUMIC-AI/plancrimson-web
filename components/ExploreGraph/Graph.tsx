@@ -1,5 +1,8 @@
 import * as d3 from 'd3';
 import { getAnalytics, logEvent } from 'firebase/analytics';
+import {
+  FaEraser, FaPlusCircle, FaPlusSquare,
+} from 'react-icons/fa';
 import { CourseBrief } from '../ClassesCloudPage/useData';
 import {
   Subject,
@@ -61,6 +64,14 @@ type CircleTransition = d3.Transition<SVGCircleElement, null, SVGGElement, unkno
 
 type TextTransition = d3.Transition<SVGTextElement, null, SVGGElement, unknown>;
 
+export type GraphTool = typeof Graph.TOOLS[number];
+
+export const toolIcons: Record<GraphTool, JSX.Element> = {
+  'Add similar': <FaPlusCircle />,
+  'Add opposite': <FaPlusSquare />,
+  Erase: <FaEraser />,
+};
+
 /**
  * The entire d3 graph visualization.
  * appendNodes and removeNodes should be used to update the graph.
@@ -71,9 +82,11 @@ type TextTransition = d3.Transition<SVGTextElement, null, SVGGElement, unknown>;
 export class Graph {
   public sim: Simulation;
 
-  public flip = false;
+  public static readonly TOOLS = ['Add similar', 'Add opposite', 'Erase'] as const;
 
-  private phase: 'init' | 'wait' | 'info' | 'ready' = 'init';
+  public mode: GraphTool = 'Add similar';
+
+  private phaseInternal: 'init' | 'wait' | 'info' | 'ready' = 'init';
 
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
 
@@ -124,7 +137,7 @@ export class Graph {
     private setSubjects: (subjects: Subject[]) => void,
     private ratingField: RatingType,
     private setRatingField: (ratingField: RatingType) => void,
-    private showInstructions: () => void,
+    private showInstructions: null | (() => void),
     private onAppendCourses: (ids: string[]) => void,
     private onRemoveCourses: (ids: string[]) => void,
   ) {
@@ -136,7 +149,7 @@ export class Graph {
       .forceSimulation<Datum>()
       .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(Graph.getLinkStrength))
       .force('charge', d3.forceManyBody().strength(Graph.CHARGE_STRENGTH))
-      .force('collide', d3.forceCollide<Datum>((d) => Graph.getRadius(d) + Graph.RADIUS * 2).iterations(2))
+      .force('collide', d3.forceCollide<Datum>((d) => Graph.getRadius(d) + Graph.RADIUS * 2))
       .force('x', d3.forceX().strength(Graph.CENTER_STRENGTH))
       .force('y', d3.forceY().strength(Graph.CENTER_STRENGTH))
       .force('center', d3.forceCenter());
@@ -153,7 +166,6 @@ export class Graph {
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
       .attr('fill', 'rgb(var(--color-primary))')
-      .attr('stroke', 'rgb(var(--color-primary))')
       .attr('cursor', 'grab');
 
     this.node = this.nodeGroup.selectAll<SVGGElement, Datum>('g');
@@ -182,8 +194,13 @@ export class Graph {
     this.svg.call(this.zoom.transform, this.defaultZoom);
   }
 
+  get phase() {
+    return this.phaseInternal;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
   get defaultZoom() {
-    return d3.zoomIdentity.translate(-this.width / 4, 0).scale(1.5);
+    return d3.zoomIdentity.translate(-this.width / 8, 0).scale(1.5);
   }
 
   get rating() {
@@ -220,8 +237,17 @@ export class Graph {
       .attr('transform', (d) => `translate(${d.x},${d.y})`);
   }
 
-  public setFlip(flip: boolean) {
-    this.flip = flip;
+  public setMode(mode: Graph['mode']) {
+    this.mode = mode;
+    this.resetCursor();
+  }
+
+  private resetCursor() {
+    if (this.mode === 'Erase') {
+      this.nodeGroup.attr('cursor', 'crosshair');
+    } else {
+      this.nodeGroup.attr('cursor', 'grab');
+    }
   }
 
   public resetZoom() {
@@ -262,7 +288,7 @@ export class Graph {
       return !this.currentData.some(({ catalog, subject }) => catalog === course.catalog && subject === course.subject);
     })
       .map((pca, i) => ({ d: cos(d.pca, pca), i }))
-      .sort((a, b) => (this.flip ? -1 : +1) * (b.d - a.d))
+      .sort((a, b) => (this.mode === 'Add opposite' ? -1 : +1) * (b.d - a.d))
       .slice(0, numNeighbours)
       .map(({ i }) => ({
         ...this.courses[i],
@@ -281,19 +307,26 @@ export class Graph {
       .transition('highlight-t')
       .duration(Graph.T_DURATION)
       .attr('stroke-width', this.getStrokeWidth.bind(this))
+      .attr('stroke', this.getStrokeColor.bind(this))
       .attr('stroke-opacity', (d) => (this.getStrokeWidth(d) > 0 ? 1 : 0));
   }
 
+  private getStrokeColor(d: Datum) {
+    if (this.focusedCourse.id !== d.id) return 'rgb(var(--color-gray-primary)';
+    if (this.focusedCourse.reason === 'fix') return 'rgb(var(--color-blue-primary)';
+    return 'rgb(var(--color-primary))';
+  }
+
   private getStrokeWidth(d: Datum) {
-    if (this.focusedCourse.id === d.id && this.focusedCourse.reason === 'fix') return 8;
-    if (this.highlightedIds.includes(d.id)) return 6;
+    if (this.focusedCourse.id === d.id) return 6;
+    if (this.highlightedIds.includes(d.id)) return 4;
     return 0;
   }
 
   /**
    * Transition the radius of nodes in the selection
    */
-  private static transitionRadius(g: SVGGElement, radius: number, duration = Graph.T_DURATION): readonly [CircleTransition, TextTransition] {
+  private static transitionRadius(g: SVGGElement, radius: number, duration = Graph.T_DURATION, emojiOnly = false): readonly [CircleTransition, TextTransition] {
     const group = d3.select<SVGGElement, Datum>(g);
 
     const circleTransition = group.selectChildren<SVGCircleElement, null>('circle')
@@ -301,7 +334,7 @@ export class Graph {
       .duration(duration)
       .attr('r', radius);
 
-    const textTransition = group.selectChildren<SVGTextElement, null>('text')
+    const textTransition = group.selectChildren<SVGTextElement, null>(emojiOnly ? 'text.emoji' : 'text')
       .transition('radius-t')
       .duration(duration)
       .attr('font-size', `${radius}px`);
@@ -317,7 +350,7 @@ export class Graph {
     this.sim.alpha(1).restart();
 
     // update link properties after strings are populated
-    this.link.attr('stroke-width', (d) => 0.5 + Graph.RADIUS * getLinkOpacity(d));
+    this.link.attr('stroke-width', Graph.getLinkWidth);
 
     // callbacks
     this.setSubjects([...new Set(this.currentData.map((d) => d.subject))]);
@@ -326,9 +359,13 @@ export class Graph {
       this.focusCourse(null);
     }
 
-    if (this.phase === 'init') {
+    if (this.phaseInternal === 'init') {
       this.setPhase('wait');
     }
+  }
+
+  private static getLinkWidth(d: LinkDatum) {
+    return 0.5 + 2 * Graph.RADIUS * getLinkOpacity(d);
   }
 
   private pulse(c: SVGGElement, radius: number, grow = true) {
@@ -355,7 +392,7 @@ export class Graph {
     this.link = this.link
       .data(this.link.data().concat(idLinks.map((d) => ({ ...d }) as unknown as LinkDatum)), (d) => `${stringify(d.source)}:${stringify(d.target)}`)
       .join((enter) => enter.append('line')
-        .attr('stroke', this.flip ? 'rgb(var(--color-blue-primary))' : 'rgb(var(--color-gray-primary))')
+        .attr('stroke', this.mode === 'Add opposite' ? 'rgb(var(--color-blue-primary))' : 'rgb(var(--color-gray-primary))')
         .call(this.addLineEventListeners.bind(this)));
 
     this.node = this.node
@@ -420,7 +457,7 @@ export class Graph {
         if (!event.active) this.sim.alphaTarget(0);
         event.subject.fx = null;
         event.subject.fy = null;
-        this.nodeGroup.attr('cursor', 'grab');
+        this.resetCursor();
       });
 
     const graph = this;
@@ -431,12 +468,12 @@ export class Graph {
       .on('mouseover', function (event, d) {
         // if we're waiting for user to interact and they do,
         // remove the "click me" label and reset radii
-        if (graph.phase === 'wait') {
-          return graph.setPhase('info');
+        if (graph.phaseInternal === 'wait') {
+          return graph.setPhase('info', d.id);
         }
 
         // don't react if info modal is open
-        if (graph.phase === 'info') return;
+        if (graph.phaseInternal === 'info') return;
 
         console.debug('mousing over');
 
@@ -444,6 +481,7 @@ export class Graph {
         if (graph.focusedCourse.id === null || graph.focusedCourse.reason === 'hover') {
           graph.setHover(d.id);
           graph.focusedCourse = { id: d.id, reason: 'hover' };
+          graph.renderHighlights();
         }
         graph.showTooltipAt(d.subject + d.catalog, event.clientX, event.clientY);
       })
@@ -457,10 +495,14 @@ export class Graph {
       .on('click', (event, d) => {
         event.preventDefault();
         event.stopPropagation();
-        logEvent(getAnalytics(), 'explore_neighbours', {
-          course: d,
-        });
-        graph.addNewNeighbours(d);
+        if (this.mode === 'Erase') {
+          graph.removeNodes([d.id]);
+        } else {
+          logEvent(getAnalytics(), 'explore_neighbours', {
+            course: d,
+          });
+          graph.addNewNeighbours(d);
+        }
       })
       .on('contextmenu', (event, d) => {
         event.preventDefault();
@@ -546,7 +588,7 @@ export class Graph {
     return { ...course, pca: this.positions[course.i] } as DatumBase;
   }
 
-  public setPhase(newPhase: Graph['phase']) {
+  public setPhase(newPhase: Graph['phaseInternal'], id?: string) {
     if (newPhase === 'init') {
       this.setHover(null);
     } else if (newPhase === 'wait') {
@@ -568,29 +610,89 @@ export class Graph {
       });
     } else if (newPhase === 'info') {
       // triggered when user hovers over a "click me" node
+      this.node.selectAll('circle, text').interrupt('radius-t');
+
       // fade out click me text
       this.node.selectChildren('text.click-me')
-        .transition()
-        .duration(Graph.PULSE_DURATION)
+        .transition('radius-t')
+        .duration(Graph.T_DURATION)
         .attr('opacity', 0)
         .remove();
 
-      // interrupt current transitions
-      this.node.selectAll('circle, text').interrupt('radius-t');
+      this.node.each(function (d) {
+        if (d.id === id) return;
+        Graph.transitionRadius(this, Graph.getRadius(d), Graph.T_DURATION, true);
+      });
 
-      this.node.select('circle')
-        .transition('radius-t')
-        .duration(Graph.PULSE_DURATION)
-        .attr('r', Graph.getRadius)
-        .on('end interrupt', this.showInstructions);
-
-      this.node.select('text.emoji')
-        .transition('radius-t')
-        .duration(Graph.PULSE_DURATION)
-        .attr('font-size', (d) => `${Graph.getRadius(d)}px`);
+      if (this.showInstructions) this.showInstructions();
+      else this.addInfoLabel(this.node.filter((d) => d.id === id));
     }
 
-    this.phase = newPhase;
+    this.phaseInternal = newPhase;
+  }
+
+  private addInfoLabel(trigger: CourseGroupSelection) {
+    const r = 100;
+
+    const group = trigger.append('g');
+
+    const [t] = Graph.transitionRadius(trigger.node()!, r, Graph.PULSE_DURATION, true);
+
+    t.on('end.info', () => {
+      // add info labels to the node
+      group
+        .append('line')
+        .attr('x1', r / 3)
+        .attr('y1', -r / 3)
+        .attr('x2', r)
+        .attr('y2', -r / 2)
+        .attr('stroke', 'black');
+
+      group
+        .append('text')
+        .attr('text-anchor', 'start')
+        .attr('dominant-baseline', 'auto')
+        .attr('x', r)
+        .attr('y', -r / 2)
+        .text('QReport rating');
+
+      group
+        .append('line')
+        .attr('x1', -6)
+        .attr('y1', r / 3)
+        .attr('x2', 6)
+        .attr('y2', r / 3)
+        .attr('stroke', 'black');
+
+      group
+        .append('line')
+        .attr('x1', -6)
+        .attr('y1', r)
+        .attr('x2', 6)
+        .attr('y2', r)
+        .attr('stroke', 'black');
+
+      group
+        .append('line')
+        .attr('x1', 0)
+        .attr('y1', r / 3)
+        .attr('x2', 0)
+        .attr('y2', r)
+        .attr('stroke', 'black');
+
+      group
+        .append('text')
+        .attr('x', 0)
+        .attr('y', ((r / 3) + r) / 2)
+        .text('Class size');
+    });
+
+    // delete group on mouseout
+    trigger
+      .on('mouseout.info click.info', () => {
+        trigger.select('g').remove();
+        this.setPhase('ready');
+      }, { once: true });
   }
 }
 

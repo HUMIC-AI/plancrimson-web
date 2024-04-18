@@ -11,7 +11,7 @@ import { Auth, Schedules } from '../../src/features';
 import { useClasses } from '../../src/utils/schedules';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 import { useModal } from '../../src/context/modal';
-import { GraphInstructions, RatingType } from './HoveredCourseInfo';
+import { RatingType } from './HoveredCourseInfo';
 import { signInUser } from '../Layout/useSyncAuth';
 import { InitGraphProps, Graph } from './Graph';
 
@@ -45,30 +45,26 @@ export function useUpdateGraph({
 
     console.info('initializing graph');
 
-    const showInstructions = () => {
-      const seen = userId && localStorage.getItem('graphInstructions');
-      console.info('showing graph instructions', seen);
-      if (seen) return graphRef.current!.setPhase('ready');
-      const close = () => {
-        setOpen(false);
-        localStorage.setItem('graphInstructions', 'true');
-        graphRef.current!.setPhase('ready');
-      };
+    // ask user to sign in if they haven't already
+    const showInstructions = userId ? null : () => {
+      console.info('showing graph instructions');
       showContents({
         title: 'Course Explorer',
-        content: userId ? <GraphInstructions direction="row" /> : (
+        noExit: true,
+        content: (
           <div className="flex items-center justify-center p-6">
             <button
               type="button"
-              onClick={() => signInUser().then(close).catch(alertUnexpectedError)}
+              onClick={() => signInUser().then(() => {
+                setOpen(false);
+                graphRef.current!.setPhase('ready');
+              }).catch(alertUnexpectedError)}
               className="button secondary"
             >
               Sign in to explore the graph!
             </button>
           </div>
         ),
-        noExit: !userId,
-        close,
       });
     };
 

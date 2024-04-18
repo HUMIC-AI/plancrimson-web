@@ -18,7 +18,7 @@ export const SidebarPanel = forwardRef(({ children, side, defaultOpen }: PropsWi
       )}
       >
         <Disclosure.Panel
-          unmount={false}
+          static
           className="max-h-[calc(100vh-4rem)] overflow-auto"
         >
           {children}
@@ -27,7 +27,7 @@ export const SidebarPanel = forwardRef(({ children, side, defaultOpen }: PropsWi
         <Disclosure.Button
           className={classNames(
             // 13px makes it match up with the search bar menu button
-            'secondary absolute top-6 rounded p-[0.6875rem]',
+            'secondary absolute top-6 rounded p-[0.5625rem]',
             'interactive duration-200',
             open && 'rotate-180',
             side === 'left' ? 'left-full ml-4' : 'right-full mr-4',

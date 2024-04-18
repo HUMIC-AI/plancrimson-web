@@ -85,7 +85,7 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
         <text dominantBaseline="central" x={r / 8} y={((r / 3) + r) / 2}>Class size</text>
       </svg>
 
-      <ul className="list-disc space-y-2">
+      <ul className="list-inside list-disc space-y-2">
         <li>
           Each
           {' '}
