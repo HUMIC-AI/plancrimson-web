@@ -7,13 +7,14 @@ import {
 import {
   alertUnexpectedError, useAppDispatch, useAppSelector, useElapsed,
 } from '../../src/utils/hooks';
-import { Auth, Schedules } from '../../src/features';
+import { Auth, ClassCache, Schedules } from '../../src/features';
 import { useClasses } from '../../src/utils/schedules';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 import { useModal } from '../../src/context/modal';
 import { RatingType } from './HoveredCourseInfo';
 import { signInUser } from '../Layout/useSyncAuth';
 import { InitGraphProps, Graph } from './Graph';
+import { useMeiliClient } from '../../src/context/meili';
 
 /**
  * Need to be careful with two way synchronization between redux store
@@ -35,13 +36,14 @@ export function useUpdateGraph({
   const [ratingType, setRatingType] = useState<RatingType>('meanRating');
 
   // refs for fine grained control
+  const { client } = useMeiliClient();
   const ref = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLParagraphElement>(null);
   const graphRef = useRef<Graph>();
 
   useEffect(() => {
     // only initialize graph after all data is included and 500ms has passed
-    if (graphRef.current || !elapsed || !positions || !courses || !fixedClasses || !ref.current || !tooltipRef.current) return;
+    if (graphRef.current || !client || !elapsed || !positions || !courses || !fixedClasses || !ref.current || !tooltipRef.current) return;
 
     console.info('initializing graph');
 
@@ -71,6 +73,7 @@ export function useUpdateGraph({
     graphRef.current = new Graph(
       ref.current,
       tooltipRef.current,
+      (ids: string[]) => dispatch(ClassCache.loadCourses(client, ids)),
       positions,
       courses,
       scheduleId,
@@ -98,7 +101,7 @@ export function useUpdateGraph({
       : fixedClasses;
 
     graphRef.current.appendNodes(initialNodes.map((id) => graphRef.current!.toDatum(id)!).filter(Boolean), []);
-  }, [courses, dispatch, elapsed, fixedClasses, positions, ratingType, scheduleId, setHover, setOpen, showContents, userId]);
+  }, [client, courses, dispatch, elapsed, fixedClasses, positions, ratingType, scheduleId, setHover, setOpen, showContents, userId]);
 
   // whenever GRAPH_SCHEDULE is updated, update the graph nodes
   useEffect(() => {

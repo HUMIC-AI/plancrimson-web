@@ -5,11 +5,13 @@ import {
 } from 'react-icons/fa';
 import { CourseBrief } from '../ClassesCloudPage/useData';
 import {
+  ExtendedClass,
   Subject,
   cos,
   getSubjectColor,
 } from '../../src/lib';
 import { EMOJI_SCALES, RatingType } from './HoveredCourseInfo';
+import { alertUnexpectedError } from '../../src/utils/hooks';
 
 export type DatumBase = CourseBrief & {
   pca: number[];
@@ -130,6 +132,7 @@ export class Graph {
   constructor(
     svgDom: SVGSVGElement,
     tooltipDom: HTMLParagraphElement,
+    private loadCourses: (ids: string[]) => Promise<ExtendedClass[]>,
     public readonly positions: number[][],
     public readonly courses: CourseBrief[],
     public readonly fixedScheduleId: string | null,
@@ -530,7 +533,31 @@ export class Graph {
       })
       .on('mouseout', () => {
         graph.hideTooltip();
+      })
+      .on('click', (event, d) => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.askRelationship(d)
+          .then((response) => alert(response))
+          .catch(alertUnexpectedError);
       });
+  }
+
+  private async askRelationship({ source: { id: srcId }, target: { id: tgtId } }: LinkDatum) {
+    const [src, tgt] = await this.loadCourses([srcId, tgtId]);
+
+    // post to backend route to ask for relationship
+    const response = await fetch('/api/relationship', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ src, tgt }),
+    });
+
+    const data = await response.json();
+
+    return data.message;
   }
 
   public highlightSubject(subject: Subject | null) {
