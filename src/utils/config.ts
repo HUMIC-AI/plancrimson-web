@@ -4,14 +4,18 @@ import { isDevelopment } from './utils';
 export type Path = {
   href: string;
   name: string;
-  children?: Path[];
 };
 
-const sitePaths: Path[] = [
+export type Parent = {
+  name: string;
+  children: Path[];
+}
+
+const sitePaths: (Path | Parent)[] = [
   {
-    href: '/explore',
     name: 'Explore',
     children: [
+      { href: '/explore', name: 'graph' },
       { href: '/explore/undergrad', name: 'Undergrad' },
       { href: '/explore/grad', name: 'Grad' },
       { href: '/explore/all', name: 'All' },
@@ -19,9 +23,9 @@ const sitePaths: Path[] = [
     ],
   },
   {
-    href: '/search',
     name: 'Search',
     children: [
+      { href: '/search', name: 'Search' },
       { href: '/search/archive', name: 'Archive' },
     ],
   },
@@ -35,7 +39,7 @@ if (isDevelopment) {
   sitePaths.push({ href: 'http://localhost:4000', name: 'Emulators' });
 }
 
-export const PATHS: readonly Path[] = sitePaths;
+export const PATHS: readonly (Path | Parent)[] = sitePaths;
 
 
 export const MESSAGES = {

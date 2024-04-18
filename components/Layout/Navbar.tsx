@@ -6,7 +6,7 @@ import {
 } from 'react-icons/fa';
 import { classNames } from '@/src/utils/styles';
 import { UserMenu } from './UserMenu';
-import { Path, PATHS } from '../../src/utils/config';
+import { Parent, Path, PATHS } from '../../src/utils/config';
 
 export function Navbar({
   className = 'bg-secondary/80 text-primary',
@@ -57,8 +57,9 @@ export function Navbar({
 }
 
 
-function NavbarLink({ item, pathname, isParent = false }: { item: Path, pathname: string; isParent?: boolean }) {
-  const isCurrent = item.href === pathname || (item.children?.some((child) => child.href === pathname));
+function NavbarLink({ item, pathname }: { item: Path | Parent, pathname: string }) {
+  const isParent = 'children' in item;
+  const isCurrent = isParent ? item.children.some((child) => child.href === pathname) : item.href === pathname;
 
   const blockStyles = classNames(
     isCurrent
@@ -70,7 +71,7 @@ function NavbarLink({ item, pathname, isParent = false }: { item: Path, pathname
 
   return isParent ? (
     <div className={blockStyles}>
-      <Link href={item.href} aria-current={isCurrent ? 'page' : 'false'}>{item.name}</Link>
+      <span aria-current={isCurrent ? 'page' : 'false'}>{item.name}</span>
       <FaChevronDown className={classNames(
         'absolute transition-transform group-hover/nav:rotate-180 right-2 top-1/2 -translate-y-1/2',
         'sm:ml-2 sm:static sm:translate-y-0',
@@ -117,32 +118,35 @@ const SmallComponents = {
     return (
       <Menu.Items className="bg-gray-dark/50 sm:hidden">
         <div className="flex flex-col justify-center p-4">
-          {PATHS.map((item) => (
-            <Menu.Item
-              key={item.name}
-              aria-current={item.href === pathname ? 'page' : undefined}
-            >
-              {item.children ? (
-                <SmallComponents.SubMenu item={item} />
-              ) : (
-                <NavbarLink item={item} pathname={pathname} />
-              )}
-            </Menu.Item>
-          ))}
+          {PATHS.map((item) => {
+            const isParent = 'children' in item;
+            return (
+              <Menu.Item
+                key={item.name}
+                aria-current={!isParent && item.href === pathname ? 'page' : undefined}
+              >
+                {isParent ? (
+                  <SmallComponents.SubMenu item={item} />
+                ) : (
+                  <NavbarLink item={item} pathname={pathname} />
+                )}
+              </Menu.Item>
+            );
+          })}
         </div>
       </Menu.Items>
     );
   },
-  SubMenu({ item }: { item: Path }) {
+  SubMenu({ item }: { item: Parent }) {
     const { pathname } = useRouter();
 
     return (
       <Menu as="div">
         <Menu.Button className="w-full">
-          <NavbarLink item={item} pathname={pathname} isParent />
+          <NavbarLink item={item} pathname={pathname} />
         </Menu.Button>
         <Menu.Items className="rounded bg-black/40">
-          {item.children!.map((child) => (
+          {item.children.map((child) => (
             <Menu.Item key={child.href}>
               <NavbarLink item={child} pathname={pathname} />
             </Menu.Item>
@@ -160,23 +164,24 @@ const LargeOnly = {
 
     return (
       <div className="hidden items-center space-x-4 sm:ml-6 sm:flex">
-        {PATHS.map((item) => (
+        {PATHS.map((item) => {
+          const isParent = 'children' in item;
           // pass the query between pages to preserve the selected schedule
-          item.children ? (
-            <LargeOnly.SubMenu item={item} key={item.href} />
+          return isParent ? (
+            <LargeOnly.SubMenu item={item} key={item.name} />
           ) : (
-            <NavbarLink key={item.href} item={item} pathname={pathname} />
-          )
-        ))}
+            <NavbarLink key={item.name} item={item} pathname={pathname} />
+          );
+        })}
       </div>
     );
   },
-  SubMenu({ item }: { item: Path }) {
+  SubMenu({ item }: { item: Parent }) {
     const { pathname } = useRouter();
 
     return (
       <div className="group/nav relative">
-        <NavbarLink item={item} pathname={pathname} isParent />
+        <NavbarLink item={item} pathname={pathname} />
 
         <div className={classNames(
           'absolute inset-x-0 top-full z-10',

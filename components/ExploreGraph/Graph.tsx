@@ -139,7 +139,7 @@ export class Graph {
 
   private static readonly PULSE_DURATION = 750;
 
-  private stillExplaining = false;
+  private waitingForExplanation = false;
 
   constructor(
     svgDom: SVGSVGElement,
@@ -195,7 +195,7 @@ export class Graph {
       .on('click contextmenu', (event) => {
         event.preventDefault();
         this.focusCourse(null);
-        if (!this.stillExplaining) {
+        if (!this.waitingForExplanation) {
           this.clearExplanation();
         }
       });
@@ -228,7 +228,7 @@ export class Graph {
   }
 
   public clearExplanation() {
-    this.stillExplaining = false;
+    this.waitingForExplanation = false;
     const shouldCloseExplanation = this.isExplanationOpen;
     this.explanationComparingIds = [];
     if (shouldCloseExplanation) this.reactSetExplanation(null);
@@ -301,7 +301,7 @@ export class Graph {
     this.focusedCourse = { id, reason: 'fix' };
 
     // replace a link explanation
-    if (!this.stillExplaining && this.isExplanationOpen) {
+    if (!this.waitingForExplanation && this.isExplanationOpen) {
       this.clearExplanation();
     }
 
@@ -607,8 +607,8 @@ export class Graph {
       })
       .on('click.basic', (event, d) => {
         event.stopPropagation();
-        if (this.stillExplaining) return;
-        this.stillExplaining = true;
+        if (this.waitingForExplanation) return;
+        this.waitingForExplanation = true;
         const courses = [{ ...d.source }, { ...d.target }];
         this.reactSetExplanation({ courses, text: null });
         this.explanationComparingIds = [d.source.id, d.target.id];
@@ -617,7 +617,7 @@ export class Graph {
         this.askRelationship(d)
           .then((text) => {
             this.reactSetExplanation({ courses, text });
-            this.stillExplaining = false;
+            this.waitingForExplanation = false;
           })
           .catch(alertUnexpectedError);
       });
