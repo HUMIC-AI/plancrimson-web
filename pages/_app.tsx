@@ -9,7 +9,7 @@ import store from '@/src/store';
 import { ModalProvider } from '@/src/context/modal';
 import { ScheduleIdProvider } from '@/src/context/selectedSchedule';
 import { useSyncAuth, useSyncUserSettings } from '@/components/Layout/useSyncAuth';
-import CourseCardStyleProvider from '@/src/context/expandCards';
+import CourseCardStyleProvider from '@/src/context/CourseCardStyleProvider';
 import IncludeSemestersProvider from '@/src/context/includeSemesters';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { useRouter } from 'next/router';

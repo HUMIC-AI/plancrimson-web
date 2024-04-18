@@ -5,25 +5,18 @@ import { useRouter } from 'next/router';
 import { ExtendedClass } from '../../src/lib';
 import { Auth, ClassCache } from '../../src/features';
 import { useAppDispatch } from '../../src/utils/hooks';
-import { InfoCard } from '../Modals/InfoCard';
+import { InfoCard, InfoCardProps } from '../Modals/InfoCard';
 import { getCourseModalContent } from '../Modals/CourseCardModal';
 import { useMeiliClient } from '../../src/context/meili';
 import { classNames } from '../../src/utils/styles';
 import { useAvailableScheduleIds } from '../../src/utils/schedules';
 import { TitleComponent } from '../YearSchedule/SemesterColumn/TitleComponent';
+import { EMOJI_SCALES } from './Graph';
+import { LoadingBars } from '../Layout/LoadingPage';
+import { useGraphContext } from '../../src/context/GraphProvider';
 
-export type RatingType = 'meanRating' | 'meanHours';
-
-// a scale of five emojis from least to most happy
-export const EMOJI_SCALES: Record<RatingType, [string, string, string, string, string]> = {
-  meanRating: ['🫣', '😬', '😊', '😍', '🤩'],
-  // meanHours: ['😌', '😐', '😰', '😱', '💀'],
-  meanHours: ['🥱', '😎', '🧐', '😰', '💀'],
-};
-
-export function HoveredCourseInfo({ courseId }: {
-  courseId: string | null;
-}) {
+export function HoveredCourseInfo() {
+  const { hoveredClassId: courseId, setExplanation, explanation } = useGraphContext();
   const dispatch = useAppDispatch();
   const { client, error } = useMeiliClient();
   const [course, setCourse] = useState<ExtendedClass>();
@@ -43,16 +36,40 @@ export function HoveredCourseInfo({ courseId }: {
       });
   }, [client, courseId, dispatch, error]);
 
-  const props = useMemo(() => (
-    course
-      ? getCourseModalContent(course)
-      : {
-        title: 'Hover a course to get started!',
-        content: <GraphInstructions direction="column" />,
-      }
-  ), [course]);
+  const props = useMemo<InfoCardProps>(() => {
+    if (explanation) {
+      return {
+        title: 'Comparing courses',
+        headerContent: (
+          <p className="mt-2 text-lg">
+            {explanation.courses.map((c) => c.subject + c.catalog).join(' and ')}
+          </p>
+        ),
+        content: (
+          <div className="px-6 pb-6">
+            {explanation.text ? (
+              <p>
+                {explanation.text}
+              </p>
+            ) : <LoadingBars />}
+          </div>
+        ),
+        close: () => {
+          setExplanation(null);
+        },
+      };
+    }
 
-  return <InfoCard isDialog={false} noExit {...props} />;
+    if (course) return { ...getCourseModalContent(course), noExit: true };
+    return {
+      title: 'Hover a course to get started!',
+      content: <GraphInstructions direction="column" />,
+      noExit: true,
+    };
+  }, [course, explanation]);
+
+
+  return <InfoCard isDialog={false} {...props} />;
 }
 
 export function GraphInstructions({ direction }: { direction: 'row' | 'column' }) {

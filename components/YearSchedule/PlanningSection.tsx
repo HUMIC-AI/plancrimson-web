@@ -19,7 +19,7 @@ import { ListOfScheduleIdOrSemester } from '@/src/types';
 import { DragObservers, useObserver } from './SemesterColumn/DragObservers';
 import { DragAndDropProvider } from './SemesterColumn/DragAndDrop';
 import SemesterColumn from './SemesterColumn/SemesterColumn';
-import CourseCardStyleProvider from '../../src/context/expandCards';
+import CourseCardStyleProvider from '../../src/context/CourseCardStyleProvider';
 
 export interface WithResizeRef {
   resizeRef: React.MutableRefObject<HTMLDivElement>;

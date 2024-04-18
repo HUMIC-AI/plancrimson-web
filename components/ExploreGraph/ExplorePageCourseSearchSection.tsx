@@ -3,7 +3,7 @@ import { SearchStateProvider, useDefaultSearchState } from '../../src/context/se
 import SearchBox from '../SearchComponents/SearchBox/SearchBox';
 import Hits from '../SearchComponents/Hits';
 import CurrentRefinements from '../SearchComponents/CurrentRefinements';
-import CourseCardStyleProvider from '../../src/context/expandCards';
+import CourseCardStyleProvider from '../../src/context/CourseCardStyleProvider';
 
 export function ExplorePageCourseSearchSection({ showSortGrid = false }: { showSortGrid?: boolean; }) {
   const defaultState = useDefaultSearchState();

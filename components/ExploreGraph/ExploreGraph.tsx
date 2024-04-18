@@ -7,20 +7,16 @@ import { LoadingBars } from '../Layout/LoadingPage';
  * A 2D d3 force graph of different courses.
  */
 export function ExploreGraph({
-  setHover,
   panelRef,
   scheduleId,
 }: {
-  setHover: (id: string | null) => void;
   panelRef: React.RefObject<HTMLDivElement>;
   scheduleId: string | null;
 }) {
   // create the graph
   const {
     graph, ref, tooltipRef, subjects, elapsed,
-  } = useUpdateGraph({
-    setHover, scheduleId,
-  });
+  } = useUpdateGraph({ scheduleId });
 
   const width = 800;
   const height = 800;
@@ -46,11 +42,13 @@ export function ExploreGraph({
         className="h-full w-full"
         preserveAspectRatio="xMidYMid meet"
       />
+
       {/* tooltip */}
       <p
         ref={tooltipRef}
         className="secondary pointer-events-none absolute hidden -translate-x-1/2 translate-y-8 rounded px-1 text-sm"
       />
+
       {/* use a portal here since buttons depend on graph state but need to be rendered elsewhere */}
       {panelRef.current && graph && createPortal(<Buttons
         graph={graph}

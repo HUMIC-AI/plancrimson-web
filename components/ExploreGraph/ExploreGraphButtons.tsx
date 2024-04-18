@@ -1,12 +1,11 @@
 import { Fragment, useState } from 'react';
 import { Disclosure, RadioGroup } from '@headlessui/react';
 import { FaCog } from 'react-icons/fa';
-import { Graph, toolIcons } from './Graph';
+import { EMOJI_SCALES, Graph, toolIcons } from './Graph';
 import { CuteSwitch } from '../Utils/CuteSwitch';
 import { Subject, choose, getSubjectColor } from '../../src/lib';
 import { classNames } from '../../src/utils/styles';
 import { useClasses } from '../../src/utils/schedules';
-import { EMOJI_SCALES } from './HoveredCourseInfo';
 
 export function Buttons({
   graph, subjects,

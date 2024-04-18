@@ -22,7 +22,7 @@ import { BioSection } from '@/components/ConnectPageComponents/EditBioForm';
 import { useProfile, useFriendStatus, FriendStatus } from '@/components/ConnectPageComponents/useProfile';
 import { IncomingRequestButtons, IncomingRequestList } from '@/components/ConnectPageComponents/FriendRequests';
 import { ErrorMessage } from '@/components/Layout/ErrorMessage';
-import CourseCardStyleProvider from '@/src/context/expandCards';
+import CourseCardStyleProvider from '@/src/context/CourseCardStyleProvider';
 import Schema from '@/src/schema';
 import { compareSemesters } from '@/src/lib';
 import { ScheduleSyncer } from '@/components/Utils/ScheduleSyncer';

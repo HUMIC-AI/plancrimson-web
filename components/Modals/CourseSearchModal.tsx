@@ -9,7 +9,7 @@ import { Auth } from '@/src/features';
 import SearchBox from '../SearchComponents/SearchBox/SearchBox';
 import Hits from '../SearchComponents/Hits';
 import { WithMeili } from '../Layout/WithMeili';
-import CourseCardStyleProvider from '../../src/context/expandCards';
+import CourseCardStyleProvider from '../../src/context/CourseCardStyleProvider';
 
 
 /**

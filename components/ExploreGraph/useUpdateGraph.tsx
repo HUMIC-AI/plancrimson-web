@@ -11,10 +11,10 @@ import { Auth, ClassCache, Schedules } from '../../src/features';
 import { useClasses } from '../../src/utils/schedules';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 import { useModal } from '../../src/context/modal';
-import { RatingType } from './HoveredCourseInfo';
 import { signInUser } from '../Layout/useSyncAuth';
-import { InitGraphProps, Graph } from './Graph';
+import { Graph, RatingField } from './Graph';
 import { useMeiliClient } from '../../src/context/meili';
+import { useGraphContext } from '../../src/context/GraphProvider';
 
 /**
  * Need to be careful with two way synchronization between redux store
@@ -22,8 +22,11 @@ import { useMeiliClient } from '../../src/context/meili';
  */
 
 export function useUpdateGraph({
-  setHover, scheduleId,
-}: InitGraphProps) {
+  scheduleId,
+}: {
+  scheduleId: string | null;
+}) {
+  const { setHoveredClassId: setHover, setExplanation, explanation } = useGraphContext();
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
   const { showContents, setOpen } = useModal();
   const userId = Auth.useAuthProperty('uid');
@@ -33,7 +36,7 @@ export function useUpdateGraph({
   const graphSchedule = useAppSelector(Schedules.selectSchedule(GRAPH_SCHEDULE));
   const fixedClasses = useClasses(scheduleId);
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [ratingType, setRatingType] = useState<RatingType>('meanRating');
+  const [ratingType, setRatingType] = useState<RatingField>('meanRating');
 
   // refs for fine grained control
   const { client } = useMeiliClient();
@@ -79,6 +82,7 @@ export function useUpdateGraph({
       scheduleId,
       setHover,
       setSubjects,
+      setExplanation,
       ratingType,
       setRatingType,
       showInstructions,
@@ -101,7 +105,8 @@ export function useUpdateGraph({
       : fixedClasses;
 
     graphRef.current.appendNodes(initialNodes.map((id) => graphRef.current!.toDatum(id)!).filter(Boolean), []);
-  }, [client, courses, dispatch, elapsed, fixedClasses, positions, ratingType, scheduleId, setHover, setOpen, showContents, userId]);
+  // bruh
+  }, [client, courses, dispatch, elapsed, fixedClasses, positions, ratingType, scheduleId, setExplanation, setHover, setOpen, showContents, userId]);
 
   // whenever GRAPH_SCHEDULE is updated, update the graph nodes
   useEffect(() => {
@@ -119,6 +124,13 @@ export function useUpdateGraph({
       dispatch(Schedules.deleteSchedule(GRAPH_SCHEDULE));
     }
   }, [dispatch]);
+
+  // to handle closing the explanation
+  useEffect(() => {
+    if (explanation === null && graphRef.current) {
+      graphRef.current.clearExplanation();
+    }
+  }, [explanation]);
 
   return {
     graph: graphRef.current,

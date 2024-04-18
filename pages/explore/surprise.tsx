@@ -1,7 +1,7 @@
 import Layout from '../../components/Layout/Layout';
 import { LoadingBars } from '../../components/Layout/LoadingPage';
 import { SurprisePage } from '../../components/SurprisePage/SurprisePage';
-import CourseCardStyleProvider from '../../src/context/expandCards';
+import CourseCardStyleProvider from '../../src/context/CourseCardStyleProvider';
 import { useTotalCourses } from '../../src/features/classCache';
 import { useElapsed } from '../../src/utils/hooks';
 

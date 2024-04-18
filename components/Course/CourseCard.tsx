@@ -11,7 +11,7 @@ import {
 import { useModal } from '@/src/context/modal';
 import { alertUnexpectedError } from '@/src/utils/hooks';
 import { classNames } from '@/src/utils/styles';
-import { useCourseCardStyle } from '@/src/context/expandCards';
+import { useCourseCardStyle } from '@/src/context/CourseCardStyleProvider';
 import Tooltip from '../Utils/Tooltip';
 import { ClassSizeRating, HoursRating, StarRating } from './RatingIndicators';
 import { useDragAndDropContext } from '../YearSchedule/SemesterColumn/DragAndDrop';

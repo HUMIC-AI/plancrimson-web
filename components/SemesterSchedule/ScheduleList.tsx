@@ -6,7 +6,7 @@ import { ClassCache } from '@/src/features';
 import { useAppSelector, useProfiles } from '@/src/utils/hooks';
 import type { BaseSchedule, UserProfile, WithId } from '@/src/types';
 import { classNames } from '@/src/utils/styles';
-import { useCourseCardStyle } from '@/src/context/expandCards';
+import { useCourseCardStyle } from '@/src/context/CourseCardStyleProvider';
 import CardExpandToggler from '../YearSchedule/CardExpandToggler';
 
 export type ScheduleListProps = {

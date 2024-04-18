@@ -3,6 +3,7 @@ import { getAnalytics, logEvent } from 'firebase/analytics';
 import {
   FaEraser, FaPlusCircle, FaPlusSquare,
 } from 'react-icons/fa';
+import { Dispatch, SetStateAction } from 'react';
 import { CourseBrief } from '../ClassesCloudPage/useData';
 import {
   ExtendedClass,
@@ -10,7 +11,6 @@ import {
   cos,
   getSubjectColor,
 } from '../../src/lib';
-import { EMOJI_SCALES, RatingType } from './HoveredCourseInfo';
 import { alertUnexpectedError } from '../../src/utils/hooks';
 
 export type DatumBase = CourseBrief & {
@@ -34,17 +34,21 @@ export type NodeId = string | { id: string };
 
 export type Simulation = d3.Simulation<Datum, LinkDatum>;
 
-export type InitGraphProps = {
-  setHover: (id: string | null) => void;
-  scheduleId: string | null;
-};
-
-export type InitGraphPropsRequired = InitGraphProps & {
-  positions: number[][];
-  courses: CourseBrief[];
-};
-
 export type CourseGroupSelection = d3.Selection<SVGGElement, Datum, SVGGElement, unknown>;
+
+export type Explanation = {
+  courses: Datum[];
+  text: string | null;
+};
+
+export type RatingField = 'meanRating' | 'meanHours';
+
+// a scale of five emojis from least to most happy
+export const EMOJI_SCALES: Record<RatingField, [string, string, string, string, string]> = {
+  meanRating: ['🫣', '😬', '😊', '😍', '🤩'],
+  // meanHours: ['😌', '😐', '😰', '😱', '💀'],
+  meanHours: ['🥱', '😎', '🧐', '😰', '💀'],
+};
 
 const getColor = (d: DatumBase) => getSubjectColor(d.subject, {
   // saturation: (d.meanRating ? d.meanRating : 3) / 5,
@@ -105,7 +109,9 @@ export class Graph {
 
   private height: number;
 
-  private highlightedIds: string[] = [];
+  private highlightedSubject: Subject | null = null;
+
+  private explanationComparingIds: string[] = [];
 
   private nodeGroup: d3.Selection<SVGGElement, unknown, null, unknown>;
 
@@ -125,9 +131,13 @@ export class Graph {
 
   private static readonly NUM_NEIGHBOURS = 3;
 
+  private static readonly HOVERED_LINK_WIDTH = 25;
+
   private static readonly CENTER_STRENGTH = 0.05;
 
   private static readonly PULSE_DURATION = 750;
+
+  private isExplaining = false;
 
   constructor(
     svgDom: SVGSVGElement,
@@ -136,13 +146,14 @@ export class Graph {
     public readonly positions: number[][],
     public readonly courses: CourseBrief[],
     public readonly fixedScheduleId: string | null,
-    private setHover: (id: string | null) => void,
-    private setSubjects: (subjects: Subject[]) => void,
-    private ratingField: RatingType,
-    private setRatingField: (ratingField: RatingType) => void,
+    private reactSetHover: (id: string | null) => void,
+    private reactSetSubjects: (subjects: Subject[]) => void,
+    private reactSetExplanation: Dispatch<SetStateAction<Explanation | null>>,
+    private ratingField: RatingField,
+    private reactSetRatingField: (ratingField: RatingField) => void,
     private showInstructions: null | (() => void),
-    private onAppendCourses: (ids: string[]) => void,
-    private onRemoveCourses: (ids: string[]) => void,
+    private reactAppendCourses: (ids: string[]) => void,
+    private reactRemoveCourses: (ids: string[]) => void,
   ) {
     this.svg = d3.select(svgDom);
     this.tooltip = d3.select(tooltipDom);
@@ -180,6 +191,9 @@ export class Graph {
       .on('click contextmenu', (event) => {
         event.preventDefault();
         this.focusCourse(null);
+        if (!this.isExplaining) {
+          this.clearExplanation();
+        }
       });
 
     this.width = svgDom.width.baseVal.value;
@@ -208,6 +222,12 @@ export class Graph {
 
   get rating() {
     return this.ratingField;
+  }
+
+  public clearExplanation() {
+    this.isExplaining = false;
+    this.explanationComparingIds = [];
+    this.renderHighlights();
   }
 
   private addCircle(enter: CourseGroupSelection) {
@@ -259,9 +279,9 @@ export class Graph {
       .call(this.zoom.transform, this.defaultZoom);
   }
 
-  public setRatingType(ratingType: RatingType) {
+  public setRatingType(ratingType: RatingField) {
     this.ratingField = ratingType;
-    this.setRatingField(ratingType);
+    this.reactSetRatingField(ratingType);
     this.node.select('text.emoji').text(this.getEmoji.bind(this));
   }
 
@@ -270,8 +290,8 @@ export class Graph {
     // deselect a currently selected node
     id = this.focusedCourse.id === id && this.focusedCourse.reason === 'fix' ? null : id;
 
-    if (id) this.setHover(id);
-    else if (this.focusedCourse) this.setHover(null);
+    if (id) this.reactSetHover(id);
+    else if (this.focusedCourse) this.reactSetHover(null);
 
     this.focusedCourse = { id, reason: 'fix' };
 
@@ -322,7 +342,8 @@ export class Graph {
 
   private getStrokeWidth(d: Datum) {
     if (this.focusedCourse.id === d.id) return 6;
-    if (this.highlightedIds.includes(d.id)) return 4;
+    if (this.explanationComparingIds.includes(d.id)) return 5;
+    if (this.highlightedSubject === d.subject) return 3;
     return 0;
   }
 
@@ -356,7 +377,7 @@ export class Graph {
     this.link.attr('stroke-width', Graph.getLinkWidth);
 
     // callbacks
-    this.setSubjects([...new Set(this.currentData.map((d) => d.subject))]);
+    this.reactSetSubjects([...new Set(this.currentData.map((d) => d.subject))]);
 
     if (!this.currentData.some((d) => d.id === this.focusedCourse.id)) {
       this.focusCourse(null);
@@ -396,7 +417,7 @@ export class Graph {
       .data(this.link.data().concat(idLinks.map((d) => ({ ...d }) as unknown as LinkDatum)), (d) => `${stringify(d.source)}:${stringify(d.target)}`)
       .join((enter) => enter.append('line')
         .attr('stroke', this.mode === 'Add opposite' ? 'rgb(var(--color-blue-primary))' : 'rgb(var(--color-gray-primary))')
-        .call(this.addLineEventListeners.bind(this)));
+        .call(this.addLinkEventListeners.bind(this)));
 
     this.node = this.node
       .data(this.currentData.concat(nodesToAdd.map((d) => ({ ...d }) as Datum)), (d) => d.id)
@@ -405,7 +426,7 @@ export class Graph {
         .call(this.addNodeEventListeners.bind(this)));
 
     // callback
-    this.onAppendCourses(nodesToAdd.map((d) => d.id));
+    this.reactAppendCourses(nodesToAdd.map((d) => d.id));
 
     this.updateNodesInternal();
   }
@@ -475,14 +496,14 @@ export class Graph {
           return graph.setPhase('info', d.id);
         }
 
-        // don't react if info modal is open
-        if (graph.phaseInternal === 'info') return;
+        // don't react if info demonstration is open or we are comparing courses
+        if (graph.phaseInternal === 'info' || graph.explanationComparingIds.length > 0) return;
 
         console.debug('mousing over');
 
         Graph.transitionRadius(this, Graph.getRadius(d) + Graph.RADIUS * 2);
         if (graph.focusedCourse.id === null || graph.focusedCourse.reason === 'hover') {
-          graph.setHover(d.id);
+          graph.reactSetHover(d.id);
           graph.focusedCourse = { id: d.id, reason: 'hover' };
           graph.renderHighlights();
         }
@@ -521,29 +542,46 @@ export class Graph {
     this.moveTooltip(x, y);
   }
 
-  private addLineEventListeners(l: d3.Selection<SVGLineElement, LinkDatum, SVGGElement, unknown>) {
+  private addLinkEventListeners(l: d3.Selection<SVGLineElement, LinkDatum, SVGGElement, unknown>) {
     const graph = this;
     l
-      .on('mouseover', (event, d) => {
+      .on('mouseover', function (event, d) {
         const percent = Math.round(getLinkOpacity(d) * 100);
         graph.showTooltipAt(`${percent}%`, event.clientX, event.clientY);
+        d3.select(this)
+          .transition('link-t')
+          .duration(Graph.T_DURATION)
+          .attr('stroke-width', Graph.HOVERED_LINK_WIDTH);
       })
       .on('mousemove', (event) => {
         graph.moveTooltip(event.clientX, event.clientY);
       })
-      .on('mouseout', () => {
+      .on('mouseout', function () {
         graph.hideTooltip();
+        d3.select<SVGLineElement, LinkDatum>(this)
+          .transition('link-t')
+          .duration(Graph.T_DURATION)
+          .attr('stroke-width', Graph.getLinkWidth);
       })
       .on('click', (event, d) => {
-        event.preventDefault();
         event.stopPropagation();
+        if (this.isExplaining) return;
+        this.isExplaining = true;
+        const courses = [{ ...d.source }, { ...d.target }];
+        this.reactSetExplanation({ courses, text: null });
+        this.explanationComparingIds = [d.source.id, d.target.id];
+        this.focusCourse(null);
+        this.renderHighlights();
         this.askRelationship(d)
-          .then((response) => alert(response))
+          .then((text) => {
+            this.reactSetExplanation({ courses, text });
+            this.isExplaining = false;
+          })
           .catch(alertUnexpectedError);
       });
   }
 
-  private async askRelationship({ source: { id: srcId }, target: { id: tgtId } }: LinkDatum) {
+  private async askRelationship({ source: { id: srcId }, target: { id: tgtId } }: LinkDatum): Promise<string> {
     const [src, tgt] = await this.loadCourses([srcId, tgtId]);
 
     // post to backend route to ask for relationship
@@ -562,8 +600,7 @@ export class Graph {
 
   public highlightSubject(subject: Subject | null) {
     console.debug('highlighting subject', this, subject);
-    const ids = this.currentData.filter((d) => d.subject === subject).map((d) => d.id);
-    this.highlightedIds = ids;
+    this.highlightedSubject = subject;
     this.renderHighlights();
   }
 
@@ -589,7 +626,7 @@ export class Graph {
       .attr('stroke-opacity', 0)
       .remove();
 
-    this.onRemoveCourses(idsToRemove);
+    this.reactRemoveCourses(idsToRemove);
 
     this.updateNodesInternal();
   }
@@ -617,7 +654,7 @@ export class Graph {
 
   public setPhase(newPhase: Graph['phaseInternal'], id?: string) {
     if (newPhase === 'init') {
-      this.setHover(null);
+      this.reactSetHover(null);
     } else if (newPhase === 'wait') {
       // add a "click me" label
       console.debug('adding click me');
@@ -729,6 +766,7 @@ export class Graph {
     trigger
       .on('mouseout.info click.info', () => {
         trigger.select('g').remove();
+        Graph.transitionRadius(trigger.node()!, Graph.getRadius(trigger.datum()), Graph.T_DURATION, true);
         this.setPhase('ready');
       }, { once: true });
   }

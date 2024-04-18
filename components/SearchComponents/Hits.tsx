@@ -11,7 +11,7 @@ import { alertSignIn } from './SearchBox/searchUtils';
 import { CourseCard } from '../Course/CourseCard';
 import useClientOrDemo from './ClientOrDemo';
 import { useElapsed } from '../../src/utils/hooks';
-import { useCourseCardStyle } from '../../src/context/expandCards';
+import { useCourseCardStyle } from '../../src/context/CourseCardStyleProvider';
 import { classNames } from '../../src/utils/styles';
 
 const sampleHits = sampleCourses as ExtendedClass[];

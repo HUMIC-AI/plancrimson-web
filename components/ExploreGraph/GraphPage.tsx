@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import Layout from '../Layout/Layout';
 import { Auth } from '../../src/features';
 import { WithMeili } from '../Layout/WithMeili';
@@ -10,12 +10,11 @@ import { ExploreGraph } from './ExploreGraph';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 import { SidebarPanel } from './CollapsibleSidebar';
 import { ScheduleSyncer } from '../Utils/ScheduleSyncer';
+import { GraphProvider } from '../../src/context/GraphProvider';
 
 export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
   const userId = Auth.useAuthProperty('uid');
-  const [hoveredClassId, setHoveredClassId] = useState<string | null>(null);
   const courseInfoRef = useRef<HTMLDivElement>(null);
-
   const isLg = useBreakpoint(breakpoints.lg);
 
   if (!isLg) {
@@ -40,23 +39,24 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
     >
       <WithMeili userId={userId}>
         {userId && <ScheduleSyncer userId={userId} />}
-        <ScheduleIdProvider id={GRAPH_SCHEDULE}>
-          {/* three main components: the background graph, the left search bar, the right course info */}
-          <ExploreGraph
-            scheduleId={scheduleId ?? null}
-            setHover={setHoveredClassId}
-            panelRef={courseInfoRef}
-          />
+        <GraphProvider>
+          <ScheduleIdProvider id={GRAPH_SCHEDULE}>
+            {/* three main components: the background graph, the left search bar, the right course info */}
+            <ExploreGraph
+              scheduleId={scheduleId ?? null}
+              panelRef={courseInfoRef}
+            />
 
-          {/* left sidebar (add courses to graph schedule) */}
-          <SidebarPanel side="left" defaultOpen>
-            <ExplorePageCourseSearchSection />
+            {/* left sidebar (add courses to graph schedule) */}
+            <SidebarPanel side="left" defaultOpen>
+              <ExplorePageCourseSearchSection />
+            </SidebarPanel>
+          </ScheduleIdProvider>
+
+          <SidebarPanel ref={courseInfoRef} side="right" defaultOpen>
+            <HoveredCourseInfo />
           </SidebarPanel>
-        </ScheduleIdProvider>
-
-        <SidebarPanel ref={courseInfoRef} side="right" defaultOpen>
-          <HoveredCourseInfo courseId={hoveredClassId} />
-        </SidebarPanel>
+        </GraphProvider>
       </WithMeili>
     </Layout>
   );

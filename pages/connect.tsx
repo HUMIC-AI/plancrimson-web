@@ -4,7 +4,7 @@ import { SearchBar } from '@/components/ConnectPageComponents/SearchBar';
 import { useFriends, useIds } from '@/components/ConnectPageComponents/friendUtils';
 import { useLunrIndex } from '@/components/ConnectPageComponents/useLunrIndex';
 import Layout from '@/components/Layout/Layout';
-import CourseCardStyleProvider from '@/src/context/expandCards';
+import CourseCardStyleProvider from '@/src/context/CourseCardStyleProvider';
 import { useIncludeSemesters } from '@/src/context/includeSemesters';
 import { useMeiliClient } from '@/src/context/meili';
 import { ClassCache } from '@/src/features';

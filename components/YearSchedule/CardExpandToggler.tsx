@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaExpand, FaExpandAlt, FaExpandArrowsAlt } from 'react-icons/fa';
-import { useCourseCardStyle } from '@/src/context/expandCards';
+import { useCourseCardStyle } from '@/src/context/CourseCardStyleProvider';
 
 export default function CardExpandToggler() {
   const { style, toggleStyle } = useCourseCardStyle();
