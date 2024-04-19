@@ -1,5 +1,4 @@
 import { ChoiceRank } from '../types';
-import { isDevelopment } from './utils';
 
 export type Path = {
   href: string;
@@ -12,32 +11,27 @@ export type Parent = {
 };
 
 const sitePaths: (Path | Parent)[] = [
-  {
-    name: 'Explore',
-    children: [
-      { href: '/explore', name: 'Graph' },
-      { href: '/explore/undergrad', name: 'Undergrad' },
-      { href: '/explore/grad', name: 'Grad' },
-      { href: '/explore/all', name: 'All' },
-      { href: '/explore/surprise', name: 'Surprise' },
-    ],
-  },
-  {
-    name: 'Search',
-    children: [
-      { href: '/search', name: 'Search' },
-      { href: '/search/archive', name: 'Archive' },
-    ],
-  },
+  { href: '/explore', name: 'Explore' },
+  { href: '/search', name: 'Search' },
   { href: '/', name: 'My Courses' },
   { href: '/connect', name: 'Connect' },
+  { href: '/explore/undergrad', name: 'Universe' },
+  // {
+  //   name: 'Widgets',
+  //   children: [
+  //     { href: '/search/archive', name: 'Past Courses' },
+  //     { href: '/explore/grad', name: 'Grad Courses' },
+  //     { href: '/explore/all', name: 'All' },
+  //     { href: '/explore/surprise', name: 'Surprise' },
+  //   ],
+  // },
   { href: '/about', name: 'About' },
 ];
 
-if (isDevelopment) {
-  // check if firebase project is running
-  sitePaths.push({ href: 'http://localhost:4000', name: 'Emulators' });
-}
+// if (isDevelopment) {
+//   // check if firebase project is running
+//   sitePaths.push({ href: 'http://localhost:4000', name: 'Emulators' });
+// }
 
 export const PATHS: readonly (Path | Parent)[] = sitePaths;
 
