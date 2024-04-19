@@ -88,8 +88,8 @@ export function useUpdateGraph({
       ratingType,
       setRatingType,
       showInstructions,
-      (ids: string[]) => dispatch(Schedules.addCourses({ scheduleId: GRAPH_SCHEDULE, courseIds: ids })),
-      (ids: string[]) => dispatch(Schedules.removeCourses({ scheduleId: GRAPH_SCHEDULE, courseIds: ids })),
+      (ids: string[], id: string) => dispatch(Schedules.addCourses({ scheduleId: id, courseIds: ids })),
+      (ids: string[], id: string) => dispatch(Schedules.removeCourses({ scheduleId: id, courseIds: ids })),
       setPhase,
     );
 
@@ -103,20 +103,14 @@ export function useUpdateGraph({
       ...getUpcomingSemester(),
     }));
 
-    const initialNodes = fixedClasses.length === 0
-      ? [choose(courses).id]
-      : fixedClasses;
-
-    graphRef.current.appendNodes(initialNodes.map((id) => graphRef.current!.toDatum(id)!).filter(Boolean), []);
+    graphRef.current.syncCourses(fixedClasses.length === 0 ? [choose(courses).id] : [], fixedClasses);
   // bruh
   }, [client, courses, dispatch, elapsed, fixedClasses, positions, ratingType, scheduleId, setExplanation, setHover, setOpen, setPhase, showContents, userId]);
 
   // whenever GRAPH_SCHEDULE is updated, update the graph nodes
   useEffect(() => {
     if (!graphRef.current || !graphSchedule?.classes || !fixedClasses || !courses || !positions) return;
-    const nodes = [...graphSchedule.classes, ...fixedClasses].map((id) => graphRef.current!.toDatum(id)!).filter(Boolean);
-    graphRef.current.appendNodes(nodes, []);
-    graphRef.current.removeNodes(graphRef.current.getNodesNotIn(nodes).map((n) => n.id));
+    graphRef.current.syncCourses(graphSchedule.classes, fixedClasses);
   }, [courses, fixedClasses, graphSchedule?.classes, positions]);
 
   // stop simulation when unmounting

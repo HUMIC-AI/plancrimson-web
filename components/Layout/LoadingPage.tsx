@@ -15,3 +15,11 @@ export function LoadingBars() {
     </ul>
   );
 }
+
+export function LoadingText() {
+  return (
+    <div className="animate-pulse rounded-full bg-gray-secondary px-4 py-2">
+      Loading results...
+    </div>
+  );
+}

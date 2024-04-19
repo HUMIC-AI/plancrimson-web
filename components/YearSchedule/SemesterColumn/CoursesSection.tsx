@@ -11,6 +11,7 @@ import { getClassIdsOfSchedule } from '@/src/features/schedules';
 import { CourseCard } from '../../Course/CourseCard';
 import { useChosenSchedule } from '../../../src/context/selectedSchedule';
 import { RemoveClassButton } from '../../Course/ToggleButton';
+import { LoadingText } from '../../Layout/LoadingPage';
 
 export function SemesterColumnBody({ highlightedRequirement }: {
   highlightedRequirement: Requirement | undefined;
@@ -23,7 +24,7 @@ export function SemesterColumnBody({ highlightedRequirement }: {
     () => schedule && findConflicts(allTruthy(schedule.classes ? schedule.classes.map((classId) => classCache[classId]) : [])),
     [schedule, classCache],
   );
-  const elapsed = useElapsed(3000, []);
+  const elapsed = useElapsed(4000, []);
 
   if (!schedule && elapsed) {
     console.error(`Schedule ${scheduleId} not found`);
@@ -77,7 +78,7 @@ export function SemesterColumnBody({ highlightedRequirement }: {
               : 'Loading course data...'}
           </div>
         ))) : (
-          <p className="animate-pulse">Loading course data...</p>
+          <LoadingText />
         )}
       </div>
     </div>

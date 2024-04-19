@@ -13,6 +13,7 @@ import useClientOrDemo from './ClientOrDemo';
 import { useElapsed } from '../../src/utils/hooks';
 import { useCourseCardStyle } from '../../src/context/CourseCardStyleProvider';
 import { classNames } from '../../src/utils/styles';
+import { LoadingText } from '../Layout/LoadingPage';
 
 const sampleHits = sampleCourses as ExtendedClass[];
 
@@ -51,11 +52,7 @@ function HitsComponent({
       {hits.length === 0 ? (
         elapsed
           ? <span>No results found. Try filtering by different properties.</span>
-          : (
-            <div className="animate-pulse rounded-full bg-gray-light px-4 py-2">
-              Loading results...
-            </div>
-          )
+          : <LoadingText />
       ) : (
         <div className={classNames(
           oneCol
