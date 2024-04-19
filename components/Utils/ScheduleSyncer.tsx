@@ -4,10 +4,10 @@ import {
 } from 'firebase/firestore';
 import { useMeiliClient } from '@/src/context/meili';
 import { ClassCache, Schedules } from '@/src/features';
-import { toLocalSchedule } from '@/src/features/schedules';
+import { GRAPH_SCHEDULE, toLocalSchedule } from '@/src/features/schedules';
 import Schema from '@/src/schema';
 import { FirestoreSchedule } from '@/src/types';
-import { useAppDispatch, alertUnexpectedError } from '@/src/utils/hooks';
+import { useAppDispatch, alertUnexpectedError, useAppSelector } from '@/src/utils/hooks';
 import { getAllClassIds } from '@/src/utils/schedules';
 
 
@@ -22,6 +22,7 @@ export function ScheduleSyncer({ userId }: {
 }) {
   const dispatch = useAppDispatch();
   const { client } = useMeiliClient();
+  const graphSchedule = useAppSelector(Schedules.selectSchedule(GRAPH_SCHEDULE));
 
   const updateSchedules = useCallback(async (snap: QuerySnapshot<FirestoreSchedule>) => {
     try {
@@ -31,14 +32,16 @@ export function ScheduleSyncer({ userId }: {
 
       // load all of the classes into the class cache
       if (client) {
-        await dispatch(ClassCache.loadCourses(client, getAllClassIds(schedules)));
+        const classIds = getAllClassIds(schedules);
+        if (graphSchedule?.classes) classIds.push(...graphSchedule.classes);
+        await dispatch(ClassCache.loadCourses(client, classIds));
       }
 
       dispatch(Schedules.overwriteSchedules(schedules.map(toLocalSchedule)));
     } catch (err) {
       alertUnexpectedError(err);
     }
-  }, [dispatch, client]);
+  }, [client, dispatch, graphSchedule?.classes]);
 
   useEffect(() => {
     const q = query(Schema.Collection.schedules(), where('ownerUid', '==', userId));

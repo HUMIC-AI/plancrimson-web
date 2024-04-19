@@ -2,7 +2,7 @@ import {
   useEffect, useMemo, useState,
 } from 'react';
 import { useRouter } from 'next/router';
-import { ExtendedClass } from '../../src/lib';
+import { ExtendedClass, getSubjectColor } from '../../src/lib';
 import { Auth, ClassCache } from '../../src/features';
 import { useAppDispatch } from '../../src/utils/hooks';
 import { InfoCard, InfoCardProps } from '../Modals/InfoCard';
@@ -86,22 +86,59 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
     )}
     >
       {/* draw an svg labelling parts of circle */}
-      <svg className="shrink-0" width={r * 4} height={r * 2} viewBox={`${-r} ${-r * (3 / 2)} ${r * 5} ${r * 3}`} fontSize={r / 3} strokeWidth={2}>
-        <circle r={r} fill="red" />
+      <svg
+        className="shrink-0"
+        width={r * 4}
+        height={r * 3}
+        viewBox={`${-r} ${-r * (3 / 2)} ${r * 5} ${r * 4}`}
+        fontSize={r / 4}
+        strokeWidth={2}
+        stroke="rgb(var(--color-primary))"
+        fill="rgb(var(--color-primary))"
+      >
+        <line x1={0} y1={0} x2={r * 3} y2={r * (3 / 2)} strokeOpacity={0.6} strokeLinecap="round" strokeWidth={r / 4} />
+
+        <circle
+          r={r}
+          fill={getSubjectColor('COMPLIT', {
+            saturation: 0.7,
+            lightness: 0.7,
+            opacity: 0.95,
+          })}
+          strokeOpacity={0}
+        />
         <text textAnchor="middle" dominantBaseline="central" fontSize={r}>
           {EMOJI_SCALES.meanRating[4]}
         </text>
 
-        <line x1={r / 3} y1={-r / 3} x2={r} y2={-r / 2} stroke="black" />
+        <line x1={r / 3} y1={-r / 3} x2={r} y2={-r / 2} />
         <text x={r} y={-r / 2}>QReport rating</text>
 
-        <line x1={-6} y1={r / 3} x2={6} y2={r / 3} stroke="black" />
-        <line x1={-6} y1={r} x2={6} y2={r} stroke="black" />
-        <line x1={0} y1={r / 3} x2={0} y2={r} stroke="black" />
+        <line x1={-6} y1={r / 3} x2={6} y2={r / 3} />
+        <line x1={-6} y1={r} x2={6} y2={r} />
+        <line x1={0} y1={r / 3} x2={0} y2={r} />
         <text dominantBaseline="central" x={r / 8} y={((r / 3) + r) / 2}>Class size</text>
 
-        <line x1={r * (2 / 3)} y1={0} x2={r + r / 4} y2={r / 6} stroke="black" />
+        <line x1={r * (2 / 3)} y1={0} x2={r + r / 4} y2={r / 6} />
         <text x={r + r / 4} y={r / 6} dominantBaseline="central">Subject</text>
+
+        <line x1={r * (5 / 3)} y1={r * (3 / 4)} x2={r - r / 4} y2={r + r / 3} />
+        <text x={r - r / 4} y={r * (3 / 2)} dominantBaseline="central" textAnchor="middle">Click to explain relationship</text>
+
+        <g transform={`translate(${r * 3}, ${r * (3 / 2)})`}>
+          <circle
+            r={r / 2}
+            fill={getSubjectColor('LING', {
+              saturation: 0.7,
+              lightness: 0.7,
+              opacity: 0.95,
+            })}
+            strokeOpacity={0}
+          />
+          <text textAnchor="middle" dominantBaseline="central" fontSize={r / 2}>
+            {EMOJI_SCALES.meanRating[2]}
+          </text>
+        </g>
       </svg>
 
       <ul className="list-inside list-disc space-y-2">
