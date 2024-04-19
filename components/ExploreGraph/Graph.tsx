@@ -912,7 +912,7 @@ export class Graph {
         transition.on('end.info', () => {
           this.addNewNeighbours(n);
           // wait to avoid double click trigger
-          setTimeout(this.addNodeEventListeners.bind(this, trigger), 1000);
+          setTimeout(this.addNodeEventListeners.bind(this, trigger), 250);
         });
         this.setPhase('ready');
 

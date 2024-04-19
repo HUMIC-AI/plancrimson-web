@@ -42,10 +42,10 @@ export default function CourseCardTabs({ course }: { course: ExtendedClass }) {
                 className={({ selected }) => classNames(
                   selected ? 'bg-gray-secondary' : (
                     disabled
-                      ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:bg-gray-primary transition-colors'
+                      ? 'cursor-not-allowed opacity-50'
+                      : 'bg-gray-secondary/50 hover:bg-gray-secondary'
                   ),
-                  'flex-1 text-sm py-2 px-4 rounded-t-xl font-medium whitespace-nowrap',
+                  'flex-1 whitespace-nowrap rounded-t-2xl px-4 py-2 text-sm font-medium transition-colors',
                 )}
                 title={disabled ? 'No evaluations' : undefined}
               >

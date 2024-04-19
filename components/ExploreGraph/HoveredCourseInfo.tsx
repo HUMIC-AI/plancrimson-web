@@ -46,7 +46,7 @@ export function HoveredCourseInfo() {
           </p>
         ),
         content: (
-          <div className="px-6 pb-6">
+          <div className="px-6 pb-64 leading-relaxed">
             {explanation.text ? (
               <p>
                 {explanation.text}
@@ -66,7 +66,7 @@ export function HoveredCourseInfo() {
       content: <GraphInstructions direction="column" />,
       noExit: true,
     };
-  }, [course, explanation]);
+  }, [course, explanation, setExplanation]);
 
 
   return <InfoCard isDialog={false} {...props} />;

@@ -107,7 +107,15 @@ function SocialPanel({ course, userId }: Props & { userId: string }) {
     <Tab.Panel>
       <h2>Others taking this class</h2>
       {schedules.length === 0
-        ? 'None'
+        ? (
+          <p>
+            None. Check out the
+            {' '}
+            <Link className="interactive font-bold" href="/connect">Connect</Link>
+            {' '}
+            page to find friends who are taking this class!
+          </p>
+        )
         : (
           <ul>
             {schedules.map((schedule) => {

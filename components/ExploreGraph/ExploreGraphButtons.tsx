@@ -6,6 +6,7 @@ import { CuteSwitch } from '../Utils/CuteSwitch';
 import { Subject, choose, getSubjectColor } from '../../src/lib';
 import { classNames } from '../../src/utils/styles';
 import { useClasses } from '../../src/utils/schedules';
+import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 
 export function Buttons({
   graph, subjects,
@@ -45,7 +46,7 @@ export function Buttons({
                   graph.removeNodes(graph.currentData.map((s) => s.id));
                   graph.setPhase('init');
                   // this sets state to wait
-                  graph.appendNodes([graph.toDatum(choose(graph.courses).id)!], []);
+                  graph.appendNodes([graph.toDatum(choose(graph.courses).id, GRAPH_SCHEDULE)!], []);
                 }
               }}
             >

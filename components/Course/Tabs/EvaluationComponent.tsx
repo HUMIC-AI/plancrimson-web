@@ -86,10 +86,10 @@ export function EvaluationComponent({ report: raw }: { report: Evaluation | Eval
             )}
 
             {courseEvaluation.comments && courseEvaluation.comments.length > 0 ? (
-              <Section title="Comments">
-                <ul className="max-h-72 overflow-auto text-sm">
+              <Section title={`Comments (${courseEvaluation.comments.length})`}>
+                <ul className="max-h-72 overflow-auto text-sm shadow-inner">
                   {courseEvaluation.comments.map((comment) => (
-                    <li key={comment} className="even:bg-gray-secondary">
+                    <li key={comment} className="py-0.5 even:bg-secondary/50">
                       {comment}
                     </li>
                   ))}
