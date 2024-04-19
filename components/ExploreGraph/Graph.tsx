@@ -171,7 +171,7 @@ export class Graph {
       .forceSimulation<Datum>()
       .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(Graph.getLinkStrength))
       .force('charge', d3.forceManyBody().strength(Graph.CHARGE_STRENGTH))
-      .force('collide', d3.forceCollide<Datum>((d) => Graph.getRadius(d) + Graph.RADIUS * 3))
+      .force('collide', d3.forceCollide<Datum>((d) => Graph.getRadius(d) + Graph.RADIUS * 2))
       .force('x', d3.forceX().strength(Graph.CENTER_STRENGTH))
       .force('y', d3.forceY().strength(Graph.CENTER_STRENGTH))
       .force('center', d3.forceCenter());
@@ -217,18 +217,19 @@ export class Graph {
       });
 
     this.drag = d3.drag<SVGGElement, Datum>()
-      .on('start.basic', (event) => {
+      .on('start', (event) => {
+        // nonzero alpha target to keep the simulation running while dragging
         if (!event.active) this.sim.alphaTarget(0.3).restart();
         event.subject.fx = event.subject.x;
         event.subject.fy = event.subject.y;
         this.nodeGroup.attr('cursor', 'grabbing');
       })
-      .on('drag.basic', (event) => {
+      .on('drag', (event) => {
         event.subject.fx = event.x;
         event.subject.fy = event.y;
         this.moveTooltip(event.sourceEvent.clientX, event.sourceEvent.clientY);
       })
-      .on('end.basic', (event) => {
+      .on('end', (event) => {
         if (!event.active) this.sim.alphaTarget(0);
         event.subject.fx = null;
         event.subject.fy = null;
@@ -237,6 +238,7 @@ export class Graph {
 
     this.svg.call(this.zoom);
 
+    // set initial zoom
     this.svg.call(this.zoom.transform, this.defaultZoom);
   }
 
@@ -397,7 +399,8 @@ export class Graph {
     }));
 
     const links = nodes.map((t) => ({ source: d.id, target: t.id }));
-    this.appendNodes(nodes, links);
+
+    return this.appendNodes(nodes, links);
   }
 
   private renderHighlights() {
@@ -469,7 +472,7 @@ export class Graph {
   }
 
   private static getLinkWidth(d: LinkDatum) {
-    return 0.5 + 2 * Graph.RADIUS * Graph.getLinkOpacity(d);
+    return 2 * Graph.RADIUS * (0.25 + 0.75 * Graph.getLinkOpacity(d));
   }
 
   private pulse(c: SVGGElement, radius: number, grow = true) {
@@ -485,23 +488,27 @@ export class Graph {
    * Main update function for entering nodes into the graph.
    * Ignores nodes that are already in the graph.
    * Use {@link DatumWithoutPosition} since we don't need to initialize x and y.
+   * @returns The nodes and links that were actually added to the graph.
    */
-  public appendNodes(nodesToAdd: DatumWithoutPosition[], idLinks: StringLink[]) {
+  public appendNodes(nodesToAdd: DatumWithoutPosition[], idLinks: StringLink[]): readonly [Datum[], LinkDatum[]] {
     nodesToAdd = this.getNewNodes(nodesToAdd);
     idLinks = this.getNewLinks(idLinks);
 
-    if (nodesToAdd.length === 0 && idLinks.length === 0) return;
+    if (nodesToAdd.length === 0 && idLinks.length === 0) return [[], []];
 
     console.debug('appending nodes', nodesToAdd.length, idLinks.length);
 
+    const nodeObjects = nodesToAdd.map((d) => ({ ...d }) as Datum);
+    const linkObjects = idLinks.map((d) => ({ ...d }) as unknown as LinkDatum);
+
     this.link = this.link
-      .data(this.link.data().concat(idLinks.map((d) => ({ ...d }) as unknown as LinkDatum)), (d) => `${stringify(d.source)}:${stringify(d.target)}`)
+      .data(this.link.data().concat(linkObjects), (d) => `${stringify(d.source)}:${stringify(d.target)}`)
       .join((enter) => enter.append('line')
         .attr('stroke', Graph.getLinkColor)
         .call(this.addLinkEventListeners.bind(this)));
 
     this.node = this.node
-      .data(this.currentData.concat(nodesToAdd.map((d) => ({ ...d }) as Datum)), (d) => d.id)
+      .data(this.currentData.concat(nodeObjects), (d) => d.id)
       .join((enter) => enter.append('g')
         .call(this.addCircle.bind(this))
         .call(this.addNodeEventListeners.bind(this)));
@@ -518,6 +525,8 @@ export class Graph {
     }
 
     this.updateNodesInternal();
+
+    return [nodeObjects, linkObjects];
   }
 
   private static getLinkColor(d: LinkDatum) {
@@ -732,7 +741,7 @@ export class Graph {
     this.node = this.node.data(nodes, (d) => d.id);
     this.node.exit()
       // remove all listeners
-      .on('.basic', null)
+      .on('.basic .drag', null)
       .each(function () {
         const [t] = Graph.transitionRadius(this, 0);
         t.on('end.remove', () => d3.select(this).remove());
@@ -830,89 +839,46 @@ export class Graph {
   private addInfoLabel(trigger: CourseGroupSelection) {
     const r = 100;
 
-    const group = trigger.append('g')
-      .attr('pointer-events', 'none')
-      .attr('stroke', 'black');
+    const n = { ...trigger.datum() };
 
     const [t] = Graph.transitionRadius(trigger.node()!, r, Graph.PULSE_DURATION, true);
 
-    trigger.on('.basic', null);
+    // disable listeners temporarily
+    this.node.on('.basic .drag', null);
 
     t.on('end.info', () => {
-      // add info labels to the node
-      group
-        .append('line')
-        .attr('x1', r / 3)
-        .attr('y1', -r / 3)
-        .attr('x2', r)
-        .attr('y2', -r / 2);
+      const group = trigger.append('g')
+        .attr('pointer-events', 'none')
+        .attr('stroke', 'rgb(var(--color-primary))');
 
-      group
-        .append('text')
-        .attr('text-anchor', 'start')
-        .attr('dominant-baseline', 'auto')
-        .attr('x', r)
-        .attr('y', -r / 2)
-        .text('QReport rating');
+      const [, [link]] = this.addNewNeighbours(n);
 
-      group
-        .append('line')
-        .attr('x1', -6)
-        .attr('y1', 0)
-        .attr('x2', 6)
-        .attr('y2', 0);
+      // pause simulation while info label is open
+      this.sim.tick(20).stop();
+      this.ticked();
+      // zoom so that new position of trigger gets mapped to old position
+      const newPosition = trigger.datum();
+      this.svg.call(this.zoom.translateBy, -newPosition.x + n.x, -newPosition.y + n.y);
 
-      group
-        .append('line')
-        .attr('x1', -6)
-        .attr('y1', r)
-        .attr('x2', 6)
-        .attr('y2', r);
+      Graph.addInfoLabels(group, r);
 
-      group
-        .append('line')
-        .attr('x1', 0)
-        .attr('y1', 0)
-        .attr('x2', 0)
-        .attr('y2', r);
-
-      group
-        .append('text')
-        .attr('x', 0)
-        .attr('y', ((r / 3) + r) / 2)
-        .text('Number of students');
-
-      group
-        .append('line')
-        .attr('x1', r * (2 / 3))
-        .attr('y1', 0)
-        .attr('x2', r + r / 4)
-        .attr('y2', r / 6);
-
-      group
-        .append('text')
-        .attr('text-anchor', 'start')
-        .attr('x', r + r / 4)
-        .attr('y', r / 6)
-        .text('Subject');
-
-      group
-        .append('text')
-        .attr('text-anchor', 'middle')
-        .attr('x', 0)
-        .attr('y', r + r / 4)
-        .text('Click to explore');
+      const linkText = this.nodeGroup.append('text')
+        .attr('pointer-events', 'none')
+        .attr('stroke', 'rgb(var(--color-primary))')
+        .attr('x', (link.source.x + link.target.x) / 2)
+        .attr('y', (link.source.y + link.target.y) / 2)
+        .text('Click link to explain');
 
       // add listeners to remove group on mouseout
-      trigger.on('mouseout.info click.info', () => {
-        console.debug('removing info label');
+      trigger.on('mouseout.info click.info', (e) => {
+        console.debug('removing info label', e);
         trigger.select('g').remove();
-        const n = trigger.datum();
+        linkText.remove();
+        this.sim.alpha(1).restart();
         const [transition] = Graph.transitionRadius(trigger.node()!, Graph.getRadius(n), Graph.T_DURATION, true);
         transition.on('end.info', () => {
-          this.addNewNeighbours(n);
           // wait to avoid double click trigger
-          setTimeout(this.addNodeEventListeners.bind(this, trigger), 250);
+          this.node.call(this.addNodeEventListeners.bind(this));
         });
         this.setPhase('ready');
 
@@ -920,6 +886,72 @@ export class Graph {
         trigger.on('.info', null);
       });
     });
+  }
+
+  private static addInfoLabels(group: d3.Selection<SVGGElement, Datum, SVGGElement, unknown>, r: number) {
+    // add info labels to the node
+    group
+      .append('line')
+      .attr('x1', r / 3)
+      .attr('y1', -r / 3)
+      .attr('x2', r)
+      .attr('y2', -r / 2);
+
+    group
+      .append('text')
+      .attr('text-anchor', 'start')
+      .attr('dominant-baseline', 'auto')
+      .attr('x', r)
+      .attr('y', -r / 2)
+      .text('QReport rating');
+
+    group
+      .append('line')
+      .attr('x1', -6)
+      .attr('y1', 0)
+      .attr('x2', 6)
+      .attr('y2', 0);
+
+    group
+      .append('line')
+      .attr('x1', -6)
+      .attr('y1', r)
+      .attr('x2', 6)
+      .attr('y2', r);
+
+    group
+      .append('line')
+      .attr('x1', 0)
+      .attr('y1', 0)
+      .attr('x2', 0)
+      .attr('y2', r);
+
+    group
+      .append('text')
+      .attr('x', 0)
+      .attr('y', ((r / 3) + r) / 2)
+      .text('Number of students');
+
+    group
+      .append('line')
+      .attr('x1', r * (2 / 3))
+      .attr('y1', 0)
+      .attr('x2', r + r / 4)
+      .attr('y2', r / 6);
+
+    group
+      .append('text')
+      .attr('text-anchor', 'start')
+      .attr('x', r + r / 4)
+      .attr('y', r / 6)
+      .text('Subject');
+
+    group
+      .append('text')
+      .attr('text-anchor', 'middle')
+      .attr('x', 0)
+      .attr('y', r + r / 4)
+      .text('Click to explore');
   }
 
   private static getLinkOpacity({ source, target }: LinkDatum) {

@@ -17,7 +17,7 @@ export function Buttons({
 
   return graph.phase === 'ready' ? (
     <div className="absolute right-full top-16 mr-4 text-right text-sm">
-      <Disclosure>
+      <Disclosure defaultOpen>
         <Disclosure.Button
           className={classNames(
             'interactive secondary ml-auto flex items-center rounded px-2 py-1',
