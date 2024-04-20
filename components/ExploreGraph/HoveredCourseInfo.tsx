@@ -2,13 +2,13 @@ import {
   useEffect, useMemo, useState,
 } from 'react';
 import { useRouter } from 'next/router';
-import { ExtendedClass, getSubjectColor } from '../../src/lib';
+import { ExtendedClass } from '../../src/lib';
 import { Auth, ClassCache } from '../../src/features';
 import { useAppDispatch } from '../../src/utils/hooks';
 import { InfoCard, InfoCardProps } from '../Modals/InfoCard';
 import { getCourseModalContent } from '../Modals/CourseCardModal';
 import { useMeiliClient } from '../../src/context/meili';
-import { classNames } from '../../src/utils/styles';
+import { classNames, getSubjectColor } from '../../src/utils/styles';
 import { useAvailableScheduleIds } from '../../src/utils/schedules';
 import { TitleComponent } from '../YearSchedule/SemesterColumn/TitleComponent';
 import { EMOJI_SCALES } from './Graph';

@@ -1,10 +1,9 @@
 import ClassesCloudPage from '@/components/ClassesCloudPage/ClassesCloudPage';
 import {
-  Subject,
-  getSubjectColor, subjectNames, subjects,
+  Subject, subjectNames, subjects,
 } from '@/src/lib';
 import { CourseLevel } from '@/src/types';
-import { classNames } from '@/src/utils/styles';
+import { classNames, getSubjectColor } from '@/src/utils/styles';
 import { Listbox } from '@headlessui/react';
 import { useState } from 'react';
 import { FaBars } from 'react-icons/fa';

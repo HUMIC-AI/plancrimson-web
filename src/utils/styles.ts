@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Subject, getSubjectHue } from '../lib';
 
 // See the defaults from https://tailwindcss.com/docs/screens
 export const breakpoints = {
@@ -33,4 +34,9 @@ export function useBreakpoint(breakpoint: number) {
   }, [breakpoint]);
 
   return isPast;
+}
+
+export function getSubjectColor(subject: Subject) {
+  const h = getSubjectHue(subject);
+  return `hsla(${h}, 70%, var(--subject-color-lightness), 0.95)`;
 }

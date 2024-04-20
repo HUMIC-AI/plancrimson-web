@@ -9,11 +9,11 @@ import {
   ExtendedClass,
   Subject,
   cos,
-  getSubjectColor,
   splitArray,
 } from '../../src/lib';
 import { alertUnexpectedError } from '../../src/utils/hooks';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
+import { getSubjectColor } from '../../src/utils/styles';
 
 export type DatumWithoutPosition = CourseBrief & {
   pca: number[];

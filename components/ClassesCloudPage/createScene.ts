@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { Subject, getSubjectColor } from '@/src/lib';
+import { Subject } from '@/src/lib';
+import { getSubjectColor } from '../../src/utils/styles';
 
 type RGB = readonly [number, number, number];
 

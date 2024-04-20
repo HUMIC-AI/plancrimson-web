@@ -2,9 +2,9 @@ import React, { useState, useMemo } from 'react';
 import type { RefinementListExposed, RefinementListProvided } from 'react-instantsearch-core';
 import { connectRefinementList } from 'react-instantsearch-dom';
 import {
-  getSubjectColor, Subject, subjects, TERM_TO_SEASON,
+  Subject, subjects, TERM_TO_SEASON,
 } from '@/src/lib';
-import { classNames } from '@/src/utils/styles';
+import { classNames, getSubjectColor } from '@/src/utils/styles';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { alertSignIn } from './SearchBox/searchUtils';
 import useClientOrDemo from './ClientOrDemo';
