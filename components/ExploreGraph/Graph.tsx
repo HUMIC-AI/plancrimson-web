@@ -115,6 +115,8 @@ export class Graph {
 
   private explanationComparingIds: string[] = [];
 
+  private grid: d3.Selection<SVGCircleElement, number, SVGGElement, unknown>;
+
   private nodeGroup: d3.Selection<SVGGElement, unknown, null, unknown>;
 
   private node: CourseGroupSelection;
@@ -127,7 +129,7 @@ export class Graph {
 
   private static readonly T_DURATION = 400;
 
-  private static readonly MAX_LINK_STRENGTH = 0.2;
+  private static readonly MAX_LINK_STRENGTH = 0.3;
 
   private static readonly CHARGE_STRENGTH = -100;
 
@@ -171,10 +173,24 @@ export class Graph {
       .forceSimulation<Datum>()
       .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(Graph.getLinkStrength))
       .force('charge', d3.forceManyBody().strength(Graph.CHARGE_STRENGTH))
-      .force('collide', d3.forceCollide<Datum>((d) => (d.radius + Graph.RADIUS * 2)))
+      .force('collide', d3.forceCollide<Datum>((d) => (d.radius + Graph.collideRadius)).strength(0.5))
       .force('x', d3.forceX().strength(Graph.CENTER_STRENGTH))
       .force('y', d3.forceY().strength(Graph.CENTER_STRENGTH))
       .force('center', d3.forceCenter());
+
+    // background radius lines
+
+    const r = d3.scaleLinear().domain([0, 1]).range([0, 500]);
+
+    this.grid = this.svg.append('g')
+      .selectAll('g')
+      .data(r.ticks(5))
+      .join('g')
+      .append('circle')
+      .attr('fill', 'none')
+      .attr('stroke', 'rgb(var(--color-gray-primary) / 0.2)')
+      .attr('stroke-dasharray', '8 16')
+      .attr('r', r);
 
     this.linkGroup = this.svg.append('g')
       .attr('stroke-opacity', 0.7)
@@ -214,6 +230,7 @@ export class Graph {
       .on('zoom', (event) => {
         this.linkGroup.attr('transform', event.transform);
         this.nodeGroup.attr('transform', event.transform);
+        this.grid.attr('transform', event.transform);
       });
 
     this.drag = d3.drag<SVGGElement, Datum>()
@@ -522,7 +539,7 @@ export class Graph {
   }
 
   private static getLinkWidth(d: LinkDatum) {
-    return 2 * Graph.RADIUS * (0.25 + 0.75 * Graph.getLinkOpacity(d));
+    return Graph.collideRadius * (0.25 + 0.75 * Graph.getLinkOpacity(d));
   }
 
   private pulse(c: SVGGElement, radius: number, grow = true) {
@@ -642,7 +659,7 @@ export class Graph {
           return;
         }
 
-        graph.transitionRadius(this, Graph.getRadius(d) + Graph.RADIUS * 2);
+        graph.transitionRadius(this, Graph.getRadius(d) + Graph.collideRadius);
 
         // set focused course
         if (graph.focusedCourse.id === null || graph.focusedCourse.reason === 'hover') {
@@ -698,20 +715,37 @@ export class Graph {
       .on('mouseover.basic', function (event, d) {
         const percent = Math.round(Graph.getLinkOpacity(d) * 100);
         graph.showTooltipAt(`${percent}%`, event.clientX, event.clientY);
-        d3.select(this)
+        const link = d3.select<SVGLineElement, LinkDatum>(this);
+        link
           .transition('link-t')
           .duration(Graph.T_DURATION)
           .attr('stroke-width', Graph.HOVERED_LINK_WIDTH);
+
+        // move the nodes a bit apart
+        // link.datum().source.radius += Graph.collideRadius;
+        // link.datum().target.radius += Graph.collideRadius;
+        // graph.sim.nodes(graph.currentData);
+      })
+      .on('mousedown.basic', (event, d) => {
+        if (this.mode === 'Erase') {
+          this.removeLinks([d]);
+        }
       })
       .on('mousemove.basic', (event) => {
         graph.moveTooltip(event.clientX, event.clientY);
       })
       .on('mouseout.basic', function () {
         graph.hideTooltip();
-        d3.select<SVGLineElement, LinkDatum>(this)
+        const link = d3.select<SVGLineElement, LinkDatum>(this);
+        link
           .transition('link-t')
           .duration(Graph.T_DURATION)
           .attr('stroke-width', Graph.getLinkWidth);
+
+        // reset the nodes
+        // link.datum().source.radius -= Graph.collideRadius;
+        // link.datum().target.radius -= Graph.collideRadius;
+        // graph.sim.nodes(graph.currentData);
       })
       .on('click.basic', (event, d) => {
         event.stopPropagation();
@@ -905,7 +939,7 @@ export class Graph {
       const [, [link]] = this.addNewNeighbours(n);
 
       // pause simulation while info label is open
-      this.sim.tick(5).stop();
+      this.sim.tick(10).stop();
       this.ticked();
       // zoom so that new position of trigger gets mapped to old position
       const { x, y } = trigger.datum();
@@ -1011,6 +1045,10 @@ export class Graph {
 
   private static getLinkOpacity({ source, target }: LinkDatum) {
     return (cos(source.pca, target.pca) + 1) / 2;
+  }
+
+  static get collideRadius() {
+    return 2 * this.RADIUS;
   }
 }
 

@@ -81,7 +81,7 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
 
   return (
     <div className={classNames(
-      'flex items-center p-6',
+      'flex items-center px-6 pb-6',
       direction === 'column' ? 'flex-col-reverse space-y-4' : 'flex-row space-x-4',
     )}
     >
@@ -157,7 +157,7 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
       </ul>
 
       {direction === 'column' && userId && (
-        <div className="primary relative mx-auto">
+        <div className="mx-auto">
           <TitleComponent
             chooseSchedule={(id) => id && router.replace({
               pathname: '/explore/[scheduleId]',
@@ -168,6 +168,7 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
             scheduleId={scheduleId}
             showSettings={false}
             showCreate={false}
+            noLink
           />
         </div>
       )}

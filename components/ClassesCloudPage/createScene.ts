@@ -55,7 +55,7 @@ export function createPoints(subjects: Subject[], positions: [number, number, nu
 
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions.flat(), 3));
 
-  const colors = subjects.flatMap((subject) => new THREE.Color(getSubjectColor(subject)).toArray() ?? [0.5, 0.5, 0.5]);
+  const colors = subjects.flatMap((subject) => new THREE.Color(getSubjectColor(subject, '50%')).toArray() ?? [0.5, 0.5, 0.5]);
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
   const points = new THREE.Points(geometry, material);

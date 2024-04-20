@@ -14,13 +14,14 @@ export type TitleComponentProps = {
   chooseSchedule: (scheduleId: ScheduleId | null) => void;
   showSettings?: boolean;
   showCreate?: boolean;
+  noLink?: boolean;
 };
 
 /**
  * Part of the {@link SemesterColumnHeader} component.
  */
 export function TitleComponent({
-  scheduleId, idList, chooseSchedule, showSettings = true, showCreate = true,
+  scheduleId, idList, chooseSchedule, showSettings = true, showCreate = true, noLink = false,
 }: TitleComponentProps) {
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
   const schedules = useAppSelector(Schedules.selectSchedules);
@@ -52,13 +53,25 @@ export function TitleComponent({
           </Menu.Button>
           )}
 
-          <TitleLink scheduleId={scheduleId}>
-            {title}
-          </TitleLink>
+          {noLink ? (
+            <Listbox.Button className="interactive flex items-center rounded border border-primary/20 px-2 py-0.5 text-lg font-medium">
+              <span>{title}</span>
 
-          <Listbox.Button className={classNames('interactive select-none duration-500', open && 'rotate-180')}>
-            <FaChevronDown />
-          </Listbox.Button>
+              <div className={classNames('transition-transform select-none duration-500 ml-2', open && 'rotate-180')}>
+                <FaChevronDown />
+              </div>
+            </Listbox.Button>
+          ) : (
+            <>
+              <TitleLink scheduleId={scheduleId}>
+                {title}
+              </TitleLink>
+
+              <Listbox.Button className={classNames('interactive select-none duration-500', open && 'rotate-180')}>
+                <FaChevronDown />
+              </Listbox.Button>
+            </>
+          )}
 
           <FadeTransition>
             <Listbox.Options className="menu-dropdown absolute left-1/2 top-full z-10 mt-2 w-max -translate-x-1/2 divide-y">

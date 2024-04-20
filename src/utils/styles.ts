@@ -36,7 +36,7 @@ export function useBreakpoint(breakpoint: number) {
   return isPast;
 }
 
-export function getSubjectColor(subject: Subject) {
+export function getSubjectColor(subject: Subject, lightness?: string) {
   const h = getSubjectHue(subject);
-  return `hsla(${h}, 70%, var(--subject-color-lightness), 0.95)`;
+  return `hsla(${h}, 70%, ${lightness ?? 'var(--subject-color-lightness)'}, 0.95)`;
 }
