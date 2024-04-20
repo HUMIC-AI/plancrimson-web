@@ -62,7 +62,12 @@ function HitsComponent({
         )}
         >
           {hits.map((hit) => (
-            <CourseCard key={hit.id} course={hit} hideRatings={concise} addViaTitleClick={hideToggle} />
+            <CourseCard
+              key={hit.id}
+              course={hit}
+              hideRatings={concise}
+              addViaTitleClick={hideToggle}
+            />
           ))}
         </div>
       )}

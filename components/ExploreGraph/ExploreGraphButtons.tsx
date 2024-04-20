@@ -3,10 +3,11 @@ import { Disclosure, RadioGroup } from '@headlessui/react';
 import { FaCog } from 'react-icons/fa';
 import { EMOJI_SCALES, Graph, toolIcons } from './Graph';
 import { CuteSwitch } from '../Utils/CuteSwitch';
-import { Subject, choose, getSubjectColor } from '../../src/lib';
+import { Subject, getSubjectColor } from '../../src/lib';
 import { classNames } from '../../src/utils/styles';
 import { useClasses } from '../../src/utils/schedules';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
+import { getRandomRatedCourse } from '../../src/utils/utils';
 
 export function Buttons({
   graph, subjects,
@@ -46,7 +47,7 @@ export function Buttons({
                   graph.removeNodes(graph.currentData.map((s) => s.id));
                   graph.setPhase('init');
                   // this sets state to wait
-                  graph.appendNodes([graph.toDatum(choose(graph.courses).id, GRAPH_SCHEDULE)!], []);
+                  graph.appendNodes([graph.toDatum(getRandomRatedCourse(graph.courses), GRAPH_SCHEDULE)!], []);
                 }
               }}
             >

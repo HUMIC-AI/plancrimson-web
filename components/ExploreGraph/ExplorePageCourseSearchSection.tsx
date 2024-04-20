@@ -13,7 +13,7 @@ export function ExplorePageCourseSearchSection({ showSortGrid = false }: { showS
       <AuthRequiredInstantSearchProvider indexName="courses" hitsPerPage={4}>
         <CourseCardStyleProvider defaultStyle="collapsed">
           {/* static positioning!!! happy */}
-          <div className="space-y-4 rounded-xl py-6 text-xs transition-colors hover:bg-secondary/50">
+          <div className="mx-2 space-y-4 rounded-xl py-6 text-xs transition-colors hover:bg-secondary/50">
             <SearchBox scheduleChooser={false} showSmallAttributeMenu showStats={false} />
             {showSortGrid && (
               <div className="grid grid-cols-[auto_1fr] items-center gap-2">

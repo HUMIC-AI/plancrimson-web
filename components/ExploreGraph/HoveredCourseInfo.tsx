@@ -100,11 +100,7 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
 
         <circle
           r={r}
-          fill={getSubjectColor('COMPLIT', {
-            saturation: 0.7,
-            lightness: 0.7,
-            opacity: 0.95,
-          })}
+          fill={getSubjectColor('COMPLIT')}
           strokeOpacity={0}
         />
         <text textAnchor="middle" dominantBaseline="central" fontSize={r}>
@@ -128,11 +124,7 @@ export function GraphInstructions({ direction }: { direction: 'row' | 'column' }
         <g transform={`translate(${r * 3}, ${r * (3 / 2)})`}>
           <circle
             r={r / 2}
-            fill={getSubjectColor('LING', {
-              saturation: 0.7,
-              lightness: 0.7,
-              opacity: 0.95,
-            })}
+            fill={getSubjectColor('LING')}
             strokeOpacity={0}
           />
           <text textAnchor="middle" dominantBaseline="central" fontSize={r / 2}>

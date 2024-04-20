@@ -40,16 +40,16 @@ export default function CourseSearchModal({ selected, semester }: {
   return (
     // create a new search state provider to override the one in "pages/_app.tsx"
     <WithMeili userId={uid!}>
-      <SearchStateProvider oneCol defaultState={defaultState} ignoreUrl>
+      <SearchStateProvider defaultState={defaultState} ignoreUrl>
         <ScheduleIdProvider id={selected}>
           <AuthRequiredInstantSearchProvider
             indexName={indexName ?? 'courses'}
             hitsPerPage={4}
           >
-            <div className="flex-1 space-y-4 rounded-lg border-2 border-gray-secondary p-6 shadow-lg">
+            <div className=" flex-1 space-y-4 p-6 shadow-lg">
               <SearchBox scheduleChooser={false} showSmallAttributeMenu />
               <CourseCardStyleProvider defaultStyle="collapsed">
-                <Hits />
+                <Hits concise hideToggle />
               </CourseCardStyleProvider>
             </div>
           </AuthRequiredInstantSearchProvider>

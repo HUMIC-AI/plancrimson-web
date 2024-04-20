@@ -16,6 +16,7 @@
     --color-gray-secondary: 203 213 225;
     --color-blue-primary: 29 78 216;
     --color-blue-secondary: 186 230 253;
+    --subject-color-lightness: 70%;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -26,6 +27,7 @@
       --color-gray-secondary: 30 41 59; /* 800 */
       --color-blue-primary: 96 165 250;
       --color-blue-secondary: 30 58 138;
+      --subject-color-lightness: 50%;
     }
   }
 

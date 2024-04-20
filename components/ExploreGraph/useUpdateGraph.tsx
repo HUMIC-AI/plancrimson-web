@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useCourseEmbeddingData } from '../ClassesCloudPage/useData';
 import {
-  Subject,
-  choose, getUpcomingSemester,
+  Subject, getUpcomingSemester,
 } from '../../src/lib';
 import {
   alertUnexpectedError, useAppDispatch, useAppSelector, useElapsed,
@@ -15,6 +14,7 @@ import { signInUser } from '../Layout/useSyncAuth';
 import { Graph, RatingField } from './Graph';
 import { useMeiliClient } from '../../src/context/meili';
 import { useGraphContext } from '../../src/context/GraphProvider';
+import { getRandomRatedCourse } from '../../src/utils/utils';
 
 /**
  * Need to be careful with two way synchronization between redux store
@@ -103,7 +103,7 @@ export function useUpdateGraph({
       ...getUpcomingSemester(),
     }));
 
-    graphRef.current.syncCourses(fixedClasses.length === 0 ? [choose(courses).id] : [], fixedClasses);
+    graphRef.current.syncCourses(fixedClasses.length === 0 ? [getRandomRatedCourse(courses)] : [], fixedClasses);
   // bruh
   }, [client, courses, dispatch, elapsed, fixedClasses, positions, ratingType, scheduleId, setExplanation, setHover, setOpen, setPhase, showContents, userId]);
 

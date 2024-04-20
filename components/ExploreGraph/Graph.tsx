@@ -23,6 +23,7 @@ export type DatumWithoutPosition = CourseBrief & {
 export type Datum = DatumWithoutPosition & {
   x: number;
   y: number;
+  radius: number;
 };
 
 export type LinkDatum = {
@@ -53,13 +54,7 @@ export const EMOJI_SCALES: Record<RatingField, [string, string, string, string, 
   meanHours: ['🥱', '😎', '🧐', '😰', '💀'],
 };
 
-const getColor = (d: DatumWithoutPosition) => getSubjectColor(d.subject, {
-  // saturation: (d.meanRating ? d.meanRating : 3) / 5,
-  // opacity: (d.meanHours ? d.meanHours : 3) / 5,
-  saturation: 0.7,
-  lightness: 0.7,
-  opacity: 0.95,
-});
+const getColor = (d: DatumWithoutPosition) => getSubjectColor(d.subject);
 const stringify = (d: NodeId) => (typeof d === 'string' ? d : d.id);
 const sameLink = (l: LinkDatum | StringLink, d: LinkDatum | StringLink) => {
   const lsrc = stringify(l.source);
@@ -171,7 +166,7 @@ export class Graph {
       .forceSimulation<Datum>()
       .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(Graph.getLinkStrength))
       .force('charge', d3.forceManyBody().strength(Graph.CHARGE_STRENGTH))
-      .force('collide', d3.forceCollide<Datum>((d) => Graph.getRadius(d) + Graph.RADIUS * 2))
+      .force('collide', d3.forceCollide<Datum>((d) => (d.radius + Graph.RADIUS * 2)))
       .force('x', d3.forceX().strength(Graph.CENTER_STRENGTH))
       .force('y', d3.forceY().strength(Graph.CENTER_STRENGTH))
       .force('center', d3.forceCenter());
@@ -263,6 +258,8 @@ export class Graph {
   }
 
   private addCircle(enter: CourseGroupSelection) {
+    const graph = this;
+
     enter.append('circle')
       .attr('fill', getColor)
       .attr('r', 0)
@@ -277,7 +274,7 @@ export class Graph {
       .text(this.getEmoji.bind(this));
 
     enter.each(function (d) {
-      Graph.transitionRadius(this, Graph.getRadius(d));
+      graph.transitionRadius(this, Graph.getRadius(d));
     });
   }
 
@@ -395,6 +392,7 @@ export class Graph {
       pca: this.positions[course.i],
       // assume all fixed nodes are in the graph already
       scheduleId: GRAPH_SCHEDULE,
+      radius: Graph.getRadius(course),
       ...Graph.getNewPosition(d, course),
     }));
 
@@ -430,7 +428,7 @@ export class Graph {
   /**
    * Transition the radius of nodes in the selection
    */
-  private static transitionRadius(g: SVGGElement, radius: number, duration = Graph.T_DURATION, emojiOnly = false): readonly [CircleTransition, TextTransition] {
+  private transitionRadius(g: SVGGElement, radius: number, { duration = Graph.T_DURATION, emojiOnly = false, updateForce = false } = {}): readonly [CircleTransition, TextTransition] {
     const group = d3.select<SVGGElement, Datum>(g);
 
     const circleTransition = group.selectChildren<SVGCircleElement, null>('circle')
@@ -442,6 +440,12 @@ export class Graph {
       .transition('radius-t')
       .duration(duration)
       .attr('font-size', `${radius}px`);
+
+    // refresh the radius data
+    if (updateForce) {
+      group.datum().radius = radius;
+      this.sim.nodes(this.currentData);
+    }
 
     return [circleTransition, textTransition] as const;
   }
@@ -476,7 +480,7 @@ export class Graph {
   }
 
   private pulse(c: SVGGElement, radius: number, grow = true) {
-    const [circleTransition] = Graph.transitionRadius(c, radius + (grow ? Graph.RADIUS : 0), Graph.PULSE_DURATION);
+    const [circleTransition] = this.transitionRadius(c, radius + (grow ? Graph.RADIUS : 0), { duration: Graph.PULSE_DURATION });
     circleTransition.on('end', () => this.pulse(c, radius, !grow));
   }
 
@@ -530,7 +534,9 @@ export class Graph {
   }
 
   private static getLinkColor(d: LinkDatum) {
-    return d.mode === 'Add opposite' ? 'rgb(var(--color-blue-primary))' : 'rgb(var(--color-gray-primary))';
+    return d.mode === 'Add opposite'
+      ? 'rgb(var(--color-blue-primary))'
+      : 'rgb(var(--color-primary))';
   }
 
   public getNewNodes<T extends NodeId>(nodes: T[]) {
@@ -590,7 +596,7 @@ export class Graph {
           return;
         }
 
-        Graph.transitionRadius(this, Graph.getRadius(d) + Graph.RADIUS * 2);
+        graph.transitionRadius(this, Graph.getRadius(d) + Graph.RADIUS * 2);
 
         // set focused course
         if (graph.focusedCourse.id === null || graph.focusedCourse.reason === 'hover') {
@@ -609,7 +615,7 @@ export class Graph {
         graph.moveTooltip(event.clientX, event.clientY);
       })
       .on('mouseout.basic', function (event, d) {
-        Graph.transitionRadius(this, Graph.getRadius(d));
+        graph.transitionRadius(this, Graph.getRadius(d));
         graph.hideTooltip();
       })
       .on('click.basic', (event, d) => {
@@ -737,13 +743,15 @@ export class Graph {
     // remove fixed and regular classes separately
     const [fixed, regular] = splitArray(idsToRemove.map((id) => this.findData(id)!), (d) => d.scheduleId === this.fixedScheduleId);
 
+    const graph = this;
+
     const nodes = this.getNodesNotIn(idsToRemove);
     this.node = this.node.data(nodes, (d) => d.id);
     this.node.exit()
       // remove all listeners
       .on('.basic .drag', null)
       .each(function () {
-        const [t] = Graph.transitionRadius(this, 0);
+        const [t] = graph.transitionRadius(this, 0);
         t.on('end.remove', () => d3.select(this).remove());
       });
 
@@ -823,9 +831,11 @@ export class Graph {
         .attr('opacity', 0)
         .remove();
 
+      const graph = this;
+
       this.node.each(function (d) {
         if (d.id === id) return;
-        Graph.transitionRadius(this, Graph.getRadius(d), Graph.T_DURATION, true);
+        graph.transitionRadius(this, Graph.getRadius(d), { duration: Graph.T_DURATION, emojiOnly: true });
       });
 
       if (this.showInstructions) this.showInstructions();
@@ -836,12 +846,10 @@ export class Graph {
     this.reactSetPhase(newPhase);
   }
 
-  private addInfoLabel(trigger: CourseGroupSelection) {
-    const r = 100;
-
+  private addInfoLabel(trigger: CourseGroupSelection, r = 100) {
     const n = { ...trigger.datum() };
 
-    const [t] = Graph.transitionRadius(trigger.node()!, r, Graph.PULSE_DURATION, true);
+    const [t] = this.transitionRadius(trigger.node()!, r, { duration: Graph.PULSE_DURATION, emojiOnly: true, updateForce: true });
 
     // disable listeners temporarily
     this.node.on('.basic .drag', null);
@@ -854,7 +862,7 @@ export class Graph {
       const [, [link]] = this.addNewNeighbours(n);
 
       // pause simulation while info label is open
-      this.sim.tick(20).stop();
+      this.sim.tick(5).stop();
       this.ticked();
       // zoom so that new position of trigger gets mapped to old position
       const newPosition = trigger.datum();
@@ -865,8 +873,8 @@ export class Graph {
       const linkText = this.nodeGroup.append('text')
         .attr('pointer-events', 'none')
         .attr('stroke', 'rgb(var(--color-primary))')
-        .attr('x', (link.source.x + link.target.x) / 2)
-        .attr('y', (link.source.y + link.target.y) / 2)
+        .attr('x', (link.source.x * 0.2 + link.target.x * 0.8))
+        .attr('y', (link.source.y * 0.2 + link.target.y * 0.8))
         .text('Click link to explain');
 
       // add listeners to remove group on mouseout
@@ -875,7 +883,7 @@ export class Graph {
         trigger.select('g').remove();
         linkText.remove();
         this.sim.alpha(1).restart();
-        const [transition] = Graph.transitionRadius(trigger.node()!, Graph.getRadius(n), Graph.T_DURATION, true);
+        const [transition] = this.transitionRadius(trigger.node()!, Graph.getRadius(n), { emojiOnly: true, updateForce: true });
         transition.on('end.info', () => {
           // wait to avoid double click trigger
           this.node.call(this.addNodeEventListeners.bind(this));
@@ -928,8 +936,9 @@ export class Graph {
 
     group
       .append('text')
-      .attr('x', 0)
-      .attr('y', ((r / 3) + r) / 2)
+      .attr('text-anchor', 'end')
+      .attr('x', -6)
+      .attr('y', r / 2)
       .text('Number of students');
 
     group

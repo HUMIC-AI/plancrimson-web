@@ -1,3 +1,5 @@
+import { CourseBrief } from '../../components/ClassesCloudPage/useData';
+import { choose } from '../lib';
 import type { UserProfile, UserSettings } from '../types';
 
 export const isDevelopment = process.env.NODE_ENV === 'development';
@@ -38,4 +40,8 @@ export function downloadJson(filename: string, data: object | string, extension 
   document.body.appendChild(a);
   a.click();
   a.remove();
+}
+
+export function getRandomRatedCourse(courses: CourseBrief[]) {
+  return choose(courses.filter((c) => c.meanRating)).id;
 }

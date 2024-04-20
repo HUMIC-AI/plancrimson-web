@@ -176,4 +176,4 @@ export const toLocalSchedule = (schedule: FirestoreSchedule): LocalSchedule => (
 });
 
 // a convenience function for getting the classes array from a schedule
-export const getClassIdsOfSchedule = (schedule?: { classes?: string[] }) => schedule?.classes ?? [];
+export const getClassIdsOfSchedule = (schedule?: { classes?: string[] } | null) => schedule?.classes ?? [];

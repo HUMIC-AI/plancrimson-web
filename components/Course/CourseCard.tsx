@@ -22,6 +22,7 @@ import {
 } from './CourseComponents';
 import { useChosenSchedule } from '../../src/context/selectedSchedule';
 import { Schedules } from '../../src/features';
+import { getClassIdsOfSchedule } from '../../src/features/schedules';
 
 type Department = keyof typeof departmentImages;
 
@@ -55,7 +56,8 @@ export const CourseCard = forwardRef(({
   const { style } = useCourseCardStyle();
   const { schedule } = useChosenSchedule();
   const drag = useCourseDragContext();
-  const handleClickTitle = useHandleClickTitle(addViaTitleClick, course);
+  const isInSchedule = getClassIdsOfSchedule(schedule).includes(course.id);
+  const handleClickTitle = useHandleClickTitle(addViaTitleClick, course, isInSchedule);
 
   const [semester, department] = useMemo(
     () => [
@@ -109,9 +111,10 @@ export const CourseCard = forwardRef(({
     // move the shadow outside to avoid it getting hidden
     <div
       className={classNames(
-        'overflow-hidden rounded-xl border border-gray-secondary',
+        'overflow-hidden rounded-xl border-gray-secondary border',
         style === 'expanded' && 'shadow-xl',
         style === 'collapsed' && 'shadow-md',
+        addViaTitleClick && isInSchedule && 'ring-blue-primary ring-4',
       )}
       ref={ref}
     >
@@ -225,21 +228,28 @@ export const CourseCard = forwardRef(({
   );
 });
 
-function useHandleClickTitle(addViaTitleClick: boolean, course: ExtendedClass) {
+function useHandleClickTitle(addViaTitleClick: boolean, course: ExtendedClass, isInSchedule: boolean) {
   const dispatch = useAppDispatch();
   const { showCourse } = useModal();
   const { id: scheduleId } = useChosenSchedule();
 
   const handleClick = useCallback(() => {
     if (addViaTitleClick) {
-      dispatch(Schedules.addCourses({
-        courseIds: [course.id],
-        scheduleId,
-      }));
+      if (isInSchedule) {
+        dispatch(Schedules.removeCourses({
+          scheduleId,
+          courseIds: [course.id],
+        }));
+      } else {
+        dispatch(Schedules.addCourses({
+          scheduleId,
+          courseIds: [course.id],
+        }));
+      }
     } else {
       showCourse(course);
     }
-  }, [course, dispatch, addViaTitleClick, scheduleId, showCourse]);
+  }, [addViaTitleClick, isInSchedule, dispatch, scheduleId, course, showCourse]);
 
   return handleClick;
 }
