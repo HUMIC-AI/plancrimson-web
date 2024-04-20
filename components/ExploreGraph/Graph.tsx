@@ -160,6 +160,8 @@ export class Graph {
     private hits: ExtendedClass[],
     private matchFilter: boolean,
     private reactSetMatchFilter: Dispatch<SetStateAction<boolean>>,
+    private hasMore: boolean,
+    private refineNext: () => void,
   ) {
     this.svg = d3.select(svgDom);
     this.tooltip = d3.select(tooltipDom);
@@ -390,11 +392,29 @@ export class Graph {
     return this.matchFilter;
   }
 
-  private getNeighbours(d: Datum, numNeighbours: number) {
+  public setHasMore(hasMore: boolean) {
+    this.hasMore = hasMore;
+  }
+
+  public setRefineNext(refineNext: () => void) {
+    this.refineNext = refineNext;
+  }
+
+  private getNeighbours(d: Datum, numNeighbours: number): CourseBrief[] {
     // if filter enabled, take from the search hits
     const courses = this.matchFilter
       ? this.hits.map((h) => this.availableCourses.find((c) => c.id === h.id)!).filter(Boolean)
       : this.availableCourses;
+
+    if (courses.length === 0 && this.matchFilter && !this.hasMore) {
+      alert('No more courses to show. Try relaxing the filter.');
+      return [];
+    }
+
+    // if we don't have enough neighbours, preemptively refine the search
+    if (courses.length < 2 * numNeighbours && this.matchFilter && this.hasMore) {
+      this.refineNext();
+    }
 
     const sorted: (CourseBrief & { distance: number })[] = courses
       .map((course) => ({

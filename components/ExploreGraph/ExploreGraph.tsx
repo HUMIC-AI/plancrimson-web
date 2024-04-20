@@ -1,25 +1,38 @@
 import { createPortal } from 'react-dom';
+import { connectInfiniteHits } from 'react-instantsearch-dom';
+import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { useUpdateGraph } from './useUpdateGraph';
 import { Buttons } from './ExploreGraphButtons';
 import { LoadingBars } from '../Layout/LoadingPage';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 import { useCourseDragContext } from '../../src/context/DragCourseMoveSchedulesProvider';
+import useClientOrDemo from '../SearchComponents/ClientOrDemo';
+import { ExtendedClass } from '../../src/lib';
+
+type Provided = InfiniteHitsProvided<ExtendedClass>;
+
+type Exposed = {
+  panelRef: React.RefObject<HTMLDivElement>;
+  scheduleId: string | null;
+};
 
 /**
  * A 2D d3 force graph of different courses.
  */
-export function ExploreGraph({
+function ExploreGraphComponent({
   panelRef,
   scheduleId,
-}: {
-  panelRef: React.RefObject<HTMLDivElement>;
-  scheduleId: string | null;
-}) {
+  hasMore,
+  refineNext,
+  hits = [],
+}: Provided & Exposed) {
   // create the graph
   const { dragStatus, handleDrop } = useCourseDragContext()!;
   const {
     graph, ref, tooltipRef, subjects, elapsed,
-  } = useUpdateGraph({ scheduleId });
+  } = useUpdateGraph({
+    scheduleId, hits, hasMore, refineNext,
+  });
 
   const width = 800;
   const height = 800;
@@ -69,4 +82,10 @@ export function ExploreGraph({
   );
 }
 
-
+export function ExploreGraph(props: Exposed) {
+  const Component = useClientOrDemo<Provided, Exposed>(
+    connectInfiniteHits as any,
+    ExploreGraphComponent,
+  );
+  return <Component {...props} />;
+}

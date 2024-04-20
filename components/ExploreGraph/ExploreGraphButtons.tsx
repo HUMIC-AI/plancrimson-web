@@ -56,7 +56,7 @@ export function Buttons({
 
             <button
               type="button"
-              className="button ml-1 flex-1 bg-primary/80 text-secondary"
+              className="button ml-1 flex-1 whitespace-nowrap bg-primary/80 text-secondary"
               onClick={() => graph.resetZoom()}
             >
               Reset zoom
@@ -89,22 +89,24 @@ export function Buttons({
           </RadioGroup>
 
           <div className="flex items-center">
-            <span className="mr-2 whitespace-nowrap">
+            <span className="mr-2 flex-1 whitespace-nowrap">
               {graph.isMatchFilter ? 'Match filter' : 'All courses'}
             </span>
             <CuteSwitch
               enabled={graph.isMatchFilter}
               onChange={(checked) => graph.setMatchFilter(checked)}
+              size="sm"
             />
           </div>
 
           <div className="flex items-center">
-            <span className="mr-2 whitespace-nowrap">
+            <span className="mr-2 flex-1 whitespace-nowrap">
               {graph.rating === 'meanRating' ? 'Average rating' : 'Average workload'}
             </span>
             <CuteSwitch
               enabled={graph.rating === 'meanHours'}
               onChange={(checked) => graph.setRatingType(checked ? 'meanHours' : 'meanRating')}
+              size="sm"
             />
           </div>
         </Disclosure.Panel>

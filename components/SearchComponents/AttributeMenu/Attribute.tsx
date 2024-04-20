@@ -1,7 +1,6 @@
 import { Disclosure } from '@headlessui/react';
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef } from 'react';
 import { compareItems, compareWeekdays } from '@/src/lib';
-import { classNames } from '@/src/utils/styles';
 import FadeTransition from '@/components/Utils/FadeTransition';
 import RefinementList from '../RefinementList';
 
@@ -29,23 +28,17 @@ export default forwardRef(({ attribute, label, showSubjectColor }: AttributeProp
 function DisclosureChildren({
   attribute, label, showSubjectColor,
 }: AttributeProps) {
-  const [operator, setOperator] = useState<'and' | 'or'>('or');
+  // const [operator, setOperator] = useState<'and' | 'or'>('or');
+  const operator = 'or';
 
   return (
     <>
       <div className="flex items-stretch border-b border-gray-primary">
-        <Disclosure.Button
-          className={classNames(
-            'flex-1 py-2 px-3 rounded-tl-lg',
-            'text-sm text-left font-medium cursor-pointer',
-            'hover:bg-gray-secondary/50 transition-colors',
-          )}
-          as="h3"
-        >
+        <Disclosure.Button className="interactive flex-1 cursor-pointer rounded-tl-lg px-3 py-2 text-left text-sm font-medium">
           {label}
         </Disclosure.Button>
 
-        <button
+        {/* <button
           type="button"
           onClick={() => {
             setOperator(operator === 'and' ? 'or' : 'and');
@@ -57,7 +50,7 @@ function DisclosureChildren({
           <span className="opacity-50">
             {operator}
           </span>
-        </button>
+        </button> */}
       </div>
 
       <FadeTransition unmount={false}>

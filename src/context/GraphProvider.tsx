@@ -9,7 +9,7 @@ function useGraphState() {
   const [hoveredClassId, setHoveredClassId] = useState<string | null>(null);
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   const [phase, setPhase] = useState<GraphPhase>('init');
-  const [matchFilter, setMatchFilter] = useState<boolean>(true);
+  const [matchFilter, setMatchFilter] = useState<boolean>(false);
 
   const context = useMemo(() => ({
     hoveredClassId,

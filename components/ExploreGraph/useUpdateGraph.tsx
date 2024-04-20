@@ -25,9 +25,13 @@ import { getRandomRatedCourse } from '../../src/utils/utils';
 export function useUpdateGraph({
   scheduleId,
   hits,
+  hasMore,
+  refineNext,
 }: {
   scheduleId: string | null;
   hits: ExtendedClass[];
+  hasMore: boolean;
+  refineNext: () => void;
 }) {
   const {
     setHoveredClassId: setHover, setExplanation, explanation, setPhase, matchFilter, setMatchFilter,
@@ -51,7 +55,7 @@ export function useUpdateGraph({
 
   useEffect(() => {
     // only initialize graph after all data is included and 500ms has passed
-    if (graphRef.current || !client || !courses || !elapsed || !fixedClasses || !positions || !ref.current || !tooltipRef.current) return;
+    if (graphRef.current || !courses || !elapsed || !fixedClasses || !positions || !ref.current || !tooltipRef.current) return;
 
     console.info('initializing graph');
 
@@ -81,7 +85,7 @@ export function useUpdateGraph({
     graphRef.current = new Graph(
       ref.current,
       tooltipRef.current,
-      (ids: string[]) => dispatch(ClassCache.loadCourses(client, ids)),
+      (ids: string[]) => (client ? dispatch(ClassCache.loadCourses(client, ids)) : Promise.resolve([])),
       positions,
       courses,
       scheduleId,
@@ -97,6 +101,8 @@ export function useUpdateGraph({
       hits,
       matchFilter,
       setMatchFilter,
+      hasMore,
+      refineNext,
     );
 
     dispatch(Schedules.createLocal({
@@ -112,7 +118,7 @@ export function useUpdateGraph({
     graphRef.current.syncCourses(fixedClasses.length === 0 ? [getRandomRatedCourse(courses)] : [], fixedClasses);
   // start the graph once these variables exist (checked at top of useEffect)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, courses, elapsed, fixedClasses, positions]);
+  }, [courses, elapsed, fixedClasses, positions]);
 
   // whenever GRAPH_SCHEDULE is updated, update the graph nodes
   useEffect(() => {
@@ -139,8 +145,10 @@ export function useUpdateGraph({
   useEffect(() => {
     if (graphRef.current) {
       graphRef.current.setHits(hits);
+      graphRef.current.setHasMore(hasMore);
+      graphRef.current.setRefineNext(refineNext);
     }
-  }, [hits]);
+  }, [hits, hasMore, refineNext]);
 
   return {
     graph: graphRef.current,
