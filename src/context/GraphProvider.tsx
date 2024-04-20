@@ -1,22 +1,15 @@
 import {
-  Dispatch,
-  PropsWithChildren, SetStateAction, createContext, useContext, useMemo, useState,
+  PropsWithChildren, createContext, useContext, useMemo, useState,
 } from 'react';
 import { Explanation, GraphPhase } from '../../components/ExploreGraph/Graph';
 
-const GraphContext = createContext<{
-  hoveredClassId: string | null;
-  setHoveredClassId: Dispatch<SetStateAction<string | null>>;
-  explanation: Explanation | null;
-  setExplanation: Dispatch<SetStateAction<Explanation | null>>;
-  phase: GraphPhase;
-  setPhase: Dispatch<SetStateAction<GraphPhase>>;
-} | null>(null);
+const GraphContext = createContext<ReturnType<typeof useGraphState> | null>(null);
 
-export function GraphProvider({ children }: PropsWithChildren<{}>) {
+function useGraphState() {
   const [hoveredClassId, setHoveredClassId] = useState<string | null>(null);
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   const [phase, setPhase] = useState<GraphPhase>('init');
+  const [matchFilter, setMatchFilter] = useState<boolean>(true);
 
   const context = useMemo(() => ({
     hoveredClassId,
@@ -25,7 +18,15 @@ export function GraphProvider({ children }: PropsWithChildren<{}>) {
     setExplanation,
     phase,
     setPhase,
-  }), [hoveredClassId, explanation, phase]);
+    matchFilter,
+    setMatchFilter,
+  }), [hoveredClassId, explanation, phase, matchFilter]);
+
+  return context;
+}
+
+export function GraphProvider({ children }: PropsWithChildren<{}>) {
+  const context = useGraphState();
 
   return (
     <GraphContext.Provider value={context}>
