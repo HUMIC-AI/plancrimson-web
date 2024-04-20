@@ -5,15 +5,21 @@ import { WithMeili } from '../Layout/WithMeili';
 import { ScheduleIdProvider } from '../../src/context/selectedSchedule';
 import { breakpoints, useBreakpoint } from '../../src/utils/styles';
 import { HoveredCourseInfo } from './HoveredCourseInfo';
-import { ExplorePageCourseSearchSection } from './ExplorePageCourseSearchSection';
 import { ExploreGraph } from './ExploreGraph';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 import { SidebarPanel } from './CollapsibleSidebar';
 import { ScheduleSyncer } from '../Utils/ScheduleSyncer';
 import { GraphProvider } from '../../src/context/GraphProvider';
 import { GraphDragDropProvider } from '../../src/context/DragCourseMoveSchedulesProvider';
+import { useDefaultSearchState, SearchStateProvider } from '../../src/context/searchState';
+import CourseCardStyleProvider from '../../src/context/CourseCardStyleProvider';
+import { AuthRequiredInstantSearchProvider } from '../Utils/AuthRequiredInstantSearchProvider';
+import SearchBox from '../SearchComponents/SearchBox/SearchBox';
+import CurrentRefinements from '../SearchComponents/CurrentRefinements';
+import Hits from '../SearchComponents/Hits';
 
 export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
+  const defaultState = useDefaultSearchState();
   const userId = Auth.useAuthProperty('uid');
   const courseInfoRef = useRef<HTMLDivElement>(null);
   const isLg = useBreakpoint(breakpoints.lg);
@@ -43,21 +49,34 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
         <GraphProvider>
           <GraphDragDropProvider>
             <ScheduleIdProvider id={GRAPH_SCHEDULE}>
-              {/* three main components: the background graph, the left search bar, the right course info */}
-              <ExploreGraph
-                scheduleId={scheduleId ?? null}
-                panelRef={courseInfoRef}
-              />
+              <SearchStateProvider oneCol defaultState={defaultState} ignoreUrl>
+                <AuthRequiredInstantSearchProvider indexName="courses">
+                  {/* three main components: the background graph, the left search bar, the right course info */}
+                  <ExploreGraph
+                    scheduleId={scheduleId ?? null}
+                    panelRef={courseInfoRef}
+                  />
 
-              {/* left sidebar (add courses to graph schedule) */}
-              <SidebarPanel side="left" defaultOpen>
-                <ExplorePageCourseSearchSection />
-              </SidebarPanel>
+                  {/* left sidebar (add courses to graph schedule) */}
+                  <SidebarPanel side="left" defaultOpen>
+                    {/* static positioning!!! happy */}
+                    <div className="mx-2 space-y-4 rounded-xl py-6 text-xs transition-colors hover:bg-secondary/50">
+                      <SearchBox scheduleChooser={false} showSmallAttributeMenu showStats={false} />
+                      <div className="grid grid-cols-[auto_1fr] items-center gap-2">
+                        <CurrentRefinements />
+                      </div>
+                      <CourseCardStyleProvider defaultStyle="collapsed">
+                        <Hits concise hideToggle />
+                      </CourseCardStyleProvider>
+                    </div>
+                  </SidebarPanel>
+
+                  <SidebarPanel ref={courseInfoRef} side="right" defaultOpen>
+                    <HoveredCourseInfo />
+                  </SidebarPanel>
+                </AuthRequiredInstantSearchProvider>
+              </SearchStateProvider>
             </ScheduleIdProvider>
-
-            <SidebarPanel ref={courseInfoRef} side="right" defaultOpen>
-              <HoveredCourseInfo />
-            </SidebarPanel>
           </GraphDragDropProvider>
         </GraphProvider>
       </WithMeili>

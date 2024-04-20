@@ -157,6 +157,9 @@ export class Graph {
     private reactAppendCourses: (ids: string[], scheduleId: string) => void,
     private reactRemoveCourses: (ids: string[], scheduleId: string) => void,
     private reactSetPhase: Dispatch<SetStateAction<GraphPhase>>,
+    private hits: ExtendedClass[],
+    private matchFilter: boolean,
+    private reactSetMatchFilter: Dispatch<SetStateAction<boolean>>,
   ) {
     this.svg = d3.select(svgDom);
     this.tooltip = d3.select(tooltipDom);
@@ -255,6 +258,15 @@ export class Graph {
     this.explanationComparingIds = [];
     if (shouldCloseExplanation) this.reactSetExplanation(null);
     this.renderHighlights();
+  }
+
+  public setHits(hits: ExtendedClass[]) {
+    this.hits = hits;
+  }
+
+  public setMatchFilter(checked: boolean) {
+    this.matchFilter = checked;
+    this.reactSetMatchFilter(checked);
   }
 
   private addCircle(enter: CourseGroupSelection) {
@@ -369,13 +381,22 @@ export class Graph {
     return this.currentData.some((n) => n.id === id);
   }
 
+  // get from all courses the ones whose titles are not in the graph
   get availableCourses() {
     return this.courses.filter((d) => !this.titleInGraph(d));
   }
 
-  private addNewNeighbours(d: Datum, numNeighbours = Graph.NUM_NEIGHBOURS) {
-    console.debug('adding neighbours', d.id);
-    let neighbours: (CourseBrief & { distance: number })[] = this.availableCourses
+  get isMatchFilter() {
+    return this.matchFilter;
+  }
+
+  private getNeighbours(d: Datum, numNeighbours: number) {
+    // if filter enabled, take from the search hits
+    const courses = this.matchFilter
+      ? this.hits.map((h) => this.availableCourses.find((c) => c.id === h.id)!).filter(Boolean)
+      : this.availableCourses;
+
+    const sorted: (CourseBrief & { distance: number })[] = courses
       .map((course) => ({
         ...course,
         distance: cos(d.pca, this.positions[course.i]),
@@ -383,11 +404,16 @@ export class Graph {
       .sort((a, b) => (this.mode === 'Add opposite' ? -1 : +1) * (b.distance - a.distance));
 
     // remove duplicates
-    neighbours = neighbours
-      .filter((n, i) => !neighbours.slice(0, i).some((m) => matchName(m, n)))
-      .slice(0, numNeighbours);
+    return sorted
+      .filter((n, i) => !sorted.slice(0, i).some((m) => matchName(m, n)))
+      .slice(0, numNeighbours)
+      .map(({ distance, ...course }) => course);
+  }
 
-    const nodes: Datum[] = neighbours.map(({ distance, ...course }) => ({
+  private addNewNeighbours(d: Datum, numNeighbours = Graph.NUM_NEIGHBOURS) {
+    console.debug('adding neighbours', d.id);
+    const neighbours = this.getNeighbours(d, numNeighbours);
+    const nodes: Datum[] = neighbours.map((course) => ({
       ...course,
       pca: this.positions[course.i],
       // assume all fixed nodes are in the graph already

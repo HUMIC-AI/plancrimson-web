@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useCourseEmbeddingData } from '../ClassesCloudPage/useData';
 import {
+  ExtendedClass,
   Subject, getUpcomingSemester,
 } from '../../src/lib';
 import {
@@ -23,11 +24,13 @@ import { getRandomRatedCourse } from '../../src/utils/utils';
 
 export function useUpdateGraph({
   scheduleId,
+  hits,
 }: {
   scheduleId: string | null;
+  hits: ExtendedClass[];
 }) {
   const {
-    setHoveredClassId: setHover, setExplanation, explanation, setPhase,
+    setHoveredClassId: setHover, setExplanation, explanation, setPhase, matchFilter, setMatchFilter,
   } = useGraphContext();
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
   const { showContents, setOpen } = useModal();
@@ -48,7 +51,7 @@ export function useUpdateGraph({
 
   useEffect(() => {
     // only initialize graph after all data is included and 500ms has passed
-    if (graphRef.current || !client || !elapsed || !positions || !courses || !fixedClasses || !ref.current || !tooltipRef.current) return;
+    if (graphRef.current || !client || !courses || !elapsed || !fixedClasses || !positions || !ref.current || !tooltipRef.current) return;
 
     console.info('initializing graph');
 
@@ -91,6 +94,9 @@ export function useUpdateGraph({
       (ids: string[], id: string) => dispatch(Schedules.addCourses({ scheduleId: id, courseIds: ids })),
       (ids: string[], id: string) => dispatch(Schedules.removeCourses({ scheduleId: id, courseIds: ids })),
       setPhase,
+      hits,
+      matchFilter,
+      setMatchFilter,
     );
 
     dispatch(Schedules.createLocal({
@@ -104,8 +110,9 @@ export function useUpdateGraph({
     }));
 
     graphRef.current.syncCourses(fixedClasses.length === 0 ? [getRandomRatedCourse(courses)] : [], fixedClasses);
-  // bruh
-  }, [client, courses, dispatch, elapsed, fixedClasses, positions, ratingType, scheduleId, setExplanation, setHover, setOpen, setPhase, showContents, userId]);
+  // start the graph once these variables exist (checked at top of useEffect)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, courses, elapsed, fixedClasses, positions]);
 
   // whenever GRAPH_SCHEDULE is updated, update the graph nodes
   useEffect(() => {
@@ -128,6 +135,12 @@ export function useUpdateGraph({
       graphRef.current.clearExplanation();
     }
   }, [explanation]);
+
+  useEffect(() => {
+    if (graphRef.current) {
+      graphRef.current.setHits(hits);
+    }
+  }, [hits]);
 
   return {
     graph: graphRef.current,

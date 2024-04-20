@@ -72,6 +72,9 @@ export function Buttons({
           >
             {Graph.TOOLS.map((tool) => (
               <div key={tool} className="flex items-center space-x-2">
+                <span className="flex-1">
+                  {tool}
+                </span>
                 <RadioGroup.Option
                   value={tool}
                   className={({ checked }) => classNames(
@@ -81,21 +84,28 @@ export function Buttons({
                 >
                   {toolIcons[tool]}
                 </RadioGroup.Option>
-                <span>
-                  {tool}
-                </span>
               </div>
             ))}
           </RadioGroup>
 
           <div className="flex items-center">
+            <span className="mr-2 whitespace-nowrap">
+              {graph.isMatchFilter ? 'Match filter' : 'All courses'}
+            </span>
+            <CuteSwitch
+              enabled={graph.isMatchFilter}
+              onChange={(checked) => graph.setMatchFilter(checked)}
+            />
+          </div>
+
+          <div className="flex items-center">
+            <span className="mr-2 whitespace-nowrap">
+              {graph.rating === 'meanRating' ? 'Average rating' : 'Average workload'}
+            </span>
             <CuteSwitch
               enabled={graph.rating === 'meanHours'}
               onChange={(checked) => graph.setRatingType(checked ? 'meanHours' : 'meanRating')}
             />
-            <span className="ml-2 whitespace-nowrap">
-              {graph.rating === 'meanRating' ? 'Average rating' : 'Average workload'}
-            </span>
           </div>
         </Disclosure.Panel>
       </Disclosure>
