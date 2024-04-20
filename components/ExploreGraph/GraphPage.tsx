@@ -70,11 +70,11 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
                       </CourseCardStyleProvider>
                     </div>
                   </SidebarPanel>
-
-                  <SidebarPanel ref={courseInfoRef} side="right" defaultOpen>
-                    <HoveredCourseInfo />
-                  </SidebarPanel>
                 </AuthRequiredInstantSearchProvider>
+
+                <SidebarPanel ref={courseInfoRef} side="right" defaultOpen>
+                  <HoveredCourseInfo />
+                </SidebarPanel>
               </SearchStateProvider>
             </ScheduleIdProvider>
           </GraphDragDropProvider>
