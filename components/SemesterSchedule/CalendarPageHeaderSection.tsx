@@ -11,6 +11,7 @@ import Hits from '../SearchComponents/Hits';
 import { ScheduleSyncer } from '../Utils/ScheduleSyncer';
 import { isOldSemester } from '../../src/lib';
 import { useChosenSchedule } from '../../src/context/selectedSchedule';
+import { LoadingText } from '../Layout/LoadingPage';
 
 type Props = {
   events: (EventAttributes & { isSection?: string })[];
@@ -23,32 +24,36 @@ export function CalendarHeaderSection({ events }: Props) {
 
   const indexName = isOldSemester(schedule) ? 'archive' : 'courses';
 
-  return schedule ? (
+  return (
     <div className="relative md:flex md:w-min md:flex-col md:space-y-4 lg:w-full lg:max-w-md">
       <div className="relative flex flex-1 items-center justify-center space-x-4 text-center md:inset-y-0 md:flex-col md:space-x-0 md:space-y-2 md:overflow-hidden">
-        <p className="text-xl font-bold">
-          {schedule.title}
-        </p>
+        {schedule ? (
+          <>
+            <p className="text-xl font-bold">
+              {schedule.title}
+            </p>
 
-        <p>
-          {schedule.year}
-          {' '}
-          {schedule.season}
-        </p>
+            <p>
+              {schedule.year}
+              {' '}
+              {schedule.season}
+            </p>
 
-        <button
-          type="button"
-          onClick={() => exportScheduleToIcs(events)}
-          className="button secondary"
-        >
-          Export to ICS
-        </button>
+            <button
+              type="button"
+              onClick={() => exportScheduleToIcs(events)}
+              className="button secondary"
+            >
+              Export to ICS
+            </button>
 
-        <div className="md:hidden">
-          <AddCoursesButton schedule={schedule}>
-            Add courses
-          </AddCoursesButton>
-        </div>
+            <div className="md:hidden">
+              <AddCoursesButton schedule={schedule}>
+                Add courses
+              </AddCoursesButton>
+            </div>
+          </>
+        ) : <LoadingText />}
 
         <p className="w-48 text-center text-xs">
           Make sure to double-check course times on
@@ -73,7 +78,7 @@ export function CalendarHeaderSection({ events }: Props) {
         </div>
       </div>
     </div>
-  ) : null;
+  );
 }
 
 

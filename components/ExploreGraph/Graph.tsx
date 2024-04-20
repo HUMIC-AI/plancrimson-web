@@ -803,6 +803,7 @@ export class Graph {
   public setPhase(newPhase: Graph['phaseInternal'], id?: string) {
     if (newPhase === 'init') {
       this.reactSetHover(null);
+      this.resetZoom();
     } else if (newPhase === 'wait') {
       // add a "click me" label
       console.debug('adding click me');
@@ -855,33 +856,21 @@ export class Graph {
     this.node.on('.basic .drag', null);
 
     t.on('end.info', () => {
-      const group = trigger.append('g')
-        .attr('pointer-events', 'none')
-        .attr('stroke', 'rgb(var(--color-primary))');
-
       const [, [link]] = this.addNewNeighbours(n);
 
       // pause simulation while info label is open
       this.sim.tick(5).stop();
       this.ticked();
       // zoom so that new position of trigger gets mapped to old position
-      const newPosition = trigger.datum();
-      this.svg.call(this.zoom.translateBy, -newPosition.x + n.x, -newPosition.y + n.y);
+      const { x, y } = trigger.datum();
+      this.svg.call(this.zoom.translateBy, -x + n.x, -y + n.y);
 
-      Graph.addInfoLabels(group, r);
-
-      const linkText = this.nodeGroup.append('text')
-        .attr('pointer-events', 'none')
-        .attr('stroke', 'rgb(var(--color-primary))')
-        .attr('x', (link.source.x * 0.2 + link.target.x * 0.8))
-        .attr('y', (link.source.y * 0.2 + link.target.y * 0.8))
-        .text('Click link to explain');
+      const group = this.addInfoLabels(x, y, r, link);
 
       // add listeners to remove group on mouseout
       trigger.on('mouseout.info click.info', (e) => {
         console.debug('removing info label', e);
-        trigger.select('g').remove();
-        linkText.remove();
+        group.remove();
         this.sim.alpha(1).restart();
         const [transition] = this.transitionRadius(trigger.node()!, Graph.getRadius(n), { emojiOnly: true, updateForce: true });
         transition.on('end.info', () => {
@@ -896,8 +885,13 @@ export class Graph {
     });
   }
 
-  private static addInfoLabels(group: d3.Selection<SVGGElement, Datum, SVGGElement, unknown>, r: number) {
+  private addInfoLabels(x: number, y: number, r: number, link: LinkDatum) {
     // add info labels to the node
+    const group = this.nodeGroup.append('g')
+      .attr('pointer-events', 'none')
+      .attr('transform', `translate(${x}, ${y})`)
+      .attr('stroke', 'rgb(var(--color-primary))');
+
     group
       .append('line')
       .attr('x1', r / 3)
@@ -955,12 +949,18 @@ export class Graph {
       .attr('y', r / 6)
       .text('Subject');
 
+    group.append('text')
+      .attr('x', link.target.x * 0.8 - x * 0.8)
+      .attr('y', link.target.y * 0.8 - y * 0.8)
+      .text('Click link to explain');
+
     group
       .append('text')
-      .attr('text-anchor', 'middle')
       .attr('x', 0)
-      .attr('y', r + r / 4)
+      .attr('y', (link.target.y > y ? -1 : +1) * (r + r / 4))
       .text('Click to explore');
+
+    return group;
   }
 
   private static getLinkOpacity({ source, target }: LinkDatum) {
