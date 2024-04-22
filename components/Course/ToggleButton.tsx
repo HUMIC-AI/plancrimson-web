@@ -1,5 +1,7 @@
 import React, { useCallback } from 'react';
-import { FaTimes, FaPlus } from 'react-icons/fa';
+import {
+  FaSquare, FaCheckSquare,
+} from 'react-icons/fa';
 import {
   ExtendedClass,
   getClassId,
@@ -70,9 +72,9 @@ export function CourseCardToggleButton({ course }: { course: ExtendedClass; }) {
         type="button"
         name="Add class to schedule"
         onClick={addClass}
-        className="secondary interactive round"
+        className="interactive"
       >
-        <FaPlus />
+        <FaSquare size={20} />
       </button>
     );
   }
@@ -93,9 +95,9 @@ export function RemoveClassButton({ classId }: { classId: string }) {
         courseIds: [classId],
         scheduleId: id,
       }))}
-      className="secondary interactive round"
+      className="interactive"
     >
-      <FaTimes />
+      <FaCheckSquare size={20} />
     </button>
   ) : null;
 }
