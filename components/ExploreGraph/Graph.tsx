@@ -173,7 +173,7 @@ export class Graph {
       .forceSimulation<Datum>()
       .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(Graph.getLinkStrength))
       .force('charge', d3.forceManyBody().strength(Graph.CHARGE_STRENGTH))
-      .force('collide', d3.forceCollide<Datum>((d) => (d.radius + Graph.collideRadius)).strength(0.5))
+      .force('collide', d3.forceCollide<Datum>((d) => (d.radius + Graph.collideRadius)))
       .force('x', d3.forceX().strength(Graph.CENTER_STRENGTH))
       .force('y', d3.forceY().strength(Graph.CENTER_STRENGTH))
       .force('center', d3.forceCenter());
