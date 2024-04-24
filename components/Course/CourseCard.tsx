@@ -108,7 +108,7 @@ export const CourseCard = forwardRef(({
       >
         <button
           type="button"
-          onClick={handleClickTitle}
+          onClick={() => handleClickTitle(course)}
           className="transition-opacity hover:opacity-50"
         >
           {course.SUBJECT + course.CATALOG_NBR}
@@ -128,7 +128,7 @@ export const CourseCard = forwardRef(({
         'overflow-hidden rounded-xl border-gray-secondary border',
         style === 'expanded' && 'shadow-xl',
         style === 'collapsed' && 'shadow-md',
-        isInSchedule && 'ring-blue-primary ring-4',
+        clickWholeCard && isInSchedule && 'ring-blue-primary ring-4',
       )}
       draggable={drag !== null}
       onDragStart={onDragStart}
