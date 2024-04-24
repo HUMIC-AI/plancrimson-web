@@ -27,7 +27,7 @@ function ExploreGraphComponent({
   hits = [],
 }: Provided & Exposed) {
   // create the graph
-  const { dragStatus, handleDrop } = useCourseDragContext()!;
+  const drag = useCourseDragContext();
   const {
     graph, ref, tooltipRef, subjects, elapsed,
   } = useUpdateGraph({
@@ -47,7 +47,7 @@ function ExploreGraphComponent({
     );
   }
 
-  const allowDrop = dragStatus.dragging && graph && !graph.idInGraph(dragStatus.data.classId);
+  const allowDrop = drag && drag.dragStatus.dragging && graph && !graph.idInGraph(drag.dragStatus.data.classId);
 
   return (
     <div className="absolute inset-0">
@@ -64,7 +64,7 @@ function ExploreGraphComponent({
         // see https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/Drag_operations#specifying_drop_targets
         onDragStart={(e) => allowDrop && e.preventDefault()}
         onDragOver={(e) => allowDrop && e.preventDefault()}
-        onDrop={() => handleDrop({ scheduleId: GRAPH_SCHEDULE, term: null })}
+        onDrop={allowDrop ? () => drag.handleDrop({ scheduleId: GRAPH_SCHEDULE, term: null }) : undefined}
       />
 
       {/* tooltip */}

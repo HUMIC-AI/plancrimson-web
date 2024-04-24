@@ -28,7 +28,7 @@ type Department = keyof typeof departmentImages;
 
 type CourseCardProps = {
   course: ExtendedClass;
-  addViaTitleClick?: boolean;
+  clickWholeCard?: boolean;
   highlight?: boolean;
   warnings?: string;
   hideTerm?: boolean;
@@ -47,7 +47,7 @@ type CourseCardProps = {
  */
 export const CourseCard = forwardRef(({
   course,
-  addViaTitleClick = false,
+  clickWholeCard = false,
   highlight = false,
   warnings,
   hideTerm = false,
@@ -57,7 +57,7 @@ export const CourseCard = forwardRef(({
   const { schedule } = useChosenSchedule();
   const drag = useCourseDragContext();
   const isInSchedule = getClassIdsOfSchedule(schedule).includes(course.id);
-  const handleClickTitle = useHandleClickTitle(addViaTitleClick, course, isInSchedule);
+  const handleClickTitle = useHandleClickTitle(clickWholeCard, course, isInSchedule);
 
   const [semester, department] = useMemo(
     () => [
@@ -67,7 +67,7 @@ export const CourseCard = forwardRef(({
     [course],
   );
 
-  const onDragStart: DragEventHandler<unknown> | undefined = drag ? (ev) => {
+  const onDragStart: DragEventHandler<unknown> | undefined = useMemo(() => (drag ? (ev) => {
     ev.dataTransfer.dropEffect = 'move';
 
     if (!schedule?.title) {
@@ -82,7 +82,19 @@ export const CourseCard = forwardRef(({
         },
       });
     }
-  } : undefined;
+  } : undefined), [course.id, drag, schedule, semester]);
+
+  const Container = useCallback(({ children, ...props }: any) => (
+    clickWholeCard
+      ? <button type="button" onClick={handleClickTitle} {...props}>{children}</button>
+      : <div {...props}>{children}</div>
+  ), [clickWholeCard, handleClickTitle]);
+
+  const TitleComponent = useCallback(({ children, ...props }: any) => (
+    clickWholeCard
+      ? <div {...props}>{children}</div>
+      : <button type="button" onClick={handleClickTitle} {...props}>{children}</button>
+  ), [clickWholeCard, handleClickTitle]);
 
   if (style === 'text') {
     return (
@@ -100,7 +112,7 @@ export const CourseCard = forwardRef(({
           {course.SUBJECT + course.CATALOG_NBR}
         </button>
 
-        {!addViaTitleClick && <CourseCardToggleButton course={course} />}
+        {!clickWholeCard && <CourseCardToggleButton course={course} />}
       </div>
     );
   }
@@ -114,21 +126,17 @@ export const CourseCard = forwardRef(({
         'overflow-hidden rounded-xl border-gray-secondary border',
         style === 'expanded' && 'shadow-xl',
         style === 'collapsed' && 'shadow-md',
-        addViaTitleClick && isInSchedule && 'ring-blue-primary ring-4',
+        isInSchedule && 'ring-blue-primary ring-4',
       )}
+      draggable={drag !== null}
+      onDragStart={onDragStart}
       ref={ref}
     >
-      <div
-        className={classNames(
-          'relative text-left h-full',
-        )}
-        draggable={drag !== null}
-        onDragStart={onDragStart}
-      >
+      <div className="relative h-full text-left">
         {/* header component */}
-        <div
+        <Container
           className={classNames(
-            'p-2 from-gray-secondary via-secondary bg-gradient-to-br',
+            'p-2 from-gray-secondary via-secondary bg-gradient-to-br text-left',
             isExpanded && (highlight ? 'to-blue-primary' : 'to-blue-secondary'),
             drag && 'cursor-move',
             isExpanded && 'relative',
@@ -148,11 +156,7 @@ export const CourseCard = forwardRef(({
           {/* relative so it appears above the image */}
           <div className="relative space-y-1">
             <p className="flex items-center justify-between">
-              <button
-                type="button"
-                className="interactive border-b text-left font-bold text-blue-primary"
-                onClick={handleClickTitle}
-              >
+              <TitleComponent className={clickWholeCard ? 'font-bold' : 'interactive border-b text-left font-bold text-blue-primary'}>
                 <Highlight
                   attribute="SUBJECT"
                   hit={course}
@@ -161,7 +165,7 @@ export const CourseCard = forwardRef(({
                   attribute="CATALOG_NBR"
                   hit={course}
                 />
-              </button>
+              </TitleComponent>
 
               {/* the info and course selection buttons */}
               <span className="ml-2 flex items-center space-x-2">
@@ -171,7 +175,7 @@ export const CourseCard = forwardRef(({
                 </Tooltip>
                 )}
 
-                {!addViaTitleClick && <CourseCardToggleButton course={course} />}
+                {!clickWholeCard && <CourseCardToggleButton course={course} />}
               </span>
             </p>
 
@@ -198,7 +202,7 @@ export const CourseCard = forwardRef(({
             </>
             )}
           </div>
-        </div>
+        </Container>
         {/* end header component */}
 
         {isExpanded && (

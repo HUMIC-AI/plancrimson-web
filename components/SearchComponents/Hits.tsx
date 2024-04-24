@@ -66,7 +66,7 @@ function HitsComponent({
               key={hit.id}
               course={hit}
               hideRatings={concise}
-              addViaTitleClick={hideToggle}
+              clickWholeCard={hideToggle}
             />
           ))}
         </div>

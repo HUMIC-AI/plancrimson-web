@@ -71,25 +71,29 @@ export function Buttons({
             }}
           >
             {Graph.TOOLS.map((tool) => (
-              <div key={tool} className="flex items-center space-x-2">
-                <span className="flex-1">
+              <RadioGroup.Option
+                key={tool}
+                value={tool}
+                className={({ checked }) => classNames(
+                  'flex items-center space-x-2 px-2',
+                  checked
+                    ? 'bg-primary/80 text-secondary font-semibold'
+                    : 'bg-secondary text-primary hover:bg-primary/50',
+                )}
+              >
+                <span className="flex-1 select-none">
                   {tool}
                 </span>
-                <RadioGroup.Option
-                  value={tool}
-                  className={({ checked }) => classNames(
-                    'button',
-                    checked ? 'bg-primary/80 text-secondary' : 'bg-secondary text-primary',
-                  )}
-                >
+
+                <span>
                   {toolIcons[tool]}
-                </RadioGroup.Option>
-              </div>
+                </span>
+              </RadioGroup.Option>
             ))}
           </RadioGroup>
 
           <div className="flex items-center">
-            <span className="mr-2 flex-1 whitespace-nowrap">
+            <span className="mr-2 flex-1 select-none whitespace-nowrap font-medium">
               {graph.isMatchFilter ? 'Match filter' : 'All courses'}
             </span>
             <CuteSwitch
@@ -100,7 +104,7 @@ export function Buttons({
           </div>
 
           <div className="flex items-center">
-            <span className="mr-2 flex-1 whitespace-nowrap">
+            <span className="mr-2 flex-1 select-none whitespace-nowrap font-medium">
               {graph.rating === 'meanRating' ? 'Average rating' : 'Average workload'}
             </span>
             <CuteSwitch
