@@ -57,7 +57,7 @@ export const CourseCard = forwardRef(({
   const { schedule } = useChosenSchedule();
   const drag = useCourseDragContext();
   const isInSchedule = getClassIdsOfSchedule(schedule).includes(course.id);
-  const handleClickTitle = useHandleClickTitle(clickWholeCard, course, isInSchedule);
+  const handleClickTitle = useHandleClickTitle(clickWholeCard, isInSchedule);
 
   const [semester, department] = useMemo(
     () => [
@@ -86,15 +86,17 @@ export const CourseCard = forwardRef(({
 
   const Container = useCallback(({ children, ...props }: any) => (
     clickWholeCard
-      ? <button type="button" onClick={handleClickTitle} {...props}>{children}</button>
+      ? <button type="button" onClick={() => handleClickTitle(course)} {...props}>{children}</button>
       : <div {...props}>{children}</div>
-  ), [clickWholeCard, handleClickTitle]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [clickWholeCard, handleClickTitle, course.id]);
 
   const TitleComponent = useCallback(({ children, ...props }: any) => (
     clickWholeCard
       ? <div {...props}>{children}</div>
-      : <button type="button" onClick={handleClickTitle} {...props}>{children}</button>
-  ), [clickWholeCard, handleClickTitle]);
+      : <button type="button" onClick={() => handleClickTitle(course)} {...props}>{children}</button>
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [clickWholeCard, handleClickTitle, course.id]);
 
   if (style === 'text') {
     return (
@@ -232,13 +234,13 @@ export const CourseCard = forwardRef(({
   );
 });
 
-function useHandleClickTitle(addViaTitleClick: boolean, course: ExtendedClass, isInSchedule: boolean) {
+function useHandleClickTitle(clickWholeCard: boolean, isInSchedule: boolean) {
   const dispatch = useAppDispatch();
   const { showCourse } = useModal();
   const { id: scheduleId } = useChosenSchedule();
 
-  const handleClick = useCallback(() => {
-    if (addViaTitleClick) {
+  const handleClick = useCallback((course: ExtendedClass) => {
+    if (clickWholeCard) {
       if (isInSchedule) {
         dispatch(Schedules.removeCourses({
           scheduleId,
@@ -253,7 +255,7 @@ function useHandleClickTitle(addViaTitleClick: boolean, course: ExtendedClass, i
     } else {
       showCourse(course);
     }
-  }, [addViaTitleClick, isInSchedule, dispatch, scheduleId, course, showCourse]);
+  }, [clickWholeCard, isInSchedule, dispatch, scheduleId, showCourse]);
 
   return handleClick;
 }
