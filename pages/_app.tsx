@@ -15,7 +15,7 @@ import { getAnalytics, logEvent } from 'firebase/analytics';
 import { useRouter } from 'next/router';
 import { Auth } from '../src/features';
 
-export default function (props: AppProps) {
+export default function App(props: AppProps) {
   return (
     <Provider store={store}>
       <ModalProvider>

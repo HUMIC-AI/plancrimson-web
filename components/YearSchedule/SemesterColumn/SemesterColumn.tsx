@@ -55,7 +55,7 @@ export default function SemesterColumn({
         } : undefined}
         onDrop={drag && schedule ? (ev) => {
           ev.preventDefault();
-          drag.handleDrop({ scheduleId: schedule.id, term: semester && semesterToTerm(semester) });
+          drag.handleDrop({ targetSchedule: schedule, term: semester && semesterToTerm(semester) });
         } : undefined}
       >
         <SemesterColumnHeader s={s} />

@@ -15,12 +15,15 @@ export interface ClassCache {
 export interface ClassCacheState {
   initialized: boolean;
   cache: ClassCache;
+  // avoid synchronization that double loads a class
+  loading: string[];
   errors: string[];
 }
 
 const initialState: ClassCacheState = {
   initialized: false,
   cache: {},
+  loading: [],
   errors: [],
 };
 
@@ -28,10 +31,15 @@ export const classCacheSlice = createSlice({
   name: 'classCache',
   initialState,
   reducers: {
-    loadClasses(state, action: PayloadAction<ExtendedClass[]>) {
+    beginLoad(state, action: PayloadAction<string[]>) {
+      state.loading.push(...action.payload);
+    },
+    addClasses(state, action: PayloadAction<ExtendedClass[]>) {
       action.payload.forEach((classData) => {
         state.cache[classData.id] = { ...classData };
       });
+      const ids = action.payload.map((classData) => classData.id);
+      state.loading = state.loading.filter((id) => !ids.includes(id));
       state.initialized = true;
     },
   },
@@ -63,7 +71,11 @@ export async function fetchAtOffset(offset: number): Promise<{
 
 // api key is required except in development
 // manually fetch the specified document from the Meilisearch index
-const fetchCourse = async (indexName: IndexName, classId: string, apiKey: string): Promise<ExtendedClass> => {
+const fetchCourse = async (cache: ClassCacheState['cache'], indexName: IndexName, classId: string, apiKey: string): Promise<ExtendedClass> => {
+  if (classId in cache) {
+    return cache[classId] as ExtendedClass;
+  }
+
   const response = await fetch(
     `${getMeiliHost()}/indexes/${indexName}/documents/${classId}`,
     {
@@ -75,7 +87,7 @@ const fetchCourse = async (indexName: IndexName, classId: string, apiKey: string
   );
 
   if (!response.ok && indexName !== 'archive') {
-    const archive = await fetchCourse('archive', classId, apiKey!);
+    const archive = await fetchCourse(cache, 'archive', classId, apiKey!);
     return archive;
   }
 
@@ -97,28 +109,32 @@ export function loadCourses(
   classIds: string[],
 ) {
   return async (dispatch: AppDispatch, getState: () => RootState) => {
-    const state = getState();
-    const cache = selectClassCache(state);
+    const apiKey = isDevelopment ? 'maple' : await getMeiliApiKey();
 
-    const apiKey = await getMeiliApiKey();
-
-    if (!apiKey && !isDevelopment) {
+    if (!apiKey) {
       throw new Error('No Meili API key found');
     }
 
-    const classes = await Promise.allSettled(classIds.map((classId) => (classId in cache
-      ? Promise.resolve(cache[classId])
-      : fetchCourse('courses', classId, apiKey!))));
+    // load new classes (only dispatch here)
+    const original = getState().classCache;
+    const newIds = classIds.filter((classId) => !(classId in original.cache) && !original.loading.includes(classId));
+    if (newIds.length > 0) {
+      console.debug(`fetching ${newIds.length} new classes from Meilisearch`);
+      dispatch(classCacheSlice.actions.beginLoad(newIds));
+      const newClasses = await Promise.all(newIds.map((classId) => fetchCourse({}, 'courses', classId, apiKey)));
+      dispatch(classCacheSlice.actions.addClasses(newClasses));
+    }
 
+    // but return an array of all fetched classes
+    const updated = getState().classCache.cache;
+    const classes = await Promise.allSettled(classIds.map((classId) => fetchCourse(updated, 'courses', classId, apiKey)));
     const fetchedClasses = allTruthy(classes.map((result) => {
       if (result.status === 'fulfilled') {
         return result.value;
       }
-      console.error('Error fetching classes', result.reason);
+      console.error('error fetching classes', result.reason);
       return null;
     }));
-
-    dispatch(classCacheSlice.actions.loadClasses(fetchedClasses));
 
     return fetchedClasses;
   };

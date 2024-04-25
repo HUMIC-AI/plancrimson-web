@@ -4,7 +4,6 @@ import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { useUpdateGraph } from './useUpdateGraph';
 import { Buttons } from './ExploreGraphButtons';
 import { LoadingBars } from '../Layout/LoadingPage';
-import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 import { useCourseDragContext } from '../../src/context/DragCourseMoveSchedulesProvider';
 import useClientOrDemo from '../SearchComponents/ClientOrDemo';
 import { ExtendedClass } from '../../src/lib';
@@ -29,7 +28,7 @@ function ExploreGraphComponent({
   // create the graph
   const drag = useCourseDragContext();
   const {
-    graph, ref, tooltipRef, subjects, elapsed,
+    graph, ref, tooltipRef, subjects, elapsed, graphSchedule,
   } = useUpdateGraph({
     scheduleId, hits, hasMore, refineNext,
   });
@@ -47,7 +46,7 @@ function ExploreGraphComponent({
     );
   }
 
-  const allowDrop = drag && drag.dragStatus.dragging && graph && !graph.idInGraph(drag.dragStatus.data.classId);
+  const allowDrop = drag && drag.dragStatus.dragging && graph && !graph.idInGraph(drag.dragStatus.data.classId) && graphSchedule;
 
   return (
     <div className="absolute inset-0">
@@ -64,7 +63,7 @@ function ExploreGraphComponent({
         // see https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/Drag_operations#specifying_drop_targets
         onDragStart={(e) => allowDrop && e.preventDefault()}
         onDragOver={(e) => allowDrop && e.preventDefault()}
-        onDrop={allowDrop ? () => drag.handleDrop({ scheduleId: GRAPH_SCHEDULE, term: null }) : undefined}
+        onDrop={allowDrop ? () => drag.handleDrop({ targetSchedule: graphSchedule, term: null }) : undefined}
       />
 
       {/* tooltip */}

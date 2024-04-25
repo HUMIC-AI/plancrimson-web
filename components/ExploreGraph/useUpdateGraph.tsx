@@ -156,5 +156,6 @@ export function useUpdateGraph({
     tooltipRef,
     subjects,
     elapsed,
+    graphSchedule,
   };
 }

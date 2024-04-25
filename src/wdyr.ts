@@ -4,7 +4,7 @@ import { isDevelopment } from './utils/utils';
 
 if (isDevelopment) {
   if (typeof window !== 'undefined') {
-    // eslint-disable-next-line import/no-extraneous-dependencies, global-require
+    // eslint-disable-next-line global-require
     const wdyr = require('@welldone-software/why-did-you-render');
     wdyr(React, {
       trackAllPureComponents: true,

@@ -93,7 +93,7 @@ export const CourseCard = forwardRef(({
 
   const TitleComponent = useCallback(({ children, ...props }: any) => (
     clickWholeCard
-      ? <div {...props}>{children}</div>
+      ? <p {...props}>{children}</p>
       : <button type="button" onClick={() => handleClickTitle(course)} {...props}>{children}</button>
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ), [clickWholeCard, handleClickTitle, course.id]);
@@ -157,7 +157,7 @@ export const CourseCard = forwardRef(({
 
           {/* relative so it appears above the image */}
           <div className="relative space-y-1">
-            <p className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <TitleComponent className={clickWholeCard ? 'font-bold' : 'interactive border-b text-left font-bold text-blue-primary'}>
                 <Highlight
                   attribute="SUBJECT"
@@ -179,7 +179,7 @@ export const CourseCard = forwardRef(({
 
                 {!clickWholeCard && <CourseCardToggleButton course={course} />}
               </span>
-            </p>
+            </div>
 
             <p className={classNames(!isExpanded && 'text-sm', 'font-medium')}>
               <Highlight

@@ -6,6 +6,7 @@ import { getAnalytics, logEvent } from 'firebase/analytics';
 import {
   PropsWithChildren, createContext, useCallback, useContext, useMemo, useState,
 } from 'react';
+import { LocalSchedule } from '../types';
 
 type DragStatus<T> =
   | {
@@ -29,7 +30,7 @@ interface DragMoveCourseData {
 }
 
 interface CourseDropArgs {
-  scheduleId: string;
+  targetSchedule: LocalSchedule;
   term: Term | null;
 }
 
@@ -43,7 +44,6 @@ export function DragCourseMoveSchedulesProvider({ children }: PropsWithChildren<
   const dispatch = useAppDispatch();
   const profile = useAppSelector(Profile.selectUserProfile);
   const classCache = useAppSelector(ClassCache.selectClassCache);
-  const schedules = useAppSelector(Schedules.selectSchedules);
 
   const [dragStatus, setDragStatus] = useState<DragStatus<DragMoveCourseData>>({
     dragging: false,
@@ -51,31 +51,26 @@ export function DragCourseMoveSchedulesProvider({ children }: PropsWithChildren<
 
   const draggedClass = dragStatus.dragging && classCache[dragStatus.data.classId];
 
-  const checkViableDrop = useCallback(
-    (scheduleId: string) => (profile.classYear && draggedClass && schedules[scheduleId]
+  /**
+   * @param schedule the target schedule that the currently held course was dropped onto
+   */
+  const handleDrop = useCallback(({ targetSchedule, term }: CourseDropArgs) => {
+    const viableDrop = (profile.classYear && draggedClass && targetSchedule
       ? checkViable({
         cls: draggedClass,
-        schedule: schedules[scheduleId],
+        schedule: targetSchedule,
         classYear: profile.classYear,
         classCache,
       })
-      : null),
-    [profile.classYear, draggedClass, schedules, classCache],
-  );
+      : null);
 
-  /**
-   * @param scheduleId the schedule that the currently held course was dropped on
-   */
-  const handleDrop = useCallback(({ scheduleId, term }: CourseDropArgs) => {
+    if (!dragStatus.dragging || !viableDrop) return;
+
     setDragStatus({ dragging: false });
-
-    const viableDrop = checkViableDrop(scheduleId);
-
-    if (!dragStatus.dragging || !scheduleId || !viableDrop) return;
 
     if (viableDrop.viability === 'No') {
       alert(viableDrop.reason);
-    } else if (scheduleId !== dragStatus.data.originScheduleId) {
+    } else if (targetSchedule.id !== dragStatus.data.originScheduleId) {
       const doAdd = viableDrop.viability !== 'Unlikely' || confirm(`${viableDrop.reason} Continue anyways?`);
       if (doAdd) {
         const { classId, originScheduleId, originTerm } = dragStatus.data;
@@ -86,11 +81,11 @@ export function DragCourseMoveSchedulesProvider({ children }: PropsWithChildren<
           originTerm,
           destinationTerm: term,
         });
-        dispatch(Schedules.addCourses({ scheduleId, courseIds: [classId] }));
+        dispatch(Schedules.addCourses({ scheduleId: targetSchedule.id, courseIds: [classId] }));
         dispatch(Schedules.removeCourses({ scheduleId: originScheduleId, courseIds: [classId] }));
       }
     }
-  }, [checkViableDrop, dragStatus, classCache, dispatch]);
+  }, [classCache, dispatch, dragStatus, draggedClass, profile.classYear]);
 
   const value = useMemo<CourseDragContextType>(
     () => ({
@@ -99,7 +94,7 @@ export function DragCourseMoveSchedulesProvider({ children }: PropsWithChildren<
       setDragStatus,
       handleDrop,
     }),
-    [dragStatus, setDragStatus, handleDrop],
+    [dragStatus, handleDrop],
   );
 
   return (
@@ -116,8 +111,8 @@ export function GraphDragDropProvider({ children }: PropsWithChildren<{}>) {
   const context = useMemo<CourseDragContextType>(() => ({
     dragStatus,
     setDragStatus,
-    handleDrop: ({ scheduleId }) => dragStatus.dragging && dispatch(Schedules.addCourses({
-      scheduleId,
+    handleDrop: ({ targetSchedule }) => dragStatus.dragging && dispatch(Schedules.addCourses({
+      scheduleId: targetSchedule.id, // should always be GRAPH_SCHEDULE
       courseIds: [dragStatus.data.classId],
     })),
   }), [dispatch, dragStatus]);
