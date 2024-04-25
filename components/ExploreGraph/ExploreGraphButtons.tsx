@@ -1,8 +1,9 @@
-import { Fragment, useState } from 'react';
+import { Fragment, ReactNode, useState } from 'react';
 import { Disclosure, RadioGroup } from '@headlessui/react';
-import { FaCog } from 'react-icons/fa';
-import { EMOJI_SCALES, Graph, toolIcons } from './Graph';
-import { CuteSwitch } from '../Utils/CuteSwitch';
+import {
+  FaCheckCircle, FaCircle, FaCog,
+} from 'react-icons/fa';
+import { EMOJI_SCALES, Graph } from './Graph';
 import { Subject } from '../../src/lib';
 import { classNames, getSubjectColor } from '../../src/utils/styles';
 import { useClasses } from '../../src/utils/schedules';
@@ -15,6 +16,20 @@ export function Buttons({
   const [myTool, setMyTool] = useState(graph.mode);
   const fixedClasses = useClasses(graph.fixedScheduleId);
   const [hovered, setHovered] = useState(localStorage.getItem('graphButtonHovered') === 'true');
+
+  const handleReset = () => {
+    if (!fixedClasses) return;
+    if (fixedClasses.length > 0) {
+      graph.setPhase('init');
+      graph.removeNodes(graph.getNodesNotIn(fixedClasses).map((s) => s.id));
+      graph.setPhase('wait');
+    } else {
+      graph.removeNodes(graph.currentData.map((s) => s.id));
+      graph.setPhase('init');
+      // this sets state to wait
+      graph.appendNodes([graph.toDatum(getRandomRatedCourse(graph.courses), GRAPH_SCHEDULE)!], []);
+    }
+  };
 
   return graph.phase === 'ready' ? (
     <div className="absolute right-full top-16 mr-4 text-right text-sm">
@@ -32,87 +47,52 @@ export function Buttons({
           <span className="mr-1 font-semibold">Options</span>
           <FaCog size={18} />
         </Disclosure.Button>
-        <Disclosure.Panel className="mt-1 flex flex-col items-stretch space-y-1 rounded transition-colors hover:bg-gray-secondary/50">
-          <div className="flex justify-between">
-            <button
-              type="button"
-              className="button bg-primary/80 text-secondary"
-              onClick={() => {
-                if (!fixedClasses) return;
-                if (fixedClasses.length > 0) {
-                  graph.setPhase('init');
-                  graph.removeNodes(graph.getNodesNotIn(fixedClasses).map((s) => s.id));
-                  graph.setPhase('wait');
-                } else {
-                  graph.removeNodes(graph.currentData.map((s) => s.id));
-                  graph.setPhase('init');
-                  // this sets state to wait
-                  graph.appendNodes([graph.toDatum(getRandomRatedCourse(graph.courses), GRAPH_SCHEDULE)!], []);
-                }
-              }}
-            >
-              Reset
-            </button>
 
-            <button
-              type="button"
-              className="button ml-1 flex-1 whitespace-nowrap bg-primary/80 text-secondary"
-              onClick={() => graph.resetZoom()}
-            >
-              Reset zoom
-            </button>
-          </div>
+        <Disclosure.Panel
+          className="mt-1 flex flex-col items-stretch space-y-1 rounded transition-colors hover:bg-gray-secondary/50"
+        >
+          <button
+            type="button"
+            className="button whitespace-nowrap bg-primary/80 text-secondary"
+            onClick={handleReset}
+          >
+            Reset graph
+          </button>
 
-          <RadioGroup
+          <button
+            type="button"
+            className="button whitespace-nowrap bg-primary/80 text-secondary"
+            onClick={() => graph.resetZoom()}
+          >
+            Center zoom
+          </button>
+
+          <MenuRadio
+            label="Tool"
             value={myTool}
             onChange={(m) => {
               setMyTool(m);
               graph.setMode(m);
             }}
-          >
-            {Graph.TOOLS.map((tool) => (
-              <RadioGroup.Option
-                key={tool}
-                value={tool}
-                className={({ checked }) => classNames(
-                  'flex items-center space-x-2 px-2',
-                  checked
-                    ? 'bg-primary/80 text-secondary font-semibold'
-                    : 'bg-secondary text-primary hover:bg-primary/50',
-                )}
-              >
-                <span className="flex-1 select-none">
-                  {tool}
-                </span>
+            values={Graph.TOOLS}
+            // icons={toolIcons}
+          />
 
-                <span>
-                  {toolIcons[tool]}
-                </span>
-              </RadioGroup.Option>
-            ))}
-          </RadioGroup>
+          <MenuRadio
+            label="Courses"
+            value={graph.isMatchFilter ? 'Match filter' : 'All courses'}
+            onChange={(m) => {
+              graph.setMatchFilter(m === 'Match filter');
+            }}
+            values={['All courses', 'Match filter']}
+          />
 
-          <div className="flex items-center">
-            <span className="mr-2 flex-1 select-none whitespace-nowrap font-medium">
-              {graph.isMatchFilter ? 'Match filter' : 'All courses'}
-            </span>
-            <CuteSwitch
-              enabled={graph.isMatchFilter}
-              onChange={(checked) => graph.setMatchFilter(checked)}
-              size="sm"
-            />
-          </div>
-
-          <div className="flex items-center">
-            <span className="mr-2 flex-1 select-none whitespace-nowrap font-medium">
-              {graph.rating === 'meanRating' ? 'Average rating' : 'Average workload'}
-            </span>
-            <CuteSwitch
-              enabled={graph.rating === 'meanHours'}
-              onChange={(checked) => graph.setRatingType(checked ? 'meanHours' : 'meanRating')}
-              size="sm"
-            />
-          </div>
+          <MenuRadio
+            label="Emojis"
+            value={graph.rating === 'meanRating' ? 'Rating' : 'Workload'}
+            onChange={(m) => graph.setRatingType(m === 'Rating' ? 'meanRating' : 'meanHours')}
+            values={['Rating', 'Workload']}
+          />
         </Disclosure.Panel>
       </Disclosure>
 
@@ -148,3 +128,46 @@ export function Buttons({
     </div>
   ) : null;
 }
+
+function MenuRadio<T extends string>({
+  label, value, onChange, values,
+}: {
+  label: ReactNode;
+  value: T;
+  onChange: (value: T) => void;
+  values: readonly T[];
+}) {
+  return (
+    <RadioGroup
+      value={value}
+      onChange={onChange}
+      className="flex flex-col items-end"
+    >
+      <RadioGroup.Label className="border-b font-semibold">
+        {label}
+      </RadioGroup.Label>
+
+      {values.map((tool) => (
+        <RadioGroup.Option
+          key={tool}
+          value={tool}
+          className={({ checked }) => classNames(
+            'interactive cursor-pointer flex items-center',
+            checked && 'font-semibold',
+          )}
+        >
+          {({ checked }) => (
+            <>
+              <span className="mr-1 select-none whitespace-nowrap">
+                {tool}
+              </span>
+
+              {checked ? <FaCheckCircle /> : <FaCircle />}
+            </>
+          )}
+        </RadioGroup.Option>
+      ))}
+    </RadioGroup>
+  );
+}
+

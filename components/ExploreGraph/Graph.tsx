@@ -1,8 +1,5 @@
 import * as d3 from 'd3';
 import { getAnalytics, logEvent } from 'firebase/analytics';
-import {
-  FaEraser, FaPlusCircle, FaPlusSquare,
-} from 'react-icons/fa';
 import { Dispatch, SetStateAction } from 'react';
 import { CourseBrief } from '../ClassesCloudPage/useData';
 import {
@@ -69,12 +66,6 @@ type CircleTransition = d3.Transition<SVGCircleElement, null, SVGGElement, unkno
 type TextTransition = d3.Transition<SVGTextElement, null, SVGGElement, unknown>;
 
 export type GraphTool = typeof Graph.TOOLS[number];
-
-export const toolIcons: Record<GraphTool, JSX.Element> = {
-  'Add similar': <FaPlusCircle />,
-  'Add opposite': <FaPlusSquare />,
-  Erase: <FaEraser />,
-};
 
 export type GraphPhase = 'init' | 'wait' | 'info' | 'ready';
 
@@ -447,16 +438,16 @@ export class Graph {
       .map(({ distance, ...course }) => course);
   }
 
-  private addNewNeighbours(d: Datum, numNeighbours = Graph.NUM_NEIGHBOURS) {
+  private addNewNeighbours(d: Datum, numNeighbours = Graph.NUM_NEIGHBOURS, positions?: { x: number; y: number }[]) {
     console.debug('adding neighbours', d.id);
     const neighbours = this.getNeighbours(d, numNeighbours);
-    const nodes: Datum[] = neighbours.map((course) => ({
+    const nodes: Datum[] = neighbours.map((course, i) => ({
       ...course,
       pca: this.positions[course.i],
       // assume all fixed nodes are in the graph already
       scheduleId: GRAPH_SCHEDULE,
       radius: Graph.getRadius(course),
-      ...Graph.getNewPosition(d, course),
+      ...(positions ? positions[i] : Graph.getNewPosition(d, course)),
     }));
 
     const links = nodes.map((t) => ({ source: d.id, target: t.id }));
@@ -655,7 +646,7 @@ export class Graph {
 
         if (graph.mode === 'Erase' && event.buttons === 1) {
           // if mouse is down, remove the node
-          graph.removeNodes([d.id]);
+          graph.eraseNode(d);
           return;
         }
 
@@ -671,7 +662,7 @@ export class Graph {
       })
       .on('mousedown.basic', (event, d) => {
         if (graph.mode === 'Erase') {
-          graph.removeNodes([d.id]);
+          graph.eraseNode(d);
         }
       })
       .on('mousemove.basic', (event) => {
@@ -685,9 +676,7 @@ export class Graph {
         event.preventDefault();
         event.stopPropagation();
         if (this.mode === 'Erase') {
-          if (d.scheduleId === GRAPH_SCHEDULE || confirm("Are you sure you want to remove this course? It's part of your schedule.")) {
-            graph.removeNodes([d.id]);
-          }
+          graph.eraseNode(d);
         } else {
           logEvent(getAnalytics(), 'explore_neighbours', {
             course: d,
@@ -700,6 +689,12 @@ export class Graph {
         event.stopPropagation();
         graph.focusCourse(d.id);
       });
+  }
+
+  private eraseNode(d: Datum) {
+    if (d.scheduleId === GRAPH_SCHEDULE || confirm("Are you sure you want to remove this course? It's part of your schedule.")) {
+      this.removeNodes([d.id]);
+    }
   }
 
   private showTooltipAt(text: string, x: number, y: number) {
@@ -936,7 +931,7 @@ export class Graph {
     this.node.on('.basic .drag', null);
 
     t.on('end.info', () => {
-      const [, [link]] = this.addNewNeighbours(n);
+      const [, [link]] = this.addNewNeighbours(n, 2, [{ x: -5, y: 0 }, { x: 0, y: 5 }]);
 
       // pause simulation while info label is open
       this.sim.tick(10).stop();
@@ -970,64 +965,50 @@ export class Graph {
     const group = this.nodeGroup.append('g')
       .attr('pointer-events', 'none')
       .attr('transform', `translate(${x}, ${y})`)
-      .attr('stroke', 'rgb(var(--color-primary))');
-
-    group
-      .append('line')
-      .attr('x1', r / 3)
-      .attr('y1', -r / 3)
-      .attr('x2', r)
-      .attr('y2', -r / 2);
+      .attr('fill', 'rgb(var(--color-primary))')
+      .attr('font-size', r / 8);
 
     group
       .append('text')
+      .attr('x', r / 2)
+      .attr('y', 0)
       .attr('text-anchor', 'start')
-      .attr('dominant-baseline', 'auto')
-      .attr('x', r)
-      .attr('y', -r / 2)
-      .text('QReport rating');
+      .text('Emoji = QReport rating');
 
     group
       .append('line')
-      .attr('x1', -6)
-      .attr('y1', 0)
-      .attr('x2', 6)
-      .attr('y2', 0);
+      .attr('x1', 0)
+      .attr('y1', -6)
+      .attr('x2', 0)
+      .attr('y2', 6);
 
     group
       .append('line')
-      .attr('x1', -6)
-      .attr('y1', r)
-      .attr('x2', 6)
-      .attr('y2', r);
+      .attr('x1', r)
+      .attr('y1', -6)
+      .attr('x2', r)
+      .attr('y2', 6);
 
     group
       .append('line')
       .attr('x1', 0)
       .attr('y1', 0)
-      .attr('x2', 0)
-      .attr('y2', r);
+      .attr('x2', r)
+      .attr('y2', 0);
 
     group
       .append('text')
-      .attr('text-anchor', 'end')
-      .attr('x', -6)
+      .attr('x', 0)
       .attr('y', r / 2)
-      .text('Number of students');
-
-    group
-      .append('line')
-      .attr('x1', r * (2 / 3))
-      .attr('y1', 0)
-      .attr('x2', r + r / 4)
-      .attr('y2', r / 6);
+      .attr('dy', r / 12)
+      .text('Radius = Number of students');
 
     group
       .append('text')
-      .attr('text-anchor', 'start')
-      .attr('x', r + r / 4)
-      .attr('y', r / 6)
-      .text('Subject');
+      .attr('x', 0)
+      .attr('y', -r / 2)
+      .attr('dy', -r / 12)
+      .text('Color = Subject');
 
     group.append('text')
       .attr('x', link.target.x * 0.8 - x * 0.8)
@@ -1038,6 +1019,7 @@ export class Graph {
       .append('text')
       .attr('x', 0)
       .attr('y', (link.target.y > y ? -1 : +1) * (r + r / 4))
+      .attr('font-size', 20)
       .text('Click to explore');
 
     return group;
