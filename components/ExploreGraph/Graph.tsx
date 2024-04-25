@@ -432,10 +432,16 @@ export class Graph {
       .sort((a, b) => (this.mode === 'Add opposite' ? -1 : +1) * (b.distance - a.distance));
 
     // remove duplicates
-    return sorted
-      .filter((n, i) => !sorted.slice(0, i).some((m) => matchName(m, n)))
-      .slice(0, numNeighbours)
-      .map(({ distance, ...course }) => course);
+    const names = new Set();
+    const neighbours: CourseBrief[] = [];
+    while (names.size < numNeighbours && sorted.length > 0) {
+      const { distance, ...n } = sorted.pop()!;
+      if (!names.has(n.subject + n.catalog)) {
+        names.add(n.subject + n.catalog);
+        neighbours.push(n);
+      }
+    }
+    return neighbours;
   }
 
   private addNewNeighbours(d: Datum, numNeighbours = Graph.NUM_NEIGHBOURS, positions?: { x: number; y: number }[]) {
