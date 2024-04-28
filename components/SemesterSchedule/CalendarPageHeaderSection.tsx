@@ -10,7 +10,7 @@ import SearchBox from '../SearchComponents/SearchBox/SearchBox';
 import Hits from '../SearchComponents/Hits';
 import { ScheduleSyncer } from '../Utils/ScheduleSyncer';
 import { isOldSemester } from '../../src/lib';
-import { useChosenSchedule } from '../../src/context/selectedSchedule';
+import { useChosenSchedule } from '../../src/context/ScheduleProvider';
 import { LoadingText } from '../Layout/LoadingPage';
 
 type Props = {

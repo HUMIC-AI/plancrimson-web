@@ -63,23 +63,30 @@ export function getSemesterBeforeEarliest(schedules: ScheduleMap): Semester {
 export function useSchedule(scheduleId?: string | null) {
   const dispatch = useAppDispatch();
 
-  const [schedule, setSchedule] = useState<BaseSchedule>();
+  const [schedule, setSchedule] = useState<BaseSchedule | null>(null);
+  const graphSchedule = useAppSelector(Schedules.selectSchedule(GRAPH_SCHEDULE));
   const [error, setError] = useState<string>();
   const { client } = useMeiliClient();
 
   useEffect(() => {
-    if (!scheduleId) return;
+    if (!scheduleId || scheduleId === GRAPH_SCHEDULE) return;
 
     const unsub = onSnapshot(Schema.schedule(scheduleId), (snap) => {
       if (snap.exists()) {
         const scheduleData = snap.data()!;
         setSchedule(scheduleData);
-        if (client && scheduleData.classes) dispatch(ClassCache.loadCourses(client, scheduleData.classes));
+        if (client && scheduleData.classes) {
+          dispatch(ClassCache.loadCourses(client, scheduleData.classes));
+        }
       }
     }, (err) => setError(err.message));
 
     return unsub;
   }, [scheduleId, client, dispatch]);
+
+  if (scheduleId === GRAPH_SCHEDULE) {
+    return { schedule: graphSchedule, error };
+  }
 
   return { schedule, error };
 }

@@ -6,7 +6,7 @@ import {
   FaExclamationTriangle,
 } from 'react-icons/fa';
 import {
-  ExtendedClass, departmentImages, getSemester, semesterToTerm,
+  ExtendedClass, Semester, departmentImages, getSemester, semesterToTerm,
 } from '@/src/lib';
 import { useModal } from '@/src/context/modal';
 import { alertUnexpectedError, useAppDispatch } from '@/src/utils/hooks';
@@ -20,7 +20,7 @@ import { Highlight } from '../SearchComponents/Highlight';
 import {
   Instructors, DaysOfWeek, Location, ClassTime,
 } from './CourseComponents';
-import { useChosenSchedule } from '../../src/context/selectedSchedule';
+import { useChosenSchedule } from '../../src/context/ScheduleProvider';
 import { Schedules } from '../../src/features';
 import { getClassIdsOfSchedule } from '../../src/features/schedules';
 
@@ -28,11 +28,9 @@ type Department = keyof typeof departmentImages;
 
 type CourseCardProps = {
   course: ExtendedClass;
-  clickWholeCard?: boolean;
   highlight?: boolean;
   warnings?: string;
   hideTerm?: boolean;
-  hideRatings?: boolean;
 };
 
 /**
@@ -47,13 +45,11 @@ type CourseCardProps = {
  */
 export const CourseCard = forwardRef(({
   course,
-  clickWholeCard = false,
   highlight = false,
   warnings,
   hideTerm = false,
-  hideRatings = false,
 }: CourseCardProps, ref: Ref<HTMLDivElement>) => {
-  const { style } = useCourseCardStyle();
+  const { style, clickWholeCard } = useCourseCardStyle();
   const { schedule } = useChosenSchedule();
   const drag = useCourseDragContext();
   const isInSchedule = getClassIdsOfSchedule(schedule).includes(course.id);
@@ -84,19 +80,6 @@ export const CourseCard = forwardRef(({
     }
   } : undefined), [course.id, drag, schedule, semester]);
 
-  const Container = useCallback(({ children, ...props }: any) => (
-    clickWholeCard
-      ? <button type="button" onClick={() => handleClickTitle(course)} {...props}>{children}</button>
-      : <div {...props}>{children}</div>
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [clickWholeCard, handleClickTitle, course.id]);
-
-  const TitleComponent = useCallback(({ children, ...props }: any) => (
-    clickWholeCard
-      ? <p {...props}>{children}</p>
-      : <button type="button" onClick={() => handleClickTitle(course)} {...props}>{children}</button>
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [clickWholeCard, handleClickTitle, course.id]);
 
   if (style === 'text') {
     return (
@@ -135,104 +118,148 @@ export const CourseCard = forwardRef(({
       ref={ref}
     >
       <div className="relative h-full text-left">
-        {/* header component */}
-        <Container
-          className={classNames(
-            'p-2 from-gray-secondary via-secondary bg-gradient-to-br text-left',
-            isExpanded && (highlight ? 'to-blue-primary' : 'to-blue-secondary'),
-            drag && 'cursor-move',
-            isExpanded && 'relative',
-          )}
-        >
-          {departmentImages[department] && (
-          <Image
-            src={departmentImages[department].urls.thumb}
-            alt={departmentImages[department].alt_description || ''}
-            fill
-            sizes="200px"
-            style={{ objectFit: 'cover' }}
-            className={highlight ? 'opacity-10' : 'opacity-30'}
-          />
-          )}
+        <CourseCardHeader
+          highlight={highlight}
+          department={department}
+          course={course}
+          warnings={warnings}
+          hideTerm={hideTerm}
+          semester={semester}
+          handleClickTitle={handleClickTitle}
+        />
 
-          {/* relative so it appears above the image */}
-          <div className="relative space-y-1">
-            <div className="flex items-center justify-between">
-              <TitleComponent className={clickWholeCard ? 'font-bold' : 'interactive border-b text-left font-bold text-blue-primary'}>
-                <Highlight
-                  attribute="SUBJECT"
-                  hit={course}
-                />
-                <Highlight
-                  attribute="CATALOG_NBR"
-                  hit={course}
-                />
-              </TitleComponent>
-
-              {/* the info and course selection buttons */}
-              <span className="ml-2 flex items-center space-x-2">
-                {warnings && (
-                <Tooltip text={warnings} direction="bottom">
-                  <FaExclamationTriangle className="text-xl text-orange" />
-                </Tooltip>
-                )}
-
-                {!clickWholeCard && <CourseCardToggleButton course={course} />}
-              </span>
-            </div>
-
-            <p className={classNames(!isExpanded && 'text-sm', 'font-medium')}>
-              <Highlight
-                attribute="Title"
-                hit={course}
-              />
-            </p>
-
-            {hideTerm || (
-            <p className={classNames(isExpanded && 'text-sm')}>
-              {semester.season}
-              {' '}
-              {semester.year}
-            </p>
-            )}
-
-            {!hideRatings && (
-            <>
-              {typeof course.meanRating === 'number' && <StarRating rating={course.meanRating} />}
-              {typeof course.meanClassSize === 'number' && <ClassSizeRating population={course.meanClassSize} />}
-              {typeof course.meanHours === 'number' && <HoursRating hours={course.meanHours} />}
-            </>
-            )}
-          </div>
-        </Container>
-        {/* end header component */}
-
-        {isExpanded && (
-        <div className="h-full bg-secondary p-2">
-          <div className="inline-grid max-w-full grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm">
-            <Instructors course={course} />
-            <Location course={course} />
-            <DaysOfWeek course={course} />
-            <ClassTime course={course} />
-          </div>
-
-          {course.textDescription.length > 0 && (
-          <>
-            <hr className="my-2 border-black" />
-            <p className="line-clamp-3 text-sm">
-              <Highlight
-                attribute="textDescription"
-                hit={course}
-              />
-            </p>
-          </>
-          )}
-        </div>
-        )}
+        {isExpanded && <CourseCardDetails course={course} />}
       </div>
     </div>
   );
 });
+
+function CourseCardDetails({ course }: { course: ExtendedClass }) {
+  return (
+    <div className="h-full bg-secondary p-2">
+      <div className="inline-grid max-w-full grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm">
+        <Instructors course={course} />
+        <Location course={course} />
+        <DaysOfWeek course={course} />
+        <ClassTime course={course} />
+      </div>
+
+      {course.textDescription.length > 0 && (
+      <>
+        <hr className="my-2 border-black" />
+        <p className="line-clamp-3 text-sm">
+          <Highlight
+            attribute="textDescription"
+            hit={course}
+          />
+        </p>
+      </>
+      )}
+    </div>
+  );
+}
+
+function CourseCardHeader({
+  highlight, department, course, warnings, hideTerm, semester, handleClickTitle,
+}: {
+  highlight: boolean;
+  department: Department;
+  course: ExtendedClass;
+  warnings: string | undefined;
+  hideTerm: boolean;
+  semester: Semester;
+  handleClickTitle: (course: ExtendedClass) => void;
+}) {
+  const { style, clickWholeCard } = useCourseCardStyle();
+  const drag = useCourseDragContext();
+  const isExpanded = style === 'expanded';
+
+  const Container = useCallback(({ children, ...props }: any) => (
+    clickWholeCard
+      ? <button type="button" onClick={() => handleClickTitle(course)} {...props}>{children}</button>
+      : <div {...props}>{children}</div>
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [clickWholeCard, handleClickTitle, course.id]);
+
+
+  const TitleComponent = useCallback(({ children, ...props }: any) => (
+    clickWholeCard
+      ? <p {...props}>{children}</p>
+      : <button type="button" onClick={() => handleClickTitle(course)} {...props}>{children}</button>
+  ), [clickWholeCard, handleClickTitle, course]);
+
+  return (
+    <Container
+      className={classNames(
+        'p-2 from-gray-secondary via-secondary bg-gradient-to-br text-left',
+        isExpanded && (highlight ? 'to-blue-primary' : 'to-blue-secondary'),
+        drag && 'cursor-move',
+        isExpanded && 'relative',
+      )}
+    >
+      {departmentImages[department] && (
+      <Image
+        src={departmentImages[department].urls.thumb}
+        alt={departmentImages[department].alt_description || ''}
+        fill
+        sizes="200px"
+        style={{ objectFit: 'cover' }}
+        className={highlight ? 'opacity-10' : 'opacity-30'}
+      />
+      )}
+
+      {/* relative so it appears above the image */}
+      <div className="relative space-y-1">
+        <div className="flex items-center justify-between">
+          <TitleComponent className={clickWholeCard ? 'font-bold' : 'interactive border-b text-left font-bold text-blue-primary'}>
+            <Highlight
+              attribute="SUBJECT"
+              hit={course}
+            />
+            <Highlight
+              attribute="CATALOG_NBR"
+              hit={course}
+            />
+          </TitleComponent>
+
+          {/* the info and course selection buttons */}
+          <span className="ml-2 flex items-center space-x-2">
+            {warnings && (
+            <Tooltip text={warnings} direction="bottom">
+              <FaExclamationTriangle className="text-xl text-orange" />
+            </Tooltip>
+            )}
+
+            {!clickWholeCard && <CourseCardToggleButton course={course} />}
+          </span>
+        </div>
+
+        <p className={classNames(!isExpanded && 'text-sm', 'font-medium')}>
+          <Highlight
+            attribute="Title"
+            hit={course}
+          />
+        </p>
+
+        {hideTerm || (
+        <p className={classNames(isExpanded && 'text-sm')}>
+          {semester.season}
+          {' '}
+          {semester.year}
+        </p>
+        )}
+
+        {isExpanded && (
+        <>
+          {typeof course.meanRating === 'number' && <StarRating rating={course.meanRating} />}
+          {typeof course.meanClassSize === 'number' && <ClassSizeRating population={course.meanClassSize} />}
+          {typeof course.meanHours === 'number' && <HoursRating hours={course.meanHours} />}
+        </>
+        )}
+      </div>
+    </Container>
+  );
+}
 
 function useHandleClickTitle(clickWholeCard: boolean, isInSchedule: boolean) {
   const dispatch = useAppDispatch();
@@ -241,16 +268,18 @@ function useHandleClickTitle(clickWholeCard: boolean, isInSchedule: boolean) {
 
   const handleClick = useCallback((course: ExtendedClass) => {
     if (clickWholeCard) {
-      if (isInSchedule) {
-        dispatch(Schedules.removeCourses({
-          scheduleId,
-          courseIds: [course.id],
-        }));
-      } else {
-        dispatch(Schedules.addCourses({
-          scheduleId,
-          courseIds: [course.id],
-        }));
+      if (scheduleId) {
+        if (isInSchedule) {
+          dispatch(Schedules.removeCourses({
+            scheduleId,
+            courseIds: [course.id],
+          }));
+        } else {
+          dispatch(Schedules.addCourses({
+            scheduleId,
+            courseIds: [course.id],
+          }));
+        }
       }
     } else {
       showCourse(course);

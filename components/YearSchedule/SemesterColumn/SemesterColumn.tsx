@@ -8,7 +8,7 @@ import SemesterColumnHeader from './SemesterColumnHeader';
 import { SemesterColumnBody } from './CoursesSection';
 import { useCourseDragContext } from '../../../src/context/DragCourseMoveSchedulesProvider';
 import { useScheduleFromScheduleIdOrSemester } from './useScheduleFromScheduleIdOrSemester';
-import { ScheduleIdProvider } from '../../../src/context/selectedSchedule';
+import { ScheduleProvider } from '../../../src/context/ScheduleProvider';
 import { checkViable } from '../../../src/searchSchedule';
 import { useAppSelector } from '../../../src/utils/hooks';
 import { ClassCache, Profile } from '../../../src/features';
@@ -61,11 +61,11 @@ export default function SemesterColumn({
         <SemesterColumnHeader s={s} />
 
         {schedule && (
-          <ScheduleIdProvider id={schedule.id}>
+          <ScheduleProvider id={schedule.id}>
             <SemesterColumnBody
               highlightedRequirement={highlightedRequirement}
             />
-          </ScheduleIdProvider>
+          </ScheduleProvider>
         )}
       </div>
     </div>

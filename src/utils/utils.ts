@@ -1,3 +1,4 @@
+import { Context, useContext } from 'react';
 import { CourseBrief } from '../../components/ClassesCloudPage/useData';
 import { choose } from '../lib';
 import type { UserProfile, UserSettings } from '../types';
@@ -13,8 +14,10 @@ export function getInitialSettings(): UserSettings {
   };
 }
 
-export function throwMissingContext<T>(): T {
-  throw new Error('must provide context element');
+export function useAssertContext<T>(C: Context<T | null>): T {
+  const context = useContext(C);
+  if (!context) throw new Error('Context not found');
+  return context;
 }
 
 export function getDisplayName(profile?: UserProfile) {

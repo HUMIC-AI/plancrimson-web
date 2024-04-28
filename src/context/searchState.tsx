@@ -1,6 +1,6 @@
 import React, {
   PropsWithChildren,
-  createContext, useContext, useEffect, useMemo, useRef, useState,
+  createContext, useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useRouter } from 'next/router';
 import qs from 'qs';
@@ -9,8 +9,8 @@ import {
 } from '@/src/lib';
 import { SearchState } from 'react-instantsearch-core';
 import { getAnalytics, logEvent } from 'firebase/analytics';
-import { throwMissingContext } from '../utils/utils';
 import { Auth } from '../features';
+import { useAssertContext } from '../utils/utils';
 
 interface SearchStateContextType {
   searchState: SearchState | null;
@@ -26,12 +26,7 @@ const DEBOUNCE_TIME = 400;
 /**
  * Used in deeply nested Instantsearch components
  */
-const SearchStateContext = createContext<SearchStateContextType>({
-  searchState: null,
-  setSearchState: throwMissingContext,
-  oneCol: false,
-  onSearchStateChange: throwMissingContext,
-});
+const SearchStateContext = createContext<SearchStateContextType | null>(null);
 
 export function getDefaultSearchStateForSemester(semester: Semester): SearchState {
   const termId = getTermId(semester);
@@ -154,9 +149,9 @@ function OldSearchStateProvider({
   );
 }
 
-const useSearchState = () => useContext(SearchStateContext);
-
-export default useSearchState;
+export function useSearchState() {
+  return useAssertContext(SearchStateContext);
+}
 
 export function useDefaultSearchState(semester?: Semester | null) {
   return useMemo(() => getDefaultSearchStateForSemester(semester ?? getUpcomingSemester()), [semester]);

@@ -24,7 +24,7 @@ export function CalendarBody({
   const [showSections, setShowSections] = useState(false);
 
   return (
-    <div className="relative flex-1 overflow-auto md:mt-0">
+    <div className="relative min-h-screen flex-1 overflow-auto md:mt-0 md:min-h-0">
       <div className="flex h-full flex-col items-stretch">
         <div className="relative mb-2">
           <h1 className="text-center text-xl font-semibold">Calendar</h1>

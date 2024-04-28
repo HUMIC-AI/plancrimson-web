@@ -1,6 +1,6 @@
 import { FaAngleDoubleRight } from 'react-icons/fa';
 import React from 'react';
-import { useChosenSchedule } from '@/src/context/selectedSchedule';
+import { useChosenSchedule } from '@/src/context/ScheduleProvider';
 import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
 import { Planner, Schedules } from '@/src/features';
 import { sortSchedulesBySemester } from '@/src/utils/schedules';

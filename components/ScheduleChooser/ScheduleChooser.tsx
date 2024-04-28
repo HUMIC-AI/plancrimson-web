@@ -11,7 +11,7 @@ import { ButtonTitle } from './ButtonTitle';
 import { StyledOption } from './StyledOption';
 import { ChooserOption } from './ChooserOption';
 import { MESSAGES } from '../../src/utils/config';
-import { useChooseSchedule } from '../../src/context/selectedSchedule';
+import { useChooseSchedule } from '../../src/context/ScheduleProvider';
 
 export interface ScheduleChooserProps {
   chosenScheduleId: string | null;

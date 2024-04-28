@@ -1,8 +1,8 @@
 import {
-  PropsWithChildren, createContext, useContext, useMemo, useState,
+  PropsWithChildren, createContext, useMemo, useState,
 } from 'react';
 import { getAnalytics, logEvent } from 'firebase/analytics';
-import { throwMissingContext } from '../utils/utils';
+import { useAssertContext } from '../utils/utils';
 
 const CARD_STYLES = ['text', 'collapsed', 'expanded'] as const;
 
@@ -10,26 +10,25 @@ type CardStyle = typeof CARD_STYLES[number];
 
 type CourseCardStyleContextType = {
   style: CardStyle;
+  clickWholeCard: boolean;
   toggleStyle: () => void;
   setStyle: (style: CardStyle) => void;
 };
 
-const CourseCardStyleContext = createContext<CourseCardStyleContextType>({
-  style: 'expanded',
-  toggleStyle: throwMissingContext,
-  setStyle: throwMissingContext,
-});
+const CourseCardStyleContext = createContext<CourseCardStyleContextType | null>(null);
 
 export default function CourseCardStyleProvider({
-  children, defaultStyle = 'expanded', readonly = false,
+  children, defaultStyle = 'expanded', readonly = false, clickWholeCard = false,
 }: PropsWithChildren<{
   defaultStyle?: CardStyle;
   readonly?: boolean;
+  clickWholeCard?: boolean;
 }>) {
   const [style, setCourseCardStyle] = useState<CardStyle>(defaultStyle);
 
   const context: CourseCardStyleContextType = useMemo(() => ({
     style,
+    clickWholeCard,
     toggleStyle: () => {
       const newStyle = CARD_STYLES[(CARD_STYLES.indexOf(style) + 1) % CARD_STYLES.length];
       logEvent(getAnalytics(), 'toggle_expand_cards', { oldStyle: style, newStyle });
@@ -40,7 +39,7 @@ export default function CourseCardStyleProvider({
         setCourseCardStyle(s);
       }
     },
-  }), [style, readonly]);
+  }), [style, clickWholeCard, readonly]);
 
   return (
     <CourseCardStyleContext.Provider value={context}>
@@ -49,4 +48,4 @@ export default function CourseCardStyleProvider({
   );
 }
 
-export const useCourseCardStyle = () => useContext(CourseCardStyleContext);
+export const useCourseCardStyle = () => useAssertContext(CourseCardStyleContext);

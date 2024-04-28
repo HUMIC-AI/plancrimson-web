@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import {
-  FaSquare, FaCheckSquare,
+  FaCheckSquare, FaPlusSquare,
 } from 'react-icons/fa';
 import {
   ExtendedClass,
@@ -14,17 +14,43 @@ import {
 } from '@/src/features';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { getClassIdsOfSchedule } from '@/src/features/schedules';
-import { useChosenSchedule } from '../../src/context/selectedSchedule';
+import { useChosenSchedule } from '../../src/context/ScheduleProvider';
+import { useCourseCardStyle } from '../../src/context/CourseCardStyleProvider';
 
 /**
- * A button that toggles a class in and out of a schedule.
+ * A button that toggles a {@link CourseCard} in and out of a schedule.
  * @param scheduleId the schedule to add the class to
  * @param course the class to add
  */
 export function CourseCardToggleButton({ course }: { course: ExtendedClass; }) {
-  const dispatch = useAppDispatch();
   const { schedule } = useChosenSchedule();
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
+
+  if (!schedule) return null;
+
+  const isInSchedule = getClassIdsOfSchedule(schedule).includes(course.id);
+
+  if (semesterFormat === 'sample' || !isInSchedule) {
+    return (
+      <AddClassButton course={course} />
+    );
+  }
+
+  return (
+    <RemoveClassButton classId={course.id} />
+  );
+}
+
+CourseCardToggleButton.whyDidYouRender = {
+  logOnDifferentValues: true,
+};
+
+export function AddClassButton({ course }: {
+  course: ExtendedClass;
+}) {
+  const dispatch = useAppDispatch();
+  const buttonSize = useButtonSize();
+  const { schedule } = useChosenSchedule();
   const classYear = useAppSelector(Profile.selectClassYear);
   const classCache = useAppSelector(ClassCache.selectClassCache);
 
@@ -60,45 +86,41 @@ export function CourseCardToggleButton({ course }: { course: ExtendedClass; }) {
       courseIds: [getClassId(course)],
       scheduleId: schedule.id,
     }));
-  }, [schedule, classYear, course, classCache, dispatch]);
-
-  if (!schedule) return null;
-
-  const isInSchedule = getClassIdsOfSchedule(schedule).includes(course.id);
-
-  if (semesterFormat === 'sample' || !isInSchedule) {
-    return (
-      <button
-        type="button"
-        name="Add class to schedule"
-        onClick={addClass}
-        className="interactive"
-      >
-        <FaSquare size={20} />
-      </button>
-    );
-  }
+  }, [classCache, classYear, course, dispatch, schedule]);
 
   return (
-    <RemoveClassButton classId={course.id} />
+    <button
+      type="button"
+      name="Add class to schedule"
+      onClick={addClass}
+      className="interactive"
+    >
+      <FaPlusSquare size={buttonSize} />
+    </button>
   );
 }
+
 export function RemoveClassButton({ classId }: { classId: string }) {
   const dispatch = useAppDispatch();
   const { id } = useChosenSchedule();
+  const buttonSize = useButtonSize();
 
   return id ? (
     <button
       type="button"
       name="Remove class from schedule"
-      onClick={() => dispatch(Schedules.removeCourses({
+      onClick={() => confirm('Remove this course from your schedule?') && dispatch(Schedules.removeCourses({
         courseIds: [classId],
         scheduleId: id,
       }))}
       className="interactive"
     >
-      <FaCheckSquare size={20} />
+      <FaCheckSquare size={buttonSize} />
     </button>
   ) : null;
 }
 
+function useButtonSize() {
+  const { style } = useCourseCardStyle();
+  return style === 'expanded' ? 28 : 20;
+}

@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import Layout from '../Layout/Layout';
 import { Auth } from '../../src/features';
 import { WithMeili } from '../Layout/WithMeili';
-import { ScheduleIdProvider } from '../../src/context/selectedSchedule';
+import { ScheduleProvider } from '../../src/context/ScheduleProvider';
 import { breakpoints, useBreakpoint } from '../../src/utils/styles';
 import { HoveredCourseInfo } from './HoveredCourseInfo';
 import { ExploreGraph } from './ExploreGraph';
@@ -48,7 +48,7 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
         {userId && <ScheduleSyncer userId={userId} />}
         <GraphProvider>
           {/* <GraphDragDropProvider> */}
-          <ScheduleIdProvider id={GRAPH_SCHEDULE}>
+          <ScheduleProvider id={GRAPH_SCHEDULE}>
             <SearchStateProvider oneCol defaultState={defaultState} ignoreUrl>
               {/* more hits per page for better filter matching experience */}
               <AuthRequiredInstantSearchProvider indexName="courses" hitsPerPage={20}>
@@ -66,8 +66,8 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
                     <div className="grid grid-cols-[auto_1fr] items-center gap-2">
                       <CurrentRefinements />
                     </div>
-                    <CourseCardStyleProvider defaultStyle="collapsed">
-                      <Hits concise hideToggle />
+                    <CourseCardStyleProvider defaultStyle="collapsed" clickWholeCard>
+                      <Hits concise />
                     </CourseCardStyleProvider>
                   </div>
                 </SidebarPanel>
@@ -77,7 +77,7 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
                 <HoveredCourseInfo />
               </SidebarPanel>
             </SearchStateProvider>
-          </ScheduleIdProvider>
+          </ScheduleProvider>
           {/* </GraphDragDropProvider> */}
         </GraphProvider>
       </WithMeili>

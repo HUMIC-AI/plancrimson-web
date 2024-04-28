@@ -9,7 +9,7 @@ import { useAppSelector } from '@/src/utils/hooks';
 import { ClassCache, Settings } from '@/src/features';
 import { CalendarHeaderSection } from './CalendarPageHeaderSection';
 import { CalendarBody } from './CalendarBody';
-import { useChosenSchedule } from '../../src/context/selectedSchedule';
+import { useChosenSchedule } from '../../src/context/ScheduleProvider';
 
 /**
  * Main calendar view of the Calendar page.

@@ -1,8 +1,8 @@
 import {
-  PropsWithChildren, createContext, useContext, useMemo, useState,
+  PropsWithChildren, createContext, useMemo, useState,
 } from 'react';
 import { Term } from '../lib';
-import { throwMissingContext } from '../utils/utils';
+import { useAssertContext } from '../utils/utils';
 
 type IncludeSemestersContextType = {
   includeSemesters: Term[];
@@ -10,11 +10,7 @@ type IncludeSemestersContextType = {
   setIncludeSemesters: (terms: Term[]) => void;
 };
 
-export const IncludeSemestersContext = createContext<IncludeSemestersContextType>({
-  includeSemesters: [],
-  profilesOnly: false,
-  setIncludeSemesters: throwMissingContext,
-});
+export const IncludeSemestersContext = createContext<IncludeSemestersContextType | null>(null);
 
 export default function IncludeSemestersProvider({ children }: PropsWithChildren<{}>) {
   const [includedSemesters, setIncludedSemesters] = useState<Term[]>([]);
@@ -32,4 +28,4 @@ export default function IncludeSemestersProvider({ children }: PropsWithChildren
   );
 }
 
-export const useIncludeSemesters = () => useContext(IncludeSemestersContext);
+export const useIncludeSemesters = () => useAssertContext(IncludeSemestersContext);

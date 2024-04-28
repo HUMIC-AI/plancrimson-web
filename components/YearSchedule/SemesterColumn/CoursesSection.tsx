@@ -9,7 +9,7 @@ import {
 import AddCoursesButton from '@/components/SemesterSchedule/AddCoursesButton';
 import { getClassIdsOfSchedule } from '@/src/features/schedules';
 import { CourseCard } from '../../Course/CourseCard';
-import { useChosenSchedule } from '../../../src/context/selectedSchedule';
+import { useChosenSchedule } from '../../../src/context/ScheduleProvider';
 import { RemoveClassButton } from '../../Course/ToggleButton';
 import { LoadingText } from '../../Layout/LoadingPage';
 

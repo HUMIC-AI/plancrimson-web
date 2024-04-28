@@ -5,7 +5,7 @@ import {
   sampleCourses, ExtendedClass,
 } from '@/src/lib';
 import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
-import useSearchState from '@/src/context/searchState';
+import { useSearchState } from '@/src/context/searchState';
 import { FaChevronUp, FaChevronDown } from 'react-icons/fa';
 import { alertSignIn } from './SearchBox/searchUtils';
 import { CourseCard } from '../Course/CourseCard';
@@ -21,7 +21,6 @@ type Provided = InfiniteHitsProvided<ExtendedClass>;
 
 type Exposed = {
   concise?: boolean;
-  hideToggle?: boolean;
 };
 
 /**
@@ -34,7 +33,6 @@ function HitsComponent({
   refineNext = alertSignIn,
   // refinePrevious = alertSignIn,
   concise,
-  hideToggle,
 }: Provided & Exposed) {
   const { oneCol } = useSearchState();
   const { style } = useCourseCardStyle();
@@ -65,8 +63,6 @@ function HitsComponent({
             <CourseCard
               key={hit.id}
               course={hit}
-              hideRatings={concise}
-              clickWholeCard={hideToggle}
             />
           ))}
         </div>

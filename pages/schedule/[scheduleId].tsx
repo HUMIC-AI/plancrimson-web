@@ -4,7 +4,7 @@ import Layout from '@/components/Layout/Layout';
 import Calendar from '@/components/SemesterSchedule/Calendar';
 import { ErrorMessage } from '@/components/Layout/ErrorMessage';
 import { useSchedule } from '@/src/utils/schedules';
-import { ScheduleIdProvider } from '../../src/context/selectedSchedule';
+import { ScheduleProvider } from '../../src/context/ScheduleProvider';
 
 export default function SchedulePage() {
   return (
@@ -30,8 +30,8 @@ function Wrapper({ userId }: { userId: string; }) {
   }
 
   return (
-    <ScheduleIdProvider id={scheduleId}>
+    <ScheduleProvider id={scheduleId}>
       <Calendar />
-    </ScheduleIdProvider>
+    </ScheduleProvider>
   );
 }

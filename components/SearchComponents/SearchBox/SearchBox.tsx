@@ -1,6 +1,6 @@
 import React from 'react';
 import { connectSearchBox } from 'react-instantsearch-dom';
-import { useChosenSchedule } from '@/src/context/selectedSchedule';
+import { useChosenSchedule } from '@/src/context/ScheduleProvider';
 import { useAppSelector } from '@/src/utils/hooks';
 import { sortSchedulesBySemester } from '@/src/utils/schedules';
 import { Schedules } from '@/src/features';

@@ -8,7 +8,7 @@ import { useModal } from '../../src/context/modal';
 import { alertUnexpectedError, useAppDispatch } from '../../src/utils/hooks';
 import { ClassCache, Schedules } from '../../src/features';
 import { useMeiliClient } from '../../src/context/meili';
-import { useChosenSchedule } from '../../src/context/selectedSchedule';
+import { useChosenSchedule } from '../../src/context/ScheduleProvider';
 
 type EventTilesProps = {
   events: (EventAttributes & ({ end?: DateArray; isSection?: string; }))[];

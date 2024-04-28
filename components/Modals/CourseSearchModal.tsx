@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SearchStateProvider, useDefaultSearchState } from '@/src/context/searchState';
-import { ScheduleIdProvider } from '@/src/context/selectedSchedule';
+import { ScheduleProvider } from '@/src/context/ScheduleProvider';
 import { AuthRequiredInstantSearchProvider } from '@/components/Utils/AuthRequiredInstantSearchProvider';
 import {
   CURRENT_ARCHIVE_TERMS, CURRENT_COURSES_TERMS, Semester, semesterToTerm,
@@ -41,19 +41,19 @@ export default function CourseSearchModal({ selected, semester }: {
     // create a new search state provider to override the one in "pages/_app.tsx"
     <WithMeili userId={uid!}>
       <SearchStateProvider defaultState={defaultState} ignoreUrl>
-        <ScheduleIdProvider id={selected}>
+        <ScheduleProvider id={selected}>
           <AuthRequiredInstantSearchProvider
             indexName={indexName ?? 'courses'}
             hitsPerPage={4}
           >
             <div className=" flex-1 space-y-4 p-6 shadow-lg">
               <SearchBox scheduleChooser={false} showSmallAttributeMenu />
-              <CourseCardStyleProvider defaultStyle="collapsed">
-                <Hits concise hideToggle />
+              <CourseCardStyleProvider defaultStyle="collapsed" clickWholeCard>
+                <Hits concise />
               </CourseCardStyleProvider>
             </div>
           </AuthRequiredInstantSearchProvider>
-        </ScheduleIdProvider>
+        </ScheduleProvider>
       </SearchStateProvider>
     </WithMeili>
   );

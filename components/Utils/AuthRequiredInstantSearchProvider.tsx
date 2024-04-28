@@ -1,7 +1,7 @@
 import React, { PropsWithChildren, createContext, useContext } from 'react';
 import { Configure, InstantSearch } from 'react-instantsearch-dom';
 import { useElapsed } from '@/src/utils/hooks';
-import useSearchState, { createUrl } from '@/src/context/searchState';
+import { createUrl, useSearchState } from '@/src/context/searchState';
 import { Auth } from '@/src/features';
 import { LoadingBars } from '@/components/Layout/LoadingPage';
 import { useMeiliClient } from '@/src/context/meili';
