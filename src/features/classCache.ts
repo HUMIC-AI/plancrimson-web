@@ -3,10 +3,13 @@ import {
 } from '@reduxjs/toolkit';
 import type { ExtendedClass, IndexName } from '@/src/lib';
 import { allTruthy } from '@/src/lib';
-import { getMeiliApiKey, getMeiliHost, InstantMeiliSearchInstance } from '@/src/context/meili';
+import {
+  getMeiliApiKey, getMeiliHost, InstantMeiliSearchInstance, useMeiliClient,
+} from '@/src/context/meili';
 import { useState, useEffect } from 'react';
 import type { AppDispatch, RootState } from '../store';
 import { isDevelopment } from '../utils/utils';
+import { useAppDispatch } from '../utils/hooks';
 
 export interface ClassCache {
   [classId: string]: ExtendedClass;
@@ -167,5 +170,28 @@ export function useRandomCourse() {
         .catch((err) => console.error(err));
     }
   }, [course, total]);
+  return course;
+}
+
+export function useCourse(id: string | null) {
+  const [course, setCourse] = useState<ExtendedClass>();
+  const dispatch = useAppDispatch();
+  const { client, error } = useMeiliClient();
+
+  useEffect(() => {
+    if (!id || !client || error) {
+      setCourse(undefined);
+      return;
+    }
+
+    dispatch(loadCourses(client, [id]))
+      .then(([response]) => {
+        setCourse(response);
+      })
+      .catch((e) => {
+        console.error(e);
+      });
+  }, [client, id, dispatch, error]);
+
   return course;
 }

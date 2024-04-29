@@ -43,6 +43,7 @@ export function getDefaultSearchStateForSemester(semester: Semester): SearchStat
  * Provides the search state to all Instantsearch components.
  * Also syncs the URL with the search state.
  * Can pass a default state to use if the URL is empty.
+ * Set defaultState to null to prevent all searching.
  * Currently exists a base search provider inside {@link _app.txt}.
  */
 export function SearchStateProvider({

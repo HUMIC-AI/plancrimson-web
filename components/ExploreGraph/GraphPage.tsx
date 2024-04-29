@@ -86,7 +86,7 @@ function Container() {
       <ExploreGraph />
 
       {/* left sidebar (add courses to graph schedule) */}
-      <SidebarPanel side="left" defaultOpen>
+      <SidebarPanel side="left" defaultOpen showLink>
         {/* static positioning!!! happy */}
         <div className="mx-2 space-y-4 rounded-xl py-6 text-xs transition-colors hover:bg-secondary/50">
           <SearchBox scheduleChooser={false} showSmallAttributeMenu showStats={false} />

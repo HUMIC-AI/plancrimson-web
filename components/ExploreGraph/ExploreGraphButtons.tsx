@@ -26,7 +26,7 @@ export function ExploreGraphButtons({
       graph.removeNodes(graph.currentData.map((s) => s.id));
       graph.setPhase('init');
       // this sets state to wait
-      graph.appendNodes([graph.toDatum(getRandomRatedCourse(graph.courses), GRAPH_SCHEDULE)!], []);
+      graph.appendNodes([graph.toDatum(getRandomRatedCourse(graph.courses).id, GRAPH_SCHEDULE)!], []);
     }
   };
 
@@ -66,6 +66,17 @@ export function ExploreGraphButtons({
             Center zoom
           </button>
 
+          {graph.target
+          && (
+          <button
+            type="button"
+            className="button whitespace-nowrap bg-primary/80 text-secondary"
+            onClick={() => graph.focusHint()}
+          >
+            Show hint
+          </button>
+          )}
+
           <MenuRadio
             label="Tool"
             value={graph.mode}
@@ -76,6 +87,7 @@ export function ExploreGraphButtons({
             // icons={toolIcons}
           />
 
+          {!graph.target && (
           <MenuRadio
             label="Courses"
             value={graph.isMatchFilter ? 'Match filter' : 'All courses'}
@@ -84,6 +96,7 @@ export function ExploreGraphButtons({
             }}
             values={['All courses', 'Match filter']}
           />
+          )}
 
           <MenuRadio
             label="Emojis"

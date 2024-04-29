@@ -46,5 +46,5 @@ export function downloadJson(filename: string, data: object | string, extension 
 }
 
 export function getRandomRatedCourse(courses: CourseBrief[]) {
-  return choose(courses.filter((c) => c.meanRating)).id;
+  return choose(courses.filter((c) => c.meanRating));
 }

@@ -23,7 +23,8 @@ import useClientOrDemo from '../../components/SearchComponents/ClientOrDemo';
 type Provided = Pick<InfiniteHitsProvided<ExtendedClass>, 'hits' | 'hasMore' | 'refineNext'>;
 
 type Exposed = {
-  scheduleId: string | null
+  scheduleId: string | null;
+  instructions?: boolean;
 };
 
 const GraphContext = createContext<ReturnType<typeof useGraphState> | null>(null);
@@ -36,6 +37,7 @@ function useGraphState({
   scheduleId,
   hits,
   hasMore,
+  instructions: gameMode,
   refineNext,
 }: Provided & Exposed) {
   // react state to ensure rerenders when graph state changes
@@ -68,28 +70,85 @@ function useGraphState({
 
     console.info('initializing graph');
 
+    const initialCourses = fixedClasses.length === 0 ? [getRandomRatedCourse(courses)] : [];
+
     // ask user to sign in if they haven't already
-    const showInstructions = userId ? null : () => {
-      console.info('showing graph instructions');
-      showContents({
-        title: 'Course Explorer',
-        close: 'none',
-        content: (
-          <div className="flex items-center justify-center p-6">
-            <button
-              type="button"
-              onClick={() => signInUser().then(() => {
-                goBack();
-                graphRef.current!.setPhase('ready');
-              }).catch(alertUnexpectedError)}
-              className="button secondary"
-            >
-              Sign in to explore the graph!
-            </button>
-          </div>
-        ),
-      });
-    };
+    const showInstructions = userId
+      ? (gameMode ? () => {
+        if (initialCourses.length !== 1) {
+          throw new Error('Game environment should not have any fixed classes');
+        }
+
+        const initial = initialCourses[0];
+
+        showContents({
+          title: 'Exploration Game',
+          close: 'none',
+          content: (
+            <div className="flex flex-col space-y-2 p-6">
+              <p>
+                Welcome to the course exploration game!
+              </p>
+              <p>
+                Your goal is to get from the origin course to the target course as quickly as possible
+                by hopping from course to course.
+              </p>
+              <p>
+                Your origin course is
+                {' '}
+                <strong>
+                  {initial.subject + initial.catalog}
+                </strong>
+                .
+              </p>
+              <p>
+                Your target course is
+                {' '}
+                <strong>
+                  {graphRef.current!.target!.subject + graphRef.current!.target!.catalog}
+                </strong>
+                .
+              </p>
+              <p>
+                Good luck and have fun!
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  goBack();
+                  graphRef.current!.cleanupClickMe();
+                  graphRef.current!.setPhase('ready');
+                }}
+                className="button secondary mx-auto"
+              >
+                Begin
+              </button>
+            </div>
+          ),
+        });
+      } : null)
+      : () => {
+        console.info('showing graph instructions');
+        showContents({
+          title: 'Course Explorer',
+          close: 'none',
+          content: (
+            <div className="flex items-center justify-center p-6">
+              <button
+                type="button"
+                onClick={() => signInUser().then(() => {
+                  goBack();
+                  graphRef.current!.cleanupClickMe();
+                  graphRef.current!.setPhase('ready');
+                }).catch(alertUnexpectedError)}
+                className="button secondary"
+              >
+                Sign in to explore the graph!
+              </button>
+            </div>
+          ),
+        });
+      };
 
     graphRef.current = new Graph(
       ref.current,
@@ -98,6 +157,7 @@ function useGraphState({
       positions,
       courses,
       scheduleId,
+      gameMode ? getRandomRatedCourse(courses) : null,
       mode,
       setMode,
       setHover,
@@ -126,7 +186,7 @@ function useGraphState({
       ...getUpcomingSemester(),
     }));
 
-    graphRef.current.syncCourses(fixedClasses.length === 0 ? [getRandomRatedCourse(courses)] : [], fixedClasses);
+    graphRef.current.syncCourses(initialCourses.map((d) => d.id), fixedClasses);
   // start the graph once these variables exist (checked at top of useEffect)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courses, elapsed, fixedClasses, positions]);
@@ -170,11 +230,14 @@ function useGraphState({
     hoveredClassId,
     mode,
     explanation,
+    setExplanation,
+    ratingType,
+    matchFilter,
     phase,
     subjects,
     elapsed,
     graphSchedule,
-  }), [hoveredClassId, mode, explanation, phase, subjects, elapsed, graphSchedule]);
+  }), [hoveredClassId, mode, matchFilter, ratingType, explanation, phase, subjects, elapsed, graphSchedule]);
 
   return context;
 }

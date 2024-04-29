@@ -1,40 +1,22 @@
 import {
-  useEffect, useMemo, useState,
+  useMemo,
 } from 'react';
 import { useRouter } from 'next/router';
-import { ExtendedClass } from '../../src/lib';
-import { Auth, ClassCache } from '../../src/features';
-import { useAppDispatch } from '../../src/utils/hooks';
+import { Auth } from '../../src/features';
 import { InfoCard, InfoCardProps } from '../Modals/InfoCard';
 import { getCourseModalContent } from '../Modals/CourseCardModal';
-import { useMeiliClient } from '../../src/context/meili';
 import { classNames, getSubjectColor } from '../../src/utils/styles';
 import { useAvailableScheduleIds } from '../../src/utils/schedules';
 import { TitleComponent } from '../YearSchedule/SemesterColumn/TitleComponent';
 import { EMOJI_SCALES } from './Graph';
 import { LoadingBars } from '../Layout/LoadingPage';
 import { useGraphContext } from '../../src/context/GraphProvider';
+import { useCourse } from '../../src/features/classCache';
+
 
 export function HoveredCourseInfo() {
   const { hoveredClassId: courseId, setExplanation, explanation } = useGraphContext();
-  const dispatch = useAppDispatch();
-  const { client, error } = useMeiliClient();
-  const [course, setCourse] = useState<ExtendedClass>();
-
-  useEffect(() => {
-    if (!courseId || !client || error) {
-      setCourse(undefined);
-      return;
-    }
-
-    dispatch(ClassCache.loadCourses(client, [courseId]))
-      .then(([response]) => {
-        setCourse(response);
-      })
-      .catch((e) => {
-        console.error(e);
-      });
-  }, [client, courseId, dispatch, error]);
+  const course = useCourse(courseId);
 
   // ensure isDialog is false and that no close button is shown
   const props = useMemo<InfoCardProps>(() => {

@@ -139,6 +139,7 @@ export class Graph {
     public readonly positions: number[][],
     public readonly courses: CourseBrief[],
     public readonly fixedScheduleId: string | null,
+    public readonly target: CourseBrief | null,
     public mode: GraphTool,
     private reactSetMode: Dispatch<SetStateAction<GraphTool>>,
     private reactSetHover: (id: string | null) => void,
@@ -309,6 +310,24 @@ export class Graph {
 
     this.node
       .attr('transform', (d) => `translate(${d.x},${d.y})`);
+  }
+
+  get targetPca() {
+    if (!this.target) throw new Error('Must be playing game');
+    return this.positions[this.target.i];
+  }
+
+  public focusHint() {
+    let closest = -Infinity;
+    let closestId: string = '';
+    this.currentData.forEach((d) => {
+      const c = cos(d.pca, this.targetPca);
+      if (c > closest) {
+        closestId = d.id;
+        closest = c;
+      }
+    });
+    this.focusCourse(closestId, 'fix');
   }
 
   public setMode(mode: Graph['mode']) {
@@ -599,7 +618,16 @@ export class Graph {
 
     this.updateNodesInternal();
 
+    if (this.target && nodesToAdd.some((d) => matchName(d, this.target!))) {
+      this.victory();
+    }
+
     return [nodeObjects, linkObjects];
+  }
+
+  private victory() {
+    alert('YOU WIN!');
+    this.svg.append('p').text('YOU WIN!!!');
   }
 
   private static getLinkColor(d: LinkDatum) {
@@ -894,6 +922,17 @@ export class Graph {
     this.removeNodes(toRemove);
   }
 
+  public cleanupClickMe() {
+    this.node.selectAll('circle, text').interrupt('radius-t');
+
+    // fade out click me text
+    this.node.selectChildren('text.click-me')
+      .transition('radius-t')
+      .duration(Graph.T_DURATION)
+      .attr('opacity', 0)
+      .remove();
+  }
+
   public setPhase(newPhase: Graph['phaseInternal'], id?: string) {
     if (newPhase === 'init') {
       this.reactSetHover(null);
@@ -917,14 +956,7 @@ export class Graph {
       });
     } else if (newPhase === 'info') {
       // triggered when user hovers over a "click me" node
-      this.node.selectAll('circle, text').interrupt('radius-t');
-
-      // fade out click me text
-      this.node.selectChildren('text.click-me')
-        .transition('radius-t')
-        .duration(Graph.T_DURATION)
-        .attr('opacity', 0)
-        .remove();
+      this.cleanupClickMe();
 
       const graph = this;
 
