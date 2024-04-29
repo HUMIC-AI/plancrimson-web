@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+import Confetti from 'react-confetti';
 import Layout from '../../components/Layout/Layout';
 import { WithMeili } from '../../components/Layout/WithMeili';
 import { AuthRequiredInstantSearchProvider } from '../../components/Utils/AuthRequiredInstantSearchProvider';
@@ -47,13 +49,7 @@ export default function GamePage() {
             {/* more hits per page for better filter matching experience */}
             <AuthRequiredInstantSearchProvider indexName="courses" hitsPerPage={2}>
               <GraphProvider scheduleId={null} instructions>
-                <ExploreGraph />
-                <SidebarPanel side="left" defaultOpen>
-                  <LeftSidebar />
-                </SidebarPanel>
-                <SidebarPanel side="right" defaultOpen>
-                  <HoveredCourseInfo />
-                </SidebarPanel>
+                <Contents />
               </GraphProvider>
             </AuthRequiredInstantSearchProvider>
           </SearchStateProvider>
@@ -64,14 +60,28 @@ export default function GamePage() {
   );
 }
 
-function LeftSidebar() {
-  const { graph } = useGraphContext();
+function Contents() {
+  const { graph, victory } = useGraphContext();
   const course = useCourse(graph?.target?.id ?? null);
+  const props = useMemo(() => {
+    if (!course) return null;
+    const { close, ...p } = getCourseModalContent(course);
+    return { ...p, isDialog: false };
+  }, [course]);
 
-  if (!course) return null;
-
-  const { close, ...props } = getCourseModalContent(course);
-
-  return <InfoCard {...props} isDialog={false} />;
+  return (
+    <>
+      {victory && <Confetti />}
+      <ExploreGraph />
+      {props && (
+      <SidebarPanel side="left" defaultOpen>
+        <InfoCard {...props} />
+      </SidebarPanel>
+      )}
+      <SidebarPanel side="right" defaultOpen>
+        <HoveredCourseInfo />
+      </SidebarPanel>
+    </>
+  );
 }
 

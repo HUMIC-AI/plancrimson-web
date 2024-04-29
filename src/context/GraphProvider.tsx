@@ -3,6 +3,7 @@ import {
 } from 'react';
 import { connectInfiniteHits } from 'react-instantsearch-dom';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
+import Link from 'next/link';
 import {
   Explanation, Graph, GraphPhase, GraphTool, RatingField,
 } from '../../components/ExploreGraph/Graph';
@@ -48,6 +49,8 @@ function useGraphState({
   const [matchFilter, setMatchFilter] = useState<boolean>(false);
   const [ratingType, setRatingType] = useState<RatingField>('meanRating');
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [victory, setVictory] = useState(false);
+  const [openVictory, setOpenVictory] = useState(false); // ensure it only runs once
 
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
   const { showContents, goBack } = useModal();
@@ -70,16 +73,14 @@ function useGraphState({
 
     console.info('initializing graph');
 
-    const initialCourses = fixedClasses.length === 0 ? [getRandomRatedCourse(courses)] : [];
+    const initial = getRandomRatedCourse(courses);
 
     // ask user to sign in if they haven't already
     const showInstructions = userId
       ? (gameMode ? () => {
-        if (initialCourses.length !== 1) {
+        if (fixedClasses.length !== 0) {
           throw new Error('Game environment should not have any fixed classes');
         }
-
-        const initial = initialCourses[0];
 
         showContents({
           title: 'Exploration Game',
@@ -116,6 +117,7 @@ function useGraphState({
                 type="button"
                 onClick={() => {
                   goBack();
+                  graphRef.current!.startTime = Date.now();
                   graphRef.current!.cleanupClickMe();
                   graphRef.current!.setPhase('ready');
                 }}
@@ -157,6 +159,7 @@ function useGraphState({
       positions,
       courses,
       scheduleId,
+      gameMode ? initial : null,
       gameMode ? getRandomRatedCourse(courses) : null,
       mode,
       setMode,
@@ -174,6 +177,8 @@ function useGraphState({
       setMatchFilter,
       hasMore,
       refineNext,
+      victory,
+      () => setVictory(true),
     );
 
     dispatch(Schedules.createLocal({
@@ -186,7 +191,7 @@ function useGraphState({
       ...getUpcomingSemester(),
     }));
 
-    graphRef.current.syncCourses(initialCourses.map((d) => d.id), fixedClasses);
+    graphRef.current.syncCourses(fixedClasses.length === 0 ? [initial.id] : [], fixedClasses);
   // start the graph once these variables exist (checked at top of useEffect)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courses, elapsed, fixedClasses, positions]);
@@ -221,6 +226,45 @@ function useGraphState({
     }
   }, [hits, hasMore, refineNext]);
 
+  useEffect(() => {
+    if (openVictory || !victory) return;
+    const graph = graphRef.current!;
+
+    setOpenVictory(true);
+
+    showContents({
+      close() {
+        goBack();
+        setVictory(false);
+      },
+      content: (
+        <div className="flex flex-col space-y-2 p-6">
+          <p>
+            Success! You made your way from
+            {' '}
+            {graph.initial!.subject + graph.initial!.catalog}
+            {' '}
+            to
+            {' '}
+            {graph.target!.subject + graph.target!.catalog}
+            {' '}
+            in
+            {' '}
+            {(Date.now() - graph.startTime) / 1000}
+            {' '}
+            seconds, exploring
+            {' '}
+            {graph.currentData.length}
+            {' '}
+            courses along the way.
+          </p>
+          <Link href="/explore/game" className="button secondary mx-auto">Play again</Link>
+        </div>
+      ),
+      title: 'You win!',
+    });
+  }, [goBack, openVictory, showContents, victory]);
+
   // update using graph methods
   // rerender whenever these dependencies change
   const context = useMemo(() => ({
@@ -237,7 +281,8 @@ function useGraphState({
     subjects,
     elapsed,
     graphSchedule,
-  }), [hoveredClassId, mode, matchFilter, ratingType, explanation, phase, subjects, elapsed, graphSchedule]);
+    victory,
+  }), [hoveredClassId, mode, matchFilter, ratingType, explanation, phase, subjects, elapsed, graphSchedule, victory]);
 
   return context;
 }

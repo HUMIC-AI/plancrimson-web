@@ -116,6 +116,8 @@ export class Graph {
 
   private static readonly RADIUS = 5;
 
+  private static readonly INFO_RADIUS = 80;
+
   private static readonly T_DURATION = 400;
 
   private static readonly MAX_LINK_STRENGTH = 0.3;
@@ -132,6 +134,8 @@ export class Graph {
 
   private waitingForExplanation = false;
 
+  public startTime = 0;
+
   constructor(
     svgDom: SVGSVGElement,
     tooltipDom: HTMLParagraphElement,
@@ -139,6 +143,7 @@ export class Graph {
     public readonly positions: number[][],
     public readonly courses: CourseBrief[],
     public readonly fixedScheduleId: string | null,
+    public readonly initial: CourseBrief | null,
     public readonly target: CourseBrief | null,
     public mode: GraphTool,
     private reactSetMode: Dispatch<SetStateAction<GraphTool>>,
@@ -156,6 +161,8 @@ export class Graph {
     private reactSetMatchFilter: Dispatch<SetStateAction<boolean>>,
     private hasMore: boolean,
     private refineNext: () => void,
+    private victory: boolean,
+    private handleVictory: () => void,
   ) {
     this.svg = d3.select(svgDom);
     this.tooltip = d3.select(tooltipDom);
@@ -618,16 +625,16 @@ export class Graph {
 
     this.updateNodesInternal();
 
-    if (this.target && nodesToAdd.some((d) => matchName(d, this.target!))) {
-      this.victory();
+    if (this.target && !this.victory) {
+      const found = this.node.filter((d) => matchName(d, this.target!));
+      if (found.size() > 0) {
+        this.transitionRadius(found.node()!, Graph.INFO_RADIUS);
+        this.victory = true;
+        this.handleVictory();
+      }
     }
 
     return [nodeObjects, linkObjects];
-  }
-
-  private victory() {
-    alert('YOU WIN!');
-    this.svg.append('p').text('YOU WIN!!!');
   }
 
   private static getLinkColor(d: LinkDatum) {
@@ -973,12 +980,12 @@ export class Graph {
     this.reactSetPhase(newPhase);
   }
 
-  private addInfoLabel(trigger: CourseGroupSelection, r = 100) {
+  private addInfoLabel(trigger: CourseGroupSelection) {
     const n = { ...trigger.datum() };
 
     this.focusCourse(n.id, 'hover');
 
-    const [t] = this.transitionRadius(trigger.node()!, r, { duration: Graph.PULSE_DURATION, emojiOnly: true, updateForce: true });
+    const [t] = this.transitionRadius(trigger.node()!, Graph.INFO_RADIUS, { duration: Graph.PULSE_DURATION, emojiOnly: true, updateForce: true });
 
     // disable listeners temporarily
     this.node.on('.basic .drag', null);
@@ -993,7 +1000,7 @@ export class Graph {
       const { x, y } = trigger.datum();
       this.svg.call(this.zoom.translateBy, -x + n.x, -y + n.y);
 
-      const group = this.addInfoLabels(x, y, r, link);
+      const group = this.addInfoLabels(x, y, Graph.INFO_RADIUS, link);
 
       // add listeners to remove group on mouseout
       trigger.on('mouseout.info click.info', (e) => {
