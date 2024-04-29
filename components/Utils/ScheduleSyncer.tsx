@@ -17,8 +17,9 @@ import { getAllClassIds } from '@/src/utils/schedules';
  * Load these schedules into the Redux store and also load all courses from all schedules into the Redux "class cache".
  * Expects access to the MeiliSearch client through React Context.
  */
-export function ScheduleSyncer({ userId }: {
+export function ScheduleSyncer({ userId, scheduleIds }: {
   userId: string;
+  scheduleIds?: string[];
 }) {
   const dispatch = useAppDispatch();
   const { client } = useMeiliClient();
@@ -32,7 +33,10 @@ export function ScheduleSyncer({ userId }: {
 
       // load all of the classes into the class cache
       if (client) {
-        const classIds = getAllClassIds(schedules);
+        const schedulesToLoad = scheduleIds
+          ? schedules.filter((s) => scheduleIds.includes(s.id))
+          : schedules;
+        const classIds = getAllClassIds(schedulesToLoad);
         if (graphSchedule?.classes) classIds.push(...graphSchedule.classes);
         await dispatch(ClassCache.loadCourses(client, classIds));
       }
@@ -41,7 +45,7 @@ export function ScheduleSyncer({ userId }: {
     } catch (err) {
       alertUnexpectedError(err);
     }
-  }, [client, dispatch, graphSchedule?.classes]);
+  }, [client, dispatch, graphSchedule?.classes, scheduleIds]);
 
   useEffect(() => {
     const q = query(Schema.Collection.schedules(), where('ownerUid', '==', userId));

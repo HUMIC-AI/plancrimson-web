@@ -15,7 +15,7 @@ export function useColumns() {
   const classYear = useAppSelector(Profile.selectClassYear);
   const sampleSchedule = useAppSelector(Planner.selectSampleSchedule);
 
-  const columns: ListOfScheduleIdOrSemester = useMemo(() => {
+  const columns = useMemo<ListOfScheduleIdOrSemester>(() => {
     switch (semesterFormat) {
       case 'sample':
         if (!sampleSchedule) return [];

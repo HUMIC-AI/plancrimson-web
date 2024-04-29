@@ -13,7 +13,7 @@ import { useBreakpoint, breakpoints } from '../../src/utils/styles';
 import { SidebarPanel } from '../../components/ExploreGraph/CollapsibleSidebar';
 import { ExploreGraph } from '../../components/ExploreGraph/ExploreGraph';
 import { HoveredCourseInfo } from '../../components/ExploreGraph/HoveredCourseInfo';
-import { InfoCard } from '../../components/Modals/InfoCard';
+import { InfoCard, InfoCardProps } from '../../components/Modals/InfoCard';
 import { getCourseModalContent } from '../../components/Modals/CourseCardModal';
 import { useCourse } from '../../src/features/classCache';
 
@@ -63,10 +63,10 @@ export default function GamePage() {
 function Contents() {
   const { graph, victory } = useGraphContext();
   const course = useCourse(graph?.target?.id ?? null);
-  const props = useMemo(() => {
+  const props = useMemo<InfoCardProps | null>(() => {
     if (!course) return null;
-    const { close, ...p } = getCourseModalContent(course);
-    return { ...p, isDialog: false };
+    const { close, title, ...p } = getCourseModalContent(course);
+    return { ...p, title: `TARGET: ${title}`, isDialog: false };
   }, [course]);
 
   return (

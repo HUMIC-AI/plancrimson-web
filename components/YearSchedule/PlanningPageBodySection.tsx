@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Requirement, RequirementGroup } from '@/src/requirements/util';
 import { breakpoints, classNames, useBreakpoint } from '@/src/utils/styles';
 import { SemestersList } from '@/components/YearSchedule/PlanningSection';
@@ -53,9 +53,8 @@ export default function PlanningPageBodySection({ userId }: { userId: string; })
     <Layout title="Plan" className="flex flex-1 flex-row-reverse" verify="meili">
       {() => (
         <>
-          <ScheduleSyncer userId={userId} />
-
           <BodySection
+            userId={userId}
             showReqs={showReqs}
             highlightedRequirement={highlightedRequirement}
           />
@@ -71,6 +70,7 @@ export default function PlanningPageBodySection({ userId }: { userId: string; })
 type Props = {
   showReqs: boolean;
   highlightedRequirement?: Requirement;
+  userId: string;
 };
 
 function PlanningPageMobileLayout({
@@ -86,13 +86,13 @@ function PlanningPageMobileLayout({
       <HeadMeta pageTitle="Plan">
         {MESSAGES.description}
       </HeadMeta>
-      <ScheduleSyncer userId={userId} />
 
       <div className="flex min-h-screen flex-col">
         <Navbar />
 
         <WithMeili userId={userId}>
           <BodySection
+            userId={userId}
             showReqs={showReqs}
             highlightedRequirement={highlightedRequirement}
           />
@@ -109,10 +109,11 @@ function PlanningPageMobileLayout({
 }
 
 function BodySection({
-  showReqs, highlightedRequirement,
+  showReqs, highlightedRequirement, userId,
 }: Props) {
   const resizeRef = useRef<HTMLDivElement>(null!);
   const columns = useColumns();
+  const scheduleIds = useMemo(() => (columns.length > 0 && typeof columns[0] === 'string' ? columns as string[] : undefined), [columns]);
 
   return (
     <div className={classNames(
@@ -120,6 +121,11 @@ function BodySection({
       showReqs && 'md:rounded-lg md:shadow-lg',
     )}
     >
+      <ScheduleSyncer
+        userId={userId}
+        scheduleIds={scheduleIds}
+      />
+
       <CourseCardStyleProvider defaultStyle="collapsed" columns={1} confirmRemoval>
         <InstructionsModal />
 

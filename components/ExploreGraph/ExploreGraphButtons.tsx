@@ -1,7 +1,7 @@
-import { Fragment, ReactNode, useState } from 'react';
+import { Fragment, ReactNode } from 'react';
 import { Disclosure, RadioGroup } from '@headlessui/react';
 import {
-  FaCheckCircle, FaCircle, FaCog,
+  FaCheckCircle, FaChevronDown, FaCircle,
 } from 'react-icons/fa';
 import { EMOJI_SCALES, Graph } from './Graph';
 import { Subject } from '../../src/lib';
@@ -14,7 +14,6 @@ export function ExploreGraphButtons({
   graph, phase, subjects,
 }: { graph: Graph; phase: Graph['phase']; subjects: Subject[]; }) {
   const fixedClasses = useClasses(graph.fixedScheduleId);
-  const [hovered, setHovered] = useState(localStorage.getItem('graphButtonHovered') === 'true');
 
   const handleReset = () => {
     if (!fixedClasses) return;
@@ -26,101 +25,91 @@ export function ExploreGraphButtons({
       graph.removeNodes(graph.currentData.map((s) => s.id));
       graph.setPhase('init');
       // this sets state to wait
-      graph.appendNodes([graph.toDatum(graph.initial?.id ?? getRandomRatedCourse(graph.courses).id, GRAPH_SCHEDULE)!], []);
+      graph.appendNodesAndLinks([graph.toDatum(graph.initial?.id ?? getRandomRatedCourse(graph.courses).id, GRAPH_SCHEDULE)!], []);
     }
   };
 
   return phase === 'ready' ? (
     <div className="absolute right-full top-16 mr-4 text-right text-sm">
       <Disclosure defaultOpen>
-        <Disclosure.Button
-          className={classNames(
-            'interactive secondary ml-auto flex items-center rounded px-2 py-1',
-            // !hovered && 'animate-ping',
-          )}
-          onMouseEnter={hovered ? undefined : () => {
-            setHovered(true);
-            localStorage.setItem('graphButtonHovered', 'true');
-          }}
-        >
-          <span className="mr-1 font-semibold">Options</span>
-          <FaCog size={18} />
-        </Disclosure.Button>
+        {({ open }) => (
+          <>
+            <Disclosure.Button className="interactive secondary ml-auto flex items-center rounded px-2 py-1">
+              <span className="mr-1 font-semibold">Menu</span>
+              <FaChevronDown className={classNames(open && 'rotate-180', 'transition duration-200')} />
+            </Disclosure.Button>
 
-        <Disclosure.Panel
-          className="mt-1 flex flex-col items-stretch space-y-1 rounded transition-colors hover:bg-gray-secondary/50"
-        >
-          <button
-            type="button"
-            className="button whitespace-nowrap bg-primary/80 text-secondary"
-            onClick={handleReset}
-          >
-            Reset graph
-          </button>
+            <Disclosure.Panel
+              className="mt-1 flex flex-col items-stretch space-y-1 rounded transition-colors hover:bg-gray-secondary/50"
+            >
+              <button
+                type="button"
+                className="button whitespace-nowrap bg-primary/80 py-0.5 text-secondary"
+                onClick={handleReset}
+              >
+                Reset graph
+              </button>
 
-          <button
-            type="button"
-            className="button whitespace-nowrap bg-primary/80 text-secondary"
-            onClick={() => graph.resetZoom()}
-          >
-            Center zoom
-          </button>
+              <button
+                type="button"
+                className="button whitespace-nowrap bg-primary/80 py-0.5 text-secondary"
+                onClick={() => graph.resetZoom()}
+              >
+                Center zoom
+              </button>
 
-          {graph.target
-          && (
-          <button
-            type="button"
-            className="button whitespace-nowrap bg-blue-primary/80 text-secondary"
-            onClick={() => graph.focusHint()}
-          >
-            Show hint
-          </button>
-          )}
+              {graph.target && (
+              <button
+                type="button"
+                className="button whitespace-nowrap bg-blue-primary/80 text-secondary"
+                onClick={() => graph.focusHint()}
+              >
+                Show hint
+              </button>
+              )}
 
-          <MenuRadio
-            label="Tool"
-            value={graph.mode}
-            onChange={(m) => {
-              graph.setMode(m);
-            }}
-            values={Graph.TOOLS}
-            // icons={toolIcons}
-          />
+              <MenuRadio
+                label="Tools"
+                value={graph.tool}
+                onChange={(m) => graph.setTool(m)}
+                values={['Select', 'Move', 'Add similar', 'Add opposite', 'Erase']}
+                icons={Graph.TOOLS}
+              />
 
-          {!graph.target && (
-          <MenuRadio
-            label="Courses"
-            value={graph.isMatchFilter ? 'Search results' : 'All courses'}
-            onChange={(m) => {
-              graph.setMatchFilter(m === 'Search results');
-            }}
-            values={['All courses', 'Search results']}
-          />
-          )}
+              {!graph.target && (
+              <MenuRadio
+                label="Courses"
+                value={graph.isMatchFilter ? 'Search results' : 'All courses'}
+                onChange={(m) => {
+                  graph.setMatchFilter(m === 'Search results');
+                }}
+                values={['All courses', 'Search results']}
+              />
+              )}
 
-          <MenuRadio
-            label="Emojis"
-            value={graph.rating === 'meanRating' ? 'Rating' : 'Workload'}
-            onChange={(m) => graph.setRatingType(m === 'Rating' ? 'meanRating' : 'meanHours')}
-            values={['Rating', 'Workload']}
-          />
-        </Disclosure.Panel>
+              <MenuRadio
+                label="Emojis"
+                value={graph.rating === 'meanRating' ? 'Q Rating' : 'Workload'}
+                onChange={(m) => graph.setRatingType(m === 'Q Rating' ? 'meanRating' : 'meanHours')}
+                values={['Q Rating', 'Workload']}
+              />
+            </Disclosure.Panel>
+          </>
+        )}
       </Disclosure>
 
       <div className="absolute right-0 top-full mt-1">
-        <ul className={classNames(
-          'grid grid-flow-col grid-rows-[auto_auto] justify-items-center gap-x-2',
-          'rounded-lg border border-primary bg-secondary/80 px-1 pb-1',
-          'leading-none',
-        )}
-        >
-          {EMOJI_SCALES[graph.rating].map((emoji, i) => (
-            <Fragment key={emoji}>
-              <li className="text-2xl">{emoji}</li>
-              <li>{graph.rating === 'meanRating' ? i + 1 : `${(i / 5) * 20}+`}</li>
-            </Fragment>
-          ))}
-        </ul>
+        <div className="rounded-lg border border-primary bg-secondary/80 px-1 pb-1">
+          <ul className="grid grid-flow-col grid-rows-[auto_auto] justify-items-center gap-x-2 leading-none">
+            {EMOJI_SCALES[graph.rating].map((emoji, i) => (
+              <Fragment key={emoji}>
+                <li className="text-2xl">{emoji}</li>
+                <li>{graph.rating === 'meanRating' ? i + 1 : `${(i / 5) * 20}+`}</li>
+              </Fragment>
+            ))}
+          </ul>
+          <p className="text-center">No emoji = no ratings</p>
+        </div>
 
         <ul className="absolute right-0 top-full mt-1 flex flex-col items-end text-xs">
           {subjects.map((s) => (
@@ -141,12 +130,13 @@ export function ExploreGraphButtons({
 }
 
 function MenuRadio<T extends string>({
-  label, value, onChange, values,
+  label, value, onChange, values, icons,
 }: {
   label: ReactNode;
   value: T;
   onChange: (value: T) => void;
   values: readonly T[];
+  icons?: Record<T, { icon: ReactNode }>;
 }) {
   return (
     <RadioGroup
@@ -163,8 +153,8 @@ function MenuRadio<T extends string>({
           key={tool}
           value={tool}
           className={({ checked }) => classNames(
-            'interactive cursor-pointer flex items-center',
-            checked && 'font-semibold',
+            'interactive flex items-center',
+            checked && 'font-semibold underline',
           )}
         >
           {({ checked }) => (
@@ -173,7 +163,7 @@ function MenuRadio<T extends string>({
                 {tool}
               </span>
 
-              {checked ? <FaCheckCircle /> : <FaCircle />}
+              {icons ? icons[tool].icon : (checked ? <FaCheckCircle /> : <FaCircle />)}
             </>
           )}
         </RadioGroup.Option>

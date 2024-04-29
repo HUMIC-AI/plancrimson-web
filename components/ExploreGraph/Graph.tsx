@@ -1,6 +1,9 @@
 import * as d3 from 'd3';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { Dispatch, SetStateAction } from 'react';
+import {
+  FaEraser, FaHandPaper, FaMousePointer, FaPlusCircle, FaPlusSquare,
+} from 'react-icons/fa';
 import { CourseBrief } from '../ClassesCloudPage/useData';
 import {
   ExtendedClass,
@@ -37,6 +40,16 @@ export type Simulation = d3.Simulation<Datum, LinkDatum>;
 
 export type CourseGroupSelection = d3.Selection<SVGGElement, Datum, SVGGElement, unknown>;
 
+export type GraphTool = keyof typeof Graph.TOOLS;
+
+export type GraphToolData = {
+  name: string;
+  icon: JSX.Element;
+  cursor: string;
+  clickNode: (d: Datum) => void;
+  clickLink: (d: LinkDatum) => void;
+};
+
 export type Explanation = {
   courses: Datum[];
   text: string | null;
@@ -65,9 +78,8 @@ type CircleTransition = d3.Transition<SVGCircleElement, null, SVGGElement, unkno
 
 type TextTransition = d3.Transition<SVGTextElement, null, SVGGElement, unknown>;
 
-export type GraphTool = typeof Graph.TOOLS[number];
-
 export type GraphPhase = 'init' | 'wait' | 'info' | 'ready';
+
 
 /**
  * The entire d3 graph visualization.
@@ -78,8 +90,6 @@ export type GraphPhase = 'init' | 'wait' | 'info' | 'ready';
  */
 export class Graph {
   public sim: Simulation;
-
-  public static readonly TOOLS = ['Add similar', 'Add opposite', 'Erase'] as const;
 
   private phaseInternal: GraphPhase = 'init';
 
@@ -114,6 +124,58 @@ export class Graph {
 
   private link: d3.Selection<SVGLineElement, LinkDatum, SVGGElement, unknown>;
 
+  private history: {
+    nodes: string[];
+    links: StringLink[];
+    type: 'add' | 'remove';
+  }[] = [];
+
+  private historyIndex = 0;
+
+  private waitingForExplanation = false;
+
+  public startTime = 0;
+
+  public static readonly TOOLS = {
+    Select: {
+      name: 'Select',
+      icon: <FaMousePointer />,
+      cursor: 'default',
+      clickNode: (g: Graph, d: Datum) => g.focusCourse(d.id, 'fix'),
+      clickLink: (g: Graph, d: LinkDatum) => g.explainLink(d),
+    },
+    Move: {
+      name: 'Move',
+      icon: <FaHandPaper />,
+      cursor: 'grab',
+      clickNode: () => null,
+      clickLink: () => null,
+    },
+    'Add similar': {
+      name: 'Add similar',
+      icon: <FaPlusCircle />,
+      cursor: 'copy',
+      clickNode: (g: Graph, d: Datum) => g.addNewNeighbours(d, Graph.NUM_NEIGHBOURS, false),
+      clickLink: (g: Graph, d: LinkDatum) => g.explainLink(d),
+    },
+    'Add opposite': {
+      name: 'Add opposite',
+      icon: <FaPlusSquare />,
+      cursor: 'alias',
+      clickNode: (g: Graph, d: Datum) => g.addNewNeighbours(d, Graph.NUM_NEIGHBOURS, true),
+      clickLink: (g: Graph, d: LinkDatum) => g.explainLink(d),
+    },
+    Erase: {
+      name: 'Erase',
+      icon: <FaEraser />,
+      cursor: 'crosshair',
+      clickNode: (g: Graph, d: Datum) => g.eraseNode(d),
+      clickLink: (g: Graph, d: LinkDatum) => g.removeLinks([{ source: d.source.id, target: d.target.id }]),
+    },
+  } as const;
+
+  // ============================== PARAMETERS ==============================
+
   private static readonly RADIUS = 5;
 
   private static readonly INFO_RADIUS = 80;
@@ -132,12 +194,15 @@ export class Graph {
 
   private static readonly PULSE_DURATION = 750;
 
+  public tool!: GraphTool;
+
   public static readonly DIFFICULTY_GRADE = 10;
 
-  private waitingForExplanation = false;
+  // ============================== CONSTRUCTOR ==============================
 
-  public startTime = 0;
-
+  /**
+   * React setters are also passed in to update the state of the parent provider.
+   */
   constructor(
     svgDom: SVGSVGElement,
     tooltipDom: HTMLParagraphElement,
@@ -147,8 +212,8 @@ export class Graph {
     public readonly fixedScheduleId: string | null,
     public readonly initial: CourseBrief | null,
     public readonly target: CourseBrief | null,
-    public mode: GraphTool,
-    private reactSetMode: Dispatch<SetStateAction<GraphTool>>,
+    reactTool: GraphTool,
+    private reactSetTool: Dispatch<SetStateAction<GraphTool>>,
     private reactSetHover: (id: string | null) => void,
     private reactSetSubjects: (subjects: Subject[]) => void,
     private reactSetExplanation: Dispatch<SetStateAction<Explanation | null>>,
@@ -195,8 +260,7 @@ export class Graph {
 
     this.linkGroup = this.svg.append('g')
       .attr('stroke-opacity', 0.3)
-      .attr('stroke-linecap', 'round')
-      .attr('cursor', 'help');
+      .attr('stroke-linecap', 'round');
 
     this.link = this.linkGroup.selectAll<SVGLineElement, LinkDatum>('line');
 
@@ -205,8 +269,7 @@ export class Graph {
     this.nodeGroup = this.svg.append('g')
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('fill', 'rgb(var(--color-primary))')
-      .attr('cursor', 'grab');
+      .attr('fill', 'rgb(var(--color-primary))');
 
     this.node = this.nodeGroup.selectAll<SVGGElement, Datum>('g');
 
@@ -251,43 +314,26 @@ export class Graph {
         if (!event.active) this.sim.alphaTarget(0);
         event.subject.fx = null;
         event.subject.fy = null;
-        this.resetCursor();
+        this.nodeGroup.attr('cursor', this.toolData.cursor);
       });
 
     this.svg.call(this.zoom);
 
     // set initial zoom
     this.svg.call(this.zoom.transform, this.defaultZoom);
+
+    this.setTool(reactTool);
+
+    // listen for command-z to undo
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'z' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        this.undo();
+      }
+    });
   }
 
-  get phase() {
-    return this.phaseInternal;
-  }
-
-  get defaultZoom() {
-    return d3.zoomIdentity.translate(-this.width / 8, 0).scale(1.5);
-  }
-
-  get rating() {
-    return this.ratingField;
-  }
-
-  public clearExplanation() {
-    this.waitingForExplanation = false;
-    const shouldCloseExplanation = this.isExplanationOpen;
-    this.explanationComparingIds = [];
-    if (shouldCloseExplanation) this.reactSetExplanation(null);
-    this.renderHighlights();
-  }
-
-  public setHits(hits: ExtendedClass[]) {
-    this.hits = hits;
-  }
-
-  public setMatchFilter(checked: boolean) {
-    this.matchFilter = checked;
-    this.reactSetMatchFilter(checked);
-  }
+  // ============================== MAIN STATE MANAGEMENT ==============================
 
   private addCircle(enter: CourseGroupSelection) {
     const graph = this;
@@ -321,296 +367,13 @@ export class Graph {
       .attr('transform', (d) => `translate(${d.x},${d.y})`);
   }
 
-  get initialPca() {
-    if (!this.initial) throw new Error('Must be playing game');
-    return this.positions[this.initial.i];
-  }
-
-  get targetPca() {
-    if (!this.target) throw new Error('Must be playing game');
-    return this.positions[this.target.i];
-  }
-
-  get difficulty() {
-    const c = cos(this.initialPca, this.targetPca);
-    const p = 1 - Math.abs(c); // closer to zero is harder
-    return Math.round(p * Graph.DIFFICULTY_GRADE);
-  }
-
-  // find the course with the closest cosine similarity to the target and hover it
-  public focusHint() {
-    let closest = -Infinity;
-    let datum: Datum = null!;
-    this.currentData.forEach((d) => {
-      const c = cos(d.pca, this.targetPca);
-      if (c > closest) {
-        datum = d;
-        closest = c;
-      }
-    });
-    if (this.focusedCourse.id !== datum.id) {
-      this.focusCourse(datum.id, 'hover');
-    }
-    this.zoomTo(datum);
-  }
-
-  public setMode(mode: Graph['mode']) {
-    this.mode = mode;
-    this.resetCursor();
-    if (this.mode === 'Erase') {
-      // disable zooming while erasing
-      this.node.on('.drag', null);
-      this.svg.on('.zoom', null);
-    } else {
-      this.node.call(this.drag);
-      this.svg.call(this.zoom);
-    }
-    this.reactSetMode(mode);
-  }
-
-  private resetCursor() {
-    if (this.mode === 'Erase') {
-      this.svg.attr('cursor', 'crosshair');
-      this.nodeGroup.attr('cursor', 'crosshair');
-      this.linkGroup.attr('cursor', 'crosshair');
-    } else {
-      this.svg.attr('cursor', null);
-      this.nodeGroup.attr('cursor', 'grab');
-      this.linkGroup.attr('cursor', 'help');
-    }
-  }
-
-  public resetZoom() {
-    this.svg.transition('svg-zoom')
-      .duration(Graph.PULSE_DURATION)
-      .call(this.zoom.transform, this.defaultZoom);
-  }
-
-  public setRatingType(ratingType: RatingField) {
-    this.ratingField = ratingType;
-    this.reactSetRatingField(ratingType);
-    this.node.select('text.emoji').text(this.getEmoji.bind(this));
-  }
-
-  public focusCourse(id: string | null, reason: 'hover' | 'fix') {
-    console.debug('fixing node', id, reason);
-
-    if (reason === 'hover') {
-      this.reactSetHover(id);
-      this.focusedCourse = { id, reason: 'hover' };
-      this.renderHighlights();
-      return;
-    }
-
-    // deselect a currently selected node
-    id = this.focusedCourse.id === id && this.focusedCourse.reason === 'fix' ? null : id;
-
-    if (id) this.reactSetHover(id);
-    else if (this.focusedCourse) this.reactSetHover(null);
-
-    this.focusedCourse = { id, reason: 'fix' };
-
-    // replace a link explanation
-    if (!this.waitingForExplanation && this.isExplanationOpen) {
-      this.clearExplanation();
-    }
-
-    // zoom into the focused course
-    const fixedNode = this.findData(this.focusedCourse.id);
-    if (fixedNode) {
-      this.zoomTo(fixedNode);
-    }
-
-    this.renderHighlights();
-  }
-
-  private zoomTo({ x, y }: { x: number, y: number }) {
-    this.svg.transition('svg-zoom')
-      .duration(Graph.PULSE_DURATION)
-      .call(this.zoom.transform, this.defaultZoom.translate(-x, -y));
-  }
-
-  private static getNewPosition(d: Datum, course: CourseBrief) {
-    const theta = Math.random() * 2 * Math.PI;
-    const r = Graph.getRadius(course) + Graph.getRadius(d) + Math.random() * Graph.RADIUS;
-    return {
-      x: d.x + r * Math.cos(theta),
-      y: d.y + r * Math.sin(theta),
-    };
-  }
-
-  public findTitle(d: Pick<CourseBrief, 'catalog' | 'subject'>) {
-    return this.currentData.find((n) => matchName(n, d));
-  }
-
-  public idInGraph(id: string) {
-    return this.currentData.some((n) => n.id === id);
-  }
-
-  // get from all courses the ones whose titles are not in the graph
-  get availableCourses() {
-    return this.courses.filter((d) => !this.findTitle(d));
-  }
-
-  get isMatchFilter() {
-    return this.matchFilter;
-  }
-
-  public setHasMore(hasMore: boolean) {
-    this.hasMore = hasMore;
-  }
-
-  public setRefineNext(refineNext: () => void) {
-    this.refineNext = refineNext;
-  }
-
-  private getNeighbours(d: Datum, numNeighbours: number): CourseBrief[] {
-    // if filter enabled, take from the search hits
-    const courses = this.matchFilter
-      ? this.hits.map((h) => this.availableCourses.find((c) => c.id === h.id)!).filter(Boolean)
-      : this.availableCourses;
-
-    if (courses.length === 0 && this.matchFilter && !this.hasMore) {
-      alert('No more courses to show. Try relaxing the filter.');
-      return [];
-    }
-
-    // if we don't have enough neighbours, preemptively refine the search
-    if (courses.length < 2 * numNeighbours && this.matchFilter && this.hasMore) {
-      this.refineNext();
-    }
-
-    const sorted: (CourseBrief & { distance: number })[] = courses
-      .map((course) => ({
-        ...course,
-        distance: cos(d.pca, this.positions[course.i]),
-      }))
-      .sort((a, b) => (this.mode === 'Add similar' ? -1 : +1) * (b.distance - a.distance));
-
-    // remove duplicates
-    const names = new Set();
-    const neighbours: CourseBrief[] = [];
-    while (names.size < numNeighbours && sorted.length > 0) {
-      const { distance, ...n } = sorted.pop()!;
-      if (!names.has(n.subject + n.catalog)) {
-        names.add(n.subject + n.catalog);
-        neighbours.push(n);
-      }
-    }
-    return neighbours;
-  }
-
-  private addNewNeighbours(d: Datum, numNeighbours = Graph.NUM_NEIGHBOURS, positions?: { x: number; y: number }[]) {
-    console.debug('adding neighbours', d.id);
-    const neighbours = this.getNeighbours(d, numNeighbours);
-    const nodes: Datum[] = neighbours.map((course, i) => ({
-      ...course,
-      pca: this.positions[course.i],
-      // assume all fixed nodes are in the graph already
-      scheduleId: GRAPH_SCHEDULE,
-      radius: Graph.getRadius(course),
-      ...(positions ? positions[i] : Graph.getNewPosition(d, course)),
-    }));
-
-    const links = nodes.map((t) => ({ source: d.id, target: t.id }));
-
-    return this.appendNodes(nodes, links);
-  }
-
-  private renderHighlights() {
-    return this.node
-      .select('circle')
-      .transition('highlight-t')
-      .duration(Graph.T_DURATION)
-      .attr('stroke-width', this.getStrokeWidth.bind(this))
-      .attr('stroke', this.getStrokeColor.bind(this))
-      .attr('stroke-opacity', (d) => (this.getStrokeWidth(d) > 0 ? 1 : 0));
-  }
-
-  private getStrokeColor(d: Datum) {
-    if (this.focusedCourse.id !== d.id) return 'rgb(var(--color-gray-primary)';
-    if (this.focusedCourse.reason === 'fix') return 'rgb(var(--color-blue-primary)';
-    return 'rgb(var(--color-primary))';
-  }
-
-  private getStrokeWidth(d: Datum) {
-    if (this.focusedCourse.id === d.id) return 6;
-    if (this.explanationComparingIds.includes(d.id)) return 5;
-    if (this.highlightedSubject === d.subject) return 3;
-    if (d.scheduleId === this.fixedScheduleId) return 2;
-    return 0;
-  }
-
-  /**
-   * Transition the radius of nodes in the selection
-   */
-  private transitionRadius(g: SVGGElement, radius: number, { duration = Graph.T_DURATION, emojiOnly = false, updateForce = false } = {}): readonly [CircleTransition, TextTransition] {
-    const group = d3.select<SVGGElement, Datum>(g);
-
-    const circleTransition = group.selectChildren<SVGCircleElement, null>('circle')
-      .transition('radius-t')
-      .duration(duration)
-      .attr('r', radius);
-
-    const textTransition = group.selectChildren<SVGTextElement, null>(emojiOnly ? 'text.emoji' : 'text')
-      .transition('radius-t')
-      .duration(duration)
-      .attr('font-size', `${radius}px`);
-
-    // refresh the radius data
-    if (updateForce) {
-      group.datum().radius = radius;
-      this.sim.nodes(this.currentData);
-    }
-
-    return [circleTransition, textTransition] as const;
-  }
-
-  /** Gets called whenever nodes are updated */
-  private updateNodesInternal() {
-    // tell simulation about new nodes and links
-    this.sim.nodes(this.currentData);
-    this.sim.force<d3.ForceLink<Datum, LinkDatum>>('link')!.links(this.link.data());
-    this.sim.alpha(1).restart();
-
-    // update link properties after strings are populated
-    this.link
-      .attr('stroke-width', Graph.getLinkWidth)
-      // .attr('stroke-opacity', Graph.getLinkOpacity)
-      .attr('stroke', Graph.getLinkColor);
-
-    // callbacks
-    this.reactSetSubjects([...new Set(this.currentData.map((d) => d.subject))]);
-
-    if (!this.currentData.some((d) => d.id === this.focusedCourse.id)) {
-      this.focusCourse(null, 'fix');
-    }
-
-    if (this.phaseInternal === 'init') {
-      this.setPhase('wait');
-    }
-  }
-
-  private static getLinkWidth(d: LinkDatum) {
-    return Graph.collideRadius * (0.25 + 0.75 * Graph.getLinkOpacity(d));
-  }
-
-  private pulse(c: SVGGElement, radius: number, grow = true) {
-    const [circleTransition] = this.transitionRadius(c, radius + (grow ? Graph.RADIUS : 0), { duration: Graph.PULSE_DURATION });
-    circleTransition.on('end', () => this.pulse(c, radius, !grow));
-  }
-
-  get currentData() {
-    return this.node.data();
-  }
-
   /**
    * Main update function for entering nodes into the graph.
    * Ignores nodes that are already in the graph.
    * Use {@link DatumWithoutPosition} since we don't need to initialize x and y.
    * @returns The nodes and links that were actually added to the graph.
    */
-  public appendNodes(nodesToAdd: DatumWithoutPosition[], idLinks: StringLink[]): readonly [Datum[], LinkDatum[]] {
+  public appendNodesAndLinks(nodesToAdd: DatumWithoutPosition[], idLinks: StringLink[], updateHistory = true): readonly [Datum[], LinkDatum[]] {
     nodesToAdd = this.getNewNodes(nodesToAdd);
     idLinks = this.getNewLinks(idLinks);
 
@@ -655,220 +418,17 @@ export class Graph {
       }
     }
 
+    if (updateHistory) {
+      this.pushHistory(nodesToAdd.map((d) => d.id), idLinks, 'add');
+    }
+
     return [nodeObjects, linkObjects];
   }
 
-  private static getLinkColor(d: LinkDatum) {
-    return d.mode === 'Add opposite'
-      ? 'rgb(var(--color-blue-primary))'
-      : 'rgb(var(--color-gray-primary))';
-  }
-
-  public getNewNodes<T extends NodeId>(nodes: T[]) {
-    return nodes.filter((d) => !this.currentData.some((n) => n.id === stringify(d)));
-  }
-
-  /** Return current nodes that are not present in the provided list */
-  public getNodesNotIn<T extends NodeId>(nodes: T[]) {
-    return this.currentData.filter((d) => !nodes.some((n) => stringify(n) === d.id));
-  }
-
-  private getNewLinks(links: StringLink[]) {
-    return links.filter((d) => !this.link.data().some((l) => sameLink(l, d)))
-      .map((d) => ({ ...d, mode: this.mode }));
-  }
-
-  public linksTouchingNodes<T extends NodeId>(nodeIds: T[]) {
-    return this.link.data().filter(({ source, target }) => nodeIds.some(
-      (id) => id === stringify(source) || id === stringify(target),
-    ));
-  }
-
-  private moveTooltip(x: number, y: number) {
-    this.tooltip
-      .style('left', `${x}px`)
-      .style('top', `${y}px`);
-  }
-
-  private hideTooltip() {
-    this.tooltip.classed('hidden', true);
-  }
-
-  get canReplaceHover() {
-    return this.focusedCourse.id === null || this.focusedCourse.reason === 'hover';
-  }
-
   /**
-   * Add event listeners to each node
+   * Remove links from the graph.
    */
-  private addNodeEventListeners(n: CourseGroupSelection) {
-    const graph = this;
-
-    n
-      .call(this.drag)
-      // expand node on hover
-      .on('mouseover.basic', function (event: MouseEvent, d) {
-        // if we're waiting for user to interact and they do,
-        // remove the "click me" label and reset radii
-        if (graph.phaseInternal === 'wait') {
-          return graph.setPhase('info', d.id);
-        }
-
-        // don't react if info demonstration is open or we are comparing courses
-        if (graph.phaseInternal === 'info') return;
-
-        console.debug('mousing over');
-
-        if (graph.mode === 'Erase' && event.buttons === 1) {
-          // if mouse is down, remove the node
-          graph.eraseNode(d);
-          return;
-        }
-
-        graph.transitionRadius(this, Graph.getRadius(d) + Graph.collideRadius);
-
-        // set focused course
-        if (graph.canReplaceHover) {
-          graph.focusCourse(d.id, 'hover');
-        }
-        graph.showTooltipAt(d.subject + d.catalog, event.clientX, event.clientY);
-      })
-      .on('mousedown.basic', (event, d) => {
-        if (graph.mode === 'Erase') {
-          graph.eraseNode(d);
-        }
-      })
-      .on('mousemove.basic', (event) => {
-        graph.moveTooltip(event.clientX, event.clientY);
-      })
-      .on('mouseout.basic', function (event, d) {
-        graph.transitionRadius(this, Graph.getRadius(d));
-        graph.hideTooltip();
-      })
-      .on('click.basic', (event, d) => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (this.mode === 'Erase') {
-          graph.eraseNode(d);
-        } else {
-          logEvent(getAnalytics(), 'explore_neighbours', {
-            course: d,
-          });
-          graph.addNewNeighbours(d);
-        }
-      })
-      .on('contextmenu.basic', (event, d) => {
-        event.preventDefault();
-        event.stopPropagation();
-        graph.focusCourse(d.id, 'fix');
-      });
-  }
-
-  private eraseNode(d: Datum) {
-    if (d.scheduleId === GRAPH_SCHEDULE || confirm("Are you sure you want to remove this course? It's part of your schedule.")) {
-      this.removeNodes([d.id]);
-    }
-  }
-
-  private showTooltipAt(text: string, x: number, y: number) {
-    this.tooltip
-      .classed('hidden', false)
-      .text(text);
-    this.moveTooltip(x, y);
-  }
-
-  private addLinkEventListeners(l: d3.Selection<SVGLineElement, LinkDatum, SVGGElement, unknown>) {
-    const graph = this;
-    l
-      .on('mouseover.basic', function (event, d) {
-        const percent = Math.round(Graph.getLinkOpacity(d) * 100);
-        graph.showTooltipAt(`${percent}%`, event.clientX, event.clientY);
-        const link = d3.select<SVGLineElement, LinkDatum>(this);
-        link
-          .transition('link-t')
-          .duration(Graph.T_DURATION)
-          .attr('stroke-width', Graph.HOVERED_LINK_WIDTH);
-
-        // move the nodes a bit apart
-        // link.datum().source.radius += Graph.collideRadius;
-        // link.datum().target.radius += Graph.collideRadius;
-        // graph.sim.nodes(graph.currentData);
-      })
-      .on('mousedown.basic', (event, d) => {
-        if (this.mode === 'Erase') {
-          this.removeLinks([d]);
-        }
-      })
-      .on('mousemove.basic', (event) => {
-        graph.moveTooltip(event.clientX, event.clientY);
-      })
-      .on('mouseout.basic', function () {
-        graph.hideTooltip();
-        const link = d3.select<SVGLineElement, LinkDatum>(this);
-        link
-          .transition('link-t')
-          .duration(Graph.T_DURATION)
-          .attr('stroke-width', Graph.getLinkWidth);
-
-        // reset the nodes
-        // link.datum().source.radius -= Graph.collideRadius;
-        // link.datum().target.radius -= Graph.collideRadius;
-        // graph.sim.nodes(graph.currentData);
-      })
-      .on('click.basic', (event, d) => {
-        event.stopPropagation();
-        if (this.mode === 'Erase') {
-          this.removeLinks([d]);
-          return;
-        }
-        if (this.waitingForExplanation) return;
-        this.waitingForExplanation = true;
-        const courses = [{ ...d.source }, { ...d.target }];
-        this.reactSetExplanation({ courses, text: null });
-        this.explanationComparingIds = [d.source.id, d.target.id];
-        this.focusCourse(null, 'fix');
-        this.renderHighlights();
-        this.askRelationship(d)
-          .then((text) => {
-            this.reactSetExplanation({ courses, text });
-            this.waitingForExplanation = false;
-          })
-          .catch(alertUnexpectedError);
-      });
-  }
-
-  get isExplanationOpen() {
-    return this.explanationComparingIds.length > 0;
-  }
-
-  private async askRelationship({ source: { id: srcId }, target: { id: tgtId } }: LinkDatum): Promise<string> {
-    const [src, tgt] = await this.loadCourses([srcId, tgtId]);
-
-    // post to backend route to ask for relationship
-    const response = await fetch('/api/relationship', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ src, tgt }),
-    });
-
-    const data = await response.json();
-
-    return data.message;
-  }
-
-  public highlightSubject(subject: Subject | null) {
-    console.debug('highlighting subject', this, subject);
-    this.highlightedSubject = subject;
-    this.renderHighlights();
-  }
-
-  private findData(id: string | null) {
-    return this.currentData.find((d) => d.id === id);
-  }
-
-  private removeLinks(linksToRemove: LinkDatum[]) {
+  private removeLinks(linksToRemove: StringLink[], updateHistory = true) {
     this.link = this.link.data(this.link.data().filter((l) => !linksToRemove.some((d) => sameLink(l, d))));
     this.link.exit()
       .on('.basic', null)
@@ -879,9 +439,16 @@ export class Graph {
 
     this.hideTooltip();
     this.updateNodesInternal();
+
+    if (updateHistory) {
+      this.pushHistory([], linksToRemove, 'remove');
+    }
   }
 
-  public removeNodes(idsToRemove: string[]) {
+  /**
+   * Remove nodes from the graph.
+   */
+  public removeNodes(idsToRemove: string[], updateHistory = true) {
     idsToRemove = idsToRemove.filter((id) => this.idInGraph(id));
 
     if (idsToRemove.length === 0) return;
@@ -905,7 +472,10 @@ export class Graph {
 
     // remove links that are no longer connected
     const links = this.linksTouchingNodes(idsToRemove);
-    this.removeLinks(links);
+    this.removeLinks(links.map((l) => ({
+      source: l.source.id,
+      target: l.target.id,
+    })), false);
 
     if (regular.length > 0) {
       console.debug('removing regular courses', regular.length);
@@ -915,21 +485,173 @@ export class Graph {
       console.debug('removing fixed courses', fixed.length);
       this.reactRemoveCourses(fixed.map((d) => d.id), this.fixedScheduleId!);
     }
+
+    if (updateHistory) {
+      this.pushHistory(idsToRemove, links.map((l) => ({ source: l.source.id, target: l.target.id })), 'remove');
+    }
   }
 
-  private getEmoji(d: Datum) {
-    const v = this.ratingField === 'meanHours'
-      ? 5 * (d.meanHours! / 20)
-      : 5 * ((d.meanRating! ** 2) / 25);
-    return EMOJI_SCALES[this.ratingField][Math.max(0, Math.min(4, Math.floor(v)))];
+  /**
+   * Gets called whenever nodes are updated
+   */
+  private updateNodesInternal() {
+    // tell simulation about new nodes and links
+    this.sim.nodes(this.currentData);
+    this.sim.force<d3.ForceLink<Datum, LinkDatum>>('link')!.links(this.link.data());
+    this.sim.alpha(1).restart();
+
+    // update link properties after strings are populated
+    this.link
+      .attr('stroke-width', Graph.getLinkWidth)
+      // .attr('stroke-opacity', Graph.getLinkOpacity)
+      .attr('stroke', Graph.getLinkColor);
+
+    // callbacks
+    this.reactSetSubjects([...new Set(this.currentData.map((d) => d.subject))]);
+
+    if (!this.currentData.some((d) => d.id === this.focusedCourse.id)) {
+      this.focusCourse(null, 'fix');
+    }
+
+    if (this.phaseInternal === 'init') {
+      this.setPhase('wait');
+    }
   }
 
-  private static getLinkStrength(link: LinkDatum) {
-    return Graph.MAX_LINK_STRENGTH * Graph.getLinkOpacity(link);
+  // ============================== NODE AND LINK EVENT LISTENERS ==============================
+
+  /**
+   * Add event listeners to each node
+   */
+  private addNodeEventListeners(n: CourseGroupSelection) {
+    const graph = this;
+
+    n
+      // expand node on hover
+      .on('mouseover.basic', function (event: MouseEvent, d) {
+        // if we're waiting for user to interact and they do,
+        // remove the "click me" label and reset radii
+        if (graph.phaseInternal === 'wait') {
+          return graph.setPhase('info', d.id);
+        }
+
+        // don't react if info demonstration is open or we are comparing courses
+        if (graph.phaseInternal === 'info') return;
+
+        graph.transitionRadius(this, Graph.getRadius(d) + Graph.collideRadius);
+        graph.showTooltipAt(d.subject + d.catalog, event.clientX, event.clientY);
+      })
+      .on('mousemove.basic', (event) => {
+        graph.moveTooltip(event.clientX, event.clientY);
+      })
+      .on('mouseout.basic', function (event, d) {
+        graph.transitionRadius(this, Graph.getRadius(d));
+        graph.hideTooltip();
+      })
+      .on('click.basic', (event, d) => {
+        event.preventDefault();
+        event.stopPropagation();
+        logEvent(getAnalytics(), 'click_node', { d, tool: this.tool });
+        this.toolData.clickNode(this, d);
+      })
+      .on('contextmenu.basic', (event, d) => {
+        event.preventDefault();
+        event.stopPropagation();
+        graph.focusCourse(d.id, 'fix');
+      });
   }
 
-  public static getRadius(d: CourseBrief) {
-    return Graph.RADIUS * (d.meanClassSize ? Math.sqrt(d.meanClassSize) : Math.sqrt(20));
+  private addLinkEventListeners(l: d3.Selection<SVGLineElement, LinkDatum, SVGGElement, unknown>) {
+    const graph = this;
+    l
+      .on('mouseover.basic', function (event, d) {
+        const percent = Math.round(Graph.getLinkOpacity(d) * 100);
+        graph.showTooltipAt(`${percent}%`, event.clientX, event.clientY);
+        const link = d3.select<SVGLineElement, LinkDatum>(this);
+        link
+          .transition('link-t')
+          .duration(Graph.T_DURATION)
+          .attr('stroke-width', Graph.HOVERED_LINK_WIDTH);
+      })
+      .on('mousemove.basic', (event) => {
+        graph.moveTooltip(event.clientX, event.clientY);
+      })
+      .on('mouseout.basic', function () {
+        graph.hideTooltip();
+        const link = d3.select<SVGLineElement, LinkDatum>(this);
+        link
+          .transition('link-t')
+          .duration(Graph.T_DURATION)
+          .attr('stroke-width', Graph.getLinkWidth);
+
+        // reset the nodes
+        // link.datum().source.radius -= Graph.collideRadius;
+        // link.datum().target.radius -= Graph.collideRadius;
+        // graph.sim.nodes(graph.currentData);
+      })
+      .on('click.basic', (event, d) => {
+        event.stopPropagation();
+        this.toolData.clickLink(this, d);
+      });
+  }
+
+  // ============================== GETTERS AND SETTERS ==============================
+
+  get initialPca() {
+    if (!this.initial) throw new Error('Must be playing game');
+    return this.positions[this.initial.i];
+  }
+
+  get targetPca() {
+    if (!this.target) throw new Error('Must be playing game');
+    return this.positions[this.target.i];
+  }
+
+  get difficulty() {
+    const c = cos(this.initialPca, this.targetPca);
+    const p = 1 - Math.abs(c); // closer to zero is harder
+    return Math.round(p * Graph.DIFFICULTY_GRADE);
+  }
+
+  get toolData() {
+    return Graph.TOOLS[this.tool];
+  }
+
+  get currentData() {
+    return this.node.data();
+  }
+
+  get phase() {
+    return this.phaseInternal;
+  }
+
+  get isExplanationOpen() {
+    return this.explanationComparingIds.length > 0;
+  }
+
+  get defaultZoom() {
+    return d3.zoomIdentity.translate(-this.width / 8, 0).scale(1.5);
+  }
+
+  get canReplaceHover() {
+    return this.focusedCourse.id === null || this.focusedCourse.reason === 'hover';
+  }
+
+  get rating() {
+    return this.ratingField;
+  }
+
+  // get from all courses the ones whose titles are not in the graph
+  get availableCourses() {
+    return this.courses.filter((d) => !this.findTitle(d));
+  }
+
+  get isMatchFilter() {
+    return this.matchFilter;
+  }
+
+  static get collideRadius() {
+    return 2 * this.RADIUS;
   }
 
   public toDatum(id: string, scheduleId: string): DatumWithoutPosition | null {
@@ -940,25 +662,86 @@ export class Graph {
     };
   }
 
-  public syncCourses(ids: string[], fixed: string[]) {
-    // remove possible duplicates
-    ids = ids.filter((id) => !fixed.includes(id));
-    console.debug('syncing courses', ids.length, 'regular', fixed.length, 'fixed');
-    const nodes = [...ids, ...fixed].map((id) => this.toDatum(id, fixed.includes(id) ? this.fixedScheduleId! : GRAPH_SCHEDULE)!).filter(Boolean);
-    this.appendNodes(nodes, []);
-    const toRemove = this.getNodesNotIn(nodes).map((n) => n.id);
-    this.removeNodes(toRemove);
+  public getNewNodes<T extends NodeId>(nodes: T[]) {
+    return nodes.filter((d) => !this.currentData.some((n) => n.id === stringify(d)));
   }
 
-  public cleanupClickMe() {
-    this.node.selectAll('circle, text').interrupt('radius-t');
+  /** Return current nodes that are not present in the provided list */
+  public getNodesNotIn<T extends NodeId>(nodes: T[]) {
+    return this.currentData.filter((d) => !nodes.some((n) => stringify(n) === d.id));
+  }
 
-    // fade out click me text
-    this.node.selectChildren('text.click-me')
-      .transition('radius-t')
-      .duration(Graph.T_DURATION)
-      .attr('opacity', 0)
-      .remove();
+  private getNewLinks(links: StringLink[]) {
+    return links.filter((d) => !this.link.data().some((l) => sameLink(l, d)))
+      .map((d) => ({ ...d, mode: this.tool }));
+  }
+
+  public linksTouchingNodes<T extends NodeId>(nodeIds: T[]) {
+    return this.link.data().filter(({ source, target }) => nodeIds.some(
+      (id) => id === stringify(source) || id === stringify(target),
+    ));
+  }
+
+  public clearExplanation() {
+    this.waitingForExplanation = false;
+    const shouldCloseExplanation = this.isExplanationOpen;
+    this.explanationComparingIds = [];
+    if (shouldCloseExplanation) this.reactSetExplanation(null);
+    this.renderHighlights();
+  }
+
+  private findData(id: string | null) {
+    return this.currentData.find((d) => d.id === id);
+  }
+
+  public setHits(hits: ExtendedClass[]) {
+    this.hits = hits;
+  }
+
+  public setMatchFilter(checked: boolean) {
+    this.matchFilter = checked;
+    this.reactSetMatchFilter(checked);
+  }
+
+  public setTool(tool: GraphTool) {
+    this.tool = tool;
+    this.nodeGroup.attr('cursor', this.toolData.cursor);
+    this.linkGroup.attr('cursor', this.toolData.cursor);
+    this.reactSetTool(tool);
+
+    if (tool === 'Move') {
+      this.node.call(this.drag);
+    } else {
+      this.node.on('.drag', null);
+    }
+  }
+
+  public resetZoom() {
+    this.svg.transition('svg-zoom')
+      .duration(Graph.PULSE_DURATION)
+      .call(this.zoom.transform, this.defaultZoom);
+  }
+
+  public setRatingType(ratingType: RatingField) {
+    this.ratingField = ratingType;
+    this.reactSetRatingField(ratingType);
+    this.node.select('text.emoji').text(this.getEmoji.bind(this));
+  }
+
+  public findTitle(d: Pick<CourseBrief, 'catalog' | 'subject'>) {
+    return this.currentData.find((n) => matchName(n, d));
+  }
+
+  public idInGraph(id: string) {
+    return this.currentData.some((n) => n.id === id);
+  }
+
+  public setHasMore(hasMore: boolean) {
+    this.hasMore = hasMore;
+  }
+
+  public setRefineNext(refineNext: () => void) {
+    this.refineNext = refineNext;
   }
 
   public setPhase(newPhase: Graph['phaseInternal'], id?: string) {
@@ -1001,6 +784,321 @@ export class Graph {
     this.reactSetPhase(newPhase);
   }
 
+  // ============================== NODE PROPERTIES ==============================
+
+  private getEmoji(d: Datum) {
+    const v = this.ratingField === 'meanHours'
+      ? 5 * (d.meanHours! / 20)
+      : 5 * ((d.meanRating! ** 2) / 25);
+    return EMOJI_SCALES[this.ratingField][Math.max(0, Math.min(4, Math.floor(v)))];
+  }
+
+  public static getRadius(d: CourseBrief) {
+    return Graph.RADIUS * (d.meanClassSize ? Math.sqrt(d.meanClassSize) : Math.sqrt(20));
+  }
+
+  private getNodeBorder(d: Datum) {
+    if (this.focusedCourse.id === d.id) return 6;
+    if (this.explanationComparingIds.includes(d.id)) return 5;
+    if (this.highlightedSubject === d.subject) return 3;
+    if (d.scheduleId === this.fixedScheduleId) return 2;
+    return 0;
+  }
+
+  // ============================== LINK PROPERTIES ==============================
+
+  private static getLinkStrength(link: LinkDatum) {
+    return Graph.MAX_LINK_STRENGTH * Graph.getLinkOpacity(link);
+  }
+
+  private static getLinkColor(d: LinkDatum) {
+    return d.mode === 'Add opposite'
+      ? 'rgb(var(--color-blue-primary))'
+      : 'rgb(var(--color-gray-primary))';
+  }
+
+  private getStrokeColor(d: Datum) {
+    if (this.focusedCourse.id !== d.id) return 'rgb(var(--color-gray-primary)';
+    if (this.focusedCourse.reason === 'fix') return 'rgb(var(--color-blue-primary)';
+    return 'rgb(var(--color-primary))';
+  }
+
+  private static getLinkWidth(d: LinkDatum) {
+    return Graph.collideRadius * (0.25 + 0.75 * Graph.getLinkOpacity(d));
+  }
+
+  private static getLinkOpacity({ source, target }: LinkDatum) {
+    return (cos(source.pca, target.pca) + 1) / 2;
+  }
+
+  // ============================== INTERACTIVITY ==============================
+
+  // find the course with the closest cosine similarity to the target and hover it
+  public focusHint() {
+    let closest = -Infinity;
+    let datum: Datum = null!;
+    this.currentData.forEach((d) => {
+      const c = cos(d.pca, this.targetPca);
+      if (c > closest) {
+        datum = d;
+        closest = c;
+      }
+    });
+    if (this.focusedCourse.id !== datum.id) {
+      this.focusCourse(datum.id, 'force-hover');
+    }
+    this.zoomTo(datum);
+  }
+
+  private explainLink(d: LinkDatum) {
+    if (this.waitingForExplanation) return;
+    this.waitingForExplanation = true;
+    const courses = [{ ...d.source }, { ...d.target }];
+    this.reactSetExplanation({ courses, text: null });
+    this.explanationComparingIds = [d.source.id, d.target.id];
+    this.focusCourse(null, 'fix');
+    this.renderHighlights();
+    this.askRelationship(d)
+      .then((text) => {
+        this.reactSetExplanation({ courses, text });
+        this.waitingForExplanation = false;
+      })
+      .catch(alertUnexpectedError);
+  }
+
+  public focusCourse(id: string | null, reason: 'soft-hover' | 'force-hover' | 'fix') {
+    console.debug('fixing node', id, reason);
+
+    if (reason === 'soft-hover' || reason === 'force-hover') {
+      // set focused course
+      if ((reason === 'soft-hover' && this.canReplaceHover) || reason === 'force-hover') {
+        this.reactSetHover(id);
+        this.focusedCourse = { id, reason: 'hover' };
+        this.renderHighlights();
+      }
+      return;
+    }
+
+    // deselect a currently selected node
+    id = this.focusedCourse.id === id && this.focusedCourse.reason === 'fix' ? null : id;
+
+    if (id) this.reactSetHover(id);
+    else if (this.focusedCourse) this.reactSetHover(null);
+
+    this.focusedCourse = { id, reason: 'fix' };
+
+    // replace a link explanation
+    if (!this.waitingForExplanation && this.isExplanationOpen) {
+      this.clearExplanation();
+    }
+
+    // zoom into the focused course
+    const fixedNode = this.findData(this.focusedCourse.id);
+    if (fixedNode) {
+      this.zoomTo(fixedNode);
+    }
+
+    this.renderHighlights();
+  }
+
+  private zoomTo({ x, y }: { x: number, y: number }) {
+    this.svg.transition('svg-zoom')
+      .duration(Graph.PULSE_DURATION)
+      .call(this.zoom.transform, this.defaultZoom.translate(-x, -y));
+  }
+
+  private static getNewPosition(d: Datum, course: CourseBrief) {
+    const theta = Math.random() * 2 * Math.PI;
+    const r = Graph.getRadius(course) + Graph.getRadius(d) + Math.random() * Graph.RADIUS;
+    return {
+      x: d.x + r * Math.cos(theta),
+      y: d.y + r * Math.sin(theta),
+    };
+  }
+
+  private getNeighbours(d: Datum, numNeighbours: number, flip: boolean): CourseBrief[] {
+    // if filter enabled, take from the search hits
+    const courses = this.matchFilter
+      ? this.hits.map((h) => this.availableCourses.find((c) => c.id === h.id)!).filter(Boolean)
+      : this.availableCourses;
+
+    if (courses.length === 0 && this.matchFilter && !this.hasMore) {
+      alert('No more courses to show. Try relaxing the filter.');
+      return [];
+    }
+
+    // if we don't have enough neighbours, preemptively refine the search
+    if (courses.length < 2 * numNeighbours && this.matchFilter && this.hasMore) {
+      this.refineNext();
+    }
+
+    const sorted: (CourseBrief & { distance: number })[] = courses
+      .map((course) => ({
+        ...course,
+        distance: cos(d.pca, this.positions[course.i]),
+      }))
+      .sort((a, b) => (flip ? +1 : -1) * (b.distance - a.distance));
+
+    // remove duplicates
+    const names = new Set();
+    const neighbours: CourseBrief[] = [];
+    while (names.size < numNeighbours && sorted.length > 0) {
+      const { distance, ...n } = sorted.pop()!;
+      if (!names.has(n.subject + n.catalog)) {
+        names.add(n.subject + n.catalog);
+        neighbours.push(n);
+      }
+    }
+    return neighbours;
+  }
+
+  private addNewNeighbours(d: Datum, numNeighbours: number, flip: boolean, positions?: { x: number; y: number }[]) {
+    console.debug('adding neighbours', d.id);
+    const neighbours = this.getNeighbours(d, numNeighbours, flip);
+    const nodes: Datum[] = neighbours.map((course, i) => ({
+      ...course,
+      pca: this.positions[course.i],
+      // assume all fixed nodes are in the graph already
+      scheduleId: GRAPH_SCHEDULE,
+      radius: Graph.getRadius(course),
+      ...(positions ? positions[i] : Graph.getNewPosition(d, course)),
+    }));
+
+    const links = nodes.map((t) => ({ source: d.id, target: t.id }));
+
+    return this.appendNodesAndLinks(nodes, links);
+  }
+
+  private renderHighlights() {
+    return this.node
+      .select('circle')
+      .transition('highlight-t')
+      .duration(Graph.T_DURATION)
+      .attr('stroke-width', this.getNodeBorder.bind(this))
+      .attr('stroke', this.getStrokeColor.bind(this))
+      .attr('stroke-opacity', (d) => (this.getNodeBorder(d) > 0 ? 1 : 0));
+  }
+
+  /**
+   * Transition the radius of nodes in the selection
+   */
+  private transitionRadius(g: SVGGElement, radius: number, { duration = Graph.T_DURATION, emojiOnly = false, updateForce = false } = {}): readonly [CircleTransition, TextTransition] {
+    const group = d3.select<SVGGElement, Datum>(g);
+
+    const circleTransition = group.selectChildren<SVGCircleElement, null>('circle')
+      .transition('radius-t')
+      .duration(duration)
+      .attr('r', radius);
+
+    const textTransition = group.selectChildren<SVGTextElement, null>(emojiOnly ? 'text.emoji' : 'text')
+      .transition('radius-t')
+      .duration(duration)
+      .attr('font-size', `${radius}px`);
+
+    // refresh the radius data
+    if (updateForce) {
+      group.datum().radius = radius;
+      this.sim.nodes(this.currentData);
+    }
+
+    return [circleTransition, textTransition] as const;
+  }
+
+  private pulse(c: SVGGElement, radius: number, grow = true) {
+    const [circleTransition] = this.transitionRadius(c, radius + (grow ? Graph.RADIUS : 0), { duration: Graph.PULSE_DURATION });
+    circleTransition.on('end', () => this.pulse(c, radius, !grow));
+  }
+
+  // ============================== HISTORY MANAGEMENT ==============================
+
+  /**
+   * Add a new element to the history stack
+   */
+  private pushHistory(nodes: string[], links: StringLink[], type: 'add' | 'remove') {
+    this.history = this.history.slice(0, this.historyIndex);
+    this.history.push({ nodes, links, type });
+    this.historyIndex += 1;
+  }
+
+  private undo() {
+    if (this.historyIndex === 0) return;
+    this.historyIndex -= 1;
+    const { nodes, links, type } = this.history[this.historyIndex];
+    if (type === 'add') {
+      this.removeNodes(nodes, false);
+      this.removeLinks(links, false);
+    } else {
+      this.appendNodesAndLinks(nodes.map((id) => this.findData(id)!), links, false);
+    }
+  }
+
+  private moveTooltip(x: number, y: number) {
+    this.tooltip
+      .style('left', `${x}px`)
+      .style('top', `${y}px`);
+  }
+
+  private hideTooltip() {
+    this.tooltip.classed('hidden', true);
+  }
+
+  private eraseNode(d: Datum) {
+    if (d.scheduleId === GRAPH_SCHEDULE || confirm("Are you sure you want to remove this course? It's part of your schedule.")) {
+      this.removeNodes([d.id]);
+    }
+  }
+
+  private showTooltipAt(text: string, x: number, y: number) {
+    this.tooltip
+      .classed('hidden', false)
+      .text(text);
+    this.moveTooltip(x, y);
+  }
+
+  private async askRelationship({ source: { id: srcId }, target: { id: tgtId } }: LinkDatum): Promise<string> {
+    const [src, tgt] = await this.loadCourses([srcId, tgtId]);
+
+    // post to backend route to ask for relationship
+    const response = await fetch('/api/relationship', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ src, tgt }),
+    });
+
+    const data = await response.json();
+
+    return data.message;
+  }
+
+  public highlightSubject(subject: Subject | null) {
+    console.debug('highlighting subject', this, subject);
+    this.highlightedSubject = subject;
+    this.renderHighlights();
+  }
+
+  public syncCourses(ids: string[], fixed: string[]) {
+    // remove possible duplicates
+    ids = ids.filter((id) => !fixed.includes(id));
+    console.debug('syncing courses', ids.length, 'regular', fixed.length, 'fixed');
+    const nodes = [...ids, ...fixed].map((id) => this.toDatum(id, fixed.includes(id) ? this.fixedScheduleId! : GRAPH_SCHEDULE)!).filter(Boolean);
+    this.appendNodesAndLinks(nodes, []);
+    const toRemove = this.getNodesNotIn(nodes).map((n) => n.id);
+    this.removeNodes(toRemove);
+  }
+
+  public cleanupClickMe() {
+    this.node.selectAll('circle, text').interrupt('radius-t');
+
+    // fade out click me text
+    this.node.selectChildren('text.click-me')
+      .transition('radius-t')
+      .duration(Graph.T_DURATION)
+      .attr('opacity', 0)
+      .remove();
+  }
+
   private addInfoLabel(trigger: CourseGroupSelection) {
     const n = { ...trigger.datum() };
 
@@ -1010,7 +1108,7 @@ export class Graph {
     this.node.on('.basic .drag', null);
 
     t.on('end.info', () => {
-      const [, [link]] = this.addNewNeighbours(n, 2, [{ x: -5, y: 0 }, { x: 0, y: 5 }]);
+      const [, [link]] = this.addNewNeighbours(n, 2, false, [{ x: -5, y: 0 }, { x: 0, y: 5 }]);
 
       // pause simulation while info label is open
       this.sim.tick(10).stop();
@@ -1022,20 +1120,20 @@ export class Graph {
       const infoLabels = this.addInfoLabels(x, y, Graph.INFO_RADIUS, link);
 
       // add listeners to remove group on mouseout
-      trigger.on('mouseout.info click.info', (e) => {
+      this.node.on('click.info', (e) => {
         console.debug('removing info label', e);
         infoLabels.remove();
         this.sim.alpha(1).restart();
         const [transition] = this.transitionRadius(trigger.node()!, Graph.getRadius(n), { emojiOnly: true, updateForce: true });
         transition.on('end.info', () => {
           // wait to avoid double click trigger
-          this.focusCourse(n.id, 'hover');
+          this.focusCourse(n.id, 'soft-hover');
           this.node.call(this.addNodeEventListeners.bind(this));
         });
         this.setPhase('ready');
 
         // only run this listener once
-        trigger.on('.info', null);
+        this.node.on('.info', null);
       });
     });
   }
@@ -1103,14 +1201,6 @@ export class Graph {
       .text('Click to explore');
 
     return group;
-  }
-
-  private static getLinkOpacity({ source, target }: LinkDatum) {
-    return (cos(source.pca, target.pca) + 1) / 2;
-  }
-
-  static get collideRadius() {
-    return 2 * this.RADIUS;
   }
 }
 

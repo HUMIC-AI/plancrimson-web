@@ -3,7 +3,6 @@ import {
 } from 'react';
 import { connectInfiniteHits } from 'react-instantsearch-dom';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
   Explanation, Graph, GraphPhase, GraphTool, RatingField,
@@ -45,7 +44,7 @@ function useGraphState({
 }: Provided & Exposed) {
   // react state to ensure rerenders when graph state changes
   const [hoveredClassId, setHover] = useState<string | null>(null);
-  const [mode, setMode] = useState<GraphTool>('Add similar');
+  const [tool, setTool] = useState<GraphTool>('Add similar');
   const [phase, setPhase] = useState<GraphPhase>('init');
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   const [matchFilter, setMatchFilter] = useState<boolean>(false);
@@ -119,8 +118,8 @@ function useGraphState({
       scheduleId,
       gameMode ? initial : null,
       gameMode ? getRandomRatedCourse(courses) : null,
-      mode,
-      setMode,
+      tool,
+      setTool,
       setHover,
       setSubjects,
       setExplanation,
@@ -236,7 +235,7 @@ function useGraphState({
     ref,
     tooltipRef,
     hoveredClassId,
-    mode,
+    tool,
     explanation,
     setExplanation,
     ratingType,
@@ -246,7 +245,7 @@ function useGraphState({
     elapsed,
     graphSchedule,
     victory,
-  }), [hoveredClassId, mode, matchFilter, ratingType, explanation, phase, subjects, elapsed, graphSchedule, victory]);
+  }), [hoveredClassId, tool, matchFilter, ratingType, explanation, phase, subjects, elapsed, graphSchedule, victory]);
 
   return context;
 }
