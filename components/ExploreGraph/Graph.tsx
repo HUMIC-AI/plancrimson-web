@@ -983,8 +983,6 @@ export class Graph {
   private addInfoLabel(trigger: CourseGroupSelection) {
     const n = { ...trigger.datum() };
 
-    this.focusCourse(n.id, 'hover');
-
     const [t] = this.transitionRadius(trigger.node()!, Graph.INFO_RADIUS, { duration: Graph.PULSE_DURATION, emojiOnly: true, updateForce: true });
 
     // disable listeners temporarily
@@ -1000,16 +998,17 @@ export class Graph {
       const { x, y } = trigger.datum();
       this.svg.call(this.zoom.translateBy, -x + n.x, -y + n.y);
 
-      const group = this.addInfoLabels(x, y, Graph.INFO_RADIUS, link);
+      const infoLabels = this.addInfoLabels(x, y, Graph.INFO_RADIUS, link);
 
       // add listeners to remove group on mouseout
       trigger.on('mouseout.info click.info', (e) => {
         console.debug('removing info label', e);
-        group.remove();
+        infoLabels.remove();
         this.sim.alpha(1).restart();
         const [transition] = this.transitionRadius(trigger.node()!, Graph.getRadius(n), { emojiOnly: true, updateForce: true });
         transition.on('end.info', () => {
           // wait to avoid double click trigger
+          this.focusCourse(n.id, 'hover');
           this.node.call(this.addNodeEventListeners.bind(this));
         });
         this.setPhase('ready');

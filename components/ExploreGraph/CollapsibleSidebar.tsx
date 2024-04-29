@@ -53,7 +53,7 @@ export const SidebarPanel = forwardRef(({
             >
               {side === 'left' ? <FaAngleDoubleRight /> : <FaAngleDoubleLeft />}
             </Disclosure.Button>
-            {showLink && side === 'left' && <Link href="/explore/game" className="secondary interactive flex items-center rounded px-2">Play</Link>}
+            {showLink && side === 'left' && <Link href="/explore/game" className="secondary interactive flex items-center rounded px-2 font-medium">Play</Link>}
           </div>
 
           {side === 'right' && graph && <ExploreGraphButtons graph={graph} phase={phase} subjects={subjects} />}
