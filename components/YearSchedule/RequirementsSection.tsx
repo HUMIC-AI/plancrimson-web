@@ -25,7 +25,7 @@ import ExternalLink from '../Utils/ExternalLink';
 import { SuggestionForm } from './SuggestionForm';
 
 
-interface RequirementsSectionProps {
+export interface RequirementsSectionProps {
   selectedRequirements: RequirementGroup;
   setSelectedRequirements: React.Dispatch<RequirementGroup>;
   validationResults: GroupResult | null;

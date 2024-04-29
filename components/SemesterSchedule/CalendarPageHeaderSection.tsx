@@ -12,6 +12,7 @@ import { ScheduleSyncer } from '../Utils/ScheduleSyncer';
 import { isOldSemester } from '../../src/lib';
 import { useChosenSchedule } from '../../src/context/ScheduleProvider';
 import { LoadingText } from '../Layout/LoadingPage';
+import CourseCardStyleProvider from '../../src/context/CourseCardStyleProvider';
 
 type Props = {
   events: (EventAttributes & { isSection?: string })[];
@@ -66,14 +67,16 @@ export function CalendarHeaderSection({ events }: Props) {
           <WithMeili userId={userId}>
             {userId && <ScheduleSyncer userId={userId} />}
 
-            <SearchStateProvider oneCol defaultState={defaultState} ignoreUrl>
-              <AuthRequiredInstantSearchProvider indexName={indexName} hitsPerPage={4}>
-                <SearchBox scheduleChooser={false} showSmallAttributeMenu />
-                <div className="md:mt-4">
-                  <Hits />
-                </div>
-              </AuthRequiredInstantSearchProvider>
-            </SearchStateProvider>
+            <CourseCardStyleProvider columns={1}>
+              <SearchStateProvider defaultState={defaultState} ignoreUrl>
+                <AuthRequiredInstantSearchProvider indexName={indexName} hitsPerPage={4}>
+                  <SearchBox scheduleChooser={false} showSmallAttributeMenu />
+                  <div className="md:mt-4">
+                    <Hits />
+                  </div>
+                </AuthRequiredInstantSearchProvider>
+              </SearchStateProvider>
+            </CourseCardStyleProvider>
           </WithMeili>
         </div>
       </div>

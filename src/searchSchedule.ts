@@ -1,10 +1,12 @@
 import {
   Class, getSemester, findConflicts, allTruthy, getClassId, seasPlan,
 } from '@/src/lib';
-import { ClassCache } from './features/classCache';
+import { useMemo } from 'react';
 import { getSchoolYear } from './requirements/util';
 import { BaseSchedule, Viability } from './types';
 import { getClassIdsOfSchedule } from './features/schedules';
+import { useAppSelector } from './utils/hooks';
+import { ClassCache, selectClassCache } from './features/classCache';
 
 type ViabilityResponse = {
   viability: Viability;
@@ -121,4 +123,15 @@ export function checkViable({
     viability: 'Unlikely',
     reason: `This course is not usually offered in the ${schedule.season.toLowerCase()}.`,
   };
+}
+
+export function useConflicts(schedule: BaseSchedule | null) {
+  const classCache = useAppSelector(selectClassCache);
+  const conflicts = useMemo<Record<string, string[]> | null>(() => {
+    if (!schedule) return null;
+    if (!schedule.classes) return {};
+    const classes = schedule.classes.map((classId) => classCache[classId]);
+    return findConflicts(allTruthy(classes));
+  }, [schedule, classCache]);
+  return conflicts;
 }

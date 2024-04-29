@@ -36,6 +36,7 @@ export function HoveredCourseInfo() {
       });
   }, [client, courseId, dispatch, error]);
 
+  // ensure isDialog is false and that no close button is shown
   const props = useMemo<InfoCardProps>(() => {
     if (explanation) {
       return {
@@ -57,19 +58,24 @@ export function HoveredCourseInfo() {
         close: () => {
           setExplanation(null);
         },
+        isDialog: false,
       };
     }
 
-    if (course) return { ...getCourseModalContent(course), noExit: true };
+    if (course) {
+      const { close, ...p } = getCourseModalContent(course);
+      return { ...p, isDialog: false };
+    }
+
     return {
       title: 'Hover a course to get started!',
       content: <GraphInstructions direction="column" />,
-      noExit: true,
+      isDialog: false,
     };
   }, [course, explanation, setExplanation]);
 
 
-  return <InfoCard isDialog={false} {...props} />;
+  return <InfoCard {...props} />;
 }
 
 export function GraphInstructions({ direction }: { direction: 'row' | 'column' }) {

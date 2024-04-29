@@ -1,6 +1,5 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { FaPlus } from 'react-icons/fa';
-import { findConflicts, allTruthy } from '@/src/lib';
 import { useAppSelector, useElapsed } from '@/src/utils/hooks';
 import { Requirement } from '@/src/requirements/util';
 import {
@@ -12,35 +11,14 @@ import { CourseCard } from '../../Course/CourseCard';
 import { useChosenSchedule } from '../../../src/context/ScheduleProvider';
 import { RemoveClassButton } from '../../Course/ToggleButton';
 import { LoadingText } from '../../Layout/LoadingPage';
+import { useConflicts } from '../../../src/searchSchedule';
 
 export function SemesterColumnBody({ highlightedRequirement }: {
   highlightedRequirement: Requirement | undefined;
 }) {
-  const { schedule, id: scheduleId } = useChosenSchedule();
-  const profile = useAppSelector(Profile.selectUserProfile);
-  const classCache = useAppSelector(ClassCache.selectClassCache);
+  const { schedule } = useChosenSchedule();
+  const conflicts = useConflicts(schedule);
   const initialized = useAppSelector(ClassCache.selectInitialized);
-  const conflicts = useMemo(
-    () => schedule && findConflicts(allTruthy(schedule.classes ? schedule.classes.map((classId) => classCache[classId]) : [])),
-    [schedule, classCache],
-  );
-  const elapsed = useElapsed(4000, []);
-
-  if (!schedule && elapsed) {
-    console.error(`Schedule ${scheduleId} not found`);
-    return null;
-  }
-
-  const doHighlight = (id: string) => highlightedRequirement && highlightedRequirement.reducer(
-    highlightedRequirement.initialValue || 0,
-    classCache[id],
-    schedule!,
-    profile,
-  ) !== null;
-
-  const warnings = (id: string) => ((conflicts?.[id]?.length ?? 0) > 0
-    ? `This class conflicts with: ${conflicts![id].map((i) => classCache[i].SUBJECT + classCache[i].CATALOG_NBR).join(', ')}`
-    : undefined);
 
   return (
     <div className="h-max flex-1 overflow-auto p-4">
@@ -54,33 +32,65 @@ export function SemesterColumnBody({ highlightedRequirement }: {
         </div>
         )}
 
-        {initialized ? schedule && getClassIdsOfSchedule(schedule).map((id) => (id && classCache[id] ? (
-          <CourseCard
+        {initialized ? schedule && getClassIdsOfSchedule(schedule).map((id) => (
+          <CourseCardComponent
             key={id}
-            course={classCache[id]}
-            highlight={doHighlight(id)}
-            warnings={warnings(id)}
+            id={id}
+            conflicts={conflicts}
+            highlightedRequirement={highlightedRequirement}
           />
-        ) : (
-          <div key={id}>
-            {elapsed
-              ? (
-                <div className="flex items-center justify-between">
-                  <span>
-                    Course
-                    {' '}
-                    {id.slice(0, 12)}
-                    ... not found
-                  </span>
-                  <RemoveClassButton classId={id} />
-                </div>
-              )
-              : 'Loading course data...'}
-          </div>
-        ))) : (
+        )) : (
           <LoadingText />
         )}
       </div>
     </div>
   );
 }
+
+function CourseCardComponent({ id, conflicts, highlightedRequirement }: {
+  id: string;
+  conflicts: Record<string, string[]> | null;
+  highlightedRequirement: Requirement | undefined;
+}): JSX.Element {
+  const { schedule } = useChosenSchedule();
+  const profile = useAppSelector(Profile.selectUserProfile);
+  const classCache = useAppSelector(ClassCache.selectClassCache);
+  const elapsed = useElapsed(3000, []);
+
+  const doHighlight = highlightedRequirement && highlightedRequirement.reducer(
+    highlightedRequirement.initialValue || 0,
+    classCache[id],
+    schedule!,
+    profile,
+  ) !== null;
+
+  const warnings = ((conflicts?.[id]?.length ?? 0) > 0
+    ? `This class conflicts with: ${conflicts![id].map((i) => classCache[i].SUBJECT + classCache[i].CATALOG_NBR).join(', ')}`
+    : undefined);
+
+  return id && classCache[id] ? (
+    <CourseCard
+      key={id}
+      course={classCache[id]}
+      highlight={doHighlight}
+      warnings={warnings}
+    />
+  ) : (
+    <div key={id}>
+      {elapsed
+        ? (
+          <div className="flex items-center justify-between">
+            <span>
+              Course
+              {' '}
+              {id.slice(0, 12)}
+              ... not found
+            </span>
+            <RemoveClassButton classId={id} />
+          </div>
+        )
+        : 'Loading course data...'}
+    </div>
+  );
+}
+

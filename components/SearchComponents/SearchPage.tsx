@@ -13,6 +13,7 @@ import { SearchStateProvider } from '../../src/context/searchState';
 import { SortingAndRefinementsGrid } from './CurrentRefinements';
 import type { IndexName } from '../../src/lib';
 import { signInUser } from '../Layout/useSyncAuth';
+import CourseCardStyleProvider from '../../src/context/CourseCardStyleProvider';
 
 export function SearchPage({ indexName }: { indexName: IndexName }) {
   const userId = Auth.useAuthProperty('uid');
@@ -24,18 +25,20 @@ export function SearchPage({ indexName }: { indexName: IndexName }) {
       title={indexName === 'courses' ? 'Course Search' : 'Archived Courses'}
       className="mx-auto flex w-screen flex-1 justify-center px-4 sm:p-8"
     >
-      <WithMeili userId={userId}>
-        {userId && <ScheduleSyncer userId={userId} />}
+      <CourseCardStyleProvider columns={4} defaultStyle="expanded">
+        <WithMeili userId={userId}>
+          {userId && <ScheduleSyncer userId={userId} />}
 
-        {indexName === 'archive' ? (
+          {indexName === 'archive' ? (
           // create a new search state so that we don't override the main search state
-          <SearchStateProvider defaultState={defaultState}>
+            <SearchStateProvider defaultState={defaultState}>
+              <Contents indexName={indexName} />
+            </SearchStateProvider>
+          ) : (
             <Contents indexName={indexName} />
-          </SearchStateProvider>
-        ) : (
-          <Contents indexName={indexName} />
-        )}
-      </WithMeili>
+          )}
+        </WithMeili>
+      </CourseCardStyleProvider>
     </Layout>
   );
 }

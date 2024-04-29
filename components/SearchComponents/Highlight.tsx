@@ -32,7 +32,7 @@ function HighlightComponent({
 export function Highlight({ hit, attribute }: Exposed) {
   const hasInstantSearch = useHasInstantSearch();
 
-  if (!hasInstantSearch) return <span>{hit[attribute]}</span>;
+  if (hasInstantSearch !== 'done') return <span>{hit[attribute]}</span>;
 
   return <HighlightWrapper hit={hit} attribute={attribute} />;
 }

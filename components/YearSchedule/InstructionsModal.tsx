@@ -10,7 +10,7 @@ export function InstructionsModal() {
 }
 
 function InstructionsModalComponent() {
-  const { showContents, setOpen } = useModal();
+  const { showContents, goBack } = useModal();
 
   useEffect(() => {
     const seen = localStorage.getItem('seenPlanInstructions') === 'true';
@@ -21,7 +21,7 @@ function InstructionsModalComponent() {
       title: 'Welcome to PlanCrimson!',
       close() {
         localStorage.setItem('seenPlanInstructions', 'true');
-        setOpen(false);
+        goBack();
       },
       content: (
         <div className="space-y-2 p-4">
@@ -52,7 +52,7 @@ function InstructionsModalComponent() {
         </div>
       ),
     });
-  }, [setOpen, showContents]);
+  }, [goBack, showContents]);
 
   return null;
 }

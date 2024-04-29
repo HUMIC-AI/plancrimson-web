@@ -1,4 +1,4 @@
-import '../src/wdyr';
+// import '../src/wdyr';
 import '@/src/index.css';
 import '@/src/initFirebase';
 import type { AppProps } from 'next/app';
@@ -9,7 +9,6 @@ import store from '@/src/store';
 import { ModalProvider } from '@/src/context/modal';
 import { ScheduleProvider } from '@/src/context/ScheduleProvider';
 import { useSyncAuth, useSyncUserSettings } from '@/components/Layout/useSyncAuth';
-import CourseCardStyleProvider from '@/src/context/CourseCardStyleProvider';
 import IncludeSemestersProvider from '@/src/context/includeSemesters';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { useRouter } from 'next/router';
@@ -42,13 +41,11 @@ function AppWrapper({ Component, pageProps }: AppProps) {
 
   return (
     <SearchStateProvider defaultState={defaultState}>
-      <CourseCardStyleProvider>
-        <ScheduleProvider id={typeof router.query.selected === 'string' ? router.query.selected : null}>
-          <IncludeSemestersProvider>
-            <Component {...pageProps} />
-          </IncludeSemestersProvider>
-        </ScheduleProvider>
-      </CourseCardStyleProvider>
+      <ScheduleProvider id={typeof router.query.selected === 'string' ? router.query.selected : null}>
+        <IncludeSemestersProvider>
+          <Component {...pageProps} />
+        </IncludeSemestersProvider>
+      </ScheduleProvider>
     </SearchStateProvider>
   );
 }

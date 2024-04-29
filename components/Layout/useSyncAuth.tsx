@@ -96,7 +96,7 @@ export function useSyncAuth() {
                 await handleSubmit(user, classYear);
               }}
             />,
-            noExit: true,
+            close: 'none',
           });
         }
       },

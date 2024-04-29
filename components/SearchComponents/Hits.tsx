@@ -1,11 +1,10 @@
 import { connectInfiniteHits } from 'react-instantsearch-dom';
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import {
   sampleCourses, ExtendedClass,
 } from '@/src/lib';
 import CardExpandToggler from '@/components/YearSchedule/CardExpandToggler';
-import { useSearchState } from '@/src/context/searchState';
 import { FaChevronUp, FaChevronDown } from 'react-icons/fa';
 import { alertSignIn } from './SearchBox/searchUtils';
 import { CourseCard } from '../Course/CourseCard';
@@ -13,7 +12,8 @@ import useClientOrDemo from './ClientOrDemo';
 import { useElapsed } from '../../src/utils/hooks';
 import { useCourseCardStyle } from '../../src/context/CourseCardStyleProvider';
 import { classNames } from '../../src/utils/styles';
-import { LoadingText } from '../Layout/LoadingPage';
+import { LoadingBars, LoadingText } from '../Layout/LoadingPage';
+import { useHasInstantSearch } from '../Utils/AuthRequiredInstantSearchProvider';
 
 const sampleHits = sampleCourses as ExtendedClass[];
 
@@ -34,9 +34,10 @@ function HitsComponent({
   // refinePrevious = alertSignIn,
   concise,
 }: Provided & Exposed) {
-  const { oneCol } = useSearchState();
-  const { style } = useCourseCardStyle();
-  const elapsed = useElapsed(750, []);
+  const hasInstantSearch = useHasInstantSearch();
+  const { style, columns } = useCourseCardStyle();
+  const elapsedFirst = useElapsed(1000, []);
+  const elapsedSecond = useElapsed(2000, []);
 
   return (
     <div className="flex flex-col items-center space-y-4">
@@ -47,16 +48,18 @@ function HitsComponent({
       /> */}
       {!concise && <CardExpandToggler />}
 
-      {hits.length === 0 ? (
-        elapsed
+      {/* Wait a second before displaying results */}
+      {hits.length === 0 || hasInstantSearch === 'loading' || !elapsedFirst ? (
+        elapsedSecond
           ? <span>No results found. Try filtering by different properties.</span>
           : <LoadingText />
       ) : (
         <div className={classNames(
-          oneCol
-            ? 'flex w-full flex-col items-stretch'
-            : 'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4',
-          oneCol && (style === 'text' ? 'space-y-1' : 'space-y-4'),
+          columns === 1 && 'flex w-full flex-col items-stretch',
+          // TODO lol
+          columns !== 1 && columns !== 3 && 'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4',
+          columns === 3 && 'grid grid-cols-3 gap-4',
+          columns === 1 && (style === 'text' ? 'space-y-1' : 'space-y-4'),
         )}
         >
           {hits.map((hit) => (

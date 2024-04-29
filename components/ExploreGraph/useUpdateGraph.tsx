@@ -37,7 +37,7 @@ export function useUpdateGraph({
     setHoveredClassId: setHover, setExplanation, explanation, setPhase, matchFilter, setMatchFilter,
   } = useGraphContext();
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
-  const { showContents, setOpen } = useModal();
+  const { showContents, goBack } = useModal();
   const userId = Auth.useAuthProperty('uid');
   const elapsed = useElapsed(1000, []);
 
@@ -64,13 +64,13 @@ export function useUpdateGraph({
       console.info('showing graph instructions');
       showContents({
         title: 'Course Explorer',
-        noExit: true,
+        close: 'none',
         content: (
           <div className="flex items-center justify-center p-6">
             <button
               type="button"
               onClick={() => signInUser().then(() => {
-                setOpen(false);
+                goBack();
                 graphRef.current!.setPhase('ready');
               }).catch(alertUnexpectedError)}
               className="button secondary"

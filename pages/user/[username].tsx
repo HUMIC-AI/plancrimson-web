@@ -39,7 +39,7 @@ const statusMessage: Record<FriendStatus, string> = {
   'pending-outgoing': 'Cancel request',
 };
 
-export default function () {
+export default function UserPageWrapper() {
   const router = useRouter();
   const username = router.query.username as string;
 
@@ -47,7 +47,7 @@ export default function () {
   return (
     <Layout title={username ?? 'User'} className="mx-auto w-full max-w-screen-md flex-1 p-8" verify="meili">
       {({ userId }) => (
-        <CourseCardStyleProvider defaultStyle="collapsed">
+        <CourseCardStyleProvider defaultStyle="collapsed" columns={4}>
           <Wrapper userId={userId} />
         </CourseCardStyleProvider>
       )}

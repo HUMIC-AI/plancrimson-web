@@ -104,6 +104,25 @@ export const CourseCard = forwardRef(({
 
   const isExpanded = style === 'expanded';
 
+  const containerStyles = classNames(
+    'p-2 from-gray-secondary via-secondary bg-gradient-to-br text-left',
+    isExpanded && (highlight ? 'to-blue-primary' : 'to-blue-secondary'),
+    drag && 'cursor-move',
+    isExpanded && 'relative',
+  );
+
+  const Header = (
+    <CourseCardHeader
+      highlight={highlight}
+      department={department}
+      course={course}
+      warnings={warnings}
+      hideTerm={hideTerm}
+      semester={semester}
+      handleClickTitle={handleClickTitle}
+    />
+  );
+
   return (
     // move the shadow outside to avoid it getting hidden
     <div
@@ -118,15 +137,21 @@ export const CourseCard = forwardRef(({
       ref={ref}
     >
       <div className="relative h-full text-left">
-        <CourseCardHeader
-          highlight={highlight}
-          department={department}
-          course={course}
-          warnings={warnings}
-          hideTerm={hideTerm}
-          semester={semester}
-          handleClickTitle={handleClickTitle}
-        />
+        {clickWholeCard
+          ? (
+            <button
+              type="button"
+              onClick={() => handleClickTitle(course)}
+              className={containerStyles}
+            >
+              {Header}
+            </button>
+          )
+          : (
+            <div className={containerStyles}>
+              {Header}
+            </div>
+          )}
 
         {isExpanded && <CourseCardDetails course={course} />}
       </div>
@@ -171,32 +196,23 @@ function CourseCardHeader({
   handleClickTitle: (course: ExtendedClass) => void;
 }) {
   const { style, clickWholeCard } = useCourseCardStyle();
-  const drag = useCourseDragContext();
   const isExpanded = style === 'expanded';
 
-  const Container = useCallback(({ children, ...props }: any) => (
-    clickWholeCard
-      ? <button type="button" onClick={() => handleClickTitle(course)} {...props}>{children}</button>
-      : <div {...props}>{children}</div>
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [clickWholeCard, handleClickTitle, course.id]);
-
-
-  const TitleComponent = useCallback(({ children, ...props }: any) => (
-    clickWholeCard
-      ? <p {...props}>{children}</p>
-      : <button type="button" onClick={() => handleClickTitle(course)} {...props}>{children}</button>
-  ), [clickWholeCard, handleClickTitle, course]);
+  const Title = (
+    <>
+      <Highlight
+        attribute="SUBJECT"
+        hit={course}
+      />
+      <Highlight
+        attribute="CATALOG_NBR"
+        hit={course}
+      />
+    </>
+  );
 
   return (
-    <Container
-      className={classNames(
-        'p-2 from-gray-secondary via-secondary bg-gradient-to-br text-left',
-        isExpanded && (highlight ? 'to-blue-primary' : 'to-blue-secondary'),
-        drag && 'cursor-move',
-        isExpanded && 'relative',
-      )}
-    >
+    <>
       {departmentImages[department] && (
       <Image
         src={departmentImages[department].urls.thumb}
@@ -210,17 +226,20 @@ function CourseCardHeader({
 
       {/* relative so it appears above the image */}
       <div className="relative space-y-1">
-        <div className="flex items-center justify-between">
-          <TitleComponent className={clickWholeCard ? 'font-bold' : 'interactive border-b text-left font-bold text-blue-primary'}>
-            <Highlight
-              attribute="SUBJECT"
-              hit={course}
-            />
-            <Highlight
-              attribute="CATALOG_NBR"
-              hit={course}
-            />
-          </TitleComponent>
+        <div className="flex items-start justify-between">
+          {clickWholeCard ? (
+            <p className="font-bold">
+              {Title}
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleClickTitle(course)}
+              className="interactive border-b text-left font-bold text-blue-primary"
+            >
+              {Title}
+            </button>
+          )}
 
           {/* the info and course selection buttons */}
           <span className="ml-2 flex items-center space-x-2">
@@ -257,7 +276,7 @@ function CourseCardHeader({
         </>
         )}
       </div>
-    </Container>
+    </>
   );
 }
 

@@ -2,40 +2,51 @@ import { Dialog } from '@headlessui/react';
 import { FaTimes } from 'react-icons/fa';
 import { ReactNode, forwardRef } from 'react';
 
-export interface InfoCardProps {
+interface ContentProps {
   title?: string;
   headerContent?: ReactNode;
   content?: ReactNode;
-  noExit?: boolean;
-  close?: () => void;
 }
 
-function InfoCardComponent({
-  title, headerContent, content, noExit, close, isDialog = true,
-}: InfoCardProps & { isDialog?: boolean }, ref: React.Ref<HTMLDivElement>) {
-  return (
-    <div
-      // className="primary w-full rounded-xl text-left shadow-xl transition-all lg:rounded-2xl"
-      className="primary w-full rounded-xl text-left lg:rounded-2xl"
-      ref={ref}
-    >
-      <div className="border-none p-6">
-        {isDialog ? (
-          <Dialog.Title as="h3" className="text-xl font-bold">
-            {title}
-          </Dialog.Title>
-        ) : (
-          <h3 className="text-xl font-bold">
-            {title}
-          </h3>
-        )}
+// arguments for card itself
+export interface InfoCardProps extends ContentProps {
+  close?: () => void;
+  isDialog?: boolean;
+}
 
-        {headerContent}
-      </div>
+// arguments for displaying modal
+export interface ModalProps extends ContentProps {
+  close: 'back' | 'none' | (() => void)
+}
 
-      {content}
+/**
+ * A card that displays information. Used in the {@link CustomModal}.
+ * Shows a close button if close is undefined.
+ */
+export const InfoCard = forwardRef(({
+  title, headerContent, content, close, isDialog = true,
+}: InfoCardProps, ref: React.Ref<HTMLDivElement>) => (
+  <div
+    className="primary w-full rounded-xl text-left lg:rounded-2xl"
+    ref={ref}
+  >
+    <div className="border-none p-6">
+      {isDialog ? (
+        <Dialog.Title as="h3" className="text-xl font-bold">
+          {title}
+        </Dialog.Title>
+      ) : (
+        <h3 className="text-xl font-bold">
+          {title}
+        </h3>
+      )}
 
-      {!noExit && close && (
+      {headerContent}
+    </div>
+
+    {content}
+
+    {close && (
       <button
         type="button"
         name="Close dialog"
@@ -44,9 +55,7 @@ function InfoCardComponent({
       >
         <FaTimes />
       </button>
-      )}
-    </div>
-  );
-}
+    )}
+  </div>
+));
 
-export const InfoCard = forwardRef(InfoCardComponent);

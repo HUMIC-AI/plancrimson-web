@@ -28,6 +28,7 @@ export default function AddCoursesButton({
         showContents({
           title: 'Add a course',
           content: <DynamicCourseSearchModal selected={schedule.id} semester={schedule} />,
+          close: 'back',
         });
       }}
     >

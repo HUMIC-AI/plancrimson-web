@@ -42,17 +42,17 @@ export default function CourseSearchModal({ selected, semester }: {
     <WithMeili userId={uid!}>
       <SearchStateProvider defaultState={defaultState} ignoreUrl>
         <ScheduleProvider id={selected}>
-          <AuthRequiredInstantSearchProvider
-            indexName={indexName ?? 'courses'}
-            hitsPerPage={4}
-          >
-            <div className=" flex-1 space-y-4 p-6 shadow-lg">
+          <div className="flex-1 space-y-4 p-6 shadow-lg">
+            <AuthRequiredInstantSearchProvider
+              indexName={indexName ?? 'courses'}
+              hitsPerPage={6}
+            >
               <SearchBox scheduleChooser={false} showSmallAttributeMenu />
-              <CourseCardStyleProvider defaultStyle="collapsed" clickWholeCard>
+              <CourseCardStyleProvider defaultStyle="collapsed" columns={3}>
                 <Hits concise />
               </CourseCardStyleProvider>
-            </div>
-          </AuthRequiredInstantSearchProvider>
+            </AuthRequiredInstantSearchProvider>
+          </div>
         </ScheduleProvider>
       </SearchStateProvider>
     </WithMeili>

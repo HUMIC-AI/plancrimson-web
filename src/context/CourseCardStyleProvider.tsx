@@ -8,27 +8,28 @@ const CARD_STYLES = ['text', 'collapsed', 'expanded'] as const;
 
 type CardStyle = typeof CARD_STYLES[number];
 
-type CourseCardStyleContextType = {
-  style: CardStyle;
-  clickWholeCard: boolean;
-  toggleStyle: () => void;
-  setStyle: (style: CardStyle) => void;
-};
-
-const CourseCardStyleContext = createContext<CourseCardStyleContextType | null>(null);
-
-export default function CourseCardStyleProvider({
-  children, defaultStyle = 'expanded', readonly = false, clickWholeCard = false,
-}: PropsWithChildren<{
+type ProviderProps = {
   defaultStyle?: CardStyle;
   readonly?: boolean;
+  confirmRemoval?: boolean;
   clickWholeCard?: boolean;
-}>) {
+  columns: number;
+};
+
+function useCourseCardStyleContext({
+  defaultStyle = 'expanded',
+  readonly = false,
+  clickWholeCard = false,
+  columns,
+  confirmRemoval = false,
+}: ProviderProps) {
   const [style, setCourseCardStyle] = useState<CardStyle>(defaultStyle);
 
-  const context: CourseCardStyleContextType = useMemo(() => ({
+  const context = useMemo(() => ({
     style,
     clickWholeCard,
+    columns,
+    confirmRemoval,
     toggleStyle: () => {
       const newStyle = CARD_STYLES[(CARD_STYLES.indexOf(style) + 1) % CARD_STYLES.length];
       logEvent(getAnalytics(), 'toggle_expand_cards', { oldStyle: style, newStyle });
@@ -39,7 +40,17 @@ export default function CourseCardStyleProvider({
         setCourseCardStyle(s);
       }
     },
-  }), [style, clickWholeCard, readonly]);
+  }), [style, clickWholeCard, columns, confirmRemoval, readonly]);
+
+  return context;
+}
+
+type CourseCardStyleContextType = ReturnType<typeof useCourseCardStyleContext>;
+
+const CourseCardStyleContext = createContext<CourseCardStyleContextType | null>(null);
+
+export default function CourseCardStyleProvider({ children, ...props }: PropsWithChildren<ProviderProps>) {
+  const context: CourseCardStyleContextType = useCourseCardStyleContext(props);
 
   return (
     <CourseCardStyleContext.Provider value={context}>

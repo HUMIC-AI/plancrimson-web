@@ -8,7 +8,7 @@ import {
   semesterToTerm,
 } from '@/src/lib';
 import { checkViable } from '@/src/searchSchedule';
-import { useAppDispatch, useAppSelector } from '@/src/utils/hooks';
+import { useAppDispatch, useAppSelector, alertUnexpectedError } from '@/src/utils/hooks';
 import {
   ClassCache, Planner, Profile, Schedules,
 } from '@/src/features';
@@ -16,6 +16,7 @@ import { getAnalytics, logEvent } from 'firebase/analytics';
 import { getClassIdsOfSchedule } from '@/src/features/schedules';
 import { useChosenSchedule } from '../../src/context/ScheduleProvider';
 import { useCourseCardStyle } from '../../src/context/CourseCardStyleProvider';
+import { classNames } from '../../src/utils/styles';
 
 /**
  * A button that toggles a {@link CourseCard} in and out of a schedule.
@@ -25,31 +26,50 @@ import { useCourseCardStyle } from '../../src/context/CourseCardStyleProvider';
 export function CourseCardToggleButton({ course }: { course: ExtendedClass; }) {
   const { schedule } = useChosenSchedule();
   const semesterFormat = useAppSelector(Planner.selectSemesterFormat);
+  const addClass = useAddClass(course);
+  const removeClass = useRemoveClass(course.id, schedule ? schedule.id : null);
+  const { style } = useCourseCardStyle();
+  const buttonSize = style === 'expanded' ? 28 : 20;
 
   if (!schedule) return null;
 
   const isInSchedule = getClassIdsOfSchedule(schedule).includes(course.id);
-
-  if (semesterFormat === 'sample' || !isInSchedule) {
-    return (
-      <AddClassButton course={course} />
-    );
-  }
+  const add = semesterFormat === 'sample' || !isInSchedule;
 
   return (
-    <RemoveClassButton classId={course.id} />
+    <button
+      type="button"
+      name={add ? 'Add class to schedule' : 'Remove class from schedule'}
+      onClick={add ? addClass : removeClass}
+      className={classNames('interactive ease-in-out', add ? 'rotate-90' : 'text-blue-primary')}
+    >
+      {add ? <FaPlusSquare size={buttonSize} /> : <FaCheckSquare size={buttonSize} />}
+    </button>
   );
 }
 
-CourseCardToggleButton.whyDidYouRender = {
-  logOnDifferentValues: true,
-};
-
-export function AddClassButton({ course }: {
-  course: ExtendedClass;
-}) {
+function useRemoveClass(classId: string, scheduleId: string | null) {
   const dispatch = useAppDispatch();
-  const buttonSize = useButtonSize();
+  const { confirmRemoval } = useCourseCardStyle();
+  const removeClass = useCallback(() => {
+    if (!scheduleId) {
+      alert('An unexpected error occurred.');
+      return;
+    }
+
+    if (confirmRemoval && !confirm('Remove this course from your schedule?')) return;
+
+    dispatch(Schedules.removeCourses({
+      courseIds: [classId],
+      scheduleId,
+    })).catch(alertUnexpectedError);
+  }, [classId, confirmRemoval, dispatch, scheduleId]);
+
+  return removeClass;
+}
+
+function useAddClass(course: ExtendedClass) {
+  const dispatch = useAppDispatch();
   const { schedule } = useChosenSchedule();
   const classYear = useAppSelector(Profile.selectClassYear);
   const classCache = useAppSelector(ClassCache.selectClassCache);
@@ -88,39 +108,5 @@ export function AddClassButton({ course }: {
     }));
   }, [classCache, classYear, course, dispatch, schedule]);
 
-  return (
-    <button
-      type="button"
-      name="Add class to schedule"
-      onClick={addClass}
-      className="interactive"
-    >
-      <FaPlusSquare size={buttonSize} />
-    </button>
-  );
-}
-
-export function RemoveClassButton({ classId }: { classId: string }) {
-  const dispatch = useAppDispatch();
-  const { id } = useChosenSchedule();
-  const buttonSize = useButtonSize();
-
-  return id ? (
-    <button
-      type="button"
-      name="Remove class from schedule"
-      onClick={() => confirm('Remove this course from your schedule?') && dispatch(Schedules.removeCourses({
-        courseIds: [classId],
-        scheduleId: id,
-      }))}
-      className="interactive"
-    >
-      <FaCheckSquare size={buttonSize} />
-    </button>
-  ) : null;
-}
-
-function useButtonSize() {
-  const { style } = useCourseCardStyle();
-  return style === 'expanded' ? 28 : 20;
+  return addClass;
 }

@@ -140,6 +140,7 @@ function OptionsMenu({ columns }: { columns: ListOfScheduleIdOrSemester }) {
             onClick={() => showContents({
               content: <UploadForm />,
               title: 'Upload plan',
+              close: 'back',
             })}
             className="transition-opacity hover:opacity-50"
           >

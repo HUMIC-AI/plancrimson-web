@@ -11,7 +11,7 @@ export default function GraduationYearDialog({ defaultYear, handleSubmit }: {
   defaultYear: number;
   handleSubmit: (classYear: number) => Promise<void>;
 }) {
-  const { setOpen } = useModal();
+  const { goBack } = useModal();
   const [classYear, setYear] = useState(defaultYear);
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +24,7 @@ export default function GraduationYearDialog({ defaultYear, handleSubmit }: {
     });
     await Promise.all([submission, timer]);
     setLoading(false);
-    setOpen(false);
+    goBack();
   }
 
   return (

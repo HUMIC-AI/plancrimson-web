@@ -27,7 +27,7 @@ export default function () {
   return (
     <Layout title="Friends" verify="meili">
       {({ userId }) => (
-        <CourseCardStyleProvider defaultStyle="text" readonly>
+        <CourseCardStyleProvider defaultStyle="text" readonly columns={4}>
           <div className="mx-auto sm:max-w-2xl">
             <FriendsPage userId={userId} />
           </div>

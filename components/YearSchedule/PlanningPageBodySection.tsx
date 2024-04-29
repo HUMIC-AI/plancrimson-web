@@ -13,12 +13,14 @@ import { Footer } from '../Layout/Footer';
 import Layout, { HeadMeta } from '../Layout/Layout';
 import { Navbar } from '../Layout/Navbar';
 import { ScheduleSyncer } from '../Utils/ScheduleSyncer';
-import RequirementsSection from './RequirementsSection';
+import RequirementsSection, { RequirementsSectionProps } from './RequirementsSection';
 import { useValidateSchedule } from './useValidateSchedule';
 import { WithMeili } from '../Layout/WithMeili';
 import { InstructionsModal } from './InstructionsModal';
 import { MESSAGES } from '../../src/utils/config';
+import CourseCardStyleProvider from '../../src/context/CourseCardStyleProvider';
 
+// keep this default export since it needs to be imported
 export default function PlanningPageBodySection({ userId }: { userId: string; }) {
   const showReqs = useAppSelector(Planner.selectShowReqs);
   const md = useBreakpoint(breakpoints.md);
@@ -38,29 +40,12 @@ export default function PlanningPageBodySection({ userId }: { userId: string; })
   if (!md) {
     // custom layout for mobile
     return (
-      <>
-        <HeadMeta pageTitle="Plan">
-          {MESSAGES.description}
-        </HeadMeta>
-        <ScheduleSyncer userId={userId} />
-
-        <div className="flex min-h-screen flex-col">
-          <Navbar />
-
-          <WithMeili userId={userId}>
-            <BodySection
-              showReqs={showReqs}
-              highlightedRequirement={highlightedRequirement}
-            />
-          </WithMeili>
-        </div>
-
-        {showReqs && <RequirementsSection {...requirementsSectionProps} />}
-
-        <Footer />
-
-        <CustomModal />
-      </>
+      <PlanningPageMobileLayout
+        userId={userId}
+        showReqs={showReqs}
+        highlightedRequirement={highlightedRequirement}
+        requirementsSectionProps={requirementsSectionProps}
+      />
     );
   }
 
@@ -88,6 +73,41 @@ type Props = {
   highlightedRequirement?: Requirement;
 };
 
+function PlanningPageMobileLayout({
+  userId, showReqs, highlightedRequirement, requirementsSectionProps,
+}: {
+  userId: string;
+  showReqs: boolean;
+  highlightedRequirement: Requirement | undefined;
+  requirementsSectionProps: RequirementsSectionProps;
+}) {
+  return (
+    <>
+      <HeadMeta pageTitle="Plan">
+        {MESSAGES.description}
+      </HeadMeta>
+      <ScheduleSyncer userId={userId} />
+
+      <div className="flex min-h-screen flex-col">
+        <Navbar />
+
+        <WithMeili userId={userId}>
+          <BodySection
+            showReqs={showReqs}
+            highlightedRequirement={highlightedRequirement}
+          />
+        </WithMeili>
+      </div>
+
+      {showReqs && <RequirementsSection {...requirementsSectionProps} />}
+
+      <Footer />
+
+      <CustomModal />
+    </>
+  );
+}
+
 function BodySection({
   showReqs, highlightedRequirement,
 }: Props) {
@@ -100,17 +120,19 @@ function BodySection({
       showReqs && 'md:rounded-lg md:shadow-lg',
     )}
     >
-      <InstructionsModal />
+      <CourseCardStyleProvider defaultStyle="collapsed" columns={1} confirmRemoval>
+        <InstructionsModal />
 
-      <PlanningPageHeaderSection resizeRef={resizeRef} columns={columns} />
+        <PlanningPageHeaderSection resizeRef={resizeRef} columns={columns} />
 
-      <SemestersList
-        highlightedRequirement={highlightedRequirement}
-        resizeRef={resizeRef}
-        columns={columns}
-      />
+        <SemestersList
+          highlightedRequirement={highlightedRequirement}
+          resizeRef={resizeRef}
+          columns={columns}
+        />
 
-      <HiddenSchedules />
+        <HiddenSchedules />
+      </CourseCardStyleProvider>
     </div>
   );
 }

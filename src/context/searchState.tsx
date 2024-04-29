@@ -15,7 +15,6 @@ import { useAssertContext } from '../utils/utils';
 interface SearchStateContextType {
   searchState: SearchState | null;
   setSearchState: React.Dispatch<React.SetStateAction<SearchState>>;
-  oneCol: boolean;
   onSearchStateChange: (newState: SearchState) => void;
 }
 
@@ -48,10 +47,8 @@ export function getDefaultSearchStateForSemester(semester: Semester): SearchStat
  */
 export function SearchStateProvider({
   children,
-  oneCol = false,
   defaultState,
 } : PropsWithChildren<{
-  oneCol?: boolean;
   defaultState: SearchState | null;
   // eslint-disable-next-line react/no-unused-prop-types
   ignoreUrl?: boolean;
@@ -65,7 +62,6 @@ export function SearchStateProvider({
   const context = useMemo(() => ({
     searchState: userId ? searchState : null,
     setSearchState,
-    oneCol,
     onSearchStateChange(newState: SearchState) {
       if (defaultState === null) return;
 
@@ -79,7 +75,7 @@ export function SearchStateProvider({
 
       setSearchState((oldState) => ({ ...oldState, ...newState }));
     },
-  }), [defaultState, oneCol, router.asPath, searchState, userId]);
+  }), [defaultState, router.asPath, searchState, userId]);
 
   return (
     <SearchStateContext.Provider value={context}>
@@ -92,6 +88,7 @@ export function SearchStateProvider({
  * @deprecated
  * Used to sync up with the URL. Buggy.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function OldSearchStateProvider({
   children,
   oneCol = false,

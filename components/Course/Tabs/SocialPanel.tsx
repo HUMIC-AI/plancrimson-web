@@ -109,7 +109,7 @@ function SocialPanel({ course, userId }: Props & { userId: string }) {
       {schedules.length === 0
         ? (
           <p>
-            None. Check out the
+            Check out the
             {' '}
             <Link className="interactive font-bold" href="/connect">Connect</Link>
             {' '}

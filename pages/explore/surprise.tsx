@@ -12,7 +12,7 @@ export default function () {
   return (
     <Layout title="Friends" verify="meili">
       {({ userId }) => (
-        <CourseCardStyleProvider defaultStyle="expanded" readonly>
+        <CourseCardStyleProvider defaultStyle="expanded" readonly columns={4}>
           <Wrapper userId={userId} />
         </CourseCardStyleProvider>
       )}

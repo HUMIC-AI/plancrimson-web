@@ -10,13 +10,17 @@ import { InfoCard } from './InfoCard';
  * This does NOT get access to a MeiliSearch instance by default. One must be provided.
  */
 export default function CustomModal() {
-  const { open, setOpen, modalProps: data } = useModal();
+  const { open, goBack, modalProps: data } = useModal();
 
-  const close = () => {
+  // do nothing if close is set to none
+  const close = !data || data.close === 'none' ? undefined : () => {
     console.info('closing modal');
-    if (data?.noExit) return;
-    if (data?.close) data.close();
-    else setOpen(false);
+    if (typeof data.close === 'function') data.close();
+    else if (data.close === 'back') {
+      goBack();
+    } else {
+      throw new Error('Unknown close type');
+    }
   };
 
   return (
@@ -24,7 +28,7 @@ export default function CustomModal() {
       <Dialog
         as="div"
         className="fixed inset-0 z-10 overflow-y-auto"
-        onClose={close}
+        onClose={() => close && close()}
       >
         <div className="min-h-screen px-4 text-center">
           <Transition.Child
