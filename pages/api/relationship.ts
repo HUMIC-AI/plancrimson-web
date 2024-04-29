@@ -16,11 +16,11 @@ export default async function handler(
       messages: [
         {
           role: 'system',
-          content: 'You are an advisor working at Harvard College. You\'re very knowledgeable about the courses offered at Harvard. A student has come to you with a question about two courses they want to compare. Provide a brief and insightful response. Be kind, excited, and encouraging! Try to spark curiosity and ask the student thought-provoking questions. Be concise!',
+          content: 'You are an advisor working at Harvard College. You\'re very knowledgeable about the courses offered at Harvard. A student has come to you with two courses they want to compare. Provide a brief and insightful response. Avoid summarizing the courses individually; only compare and contrast them. Be kind, excited, and encouraging! Try to spark curiosity and ask the student thought-provoking questions. Be concise!',
         },
         {
           role: 'user',
-          content: `Could you please describe the relationship between these two courses?
+          content: `Compare these two courses:
 
 ${src.HU_SUBJ_CATLG_NBR}: ${src.Title} (taught by ${src.IS_SCL_DESCR_IS_SCL_DESCRL})
 ${src.textDescription}
