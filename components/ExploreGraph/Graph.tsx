@@ -194,17 +194,18 @@ export class Graph {
       name: 'Link',
       icon: <FaLink />,
       cursor: 'alias',
-      linkCursor: 'default',
+      linkCursor: 'pointer',
       clickNode: (g: Graph, d: Datum) => {
         if (g.linkFrom) {
-          g.appendNodesAndLinks([], [{ source: g.linkFrom.id, target: d.id, mode: 'User' }]);
+          const [, [link]] = g.appendNodesAndLinks([], [{ source: g.linkFrom.id, target: d.id, mode: 'User' }]);
+          g.explainLink(link);
           g.linkFrom = null;
         } else {
           g.linkFrom = d;
         }
         g.renderHighlights();
       },
-      clickLink: () => null,
+      clickLink: (g: Graph, d: LinkDatum) => g.explainLink(d),
     },
   } as const;
 

@@ -4,16 +4,17 @@ import {
   FaCheckCircle, FaChevronDown, FaCircle,
 } from 'react-icons/fa';
 import { EMOJI_SCALES, Graph } from './Graph';
-import { Subject } from '../../src/lib';
-import { classNames, getSubjectColor } from '../../src/utils/styles';
+import { classNames } from '../../src/utils/styles';
 import { useClasses } from '../../src/utils/schedules';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 import { getRandomRatedCourse } from '../../src/utils/utils';
+import { useGraphContext } from '../../src/context/GraphProvider';
 
-export function ExploreGraphButtons({
-  graph, phase, subjects,
-}: { graph: Graph; phase: Graph['phase']; subjects: Subject[]; }) {
-  const fixedClasses = useClasses(graph.fixedScheduleId);
+export function ExploreGraphButtons() {
+  const { graph, phase } = useGraphContext();
+  const fixedClasses = useClasses(graph?.fixedScheduleId ?? null);
+
+  if (!graph) return null;
 
   const handleReset = () => {
     if (!fixedClasses) return;
@@ -40,7 +41,7 @@ export function ExploreGraphButtons({
             </Disclosure.Button>
 
             <Disclosure.Panel
-              className="mt-2 flex flex-col items-stretch space-y-4 rounded transition-colors hover:bg-gray-secondary/50"
+              className="flex flex-col items-stretch space-y-4 rounded bg-gray-secondary/50 p-2 transition-colors"
             >
               <div className="space-y-1">
                 <button
@@ -112,20 +113,6 @@ export function ExploreGraphButtons({
           </ul>
           <p className="text-center">No emoji = no ratings</p>
         </div>
-
-        <ul className="absolute right-0 top-full mt-1 flex flex-col items-end text-xs">
-          {subjects.map((s) => (
-            <li
-              key={s}
-              className="flex items-center"
-              onMouseEnter={() => graph.highlightSubject(s)}
-              onMouseLeave={() => graph.highlightSubject(null)}
-            >
-              {s}
-              <span className="ml-1 h-2 w-2 rounded-full" style={{ backgroundColor: getSubjectColor(s) }} />
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   ) : null;
