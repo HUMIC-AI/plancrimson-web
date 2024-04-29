@@ -9,9 +9,9 @@ import AddCoursesButton from '@/components/SemesterSchedule/AddCoursesButton';
 import { getClassIdsOfSchedule } from '@/src/features/schedules';
 import { CourseCard } from '../../Course/CourseCard';
 import { useChosenSchedule } from '../../../src/context/ScheduleProvider';
-import { RemoveClassButton } from '../../Course/ToggleButton';
 import { LoadingText } from '../../Layout/LoadingPage';
 import { useConflicts } from '../../../src/searchSchedule';
+import { RemoveCourseButton } from '../../Course/ToggleButton';
 
 export function SemesterColumnBody({ highlightedRequirement }: {
   highlightedRequirement: Requirement | undefined;
@@ -86,7 +86,7 @@ function CourseCardComponent({ id, conflicts, highlightedRequirement }: {
               {id.slice(0, 12)}
               ... not found
             </span>
-            <RemoveClassButton classId={id} />
+            {schedule && <RemoveCourseButton courseId={id} scheduleId={schedule.id} />}
           </div>
         )
         : 'Loading course data...'}

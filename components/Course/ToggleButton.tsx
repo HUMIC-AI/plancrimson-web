@@ -48,6 +48,21 @@ export function CourseCardToggleButton({ course }: { course: ExtendedClass; }) {
   );
 }
 
+export function RemoveCourseButton({ courseId, scheduleId }: { courseId: string; scheduleId: string }) {
+  const removeClass = useRemoveClass(courseId, scheduleId);
+  return (
+
+    <button
+      type="button"
+      name="Remove class from schedule"
+      onClick={removeClass}
+      className="interactive text-blue-primary"
+    >
+      <FaCheckSquare size={20} />
+    </button>
+  );
+}
+
 function useRemoveClass(classId: string, scheduleId: string | null) {
   const dispatch = useAppDispatch();
   const { confirmRemoval } = useCourseCardStyle();

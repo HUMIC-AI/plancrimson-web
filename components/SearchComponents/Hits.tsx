@@ -1,5 +1,5 @@
 import { connectInfiniteHits } from 'react-instantsearch-dom';
-import React, { useEffect } from 'react';
+import React from 'react';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import {
   sampleCourses, ExtendedClass,
@@ -12,7 +12,7 @@ import useClientOrDemo from './ClientOrDemo';
 import { useElapsed } from '../../src/utils/hooks';
 import { useCourseCardStyle } from '../../src/context/CourseCardStyleProvider';
 import { classNames } from '../../src/utils/styles';
-import { LoadingBars, LoadingText } from '../Layout/LoadingPage';
+import { LoadingText } from '../Layout/LoadingPage';
 import { useHasInstantSearch } from '../Utils/AuthRequiredInstantSearchProvider';
 
 const sampleHits = sampleCourses as ExtendedClass[];
