@@ -36,9 +36,9 @@ export function ExploreGraphButtons({
         <Disclosure.Button
           className={classNames(
             'interactive secondary ml-auto flex items-center rounded px-2 py-1',
-            !hovered && 'animate-ping',
+            // !hovered && 'animate-ping',
           )}
-          onMouseEnter={() => {
+          onMouseEnter={hovered ? undefined : () => {
             setHovered(true);
             localStorage.setItem('graphButtonHovered', 'true');
           }}
@@ -70,7 +70,7 @@ export function ExploreGraphButtons({
           && (
           <button
             type="button"
-            className="button whitespace-nowrap bg-primary/80 text-secondary"
+            className="button whitespace-nowrap bg-blue-primary/80 text-secondary"
             onClick={() => graph.focusHint()}
           >
             Show hint

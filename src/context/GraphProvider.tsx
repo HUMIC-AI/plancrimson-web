@@ -4,11 +4,12 @@ import {
 import { connectInfiniteHits } from 'react-instantsearch-dom';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import {
   Explanation, Graph, GraphPhase, GraphTool, RatingField,
 } from '../../components/ExploreGraph/Graph';
 import { ExtendedClass, Subject, getUpcomingSemester } from '../lib';
-import { useCourseEmbeddingData } from '../../components/ClassesCloudPage/useData';
+import { CourseBrief, useCourseEmbeddingData } from '../../components/ClassesCloudPage/useData';
 import { signInUser } from '../../components/Layout/useSyncAuth';
 import { Auth, Schedules, ClassCache } from '../features';
 import { GRAPH_SCHEDULE } from '../features/schedules';
@@ -20,6 +21,7 @@ import { getRandomRatedCourse, useAssertContext } from '../utils/utils';
 import { useMeiliClient } from './meili';
 import { useModal } from './modal';
 import useClientOrDemo from '../../components/SearchComponents/ClientOrDemo';
+import { ModalProps } from '../../components/Modals/InfoCard';
 
 type Provided = Pick<InfiniteHitsProvided<ExtendedClass>, 'hits' | 'hasMore' | 'refineNext'>;
 
@@ -50,8 +52,9 @@ function useGraphState({
   const [ratingType, setRatingType] = useState<RatingField>('meanRating');
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [victory, setVictory] = useState(false);
-  const [openVictory, setOpenVictory] = useState(false); // ensure it only runs once
+  const [victorySeen, setVictorySeen] = useState(false); // ensure it only runs once
 
+  const router = useRouter();
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
   const { showContents, goBack } = useModal();
   const userId = Auth.useAuthProperty('uid');
@@ -82,52 +85,7 @@ function useGraphState({
           throw new Error('Game environment should not have any fixed classes');
         }
 
-        showContents({
-          title: 'Exploration Game',
-          close: 'none',
-          content: (
-            <div className="flex flex-col space-y-2 p-6">
-              <p>
-                Welcome to the course exploration game!
-              </p>
-              <p>
-                Your goal is to get from the origin course to the target course as quickly as possible
-                by hopping from course to course.
-              </p>
-              <p>
-                Your origin course is
-                {' '}
-                <strong>
-                  {initial.subject + initial.catalog}
-                </strong>
-                .
-              </p>
-              <p>
-                Your target course is
-                {' '}
-                <strong>
-                  {graphRef.current!.target!.subject + graphRef.current!.target!.catalog}
-                </strong>
-                .
-              </p>
-              <p>
-                Good luck and have fun!
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  goBack();
-                  graphRef.current!.startTime = Date.now();
-                  graphRef.current!.cleanupClickMe();
-                  graphRef.current!.setPhase('ready');
-                }}
-                className="button secondary mx-auto"
-              >
-                Begin
-              </button>
-            </div>
-          ),
-        });
+        showContents(getGameContents(initial, graphRef.current!, goBack));
       } : null)
       : () => {
         console.info('showing graph instructions');
@@ -227,10 +185,10 @@ function useGraphState({
   }, [hits, hasMore, refineNext]);
 
   useEffect(() => {
-    if (openVictory || !victory) return;
+    if (victorySeen || !victory) return;
     const graph = graphRef.current!;
 
-    setOpenVictory(true);
+    setVictorySeen(true);
 
     showContents({
       close() {
@@ -258,12 +216,18 @@ function useGraphState({
             {' '}
             courses along the way.
           </p>
-          <Link href="/explore/game" className="button secondary mx-auto">Play again</Link>
+          <button
+            type="button"
+            className="button secondary mx-auto"
+            onClick={() => router.reload()}
+          >
+            Play again
+          </button>
         </div>
       ),
       title: 'You win!',
     });
-  }, [goBack, openVictory, showContents, victory]);
+  }, [goBack, victorySeen, router, showContents, victory]);
 
   // update using graph methods
   // rerender whenever these dependencies change
@@ -285,6 +249,63 @@ function useGraphState({
   }), [hoveredClassId, mode, matchFilter, ratingType, explanation, phase, subjects, elapsed, graphSchedule, victory]);
 
   return context;
+}
+
+function getGameContents(initial: CourseBrief, graph: Graph, goBack: () => void): ModalProps {
+  return {
+    title: 'Exploration Game',
+    close: 'none',
+    content: (
+      <div className="flex flex-col space-y-2 p-6">
+        <p>
+          Welcome to the course exploration game!
+        </p>
+        <p>
+          Your goal is to get from the origin course to the target course as quickly as possible
+          by hopping from course to course.
+        </p>
+        <p>
+          Your origin course is
+          {' '}
+          <strong>
+            {initial.subject + initial.catalog}
+          </strong>
+          .
+        </p>
+        <p>
+          Your target course is
+          {' '}
+          <strong>
+            {graph.target!.subject + graph.target!.catalog}
+          </strong>
+          .
+        </p>
+        <p>
+          This has difficulty
+          {' '}
+          {graph.difficulty}
+          /
+          {Graph.DIFFICULTY_GRADE}
+          .
+        </p>
+        <p>
+          Good luck and have fun!
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            goBack();
+            graph.startTime = Date.now();
+            graph.cleanupClickMe();
+            graph.setPhase('ready');
+          }}
+          className="button secondary mx-auto"
+        >
+          Begin
+        </button>
+      </div>
+    ),
+  };
 }
 
 // This is a separate component for TypeScript convenience

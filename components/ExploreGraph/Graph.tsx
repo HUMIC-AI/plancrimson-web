@@ -132,6 +132,8 @@ export class Graph {
 
   private static readonly PULSE_DURATION = 750;
 
+  public static readonly DIFFICULTY_GRADE = 10;
+
   private waitingForExplanation = false;
 
   public startTime = 0;
@@ -319,22 +321,37 @@ export class Graph {
       .attr('transform', (d) => `translate(${d.x},${d.y})`);
   }
 
+  get initialPca() {
+    if (!this.initial) throw new Error('Must be playing game');
+    return this.positions[this.initial.i];
+  }
+
   get targetPca() {
     if (!this.target) throw new Error('Must be playing game');
     return this.positions[this.target.i];
   }
 
+  get difficulty() {
+    const c = cos(this.initialPca, this.targetPca);
+    const p = 1 - Math.abs(c); // closer to zero is harder
+    return Math.round(p * Graph.DIFFICULTY_GRADE);
+  }
+
+  // find the course with the closest cosine similarity to the target and hover it
   public focusHint() {
     let closest = -Infinity;
-    let closestId: string = '';
+    let datum: Datum = null!;
     this.currentData.forEach((d) => {
       const c = cos(d.pca, this.targetPca);
       if (c > closest) {
-        closestId = d.id;
+        datum = d;
         closest = c;
       }
     });
-    this.focusCourse(closestId, 'fix');
+    if (this.focusedCourse.id !== datum.id) {
+      this.focusCourse(datum.id, 'hover');
+    }
+    this.zoomTo(datum);
   }
 
   public setMode(mode: Graph['mode']) {
@@ -401,12 +418,16 @@ export class Graph {
     // zoom into the focused course
     const fixedNode = this.findData(this.focusedCourse.id);
     if (fixedNode) {
-      this.svg.transition('svg-zoom')
-        .duration(Graph.PULSE_DURATION)
-        .call(this.zoom.transform, this.defaultZoom.translate(-fixedNode.x, -fixedNode.y));
+      this.zoomTo(fixedNode);
     }
 
     this.renderHighlights();
+  }
+
+  private zoomTo({ x, y }: { x: number, y: number }) {
+    this.svg.transition('svg-zoom')
+      .duration(Graph.PULSE_DURATION)
+      .call(this.zoom.transform, this.defaultZoom.translate(-x, -y));
   }
 
   private static getNewPosition(d: Datum, course: CourseBrief) {
