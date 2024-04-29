@@ -198,7 +198,8 @@ export class Graph {
       clickNode: (g: Graph, d: Datum) => {
         if (g.linkFrom) {
           const [, [link]] = g.appendNodesAndLinks([], [{ source: g.linkFrom.id, target: d.id, mode: 'User' }]);
-          g.explainLink(link);
+          // explain the link if it already exists
+          g.explainLink(link ?? { source: g.linkFrom, target: d, mode: 'User' });
           g.linkFrom = null;
         } else {
           g.linkFrom = d;
@@ -363,11 +364,16 @@ export class Graph {
 
     this.setTool(reactTool);
 
-    // listen for command-z to undo
+    // listen for command-z to undo and command-shift-z to redo
     window.addEventListener('keydown', (event) => {
+      if (this.phase !== 'ready') return;
       if (event.key === 'z' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
-        this.undo();
+        if (event.shiftKey) {
+          this.redo();
+        } else {
+          this.undo();
+        }
       }
     });
   }
@@ -1071,7 +1077,7 @@ export class Graph {
   // ============================== HISTORY MANAGEMENT ==============================
 
   /**
-   * Add a new element to the history stack
+   * Add a new element to the history stack. Replace all elements after the current index.
    */
   private pushHistory(nodes: string[], links: StringLink[], type: 'add' | 'remove') {
     this.history = this.history.slice(0, this.historyIndex);
@@ -1079,7 +1085,7 @@ export class Graph {
     this.historyIndex += 1;
   }
 
-  private undo() {
+  public undo() {
     if (this.historyIndex === 0) return;
     this.historyIndex -= 1;
     const { nodes, links, type } = this.history[this.historyIndex];
@@ -1089,6 +1095,18 @@ export class Graph {
     } else {
       this.appendNodesAndLinks(nodes.map((id) => this.findData(id)!), links, false);
     }
+  }
+
+  public redo() {
+    if (this.historyIndex === this.history.length) return;
+    const { nodes, links, type } = this.history[this.historyIndex];
+    if (type === 'add') {
+      this.appendNodesAndLinks(nodes.map((id) => this.toDatum(id, GRAPH_SCHEDULE)!), links, false);
+    } else {
+      this.removeNodes(nodes, false);
+      this.removeLinks(links, false);
+    }
+    this.historyIndex += 1;
   }
 
   private moveTooltip(x: number, y: number) {

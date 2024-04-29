@@ -1,7 +1,7 @@
 import { Fragment, ReactNode } from 'react';
 import { Disclosure, RadioGroup } from '@headlessui/react';
 import {
-  FaCheckCircle, FaChevronDown, FaCircle,
+  FaCheckCircle, FaChevronDown, FaCircle, FaRedo, FaUndo,
 } from 'react-icons/fa';
 import { EMOJI_SCALES, Graph } from './Graph';
 import { classNames } from '../../src/utils/styles';
@@ -43,10 +43,10 @@ export function ExploreGraphButtons() {
             <Disclosure.Panel
               className="flex flex-col items-stretch space-y-4 rounded bg-gray-secondary/50 p-2 transition-colors"
             >
-              <div className="space-y-1">
+              <div className="font-medium">
                 <button
                   type="button"
-                  className="button whitespace-nowrap bg-primary/80 py-0.5 text-secondary"
+                  className="interactive whitespace-nowrap"
                   onClick={handleReset}
                 >
                   Reset graph
@@ -54,11 +54,35 @@ export function ExploreGraphButtons() {
 
                 <button
                   type="button"
-                  className="button whitespace-nowrap bg-primary/80 py-0.5 text-secondary"
+                  className="interactive whitespace-nowrap"
                   onClick={() => graph.resetZoom()}
                 >
                   Center zoom
                 </button>
+
+                <div className="flex justify-between">
+                  <button
+                    type="button"
+                    onClick={() => graph.undo()}
+                    className="interactive flex items-center space-x-1"
+                  >
+                    <FaUndo />
+                    <span>
+                      Undo
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => graph.redo()}
+                    className="interactive flex items-center space-x-1"
+                  >
+                    <span>
+                      Redo
+                    </span>
+                    <FaRedo />
+                  </button>
+                </div>
               </div>
 
               {graph.target && (
@@ -142,8 +166,8 @@ function MenuRadio<T extends string>({
           key={tool}
           value={tool}
           className={({ checked }) => classNames(
-            'interactive flex items-center',
-            checked && 'font-semibold underline',
+            'interactive flex items-center rounded',
+            icons && checked && 'ring ring-offset-1',
           )}
         >
           {({ checked }) => (
