@@ -194,7 +194,7 @@ export class Graph {
       .attr('r', r);
 
     this.linkGroup = this.svg.append('g')
-      .attr('stroke-opacity', 0.7)
+      .attr('stroke-opacity', 0.3)
       .attr('stroke-linecap', 'round')
       .attr('cursor', 'help');
 
@@ -661,7 +661,7 @@ export class Graph {
   private static getLinkColor(d: LinkDatum) {
     return d.mode === 'Add opposite'
       ? 'rgb(var(--color-blue-primary))'
-      : 'rgb(var(--color-primary))';
+      : 'rgb(var(--color-gray-primary))';
   }
 
   public getNewNodes<T extends NodeId>(nodes: T[]) {

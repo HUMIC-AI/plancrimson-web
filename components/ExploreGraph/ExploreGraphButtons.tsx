@@ -90,11 +90,11 @@ export function ExploreGraphButtons({
           {!graph.target && (
           <MenuRadio
             label="Courses"
-            value={graph.isMatchFilter ? 'Match filter' : 'All courses'}
+            value={graph.isMatchFilter ? 'Search results' : 'All courses'}
             onChange={(m) => {
-              graph.setMatchFilter(m === 'Match filter');
+              graph.setMatchFilter(m === 'Search results');
             }}
-            values={['All courses', 'Match filter']}
+            values={['All courses', 'Search results']}
           />
           )}
 
