@@ -8,7 +8,7 @@ import { ExploreGraph } from './ExploreGraph';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 import { SidebarPanel } from './CollapsibleSidebar';
 import { ScheduleSyncer } from '../Utils/ScheduleSyncer';
-import { GraphProvider } from '../../src/context/GraphProvider';
+import { GraphProvider, useGraphContext } from '../../src/context/GraphProvider';
 // import { GraphDragDropProvider } from '../../src/context/DragCourseMoveSchedulesProvider';
 import { useDefaultSearchState, SearchStateProvider } from '../../src/context/searchState';
 import CourseCardStyleProvider from '../../src/context/CourseCardStyleProvider';
@@ -46,35 +46,60 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
         {userId && <ScheduleSyncer userId={userId} />}
         {/* <GraphDragDropProvider> */}
         <ScheduleProvider id={GRAPH_SCHEDULE}>
-          <CourseCardStyleProvider defaultStyle="collapsed" clickWholeCard columns={1}>
-            <SearchStateProvider defaultState={defaultState} ignoreUrl>
-              {/* more hits per page for better filter matching experience */}
-              <AuthRequiredInstantSearchProvider indexName="courses" hitsPerPage={20}>
-                <GraphProvider scheduleId={scheduleId ?? null}>
-                  {/* three main components: the background graph, the left search bar, the right course info */}
-                  <ExploreGraph />
-
-                  {/* left sidebar (add courses to graph schedule) */}
-                  <SidebarPanel side="left" defaultOpen>
-                    {/* static positioning!!! happy */}
-                    <div className="mx-2 space-y-4 rounded-xl py-6 text-xs transition-colors hover:bg-secondary/50">
-                      <SearchBox scheduleChooser={false} showSmallAttributeMenu showStats={false} />
-                      <div className="grid grid-cols-[auto_1fr] items-center gap-2">
-                        <CurrentRefinements />
-                      </div>
-                      <Hits concise />
-                    </div>
-                  </SidebarPanel>
-                  <SidebarPanel side="right" defaultOpen>
-                    <HoveredCourseInfo />
-                  </SidebarPanel>
-                </GraphProvider>
-              </AuthRequiredInstantSearchProvider>
-            </SearchStateProvider>
-          </CourseCardStyleProvider>
+          <SearchStateProvider defaultState={defaultState} ignoreUrl>
+            {/* more hits per page for better filter matching experience */}
+            <AuthRequiredInstantSearchProvider indexName="courses" hitsPerPage={20}>
+              <GraphProvider scheduleId={scheduleId ?? null}>
+                <Container />
+              </GraphProvider>
+            </AuthRequiredInstantSearchProvider>
+          </SearchStateProvider>
         </ScheduleProvider>
         {/* </GraphDragDropProvider> */}
       </WithMeili>
     </Layout>
   );
 }
+
+// needs to go inside graph provider
+function Container() {
+  const { graph, phase } = useGraphContext();
+  return (
+    <CourseCardStyleProvider
+      defaultStyle="collapsed"
+      clickWholeCard
+      columns={1}
+      disableClick={phase !== 'ready'}
+      hover={phase === 'ready' && graph ? {
+        filter(course) {
+          return graph.canReplaceHover && typeof graph.findTitle({ catalog: course.CATALOG_NBR, subject: course.SUBJECT }) !== 'undefined';
+        },
+        onHover(course) {
+          const node = graph.findTitle({ catalog: course.CATALOG_NBR, subject: course.SUBJECT });
+          if (node) {
+            graph.focusCourse(node.id, 'hover');
+          }
+        },
+      } : undefined}
+    >
+      {/* three main components: the background graph, the left search bar, the right course info */}
+      <ExploreGraph />
+
+      {/* left sidebar (add courses to graph schedule) */}
+      <SidebarPanel side="left" defaultOpen>
+        {/* static positioning!!! happy */}
+        <div className="mx-2 space-y-4 rounded-xl py-6 text-xs transition-colors hover:bg-secondary/50">
+          <SearchBox scheduleChooser={false} showSmallAttributeMenu showStats={false} />
+          <div className="grid grid-cols-[auto_1fr] items-center gap-2">
+            <CurrentRefinements />
+          </div>
+          <Hits concise />
+        </div>
+      </SidebarPanel>
+      <SidebarPanel side="right" defaultOpen>
+        <HoveredCourseInfo />
+      </SidebarPanel>
+    </CourseCardStyleProvider>
+  );
+}
+

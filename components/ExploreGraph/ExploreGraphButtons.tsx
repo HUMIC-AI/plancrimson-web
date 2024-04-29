@@ -13,7 +13,6 @@ import { getRandomRatedCourse } from '../../src/utils/utils';
 export function ExploreGraphButtons({
   graph, phase, subjects,
 }: { graph: Graph; phase: Graph['phase']; subjects: Subject[]; }) {
-  const [myTool, setMyTool] = useState(graph.mode);
   const fixedClasses = useClasses(graph.fixedScheduleId);
   const [hovered, setHovered] = useState(localStorage.getItem('graphButtonHovered') === 'true');
 
@@ -69,9 +68,8 @@ export function ExploreGraphButtons({
 
           <MenuRadio
             label="Tool"
-            value={myTool}
+            value={graph.mode}
             onChange={(m) => {
-              setMyTool(m);
               graph.setMode(m);
             }}
             values={Graph.TOOLS}

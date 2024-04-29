@@ -15,12 +15,12 @@ import { getSubjectColor } from '../../src/utils/styles';
 export type DatumWithoutPosition = CourseBrief & {
   pca: number[];
   scheduleId: string;
+  radius: number;
 };
 
 export type Datum = DatumWithoutPosition & {
   x: number;
   y: number;
-  radius: number;
 };
 
 export type LinkDatum = {
@@ -81,8 +81,6 @@ export class Graph {
 
   public static readonly TOOLS = ['Add similar', 'Add opposite', 'Erase'] as const;
 
-  public mode: GraphTool = 'Add similar';
-
   private phaseInternal: GraphPhase = 'init';
 
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
@@ -141,6 +139,8 @@ export class Graph {
     public readonly positions: number[][],
     public readonly courses: CourseBrief[],
     public readonly fixedScheduleId: string | null,
+    public mode: GraphTool,
+    private reactSetMode: Dispatch<SetStateAction<GraphTool>>,
     private reactSetHover: (id: string | null) => void,
     private reactSetSubjects: (subjects: Subject[]) => void,
     private reactSetExplanation: Dispatch<SetStateAction<Explanation | null>>,
@@ -206,7 +206,7 @@ export class Graph {
     this.svg
       .on('click contextmenu', (event) => {
         event.preventDefault();
-        this.focusCourse(null);
+        this.focusCourse(null, 'fix');
         if (!this.waitingForExplanation) {
           this.clearExplanation();
         }
@@ -322,6 +322,7 @@ export class Graph {
       this.node.call(this.drag);
       this.svg.call(this.zoom);
     }
+    this.reactSetMode(mode);
   }
 
   private resetCursor() {
@@ -348,8 +349,16 @@ export class Graph {
     this.node.select('text.emoji').text(this.getEmoji.bind(this));
   }
 
-  public focusCourse(id: string | null) {
-    console.debug('fixing node', id);
+  public focusCourse(id: string | null, reason: 'hover' | 'fix') {
+    console.debug('fixing node', id, reason);
+
+    if (reason === 'hover') {
+      this.reactSetHover(id);
+      this.focusedCourse = { id, reason: 'hover' };
+      this.renderHighlights();
+      return;
+    }
+
     // deselect a currently selected node
     id = this.focusedCourse.id === id && this.focusedCourse.reason === 'fix' ? null : id;
 
@@ -383,8 +392,8 @@ export class Graph {
     };
   }
 
-  private titleInGraph(d: Pick<CourseBrief, 'catalog' | 'subject'>) {
-    return this.currentData.some((n) => matchName(n, d));
+  public findTitle(d: Pick<CourseBrief, 'catalog' | 'subject'>) {
+    return this.currentData.find((n) => matchName(n, d));
   }
 
   public idInGraph(id: string) {
@@ -393,7 +402,7 @@ export class Graph {
 
   // get from all courses the ones whose titles are not in the graph
   get availableCourses() {
-    return this.courses.filter((d) => !this.titleInGraph(d));
+    return this.courses.filter((d) => !this.findTitle(d));
   }
 
   get isMatchFilter() {
@@ -429,7 +438,7 @@ export class Graph {
         ...course,
         distance: cos(d.pca, this.positions[course.i]),
       }))
-      .sort((a, b) => (this.mode === 'Add opposite' ? -1 : +1) * (b.distance - a.distance));
+      .sort((a, b) => (this.mode === 'Add similar' ? -1 : +1) * (b.distance - a.distance));
 
     // remove duplicates
     const names = new Set();
@@ -527,7 +536,7 @@ export class Graph {
     this.reactSetSubjects([...new Set(this.currentData.map((d) => d.subject))]);
 
     if (!this.currentData.some((d) => d.id === this.focusedCourse.id)) {
-      this.focusCourse(null);
+      this.focusCourse(null, 'fix');
     }
 
     if (this.phaseInternal === 'init') {
@@ -629,6 +638,10 @@ export class Graph {
     this.tooltip.classed('hidden', true);
   }
 
+  get canReplaceHover() {
+    return this.focusedCourse.id === null || this.focusedCourse.reason === 'hover';
+  }
+
   /**
    * Add event listeners to each node
    */
@@ -659,10 +672,8 @@ export class Graph {
         graph.transitionRadius(this, Graph.getRadius(d) + Graph.collideRadius);
 
         // set focused course
-        if (graph.focusedCourse.id === null || graph.focusedCourse.reason === 'hover') {
-          graph.reactSetHover(d.id);
-          graph.focusedCourse = { id: d.id, reason: 'hover' };
-          graph.renderHighlights();
+        if (graph.canReplaceHover) {
+          graph.focusCourse(d.id, 'hover');
         }
         graph.showTooltipAt(d.subject + d.catalog, event.clientX, event.clientY);
       })
@@ -693,7 +704,7 @@ export class Graph {
       .on('contextmenu.basic', (event, d) => {
         event.preventDefault();
         event.stopPropagation();
-        graph.focusCourse(d.id);
+        graph.focusCourse(d.id, 'fix');
       });
   }
 
@@ -759,7 +770,7 @@ export class Graph {
         const courses = [{ ...d.source }, { ...d.target }];
         this.reactSetExplanation({ courses, text: null });
         this.explanationComparingIds = [d.source.id, d.target.id];
-        this.focusCourse(null);
+        this.focusCourse(null, 'fix');
         this.renderHighlights();
         this.askRelationship(d)
           .then((text) => {
@@ -868,7 +879,9 @@ export class Graph {
   public toDatum(id: string, scheduleId: string): DatumWithoutPosition | null {
     const course = this.courses.find((c) => c.id === id);
     if (!course) return null;
-    return { ...course, pca: this.positions[course.i], scheduleId };
+    return {
+      ...course, radius: Graph.getRadius(course), pca: this.positions[course.i], scheduleId,
+    };
   }
 
   public syncCourses(ids: string[], fixed: string[]) {
@@ -930,6 +943,8 @@ export class Graph {
 
   private addInfoLabel(trigger: CourseGroupSelection, r = 100) {
     const n = { ...trigger.datum() };
+
+    this.focusCourse(n.id, 'hover');
 
     const [t] = this.transitionRadius(trigger.node()!, r, { duration: Graph.PULSE_DURATION, emojiOnly: true, updateForce: true });
 

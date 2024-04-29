@@ -23,7 +23,7 @@ import {
 import { ProfilesList } from '../components/ConnectPageComponents/ProfilesList';
 import { AllSchedules, useShowProfiles } from '../components/ConnectPageComponents/useShowProfiles';
 
-export default function () {
+export default function ConnectPageWrapper() {
   return (
     <Layout title="Friends" verify="meili">
       {({ userId }) => (

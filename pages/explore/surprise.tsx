@@ -8,7 +8,7 @@ import { useElapsed } from '../../src/utils/hooks';
 /**
  * Randomly sample pairs of courses and ask which one the user prefers.
  */
-export default function () {
+export default function SurprisePageWrapper() {
   return (
     <Layout title="Friends" verify="meili">
       {({ userId }) => (

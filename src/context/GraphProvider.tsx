@@ -4,7 +4,7 @@ import {
 import { connectInfiniteHits } from 'react-instantsearch-dom';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import {
-  Explanation, Graph, GraphPhase, RatingField,
+  Explanation, Graph, GraphPhase, GraphTool, RatingField,
 } from '../../components/ExploreGraph/Graph';
 import { ExtendedClass, Subject, getUpcomingSemester } from '../lib';
 import { useCourseEmbeddingData } from '../../components/ClassesCloudPage/useData';
@@ -40,9 +40,12 @@ function useGraphState({
 }: Provided & Exposed) {
   // react state to ensure rerenders when graph state changes
   const [hoveredClassId, setHover] = useState<string | null>(null);
+  const [mode, setMode] = useState<GraphTool>('Add similar');
   const [phase, setPhase] = useState<GraphPhase>('init');
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   const [matchFilter, setMatchFilter] = useState<boolean>(false);
+  const [ratingType, setRatingType] = useState<RatingField>('meanRating');
+  const [subjects, setSubjects] = useState<Subject[]>([]);
 
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
   const { showContents, goBack } = useModal();
@@ -52,8 +55,6 @@ function useGraphState({
   const dispatch = useAppDispatch();
   const graphSchedule = useAppSelector(Schedules.selectSchedule(GRAPH_SCHEDULE));
   const fixedClasses = useClasses(scheduleId);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [ratingType, setRatingType] = useState<RatingField>('meanRating');
 
   // refs for fine grained control
   const { client } = useMeiliClient();
@@ -97,6 +98,8 @@ function useGraphState({
       positions,
       courses,
       scheduleId,
+      mode,
+      setMode,
       setHover,
       setSubjects,
       setExplanation,
@@ -165,11 +168,13 @@ function useGraphState({
     ref,
     tooltipRef,
     hoveredClassId,
+    mode,
+    explanation,
     phase,
     subjects,
     elapsed,
     graphSchedule,
-  }), [elapsed, hoveredClassId, graphSchedule, phase, subjects]);
+  }), [hoveredClassId, mode, explanation, phase, subjects, elapsed, graphSchedule]);
 
   return context;
 }

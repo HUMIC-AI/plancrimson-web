@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import React, {
-  DragEventHandler, Ref, forwardRef, useMemo, useCallback,
+  DragEventHandler, Ref, forwardRef, useMemo, useCallback, useState,
 } from 'react';
 import {
   FaExclamationTriangle,
@@ -49,7 +49,10 @@ export const CourseCard = forwardRef(({
   warnings,
   hideTerm = false,
 }: CourseCardProps, ref: Ref<HTMLDivElement>) => {
-  const { style, clickWholeCard } = useCourseCardStyle();
+  const {
+    style, clickWholeCard, disableClick, hover,
+  } = useCourseCardStyle();
+  const [isHovered, setIsHovered] = useState(false);
   const { schedule } = useChosenSchedule();
   const drag = useCourseDragContext();
   const isInSchedule = getClassIdsOfSchedule(schedule).includes(course.id);
@@ -123,17 +126,30 @@ export const CourseCard = forwardRef(({
     />
   );
 
+  const onHover = () => {
+    if (hover?.filter(course)) {
+      hover.onHover(course);
+      setIsHovered(true);
+    }
+  };
+
   return (
     // move the shadow outside to avoid it getting hidden
     <div
       className={classNames(
-        'overflow-hidden rounded-xl border-gray-secondary border',
+        'overflow-hidden rounded-xl border-gray-secondary border transition',
         style === 'expanded' && 'shadow-xl',
         style === 'collapsed' && 'shadow-md',
         clickWholeCard && isInSchedule && 'ring-blue-primary ring-4',
+        // don't use "hover.filter" and "hover:" for performance
+        isHovered && 'ring-8 ring-primary',
       )}
       draggable={drag !== null}
       onDragStart={onDragStart}
+      onMouseOver={onHover}
+      onMouseOut={() => setIsHovered(false)}
+      onFocus={onHover}
+      onBlur={() => setIsHovered(false)}
       ref={ref}
     >
       <div className="relative h-full text-left">
@@ -141,8 +157,8 @@ export const CourseCard = forwardRef(({
           ? (
             <button
               type="button"
-              onClick={() => handleClickTitle(course)}
-              className={containerStyles}
+              onClick={disableClick ? undefined : () => handleClickTitle(course)}
+              className={classNames(containerStyles, disableClick && 'cursor-not-allowed')}
             >
               {Header}
             </button>

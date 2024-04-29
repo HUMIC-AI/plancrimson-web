@@ -3,6 +3,7 @@ import {
 } from 'react';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { useAssertContext } from '../utils/utils';
+import { ExtendedClass } from '../lib';
 
 const CARD_STYLES = ['text', 'collapsed', 'expanded'] as const;
 
@@ -12,6 +13,11 @@ type ProviderProps = {
   defaultStyle?: CardStyle;
   readonly?: boolean;
   confirmRemoval?: boolean;
+  disableClick?: boolean;
+  hover?: {
+    onHover: (course: ExtendedClass) => void;
+    filter: (course: ExtendedClass) => boolean;
+  };
   clickWholeCard?: boolean;
   columns: number;
 };
@@ -20,7 +26,9 @@ function useCourseCardStyleContext({
   defaultStyle = 'expanded',
   readonly = false,
   clickWholeCard = false,
+  disableClick = false,
   columns,
+  hover,
   confirmRemoval = false,
 }: ProviderProps) {
   const [style, setCourseCardStyle] = useState<CardStyle>(defaultStyle);
@@ -30,6 +38,8 @@ function useCourseCardStyleContext({
     clickWholeCard,
     columns,
     confirmRemoval,
+    disableClick,
+    hover,
     toggleStyle: () => {
       const newStyle = CARD_STYLES[(CARD_STYLES.indexOf(style) + 1) % CARD_STYLES.length];
       logEvent(getAnalytics(), 'toggle_expand_cards', { oldStyle: style, newStyle });
@@ -40,7 +50,7 @@ function useCourseCardStyleContext({
         setCourseCardStyle(s);
       }
     },
-  }), [style, clickWholeCard, columns, confirmRemoval, readonly]);
+  }), [style, clickWholeCard, columns, confirmRemoval, disableClick, hover, readonly]);
 
   return context;
 }
