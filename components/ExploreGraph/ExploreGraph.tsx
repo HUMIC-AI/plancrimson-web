@@ -1,37 +1,17 @@
-import { createPortal } from 'react-dom';
-import { connectInfiniteHits } from 'react-instantsearch-dom';
-import type { InfiniteHitsProvided } from 'react-instantsearch-core';
-import { useUpdateGraph } from './useUpdateGraph';
-import { Buttons } from './ExploreGraphButtons';
 import { LoadingBars } from '../Layout/LoadingPage';
 import { useCourseDragContext } from '../../src/context/DragCourseMoveSchedulesProvider';
-import useClientOrDemo from '../SearchComponents/ClientOrDemo';
-import { ExtendedClass } from '../../src/lib';
+import { useGraphContext } from '../../src/context/GraphProvider';
 
-type Provided = InfiniteHitsProvided<ExtendedClass>;
-
-type Exposed = {
-  panelRef: React.RefObject<HTMLDivElement>;
-  scheduleId: string | null;
-};
 
 /**
  * A 2D d3 force graph of different courses.
  */
-function ExploreGraphComponent({
-  panelRef,
-  scheduleId,
-  hasMore,
-  refineNext,
-  hits = [],
-}: Provided & Exposed) {
+export function ExploreGraph() {
   // create the graph
   const drag = useCourseDragContext();
   const {
-    graph, ref, tooltipRef, subjects, elapsed, graphSchedule,
-  } = useUpdateGraph({
-    scheduleId, hits, hasMore, refineNext,
-  });
+    graph, ref, tooltipRef, elapsed, graphSchedule,
+  } = useGraphContext();
 
   const width = 800;
   const height = 800;
@@ -71,20 +51,7 @@ function ExploreGraphComponent({
         ref={tooltipRef}
         className="secondary pointer-events-none absolute hidden -translate-x-1/2 translate-y-8 rounded px-1 text-sm"
       />
-
-      {/* use a portal here since buttons depend on graph state but need to be rendered elsewhere */}
-      {panelRef.current && graph && createPortal(<Buttons
-        graph={graph}
-        subjects={subjects}
-      />, panelRef.current)}
     </div>
   );
 }
 
-export function ExploreGraph(props: Exposed) {
-  const Component = useClientOrDemo<Provided, Exposed>(
-    connectInfiniteHits as any,
-    ExploreGraphComponent,
-  );
-  return <Component {...props} />;
-}

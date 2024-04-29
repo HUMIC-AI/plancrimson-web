@@ -10,9 +10,9 @@ import { useClasses } from '../../src/utils/schedules';
 import { GRAPH_SCHEDULE } from '../../src/features/schedules';
 import { getRandomRatedCourse } from '../../src/utils/utils';
 
-export function Buttons({
-  graph, subjects,
-}: { graph: Graph; subjects: Subject[]; }) {
+export function ExploreGraphButtons({
+  graph, phase, subjects,
+}: { graph: Graph; phase: Graph['phase']; subjects: Subject[]; }) {
   const [myTool, setMyTool] = useState(graph.mode);
   const fixedClasses = useClasses(graph.fixedScheduleId);
   const [hovered, setHovered] = useState(localStorage.getItem('graphButtonHovered') === 'true');
@@ -31,7 +31,7 @@ export function Buttons({
     }
   };
 
-  return graph.phase === 'ready' ? (
+  return phase === 'ready' ? (
     <div className="absolute right-full top-16 mr-4 text-right text-sm">
       <Disclosure defaultOpen>
         <Disclosure.Button

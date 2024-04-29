@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import Layout from '../Layout/Layout';
 import { Auth } from '../../src/features';
 import { WithMeili } from '../Layout/WithMeili';
@@ -21,7 +20,6 @@ import Hits from '../SearchComponents/Hits';
 export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
   const defaultState = useDefaultSearchState();
   const userId = Auth.useAuthProperty('uid');
-  const courseInfoRef = useRef<HTMLDivElement>(null);
   const isLg = useBreakpoint(breakpoints.lg);
 
   if (!isLg) {
@@ -46,18 +44,15 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
     >
       <WithMeili userId={userId}>
         {userId && <ScheduleSyncer userId={userId} />}
-        <GraphProvider>
-          {/* <GraphDragDropProvider> */}
-          <ScheduleProvider id={GRAPH_SCHEDULE}>
-            <CourseCardStyleProvider defaultStyle="collapsed" clickWholeCard columns={1}>
-              <SearchStateProvider defaultState={defaultState} ignoreUrl>
-                {/* more hits per page for better filter matching experience */}
-                <AuthRequiredInstantSearchProvider indexName="courses" hitsPerPage={20}>
+        {/* <GraphDragDropProvider> */}
+        <ScheduleProvider id={GRAPH_SCHEDULE}>
+          <CourseCardStyleProvider defaultStyle="collapsed" clickWholeCard columns={1}>
+            <SearchStateProvider defaultState={defaultState} ignoreUrl>
+              {/* more hits per page for better filter matching experience */}
+              <AuthRequiredInstantSearchProvider indexName="courses" hitsPerPage={20}>
+                <GraphProvider scheduleId={scheduleId ?? null}>
                   {/* three main components: the background graph, the left search bar, the right course info */}
-                  <ExploreGraph
-                    scheduleId={scheduleId ?? null}
-                    panelRef={courseInfoRef}
-                  />
+                  <ExploreGraph />
 
                   {/* left sidebar (add courses to graph schedule) */}
                   <SidebarPanel side="left" defaultOpen>
@@ -70,15 +65,15 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
                       <Hits concise />
                     </div>
                   </SidebarPanel>
-                </AuthRequiredInstantSearchProvider>
-                <SidebarPanel ref={courseInfoRef} side="right" defaultOpen>
-                  <HoveredCourseInfo />
-                </SidebarPanel>
-              </SearchStateProvider>
-            </CourseCardStyleProvider>
-          </ScheduleProvider>
-          {/* </GraphDragDropProvider> */}
-        </GraphProvider>
+                  <SidebarPanel side="right" defaultOpen>
+                    <HoveredCourseInfo />
+                  </SidebarPanel>
+                </GraphProvider>
+              </AuthRequiredInstantSearchProvider>
+            </SearchStateProvider>
+          </CourseCardStyleProvider>
+        </ScheduleProvider>
+        {/* </GraphDragDropProvider> */}
       </WithMeili>
     </Layout>
   );
