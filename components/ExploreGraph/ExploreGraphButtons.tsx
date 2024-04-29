@@ -40,23 +40,25 @@ export function ExploreGraphButtons({
             </Disclosure.Button>
 
             <Disclosure.Panel
-              className="mt-1 flex flex-col items-stretch space-y-1 rounded transition-colors hover:bg-gray-secondary/50"
+              className="mt-2 flex flex-col items-stretch space-y-4 rounded transition-colors hover:bg-gray-secondary/50"
             >
-              <button
-                type="button"
-                className="button whitespace-nowrap bg-primary/80 py-0.5 text-secondary"
-                onClick={handleReset}
-              >
-                Reset graph
-              </button>
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  className="button whitespace-nowrap bg-primary/80 py-0.5 text-secondary"
+                  onClick={handleReset}
+                >
+                  Reset graph
+                </button>
 
-              <button
-                type="button"
-                className="button whitespace-nowrap bg-primary/80 py-0.5 text-secondary"
-                onClick={() => graph.resetZoom()}
-              >
-                Center zoom
-              </button>
+                <button
+                  type="button"
+                  className="button whitespace-nowrap bg-primary/80 py-0.5 text-secondary"
+                  onClick={() => graph.resetZoom()}
+                >
+                  Center zoom
+                </button>
+              </div>
 
               {graph.target && (
               <button
@@ -72,7 +74,7 @@ export function ExploreGraphButtons({
                 label="Tools"
                 value={graph.tool}
                 onChange={(m) => graph.setTool(m)}
-                values={['Select', 'Move', 'Add similar', 'Add opposite', 'Erase']}
+                values={['Select', 'Move', 'Add similar', 'Add opposite', 'Link', 'Erase']}
                 icons={Graph.TOOLS}
               />
 

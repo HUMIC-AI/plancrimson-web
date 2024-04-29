@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { Dispatch, SetStateAction } from 'react';
 import {
-  FaEraser, FaHandPaper, FaMousePointer, FaPlusCircle, FaPlusSquare,
+  FaEraser, FaHandPaper, FaLink, FaMousePointer, FaPlusCircle, FaPlusSquare,
 } from 'react-icons/fa';
 import { CourseBrief } from '../ClassesCloudPage/useData';
 import {
@@ -29,7 +29,7 @@ export type Datum = DatumWithoutPosition & {
 export type LinkDatum = {
   source: Datum;
   target: Datum;
-  mode: 'Add similar' | 'Add opposite';
+  mode: 'Add similar' | 'Add opposite' | 'User';
 };
 
 export type StringLink = { source: string; target: string; };
@@ -46,6 +46,7 @@ export type GraphToolData = {
   name: string;
   icon: JSX.Element;
   cursor: string;
+  linkCursor: string;
   clickNode: (d: Datum) => void;
   clickLink: (d: LinkDatum) => void;
 };
@@ -79,7 +80,6 @@ type CircleTransition = d3.Transition<SVGCircleElement, null, SVGGElement, unkno
 type TextTransition = d3.Transition<SVGTextElement, null, SVGGElement, unknown>;
 
 export type GraphPhase = 'init' | 'wait' | 'info' | 'ready';
-
 
 /**
  * The entire d3 graph visualization.
@@ -124,6 +124,8 @@ export class Graph {
 
   private link: d3.Selection<SVGLineElement, LinkDatum, SVGGElement, unknown>;
 
+  private defs: d3.Selection<SVGLinearGradientElement, LinkDatum, SVGDefsElement, undefined>;
+
   private history: {
     nodes: string[];
     links: StringLink[];
@@ -136,18 +138,31 @@ export class Graph {
 
   public startTime = 0;
 
+  private linkFrom: Datum | null = null;
+
   public static readonly TOOLS = {
+    Begin: {
+      name: 'Begin',
+      icon: <FaMousePointer />,
+      cursor: 'pointer',
+      linkCursor: 'pointer',
+      clickNode: () => null,
+      clickLink: () => null,
+    },
     Select: {
       name: 'Select',
       icon: <FaMousePointer />,
       cursor: 'default',
+      linkCursor: 'pointer',
       clickNode: (g: Graph, d: Datum) => g.focusCourse(d.id, 'fix'),
       clickLink: (g: Graph, d: LinkDatum) => g.explainLink(d),
+      mouseOver: (g: Graph, d: Datum) => g.focusCourse(d.id, 'soft-hover'),
     },
     Move: {
       name: 'Move',
       icon: <FaHandPaper />,
       cursor: 'grab',
+      linkCursor: 'default',
       clickNode: () => null,
       clickLink: () => null,
     },
@@ -155,6 +170,7 @@ export class Graph {
       name: 'Add similar',
       icon: <FaPlusCircle />,
       cursor: 'copy',
+      linkCursor: 'pointer',
       clickNode: (g: Graph, d: Datum) => g.addNewNeighbours(d, Graph.NUM_NEIGHBOURS, false),
       clickLink: (g: Graph, d: LinkDatum) => g.explainLink(d),
     },
@@ -162,6 +178,7 @@ export class Graph {
       name: 'Add opposite',
       icon: <FaPlusSquare />,
       cursor: 'alias',
+      linkCursor: 'pointer',
       clickNode: (g: Graph, d: Datum) => g.addNewNeighbours(d, Graph.NUM_NEIGHBOURS, true),
       clickLink: (g: Graph, d: LinkDatum) => g.explainLink(d),
     },
@@ -169,8 +186,25 @@ export class Graph {
       name: 'Erase',
       icon: <FaEraser />,
       cursor: 'crosshair',
+      linkCursor: 'crosshair',
       clickNode: (g: Graph, d: Datum) => g.eraseNode(d),
       clickLink: (g: Graph, d: LinkDatum) => g.removeLinks([{ source: d.source.id, target: d.target.id }]),
+    },
+    Link: {
+      name: 'Link',
+      icon: <FaLink />,
+      cursor: 'alias',
+      linkCursor: 'default',
+      clickNode: (g: Graph, d: Datum) => {
+        if (g.linkFrom) {
+          g.appendNodesAndLinks([], [{ source: g.linkFrom.id, target: d.id, mode: 'User' }]);
+          g.linkFrom = null;
+        } else {
+          g.linkFrom = d;
+        }
+        g.renderHighlights();
+      },
+      clickLink: () => null,
     },
   } as const;
 
@@ -193,6 +227,8 @@ export class Graph {
   private static readonly CENTER_STRENGTH = 0.05;
 
   private static readonly PULSE_DURATION = 750;
+
+  private static readonly LINK_OPACITY = 0.5;
 
   public tool!: GraphTool;
 
@@ -248,6 +284,8 @@ export class Graph {
 
     const r = d3.scaleLinear().domain([0, 1]).range([0, 500]);
 
+    this.defs = this.svg.append('defs').selectAll<SVGLinearGradientElement, LinkDatum>('linearGradient');
+
     this.grid = this.svg.append('g')
       .selectAll('g')
       .data(r.ticks(5))
@@ -259,7 +297,7 @@ export class Graph {
       .attr('r', r);
 
     this.linkGroup = this.svg.append('g')
-      .attr('stroke-opacity', 0.3)
+      .attr('stroke-opacity', Graph.LINK_OPACITY)
       .attr('stroke-linecap', 'round');
 
     this.link = this.linkGroup.selectAll<SVGLineElement, LinkDatum>('line');
@@ -363,6 +401,12 @@ export class Graph {
       .attr('x2', (d) => d.target.x)
       .attr('y2', (d) => d.target.y);
 
+    this.defs
+      .attr('x1', (d) => d.source.x)
+      .attr('y1', (d) => d.source.y)
+      .attr('x2', (d) => d.target.x)
+      .attr('y2', (d) => d.target.y);
+
     this.node
       .attr('transform', (d) => `translate(${d.x},${d.y})`);
   }
@@ -373,7 +417,7 @@ export class Graph {
    * Use {@link DatumWithoutPosition} since we don't need to initialize x and y.
    * @returns The nodes and links that were actually added to the graph.
    */
-  public appendNodesAndLinks(nodesToAdd: DatumWithoutPosition[], idLinks: StringLink[], updateHistory = true): readonly [Datum[], LinkDatum[]] {
+  public appendNodesAndLinks(nodesToAdd: DatumWithoutPosition[], idLinks: (StringLink & { mode?: LinkDatum['mode'] })[], updateHistory = true): readonly [Datum[], LinkDatum[]] {
     nodesToAdd = this.getNewNodes(nodesToAdd);
     idLinks = this.getNewLinks(idLinks);
 
@@ -382,10 +426,10 @@ export class Graph {
     console.debug('appending nodes', nodesToAdd.length, idLinks.length);
 
     const nodeObjects = nodesToAdd.map((d) => ({ ...d }) as Datum);
-    const linkObjects = idLinks.map((d) => ({ ...d }) as unknown as LinkDatum);
+    const linkObjects = idLinks.map((d) => ({ ...d, mode: d.mode ?? this.tool }) as unknown as LinkDatum);
 
     this.link = this.link
-      .data(this.link.data().concat(linkObjects), (d) => `${stringify(d.source)}:${stringify(d.target)}`)
+      .data(this.link.data().concat(linkObjects), getLinkId)
       .join((enter) => enter.append('line')
         .attr('stroke', Graph.getLinkColor)
         .call(this.addLinkEventListeners.bind(this)));
@@ -395,6 +439,19 @@ export class Graph {
       .join((enter) => enter.append('g')
         .call(this.addCircle.bind(this))
         .call(this.addNodeEventListeners.bind(this)));
+
+    // for Daniel
+    this.defs = this.defs
+      .data(this.link.data(), getLinkId)
+      .join((enter) => enter.append('linearGradient')
+        .attr('id', getLinkId)
+        .attr('gradientUnits', 'userSpaceOnUse')
+        .call((e) => e.append('stop')
+          .attr('offset', '0%')
+          .attr('stop-color', ({ source }) => getSubjectColor(this.findData(stringify(source))!.subject)))
+        .call((e) => e.append('stop')
+          .attr('offset', '100%')
+          .attr('stop-color', ({ target }) => getSubjectColor(this.findData(stringify(target))!.subject))));
 
     // callback
     const [fixed, regular] = splitArray(nodesToAdd, (d) => d.scheduleId === this.fixedScheduleId);
@@ -538,6 +595,8 @@ export class Graph {
         // don't react if info demonstration is open or we are comparing courses
         if (graph.phaseInternal === 'info') return;
 
+        if ('mouseOver' in graph.toolData) graph.toolData.mouseOver(graph, d);
+
         graph.transitionRadius(this, Graph.getRadius(d) + Graph.collideRadius);
         graph.showTooltipAt(d.subject + d.catalog, event.clientX, event.clientY);
       })
@@ -672,8 +731,7 @@ export class Graph {
   }
 
   private getNewLinks(links: StringLink[]) {
-    return links.filter((d) => !this.link.data().some((l) => sameLink(l, d)))
-      .map((d) => ({ ...d, mode: this.tool }));
+    return links.filter((d) => !this.link.data().some((l) => sameLink(l, d)));
   }
 
   public linksTouchingNodes<T extends NodeId>(nodeIds: T[]) {
@@ -706,7 +764,7 @@ export class Graph {
   public setTool(tool: GraphTool) {
     this.tool = tool;
     this.nodeGroup.attr('cursor', this.toolData.cursor);
-    this.linkGroup.attr('cursor', this.toolData.cursor);
+    this.linkGroup.attr('cursor', this.toolData.linkCursor);
     this.reactSetTool(tool);
 
     if (tool === 'Move') {
@@ -798,11 +856,19 @@ export class Graph {
   }
 
   private getNodeBorder(d: Datum) {
-    if (this.focusedCourse.id === d.id) return 6;
-    if (this.explanationComparingIds.includes(d.id)) return 5;
+    if (this.linkFrom && d.id === this.linkFrom.id) return 6;
+    if (this.focusedCourse.id === d.id) return 5;
+    if (this.explanationComparingIds.includes(d.id)) return 4;
     if (this.highlightedSubject === d.subject) return 3;
     if (d.scheduleId === this.fixedScheduleId) return 2;
     return 0;
+  }
+
+  private getNodeBorderColor(d: Datum) {
+    if (this.linkFrom && d.id === this.linkFrom.id) return 'rgb(var(--color-blue-primary))';
+    if (this.focusedCourse.id !== d.id) return 'rgb(var(--color-gray-primary)';
+    if (this.focusedCourse.reason === 'fix') return 'rgb(var(--color-blue-primary)';
+    return 'rgb(var(--color-primary))';
   }
 
   // ============================== LINK PROPERTIES ==============================
@@ -812,15 +878,7 @@ export class Graph {
   }
 
   private static getLinkColor(d: LinkDatum) {
-    return d.mode === 'Add opposite'
-      ? 'rgb(var(--color-blue-primary))'
-      : 'rgb(var(--color-gray-primary))';
-  }
-
-  private getStrokeColor(d: Datum) {
-    if (this.focusedCourse.id !== d.id) return 'rgb(var(--color-gray-primary)';
-    if (this.focusedCourse.reason === 'fix') return 'rgb(var(--color-blue-primary)';
-    return 'rgb(var(--color-primary))';
+    return `url('#${getLinkId(d)}')`;
   }
 
   private static getLinkWidth(d: LinkDatum) {
@@ -975,7 +1033,7 @@ export class Graph {
       .transition('highlight-t')
       .duration(Graph.T_DURATION)
       .attr('stroke-width', this.getNodeBorder.bind(this))
-      .attr('stroke', this.getStrokeColor.bind(this))
+      .attr('stroke', this.getNodeBorderColor.bind(this))
       .attr('stroke-opacity', (d) => (this.getNodeBorder(d) > 0 ? 1 : 0));
   }
 
@@ -1129,8 +1187,9 @@ export class Graph {
           // wait to avoid double click trigger
           this.focusCourse(n.id, 'soft-hover');
           this.node.call(this.addNodeEventListeners.bind(this));
+          this.setTool('Add similar');
+          this.setPhase('ready');
         });
-        this.setPhase('ready');
 
         // only run this listener once
         this.node.on('.info', null);
@@ -1206,4 +1265,8 @@ export class Graph {
 
 function matchName(n: Pick<CourseBrief, 'catalog' | 'subject'>, d: Pick<Datum, 'catalog' | 'subject'>) {
   return n.catalog === d.catalog && n.subject === d.subject;
+}
+
+function getLinkId(d: LinkDatum) {
+  return `${stringify(d.source)}:${stringify(d.target)}`;
 }

@@ -44,7 +44,7 @@ function useGraphState({
 }: Provided & Exposed) {
   // react state to ensure rerenders when graph state changes
   const [hoveredClassId, setHover] = useState<string | null>(null);
-  const [tool, setTool] = useState<GraphTool>('Add similar');
+  const [tool, setTool] = useState<GraphTool>('Begin');
   const [phase, setPhase] = useState<GraphPhase>('init');
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   const [matchFilter, setMatchFilter] = useState<boolean>(false);

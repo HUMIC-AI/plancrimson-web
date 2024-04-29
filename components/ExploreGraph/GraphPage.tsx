@@ -77,7 +77,7 @@ function Container() {
         onHover(course) {
           const node = graph.findTitle({ catalog: course.CATALOG_NBR, subject: course.SUBJECT });
           if (node) {
-            graph.focusCourse(node.id, 'hover');
+            graph.focusCourse(node.id, 'soft-hover');
           }
         },
       } : undefined}
