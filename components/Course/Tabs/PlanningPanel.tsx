@@ -25,7 +25,7 @@ import { MESSAGES } from '../../../src/utils/config';
  * The planning panel in the course modal. Returns a Tab.Panel.
  * @param course The course that's currently displayed in the modal
  */
-export default function ({ course }: { course: ExtendedClass }) {
+export default function PlanningPanel({ course }: { course: ExtendedClass }) {
   const userId = Auth.useAuthProperty('uid');
   const elapsed = useElapsed(500, [userId]);
 
@@ -45,10 +45,10 @@ export default function ({ course }: { course: ExtendedClass }) {
     );
   }
 
-  return <PlanningPanel course={course} />;
+  return <PlanningPanelInner course={course} />;
 }
 
-function PlanningPanel({ course }: { course: ExtendedClass }) {
+function PlanningPanelInner({ course }: { course: ExtendedClass }) {
   const schedules = useAppSelector(Schedules.selectSchedules);
 
   if (Object.keys(schedules).length === 0) {

@@ -402,6 +402,9 @@ export class Graph {
     window.addEventListener('keydown', (event) => {
       if (this.phase !== 'ready') return;
 
+      // ignore if input is in a text field
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+
       if (event.key === 'z' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         if (event.shiftKey) {

@@ -46,7 +46,6 @@ export async function signInUser() {
  * Gets called in {@link pages/_app.tsx}.
  */
 export function useSyncAuth() {
-  const auth = getAuth();
   const dispatch = useAppDispatch();
   const { showContents } = useModal();
 
@@ -54,7 +53,7 @@ export function useSyncAuth() {
   // updates all of the relevant redux state when the user logs in or out
   useEffect(() => {
     const unsub = onAuthStateChanged(
-      auth,
+      getAuth(),
       async (user) => {
         const analytics = getAnalytics();
 
@@ -107,7 +106,7 @@ export function useSyncAuth() {
     );
 
     return unsub;
-  }, [auth, dispatch, showContents]);
+  }, [dispatch, showContents]);
 }
 
 /**
