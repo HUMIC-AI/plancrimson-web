@@ -105,6 +105,19 @@ export interface FriendRequest {
   accepted: boolean;
 }
 
+// ============================== /games ==============================
+
+export interface GameRecord {
+  id: string;
+  createdAt: Timestamp;
+  userId: string;
+  sourceId: string;
+  targetId: string;
+  milliseconds: number;
+  clickCount: number;
+  hintsUsed: number;
+}
+
 // ============================== misc ==============================
 
 export type Viability = 'Yes' | 'Likely' | 'Unlikely' | 'No';

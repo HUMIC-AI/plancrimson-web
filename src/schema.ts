@@ -2,7 +2,7 @@ import {
   getFirestore, doc, DocumentReference, collection, CollectionReference, collectionGroup, Query, query, where, DocumentSnapshot, QueryConstraint, limit, startAfter, getDocs, QuerySnapshot,
 } from 'firebase/firestore';
 import type {
-  UserProfile, UserSettings, FriendRequest, Metadata, Alert, FirestoreSchedule, WithId,
+  UserProfile, UserSettings, FriendRequest, Metadata, Alert, FirestoreSchedule, WithId, GameRecord,
 } from './types';
 import { Season } from './lib';
 
@@ -73,6 +73,9 @@ const Schema = {
   },
   metadata() {
     return doc(db(), 'metadata', 'metadata') as DocumentReference<Metadata>;
+  },
+  game(id: string) {
+    return doc(db(), 'games', id) as DocumentReference<GameRecord>;
   },
   Collection: {
     profiles() {

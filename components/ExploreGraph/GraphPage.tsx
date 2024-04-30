@@ -63,9 +63,7 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
 
 // needs to go inside graph provider
 function Container() {
-  const {
-    graph, phase, showRightSidebar, setShowRightSidebar, showLeftSidebar, setShowLeftSidebar,
-  } = useGraphContext();
+  const { graph, phase } = useGraphContext();
   return (
     <CourseCardStyleProvider
       defaultStyle="collapsed"
@@ -88,7 +86,7 @@ function Container() {
       <ExploreGraph />
 
       {/* left sidebar (add courses to graph schedule) */}
-      <SidebarPanel side="left" open={showLeftSidebar} setOpen={setShowLeftSidebar} showLink>
+      <SidebarPanel side="left" showLink>
         {/* static positioning!!! happy */}
         <div className="mx-2 space-y-4 rounded-xl py-6 text-xs transition-colors hover:bg-secondary/50">
           <SearchBox scheduleChooser={false} showSmallAttributeMenu showStats={false} />
@@ -98,7 +96,7 @@ function Container() {
           <Hits concise />
         </div>
       </SidebarPanel>
-      <SidebarPanel side="right" open={showRightSidebar} setOpen={setShowRightSidebar}>
+      <SidebarPanel side="right">
         <HoveredCourseInfo />
       </SidebarPanel>
     </CourseCardStyleProvider>

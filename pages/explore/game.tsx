@@ -48,7 +48,7 @@ export default function GamePage() {
           <SearchStateProvider defaultState={null} ignoreUrl>
             {/* more hits per page for better filter matching experience */}
             <AuthRequiredInstantSearchProvider indexName="courses" hitsPerPage={2}>
-              <GraphProvider scheduleId={null} instructions>
+              <GraphProvider scheduleId={null} playGame>
                 <Contents />
               </GraphProvider>
             </AuthRequiredInstantSearchProvider>
@@ -74,11 +74,11 @@ function Contents() {
       {victory && <Confetti />}
       <ExploreGraph />
       {props && (
-      <SidebarPanel side="left" defaultOpen>
+      <SidebarPanel side="left">
         <InfoCard {...props} />
       </SidebarPanel>
       )}
-      <SidebarPanel side="right" defaultOpen>
+      <SidebarPanel side="right">
         <HoveredCourseInfo />
       </SidebarPanel>
     </>

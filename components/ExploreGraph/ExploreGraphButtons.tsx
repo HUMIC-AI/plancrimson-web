@@ -127,7 +127,7 @@ function GraphButtons() {
       </Button>
 
       {graph.target && (
-      <Button title="Show hint" onClick={() => graph.focusHint()}>
+      <Button title="Use hint" onClick={() => graph.focusHint()}>
         <FaMapMarker />
       </Button>
       )}

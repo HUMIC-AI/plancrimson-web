@@ -136,9 +136,17 @@ export class Graph {
 
   private waitingForExplanation = false;
 
+  // ============================== GAME STATE ==============================
+
   public startTime = 0;
 
+  public hintsUsed = 0;
+
+  public maxCourses = 0;
+
   private linkFrom: Datum | null = null;
+
+  // ============================== TOOLS ==============================
 
   public static TOOL_MENU: GraphTool[] = ['Select', 'Move', 'Add similar', 'Add opposite', 'Link', 'Erase'];
 
@@ -642,6 +650,8 @@ export class Graph {
     if (this.phaseInternal === 'init') {
       this.setPhase('wait');
     }
+
+    this.maxCourses = Math.max(this.maxCourses, this.node.size());
   }
 
   // ============================== NODE AND LINK EVENT LISTENERS ==============================
@@ -915,6 +925,11 @@ export class Graph {
 
       if (this.showInstructions) this.showInstructions();
       else this.addInfoLabel(this.node.filter((d) => d.id === id));
+    } else if (newPhase === 'ready') {
+      this.setTool('Add similar');
+      this.startTime = Date.now();
+      this.hintsUsed = 0;
+      this.maxCourses = 0;
     }
 
     this.phaseInternal = newPhase;
@@ -986,6 +1001,7 @@ export class Graph {
       this.focusCourse(datum.id, 'force-hover');
     }
     this.zoomTo(datum);
+    this.hintsUsed += 1;
   }
 
   private explainLink(d: LinkDatum) {
@@ -1293,7 +1309,6 @@ export class Graph {
           // this.reactShowLeftSidebar(true);
           this.reactShowRightSidebar(true);
           this.node.call(this.addNodeEventListeners.bind(this));
-          this.setTool('Add similar');
           this.setPhase('ready');
         });
 

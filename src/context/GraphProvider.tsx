@@ -3,7 +3,7 @@ import {
 } from 'react';
 import { connectInfiniteHits } from 'react-instantsearch-dom';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
-import { useRouter } from 'next/router';
+import { NextRouter, useRouter } from 'next/router';
 import {
   Explanation, Graph, GraphPhase, GraphTool, RatingField,
 } from '../../components/ExploreGraph/Graph';
@@ -26,7 +26,7 @@ type Provided = Pick<InfiniteHitsProvided<ExtendedClass>, 'hits' | 'hasMore' | '
 
 type Exposed = {
   scheduleId: string | null;
-  instructions?: boolean;
+  playGame?: boolean;
 };
 
 const GraphContext = createContext<ReturnType<typeof useGraphState> | null>(null);
@@ -39,7 +39,7 @@ function useGraphState({
   scheduleId,
   hits,
   hasMore,
-  instructions: gameMode,
+  playGame,
   refineNext,
 }: Provided & Exposed) {
   // react state to ensure rerenders when graph state changes
@@ -81,11 +81,10 @@ function useGraphState({
 
     // ask user to sign in if they haven't already
     const showInstructions = userId
-      ? (gameMode ? () => {
+      ? (playGame ? () => {
         if (fixedClasses.length !== 0) {
           throw new Error('Game environment should not have any fixed classes');
         }
-
         showContents(getGameContents(initial, graphRef.current!, goBack));
       } : null)
       : () => {
@@ -118,8 +117,8 @@ function useGraphState({
       positions,
       courses,
       scheduleId,
-      gameMode ? initial : null,
-      gameMode ? getRandomRatedCourse(courses) : null,
+      playGame ? initial : null,
+      playGame ? getRandomRatedCourse(courses) : null,
       tool,
       setTool,
       (id: string | null) => {
@@ -196,43 +195,7 @@ function useGraphState({
 
     setVictorySeen(true);
 
-    showContents({
-      close() {
-        goBack();
-        setVictory(false);
-      },
-      content: (
-        <div className="flex flex-col space-y-2 p-6">
-          <p>
-            Success! You made your way from
-            {' '}
-            {graph.initial!.subject + graph.initial!.catalog}
-            {' '}
-            to
-            {' '}
-            {graph.target!.subject + graph.target!.catalog}
-            {' '}
-            in
-            {' '}
-            {(Date.now() - graph.startTime) / 1000}
-            {' '}
-            seconds, exploring
-            {' '}
-            {graph.currentData.length}
-            {' '}
-            courses along the way.
-          </p>
-          <button
-            type="button"
-            className="button secondary mx-auto"
-            onClick={() => router.reload()}
-          >
-            Play again
-          </button>
-        </div>
-      ),
-      title: 'You win!',
-    });
+    showContents(getVictoryContents(goBack, setVictory, graph, router));
   }, [goBack, victorySeen, router, showContents, victory]);
 
   // update using graph methods
@@ -261,10 +224,55 @@ function useGraphState({
   return context;
 }
 
+function getVictoryContents(goBack: () => void, setVictory: (victory: boolean) => void, graph: Graph, router: NextRouter): ModalProps {
+  return {
+    close() {
+      goBack();
+      setVictory(false);
+    },
+    content: (
+      <div className="flex flex-col space-y-4 p-6">
+        <p>
+          Success! You made your way from
+          {' '}
+          {graph.initial!.subject + graph.initial!.catalog}
+          {' '}
+          to
+          {' '}
+          {graph.target!.subject + graph.target!.catalog}
+          {' '}
+          in
+          {' '}
+          {(Date.now() - graph.startTime) / 1000}
+          {' '}
+          seconds, exploring
+          {' '}
+          {graph.maxCourses}
+          {' '}
+          courses along the way and using
+          {' '}
+          {graph.hintsUsed}
+          {' '}
+          hints.
+        </p>
+
+        <button
+          type="button"
+          className="button secondary mx-auto"
+          onClick={() => router.reload()}
+        >
+          Play again
+        </button>
+      </div>
+    ),
+    title: 'You win!',
+  };
+}
+
 function getGameContents(initial: CourseBrief, graph: Graph, goBack: () => void): ModalProps {
   return {
     title: 'Exploration Game',
-    close: 'none',
+    close: 'none', // force user to click "Begin" button
     content: (
       <div className="flex flex-col space-y-2 p-6">
         <p>
@@ -305,7 +313,6 @@ function getGameContents(initial: CourseBrief, graph: Graph, goBack: () => void)
           type="button"
           onClick={() => {
             goBack();
-            graph.startTime = Date.now();
             graph.cleanupClickMe();
             graph.setPhase('ready');
           }}
