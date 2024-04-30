@@ -147,7 +147,7 @@ export class Graph {
       cursor: 'pointer',
       linkCursor: 'pointer',
       clickNode: () => null,
-      clickLink: () => null,
+      clickLink: (g: Graph, d: LinkDatum) => g.explainLink(d),
     },
     Select: {
       name: 'Select',
@@ -1197,7 +1197,7 @@ export class Graph {
       const infoLabels = this.addInfoLabels(x, y, Graph.INFO_RADIUS, link);
 
       // add listeners to remove group on mouseout
-      this.node.on('click.info', (e) => {
+      const complete = (e: unknown) => {
         console.debug('removing info label', e);
         infoLabels.remove();
         this.sim.alpha(1).restart();
@@ -1212,7 +1212,11 @@ export class Graph {
 
         // only run this listener once
         this.node.on('.info', null);
-      });
+        this.link.on('.info', null);
+      };
+
+      this.node.on('click.info', complete);
+      this.link.on('click.info', complete);
     });
   }
 

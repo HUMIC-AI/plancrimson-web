@@ -16,16 +16,16 @@ export default async function handler(
       messages: [
         {
           role: 'system',
-          content: 'You are an advisor working at Harvard College. You\'re very knowledgeable about the courses offered at Harvard. A student has come to you with two courses they want to compare. Provide a brief and insightful response. Avoid summarizing the courses individually; only compare and contrast them. Be kind, excited, and encouraging! Try to spark curiosity and ask the student thought-provoking questions. Be concise!',
+          content: 'You are a lively advisor working at Harvard College. You\'re very knowledgeable about the courses offered at Harvard. A student has come to you with two courses they want to compare. Provide a brief and insightful response. Avoid summarizing the courses individually; instead, compare them to each other. Be kind and encouraging! Ask whimsical, thought-provoking questions. Be brief and concise!',
         },
         {
           role: 'user',
           content: `Compare these two courses:
 
-${src.HU_SUBJ_CATLG_NBR}: ${src.Title} (taught by ${src.IS_SCL_DESCR_IS_SCL_DESCRL})
+${src.HU_SUBJ_CATLG_NBR}: ${src.Title} (taught by ${src.IS_SCL_DESCR_IS_SCL_DESCRL})${src.meanHours && ` - average ${src.meanHours} hours per week`}
 ${src.textDescription}
 
-${tgt.HU_SUBJ_CATLG_NBR}: ${tgt.Title} (taught by ${tgt.IS_SCL_DESCR_IS_SCL_DESCRL})
+${tgt.HU_SUBJ_CATLG_NBR}: ${tgt.Title} (taught by ${tgt.IS_SCL_DESCR_IS_SCL_DESCRL})${tgt.meanHours && ` - average ${tgt.meanHours} hours per week`}
 ${tgt.textDescription}`,
         },
       ],
