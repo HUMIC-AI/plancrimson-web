@@ -4,6 +4,7 @@ import {
 import { connectInfiniteHits } from 'react-instantsearch-dom';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { NextRouter, useRouter } from 'next/router';
+import { Timestamp, addDoc } from 'firebase/firestore';
 import {
   Explanation, Graph, GraphPhase, GraphTool, RatingField,
 } from '../../components/ExploreGraph/Graph';
@@ -21,6 +22,7 @@ import { useMeiliClient } from './meili';
 import { useModal } from './modal';
 import useClientOrDemo from '../../components/SearchComponents/ClientOrDemo';
 import { ModalProps } from '../../components/Modals/InfoCard';
+import Schema from '../schema';
 
 type Provided = Pick<InfiniteHitsProvided<ExtendedClass>, 'hits' | 'hasMore' | 'refineNext'>;
 
@@ -85,7 +87,7 @@ function useGraphState({
         if (fixedClasses.length !== 0) {
           throw new Error('Game environment should not have any fixed classes');
         }
-        showContents(getGameContents(initial, graphRef.current!, goBack));
+        showContents(getGameContents(initial, graphRef.current!, goBack, setShowLeftSidebar, setShowRightSidebar));
       } : null)
       : () => {
         console.info('showing graph instructions');
@@ -190,13 +192,25 @@ function useGraphState({
   }, [hits, hasMore, refineNext]);
 
   useEffect(() => {
-    if (victorySeen || !victory) return;
+    if (victorySeen || !victory || !userId) return;
+
     const graph = graphRef.current!;
 
     setVictorySeen(true);
 
+    addDoc(Schema.Collection.games(), {
+      createdAt: Timestamp.fromMillis(graph.startTime),
+      maxCourses: graph.maxCourses,
+      hintsUsed: graph.hintsUsed,
+      milliseconds: Date.now() - graph.startTime,
+      sourceId: graph.initial!.id,
+      targetId: graph.target!.id,
+      difficulty: graph.difficulty,
+      userId,
+    }).catch(alertUnexpectedError);
+
     showContents(getVictoryContents(goBack, setVictory, graph, router));
-  }, [goBack, victorySeen, router, showContents, victory]);
+  }, [goBack, victorySeen, router, showContents, victory, userId]);
 
   // update using graph methods
   // rerender whenever these dependencies change
@@ -269,7 +283,13 @@ function getVictoryContents(goBack: () => void, setVictory: (victory: boolean) =
   };
 }
 
-function getGameContents(initial: CourseBrief, graph: Graph, goBack: () => void): ModalProps {
+function getGameContents(
+  initial: CourseBrief,
+  graph: Graph,
+  goBack: () => void,
+  showLeftSidebar: (show: boolean) => void,
+  showRightSidebar: (show: boolean) => void,
+): ModalProps {
   return {
     title: 'Exploration Game',
     close: 'none', // force user to click "Begin" button
@@ -279,27 +299,23 @@ function getGameContents(initial: CourseBrief, graph: Graph, goBack: () => void)
           Welcome to the course exploration game!
         </p>
         <p>
-          Your goal is to get from the origin course to the target course as quickly as possible
-          by hopping from course to course.
-        </p>
-        <p>
-          Your origin course is
+          Goal: get from
           {' '}
           <strong>
             {initial.subject + initial.catalog}
           </strong>
-          .
-        </p>
-        <p>
-          Your target course is
+          {' '}
+          to
           {' '}
           <strong>
             {graph.target!.subject + graph.target!.catalog}
           </strong>
-          .
+          {' '}
+          as quickly as possible
+          by hopping from course to course.
         </p>
         <p>
-          This has difficulty
+          Difficulty rating:
           {' '}
           {graph.difficulty}
           /
@@ -315,6 +331,9 @@ function getGameContents(initial: CourseBrief, graph: Graph, goBack: () => void)
             goBack();
             graph.cleanupClickMe();
             graph.setPhase('ready');
+            graph.focusCourse(initial.id, 'soft-hover');
+            showLeftSidebar(true);
+            showRightSidebar(true);
           }}
           className="button secondary mx-auto"
         >

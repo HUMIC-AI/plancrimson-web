@@ -90,6 +90,9 @@ const Schema = {
     alerts() {
       return collection(db(), 'alerts') as CollectionReference<Alert>;
     },
+    games() {
+      return collection(db(), 'games') as CollectionReference<GameRecord>;
+    },
   },
 } as const;
 

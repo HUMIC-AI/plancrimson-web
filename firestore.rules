@@ -36,6 +36,11 @@ service cloud.firestore {
       allow read, write: if loggedInStudent() && request.auth.uid == uid;
     }
 
+    match /games/{id} {
+      allow read: if loggedInStudent();
+      allow write: if loggedInStudent() && request.resource.data.userId == request.auth.uid;
+    }
+
     // this path exists to support collection group queries
     match /{fullPath=**}/friends/{friendRequest} {
       allow read, delete: if loggedInStudent() && (resource == null || resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);

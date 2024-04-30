@@ -108,13 +108,13 @@ export interface FriendRequest {
 // ============================== /games ==============================
 
 export interface GameRecord {
-  id: string;
   createdAt: Timestamp;
   userId: string;
   sourceId: string;
   targetId: string;
   milliseconds: number;
-  clickCount: number;
+  maxCourses: number;
+  difficulty: number;
   hintsUsed: number;
 }
 
