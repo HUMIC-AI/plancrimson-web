@@ -34,6 +34,8 @@ export default function LeaderboardPage() {
                 <th className="bg-gray-secondary px-2 py-1 text-center font-medium">Rank</th>
                 <th className="bg-gray-secondary px-2 py-1 text-center font-medium">User</th>
                 <th className="bg-gray-secondary px-2 py-1 text-center font-medium">Seconds</th>
+                <th className="bg-gray-secondary px-2 py-1 text-center font-medium">Start</th>
+                <th className="bg-gray-secondary px-2 py-1 text-center font-medium">Target</th>
                 <th className="bg-gray-secondary px-2 py-1 text-center font-medium">Difficulty</th>
                 <th className="bg-gray-secondary px-2 py-1 text-center font-medium">Hints</th>
               </tr>
@@ -56,6 +58,8 @@ function LeaderboardRow({ game, rank, profile }: { game: GameRecord; rank: numbe
       <td className="px-2 text-center">{rank}</td>
       <td className="px-2 text-center">{profile ? profile.displayName ?? profile.username : 'Loading...'}</td>
       <td className="px-2 text-center">{(game.milliseconds / 1000).toFixed(2)}</td>
+      <td className="px-2 text-center">{game.sourceName}</td>
+      <td className="px-2 text-center">{game.targetName}</td>
       <td className="px-2 text-center">{game.difficulty}</td>
       <td className="px-2 text-center">{game.hintsUsed}</td>
     </tr>

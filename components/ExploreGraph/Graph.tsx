@@ -47,8 +47,10 @@ export type GraphToolData = {
   icon: JSX.Element;
   cursor: string;
   linkCursor: string;
-  clickNode: (d: Datum) => void;
-  clickLink: (d: LinkDatum) => void;
+  clickNode: (g: Graph, d: Datum) => void;
+  clickLink: (g: Graph, d: LinkDatum) => void;
+  mouseOver?: (g: Graph, d: Datum) => void;
+  clickBackground?: (g: Graph) => void;
 };
 
 export type Explanation = {
@@ -161,17 +163,14 @@ export class Graph {
   };
 
   public static readonly TOOLS = {
+    // dummy tool to prevent user from interacting with graph during tutorial
     Begin: {
       name: 'Begin',
       icon: <FaMousePointer />,
-      cursor: 'pointer',
-      linkCursor: 'pointer',
+      cursor: 'default',
+      linkCursor: 'default',
       clickNode: () => null,
-      clickLink: (g: Graph, d: LinkDatum) => {
-        // g.reactShowLeftSidebar(true);
-        g.reactShowRightSidebar(true);
-        g.explainLink(d);
-      },
+      clickLink: () => null,
     },
     Select: {
       name: 'Select',
@@ -290,13 +289,11 @@ export class Graph {
     private reactSetPhase: Dispatch<SetStateAction<GraphPhase>>,
     private hits: ExtendedClass[],
     private matchFilter: boolean,
-    private reactSetMatchFilter: Dispatch<SetStateAction<boolean>>,
+    private reactSetMatchFilter: Dispatch<boolean>,
     private hasMore: boolean,
     private refineNext: () => void,
     private victory: boolean,
     private handleVictory: () => void,
-    private reactShowLeftSidebar: (open: boolean) => void,
-    private reactShowRightSidebar: (open: boolean) => void,
   ) {
     this.svg = d3.select(svgDom);
     this.tooltip = d3.select(tooltipDom);
@@ -345,11 +342,12 @@ export class Graph {
     // update node positions
     this.sim.on('tick', this.ticked.bind(this));
 
-    this.svg
-      .on('click contextmenu', (event) => {
+    this.svg.on('click', (event) => {
+      if ('clickBackground' in this.toolData) {
         event.preventDefault();
-        if ('clickBackground' in this.toolData) this.toolData.clickBackground(this);
-      });
+        this.toolData.clickBackground(this);
+      }
+    });
 
     this.width = svgDom.width.baseVal.value;
     this.height = svgDom.height.baseVal.value;
@@ -650,7 +648,8 @@ export class Graph {
     // callbacks
     this.reactSetSubjects([...new Set(this.currentData.map((d) => d.subject))]);
 
-    if (!this.currentData.some((d) => d.id === this.focusedCourse.id)) {
+    // if focused course gets removed, unfocus it
+    if (this.focusedCourse.id && !this.currentData.some((d) => d.id === this.focusedCourse.id)) {
       this.focusCourse(null, 'fix');
     }
 
@@ -690,8 +689,10 @@ export class Graph {
         graph.moveTooltip(event.clientX, event.clientY);
       })
       .on('mouseout.basic', function (event, d) {
-        graph.transitionRadius(this, Graph.getRadius(d));
         graph.hideTooltip();
+        if (graph.phase === 'ready') {
+          graph.transitionRadius(this, Graph.getRadius(d));
+        }
       })
       .on('click.basic', (event, d) => {
         event.preventDefault();
@@ -852,7 +853,6 @@ export class Graph {
 
   public setMatchFilter(checked: boolean) {
     this.matchFilter = checked;
-    if (checked) this.reactShowLeftSidebar(checked);
     this.reactSetMatchFilter(checked);
   }
 
@@ -1287,17 +1287,14 @@ export class Graph {
   private addInfoLabel(trigger: CourseGroupSelection) {
     const n = { ...trigger.datum() };
 
-    const [t] = this.transitionRadius(trigger.node()!, Graph.INFO_RADIUS, { duration: Graph.PULSE_DURATION, emojiOnly: true, updateForce: true });
-
-    // disable listeners temporarily
-    this.node.on('.basic .drag', null);
+    const [t] = this.transitionRadius(trigger.node()!, Graph.INFO_RADIUS, {
+      duration: Graph.PULSE_DURATION, emojiOnly: true, updateForce: true,
+    });
 
     t.on('end.info', () => {
-      const [, [link]] = this.addNewNeighbours(n, 2, false, [{ x: -5, y: 0 }, { x: 0, y: 5 }]);
+      const [, [link]] = this.addNewNeighbours(n, 1, false, [{ x: -5, y: 0 }]);
 
       this.focusCourse(n.id, 'soft-hover');
-      // this.reactShowLeftSidebar(true);
-      this.reactShowRightSidebar(true);
 
       // pause simulation while info label is open
       this.sim.tick(10).stop();
@@ -1308,25 +1305,29 @@ export class Graph {
 
       const infoLabels = this.addInfoLabels(x, y, Graph.INFO_RADIUS, link);
 
-      // add listeners to remove group on mouseout
-      const complete = (e: unknown) => {
-        console.debug('removing info label', e);
+      // add one-time listener to remove tutorial info on click
+      const complete = () => {
         infoLabels.remove();
+
+        // resume simulation
         this.sim.alpha(1).restart();
-        const [transition] = this.transitionRadius(trigger.node()!, Graph.getRadius(n), { emojiOnly: true, updateForce: true });
-        transition.on('end.info', () => {
-          // wait to avoid double click trigger
-          this.node.call(this.addNodeEventListeners.bind(this));
-          this.setPhase('ready');
+
+        const [transition] = this.transitionRadius(trigger.node()!, Graph.getRadius(n), {
+          emojiOnly: true, updateForce: true,
         });
+        transition.on('end.info', () => this.setPhase('ready'));
 
         // only run this listener once
         this.node.on('.info', null);
         this.link.on('.info', null);
       };
 
-      this.node.on('click.info', complete);
-      this.link.on('click.info', complete);
+      // prevent user from immediately clicking and exiting
+      setTimeout(() => {
+        this.setTool('Add similar');
+        this.node.on('click.info', complete);
+        this.link.on('click.info', complete);
+      }, 500);
     });
   }
 
@@ -1336,7 +1337,7 @@ export class Graph {
       .attr('pointer-events', 'none')
       .attr('transform', `translate(${x}, ${y})`)
       .attr('fill', 'rgb(var(--color-primary))')
-      .attr('font-size', r / 6);
+      .attr('font-size', r / 8);
 
     group
       .append('text')
@@ -1383,14 +1384,14 @@ export class Graph {
     group.append('text')
       .attr('x', link.target.x * 0.8 - x * 0.8)
       .attr('y', link.target.y * 0.8 - y * 0.8)
-      .text('Click link to explain');
+      .text('Click link to explain!');
 
     group
       .append('text')
       .attr('x', 0)
       .attr('y', (link.target.y > y ? -1 : +1) * (r + r / 4))
-      .attr('font-size', r / 3)
-      .text('Click to explore');
+      .attr('font-size', r / 4)
+      .text('Click to add similar courses!');
 
     return group;
   }

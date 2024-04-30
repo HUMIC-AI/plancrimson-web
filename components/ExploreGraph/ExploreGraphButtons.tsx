@@ -42,7 +42,7 @@ export function ExploreGraphButtons() {
 
               {!graph.target && (
               <MenuRadio
-                label="Courses"
+                label="Add from"
                 value={graph.isMatchFilter ? 'Search results' : 'All courses'}
                 onChange={(m) => {
                   graph.setMatchFilter(m === 'Search results');
@@ -216,7 +216,7 @@ function MenuRadio<T extends string>({
             key={tool}
             value={tool}
             className={({ checked }) => classNames(
-              'interactive flex items-center rounded',
+              'interactive flex items-center rounded py-px',
               icons && checked && 'ring ring-offset-1',
             )}
           >

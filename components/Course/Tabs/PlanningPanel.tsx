@@ -68,7 +68,10 @@ function PlanningPanelInner({ course }: { course: ExtendedClass }) {
 
   return (
     <Tab.Panel>
-      <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
+      <p>
+        Add this course to one (or more) of your schedules!
+      </p>
+      <div className="mt-2 grid grid-cols-[1fr_1fr_auto] items-center gap-2">
         {sortSchedulesBySemester(schedules).map((schedule) => (
           <ScheduleRow
             key={schedule.id}

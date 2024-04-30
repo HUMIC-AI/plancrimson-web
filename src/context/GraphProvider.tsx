@@ -46,7 +46,7 @@ function useGraphState({
   refineNext,
 }: Provided & Exposed) {
   // react state to ensure rerenders when graph state changes
-  const [hoveredClassId, setHover] = useState<string | null>(null);
+  const [hoveredClassId, setHoveredClassId] = useState<string | null>(null);
   const [tool, setTool] = useState<GraphTool>('Begin');
   const [phase, setPhase] = useState<GraphPhase>('init');
   const [explanation, setExplanation] = useState<Explanation | null>(null);
@@ -125,7 +125,7 @@ function useGraphState({
       tool,
       setTool,
       (id: string | null) => {
-        setHover(id);
+        setHoveredClassId(id);
         if (id) setShowRightSidebar(true);
       },
       setSubjects,
@@ -138,13 +138,14 @@ function useGraphState({
       setPhase,
       hits,
       matchFilter,
-      setMatchFilter,
+      (match: boolean) => {
+        setMatchFilter(match);
+        if (match) setShowLeftSidebar(true);
+      },
       hasMore,
       refineNext,
       victory,
       () => setVictory(true),
-      setShowLeftSidebar,
-      setShowRightSidebar,
     );
 
     dispatch(Schedules.createLocal({
@@ -176,13 +177,6 @@ function useGraphState({
       dispatch(Schedules.deleteSchedule(GRAPH_SCHEDULE));
     }
   }, [dispatch]);
-
-  // to handle closing the explanation
-  useEffect(() => {
-    if (explanation === null && graphRef.current) {
-      graphRef.current.clearExplanation();
-    }
-  }, [explanation]);
 
   useEffect(() => {
     if (graphRef.current) {
@@ -285,6 +279,7 @@ function getVictoryContents(goBack: () => void, setVictory: (victory: boolean) =
           <Link
             href="/explore/leaderboard"
             className="button secondary"
+            onClick={goBack}
           >
             Leaderboard
           </Link>
