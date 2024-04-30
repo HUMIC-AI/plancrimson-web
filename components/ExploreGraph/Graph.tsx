@@ -140,6 +140,8 @@ export class Graph {
 
   private linkFrom: Datum | null = null;
 
+  public static TOOL_MENU: GraphTool[] = ['Select', 'Move', 'Add similar', 'Add opposite', 'Link', 'Erase'];
+
   public static readonly TOOLS = {
     Begin: {
       name: 'Begin',
@@ -147,7 +149,11 @@ export class Graph {
       cursor: 'pointer',
       linkCursor: 'pointer',
       clickNode: () => null,
-      clickLink: (g: Graph, d: LinkDatum) => g.explainLink(d),
+      clickLink: (g: Graph, d: LinkDatum) => {
+        // g.reactShowLeftSidebar(true);
+        g.reactShowRightSidebar(true);
+        g.explainLink(d);
+      },
     },
     Select: {
       name: 'Select',
@@ -157,6 +163,7 @@ export class Graph {
       clickNode: (g: Graph, d: Datum) => g.focusCourse(d.id, 'fix'),
       clickLink: (g: Graph, d: LinkDatum) => g.explainLink(d),
       mouseOver: (g: Graph, d: Datum) => g.focusCourse(d.id, 'soft-hover'),
+      clickBackground: (g: Graph) => g.focusCourse(null, 'force-hover'),
     },
     Move: {
       name: 'Move',
@@ -197,9 +204,11 @@ export class Graph {
       linkCursor: 'pointer',
       clickNode: (g: Graph, d: Datum) => {
         if (g.linkFrom) {
-          const [, [link]] = g.appendNodesAndLinks([], [{ source: g.linkFrom.id, target: d.id, mode: 'User' }]);
-          // explain the link if it already exists
-          g.explainLink(link ?? { source: g.linkFrom, target: d, mode: 'User' });
+          if (g.linkFrom.id !== d.id) {
+            const [, [link]] = g.appendNodesAndLinks([], [{ source: g.linkFrom.id, target: d.id, mode: 'User' }]);
+            // explain the link if it already exists
+            g.explainLink(link ?? { source: g.linkFrom, target: d, mode: 'User' });
+          }
           g.linkFrom = null;
         } else {
           g.linkFrom = d;
@@ -268,6 +277,8 @@ export class Graph {
     private refineNext: () => void,
     private victory: boolean,
     private handleVictory: () => void,
+    private reactShowLeftSidebar: (open: boolean) => void,
+    private reactShowRightSidebar: (open: boolean) => void,
   ) {
     this.svg = d3.select(svgDom);
     this.tooltip = d3.select(tooltipDom);
@@ -275,7 +286,7 @@ export class Graph {
     // these get initialized later in the component by the user
     this.sim = d3
       .forceSimulation<Datum>()
-      .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(Graph.getLinkStrength))
+      .force('link', d3.forceLink<Datum, LinkDatum>().id((d) => d.id).strength(Graph.getLinkForce))
       .force('charge', d3.forceManyBody().strength(Graph.CHARGE_STRENGTH))
       .force('collide', d3.forceCollide<Datum>((d) => (d.radius + Graph.collideRadius)))
       .force('x', d3.forceX().strength(Graph.CENTER_STRENGTH))
@@ -319,10 +330,7 @@ export class Graph {
     this.svg
       .on('click contextmenu', (event) => {
         event.preventDefault();
-        this.focusCourse(null, 'fix');
-        if (!this.waitingForExplanation) {
-          this.clearExplanation();
-        }
+        if ('clickBackground' in this.toolData) this.toolData.clickBackground(this);
       });
 
     this.width = svgDom.width.baseVal.value;
@@ -364,9 +372,25 @@ export class Graph {
 
     this.setTool(reactTool);
 
-    // listen for command-z to undo and command-shift-z to redo
+    this.addKeyListeners();
+  }
+
+  /**
+   * Number keys to switch between tools
+   * Command-Z to undo
+   * Command-Shift-Z to redo
+   */
+  private addKeyListeners() {
     window.addEventListener('keydown', (event) => {
       if (this.phase !== 'ready') return;
+
+      // check if event.key is a number from 1 to TOOL_MENU.length
+      const toolIndex = parseInt(event.key, 10) - 1;
+      if (toolIndex >= 0 && toolIndex < Graph.TOOL_MENU.length) {
+        event.preventDefault();
+        this.setTool(Graph.TOOL_MENU[toolIndex]);
+      }
+
       if (event.key === 'z' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         if (event.shiftKey) {
@@ -374,6 +398,32 @@ export class Graph {
         } else {
           this.undo();
         }
+      }
+
+      // on escape key, focus null course
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        this.focusCourse(null, 'fix');
+      }
+
+      if (event.key === 'a') {
+        event.preventDefault();
+        this.setMatchFilter(false);
+      }
+
+      if (event.key === 's') {
+        event.preventDefault();
+        this.setMatchFilter(true);
+      }
+
+      if (event.key === 'q') {
+        event.preventDefault();
+        this.setRatingType('meanRating');
+      }
+
+      if (event.key === 'w') {
+        event.preventDefault();
+        this.setRatingType('meanHours');
       }
     });
   }
@@ -454,10 +504,10 @@ export class Graph {
         .attr('id', getLinkId)
         .attr('gradientUnits', 'userSpaceOnUse')
         .call((e) => e.append('stop')
-          .attr('offset', '0%')
+          .attr('offset', '20%')
           .attr('stop-color', ({ source }) => getSubjectColor(this.findData(stringify(source))!.subject)))
         .call((e) => e.append('stop')
-          .attr('offset', '100%')
+          .attr('offset', '80%')
           .attr('stop-color', ({ target }) => getSubjectColor(this.findData(stringify(target))!.subject))));
 
     // callback
@@ -567,7 +617,6 @@ export class Graph {
     // update link properties after strings are populated
     this.link
       .attr('stroke-width', Graph.getLinkWidth)
-      // .attr('stroke-opacity', Graph.getLinkOpacity)
       .attr('stroke', Graph.getLinkColor);
 
     // callbacks
@@ -631,8 +680,8 @@ export class Graph {
     const graph = this;
     l
       .on('mouseover.basic', function (event, d) {
-        const percent = Math.round(Graph.getLinkOpacity(d) * 100);
-        graph.showTooltipAt(`${percent}%`, event.clientX, event.clientY);
+        const percent = Math.round(Graph.getLinkStrength(d) * 100);
+        graph.showTooltipAt(`${Math.abs(percent)}% ${percent > 0 ? 'similar' : 'different'}`, event.clientX, event.clientY);
         const link = d3.select<SVGLineElement, LinkDatum>(this);
         link
           .transition('link-t')
@@ -705,6 +754,14 @@ export class Graph {
 
   get rating() {
     return this.ratingField;
+  }
+
+  get undoable() {
+    return this.historyIndex > 0;
+  }
+
+  get redoable() {
+    return this.historyIndex < this.history.length;
   }
 
   // get from all courses the ones whose titles are not in the graph
@@ -811,6 +868,7 @@ export class Graph {
 
   public setPhase(newPhase: Graph['phaseInternal'], id?: string) {
     if (newPhase === 'init') {
+      this.setTool('Begin');
       this.reactSetHover(null);
       this.resetZoom();
     } else if (newPhase === 'wait') {
@@ -880,8 +938,8 @@ export class Graph {
 
   // ============================== LINK PROPERTIES ==============================
 
-  private static getLinkStrength(link: LinkDatum) {
-    return Graph.MAX_LINK_STRENGTH * Graph.getLinkOpacity(link);
+  private static getLinkForce(link: LinkDatum) {
+    return Graph.MAX_LINK_STRENGTH * ((Graph.getLinkStrength(link) + 1) / 2);
   }
 
   private static getLinkColor(d: LinkDatum) {
@@ -889,11 +947,12 @@ export class Graph {
   }
 
   private static getLinkWidth(d: LinkDatum) {
-    return Graph.collideRadius * (0.25 + 0.75 * Graph.getLinkOpacity(d));
+    return Graph.collideRadius * (0.75 + Graph.getLinkStrength(d) / 2);
   }
 
-  private static getLinkOpacity({ source, target }: LinkDatum) {
-    return (cos(source.pca, target.pca) + 1) / 2;
+  /** Returns a number between -1 and +1. */
+  private static getLinkStrength({ source, target }: LinkDatum) {
+    return cos(source.pca, target.pca);
   }
 
   // ============================== INTERACTIVITY ==============================
@@ -935,7 +994,17 @@ export class Graph {
     console.debug('fixing node', id, reason);
 
     if (reason === 'soft-hover' || reason === 'force-hover') {
-      // set focused course
+      // on soft remove, don't remove fix
+      if (id === null) {
+        if (this.focusedCourse.reason !== 'fix') {
+          this.reactSetHover(null);
+          this.focusedCourse = { id: null, reason: 'fix' };
+          this.renderHighlights();
+        }
+        return;
+      }
+
+      // set hovered course
       if ((reason === 'soft-hover' && this.canReplaceHover) || reason === 'force-hover') {
         this.reactSetHover(id);
         this.focusedCourse = { id, reason: 'hover' };
@@ -943,6 +1012,8 @@ export class Graph {
       }
       return;
     }
+
+    // handle fixing a course
 
     // deselect a currently selected node
     id = this.focusedCourse.id === id && this.focusedCourse.reason === 'fix' ? null : id;
@@ -966,7 +1037,7 @@ export class Graph {
     this.renderHighlights();
   }
 
-  private zoomTo({ x, y }: { x: number, y: number }) {
+  public zoomTo({ x, y }: { x: number, y: number }) {
     this.svg.transition('svg-zoom')
       .duration(Graph.PULSE_DURATION)
       .call(this.zoom.transform, this.defaultZoom.translate(-x, -y));
@@ -1086,7 +1157,7 @@ export class Graph {
   }
 
   public undo() {
-    if (this.historyIndex === 0) return;
+    if (!this.undoable) return;
     this.historyIndex -= 1;
     const { nodes, links, type } = this.history[this.historyIndex];
     if (type === 'add') {
@@ -1098,7 +1169,7 @@ export class Graph {
   }
 
   public redo() {
-    if (this.historyIndex === this.history.length) return;
+    if (!this.redoable) return;
     const { nodes, links, type } = this.history[this.historyIndex];
     if (type === 'add') {
       this.appendNodesAndLinks(nodes.map((id) => this.toDatum(id, GRAPH_SCHEDULE)!), links, false);
@@ -1205,6 +1276,8 @@ export class Graph {
         transition.on('end.info', () => {
           // wait to avoid double click trigger
           this.focusCourse(n.id, 'soft-hover');
+          // this.reactShowLeftSidebar(true);
+          this.reactShowRightSidebar(true);
           this.node.call(this.addNodeEventListeners.bind(this));
           this.setTool('Add similar');
           this.setPhase('ready');

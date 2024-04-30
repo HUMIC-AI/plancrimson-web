@@ -140,9 +140,8 @@ export const CourseCard = forwardRef(({
         'overflow-hidden rounded-xl border-gray-secondary border transition',
         style === 'expanded' && 'shadow-xl',
         style === 'collapsed' && 'shadow-md',
-        clickWholeCard && isInSchedule && 'ring-blue-primary ring-4',
         // don't use "hover.filter" and "hover:" for performance
-        isHovered && 'ring-8 ring-primary',
+        hover && isInSchedule && (isHovered ? 'ring-4 ring-primary' : 'ring-blue-primary ring-2'),
       )}
       draggable={drag !== null}
       onDragStart={onDragStart}

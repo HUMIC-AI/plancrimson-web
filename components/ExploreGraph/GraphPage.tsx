@@ -63,11 +63,13 @@ export function GraphPage({ scheduleId }: { scheduleId?: string; }) {
 
 // needs to go inside graph provider
 function Container() {
-  const { graph, phase } = useGraphContext();
+  const {
+    graph, phase, showRightSidebar, setShowRightSidebar, showLeftSidebar, setShowLeftSidebar,
+  } = useGraphContext();
   return (
     <CourseCardStyleProvider
       defaultStyle="collapsed"
-      clickWholeCard
+      // clickWholeCard
       columns={1}
       disableClick={phase !== 'ready'}
       hover={phase === 'ready' && graph ? {
@@ -77,7 +79,7 @@ function Container() {
         onHover(course) {
           const node = graph.findTitle({ catalog: course.CATALOG_NBR, subject: course.SUBJECT });
           if (node) {
-            graph.focusCourse(node.id, 'soft-hover');
+            graph.focusCourse(node.id, 'fix');
           }
         },
       } : undefined}
@@ -86,7 +88,7 @@ function Container() {
       <ExploreGraph />
 
       {/* left sidebar (add courses to graph schedule) */}
-      <SidebarPanel side="left" defaultOpen showLink>
+      <SidebarPanel side="left" open={showLeftSidebar} setOpen={setShowLeftSidebar} showLink>
         {/* static positioning!!! happy */}
         <div className="mx-2 space-y-4 rounded-xl py-6 text-xs transition-colors hover:bg-secondary/50">
           <SearchBox scheduleChooser={false} showSmallAttributeMenu showStats={false} />
@@ -96,7 +98,7 @@ function Container() {
           <Hits concise />
         </div>
       </SidebarPanel>
-      <SidebarPanel side="right" defaultOpen>
+      <SidebarPanel side="right" open={showRightSidebar} setOpen={setShowRightSidebar}>
         <HoveredCourseInfo />
       </SidebarPanel>
     </CourseCardStyleProvider>

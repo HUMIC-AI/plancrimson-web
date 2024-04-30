@@ -52,6 +52,8 @@ function useGraphState({
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [victory, setVictory] = useState(false);
   const [victorySeen, setVictorySeen] = useState(false); // ensure it only runs once
+  const [showLeftSidebar, setShowLeftSidebar] = useState(false);
+  const [showRightSidebar, setShowRightSidebar] = useState(false);
 
   const router = useRouter();
   const { positions, courses } = useCourseEmbeddingData('all', undefined, 'pca');
@@ -120,7 +122,10 @@ function useGraphState({
       gameMode ? getRandomRatedCourse(courses) : null,
       tool,
       setTool,
-      setHover,
+      (id: string | null) => {
+        setHover(id);
+        if (id) setShowRightSidebar(true);
+      },
       setSubjects,
       setExplanation,
       ratingType,
@@ -136,6 +141,8 @@ function useGraphState({
       refineNext,
       victory,
       () => setVictory(true),
+      setShowLeftSidebar,
+      setShowRightSidebar,
     );
 
     dispatch(Schedules.createLocal({
@@ -242,10 +249,14 @@ function useGraphState({
     matchFilter,
     phase,
     subjects,
+    showLeftSidebar,
+    setShowLeftSidebar,
+    showRightSidebar,
+    setShowRightSidebar,
     elapsed,
     graphSchedule,
     victory,
-  }), [hoveredClassId, tool, matchFilter, ratingType, explanation, phase, subjects, elapsed, graphSchedule, victory]);
+  }), [hoveredClassId, tool, explanation, ratingType, matchFilter, phase, subjects, showLeftSidebar, showRightSidebar, elapsed, graphSchedule, victory]);
 
   return context;
 }

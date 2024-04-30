@@ -1,7 +1,7 @@
-import { Fragment, ReactNode } from 'react';
+import { Fragment, PropsWithChildren, ReactNode } from 'react';
 import { Disclosure, RadioGroup } from '@headlessui/react';
 import {
-  FaCheckCircle, FaChevronDown, FaCircle, FaRedo, FaUndo,
+  FaCheckCircle, FaChevronDown, FaCircle, FaInfoCircle, FaMapMarker, FaRedo, FaSearch, FaSync, FaUndo,
 } from 'react-icons/fa';
 import { EMOJI_SCALES, Graph } from './Graph';
 import { classNames } from '../../src/utils/styles';
@@ -11,10 +11,74 @@ import { getRandomRatedCourse } from '../../src/utils/utils';
 import { useGraphContext } from '../../src/context/GraphProvider';
 
 export function ExploreGraphButtons() {
-  const { graph, phase } = useGraphContext();
-  const fixedClasses = useClasses(graph?.fixedScheduleId ?? null);
+  const { graph, phase, setShowLeftSidebar } = useGraphContext();
 
   if (!graph) return null;
+
+  return phase === 'ready' ? (
+    <Disclosure defaultOpen>
+      {({ open }) => (
+        <>
+          <Disclosure.Button className="interactive secondary ml-auto flex items-center rounded px-2 py-1">
+            <span className="mr-1 font-semibold">Menu</span>
+            <FaChevronDown className={classNames(open && 'rotate-180', 'transition duration-200')} />
+          </Disclosure.Button>
+
+          <div className="absolute right-0 top-full mt-1 text-sm">
+            <Disclosure.Panel className="flex flex-col items-stretch space-y-4 rounded bg-gray-secondary/50 p-2 transition-colors">
+              <GraphButtons />
+
+              <MenuRadio
+                label="Tools"
+                value={graph.tool}
+                onChange={(m) => graph.setTool(m)}
+                values={Graph.TOOL_MENU}
+                icons={Graph.TOOLS}
+              />
+
+              {!graph.target && (
+              <MenuRadio
+                label="Courses"
+                value={graph.isMatchFilter ? 'Search results' : 'All courses'}
+                onChange={(m) => {
+                  graph.setMatchFilter(m === 'Search results');
+                  if (m === 'Search results') {
+                    setShowLeftSidebar(true);
+                  }
+                }}
+                values={['All courses', 'Search results']}
+              />
+              )}
+
+              <MenuRadio
+                label="Emojis"
+                value={graph.rating === 'meanRating' ? 'Q Rating' : 'Workload'}
+                onChange={(m) => graph.setRatingType(m === 'Q Rating' ? 'meanRating' : 'meanHours')}
+                values={['Q Rating', 'Workload']}
+              />
+            </Disclosure.Panel>
+
+            <div className="rounded-lg border border-primary bg-secondary/80 px-1 pb-1">
+              <ul className="grid grid-flow-col grid-rows-[auto_auto] justify-items-center gap-x-2 leading-none">
+                {EMOJI_SCALES[graph.rating].map((emoji, i) => (
+                  <Fragment key={emoji}>
+                    <li className="text-2xl">{emoji}</li>
+                    <li>{graph.rating === 'meanRating' ? i + 1 : `${(i / 5) * 20}+`}</li>
+                  </Fragment>
+                ))}
+              </ul>
+              <p className="text-center">No emoji = no ratings</p>
+            </div>
+          </div>
+        </>
+      )}
+    </Disclosure>
+  ) : null;
+}
+
+function GraphButtons() {
+  const graph = useGraphContext().graph!;
+  const fixedClasses = useClasses(graph.fixedScheduleId ?? null);
 
   const handleReset = () => {
     if (!fixedClasses) return;
@@ -30,116 +94,74 @@ export function ExploreGraphButtons() {
     }
   };
 
-  return phase === 'ready' ? (
-    <div className="absolute right-full top-16 mr-4 text-right text-sm">
-      <Disclosure defaultOpen>
-        {({ open }) => (
-          <>
-            <Disclosure.Button className="interactive secondary ml-auto flex items-center rounded px-2 py-1">
-              <span className="mr-1 font-semibold">Menu</span>
-              <FaChevronDown className={classNames(open && 'rotate-180', 'transition duration-200')} />
-            </Disclosure.Button>
+  return (
+    <div className="flex flex-col items-end font-medium">
+      <Button title="Help" onClick={() => graph.focusCourse(null, 'fix')}>
+        <FaInfoCircle />
+      </Button>
 
-            <Disclosure.Panel
-              className="flex flex-col items-stretch space-y-4 rounded bg-gray-secondary/50 p-2 transition-colors"
-            >
-              <div className="font-medium">
-                <button
-                  type="button"
-                  className="interactive whitespace-nowrap"
-                  onClick={handleReset}
-                >
-                  Reset graph
-                </button>
+      <Button title="Reset graph" onClick={handleReset}>
+        <FaSync />
+      </Button>
 
-                <button
-                  type="button"
-                  className="interactive whitespace-nowrap"
-                  onClick={() => graph.resetZoom()}
-                >
-                  Center zoom
-                </button>
+      <Button title="Center zoom" onClick={() => graph.resetZoom()}>
+        <FaSearch />
+      </Button>
 
-                <div className="flex justify-between">
-                  <button
-                    type="button"
-                    onClick={() => graph.undo()}
-                    className="interactive flex items-center space-x-1"
-                  >
-                    <FaUndo />
-                    <span>
-                      Undo
-                    </span>
-                  </button>
+      {graph.target && (
+      <Button title="Show hint" onClick={() => graph.focusHint()}>
+        <FaMapMarker />
+      </Button>
+      )}
 
-                  <button
-                    type="button"
-                    onClick={() => graph.redo()}
-                    className="interactive flex items-center space-x-1"
-                  >
-                    <span>
-                      Redo
-                    </span>
-                    <FaRedo />
-                  </button>
-                </div>
-              </div>
+      <div className="flex justify-end space-x-2">
+        <button
+          type="button"
+          disabled={!graph.undoable}
+          onClick={() => graph.undo()}
+          className="enabled:interactive flex items-center space-x-1 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <FaUndo />
+          <span>
+            Undo
+          </span>
+        </button>
 
-              {graph.target && (
-              <button
-                type="button"
-                className="button whitespace-nowrap bg-blue-primary/80 text-secondary"
-                onClick={() => graph.focusHint()}
-              >
-                Show hint
-              </button>
-              )}
-
-              <MenuRadio
-                label="Tools"
-                value={graph.tool}
-                onChange={(m) => graph.setTool(m)}
-                values={['Select', 'Move', 'Add similar', 'Add opposite', 'Link', 'Erase']}
-                icons={Graph.TOOLS}
-              />
-
-              {!graph.target && (
-              <MenuRadio
-                label="Courses"
-                value={graph.isMatchFilter ? 'Search results' : 'All courses'}
-                onChange={(m) => {
-                  graph.setMatchFilter(m === 'Search results');
-                }}
-                values={['All courses', 'Search results']}
-              />
-              )}
-
-              <MenuRadio
-                label="Emojis"
-                value={graph.rating === 'meanRating' ? 'Q Rating' : 'Workload'}
-                onChange={(m) => graph.setRatingType(m === 'Q Rating' ? 'meanRating' : 'meanHours')}
-                values={['Q Rating', 'Workload']}
-              />
-            </Disclosure.Panel>
-          </>
-        )}
-      </Disclosure>
-
-      <div className="absolute right-0 top-full mt-1">
-        <div className="rounded-lg border border-primary bg-secondary/80 px-1 pb-1">
-          <ul className="grid grid-flow-col grid-rows-[auto_auto] justify-items-center gap-x-2 leading-none">
-            {EMOJI_SCALES[graph.rating].map((emoji, i) => (
-              <Fragment key={emoji}>
-                <li className="text-2xl">{emoji}</li>
-                <li>{graph.rating === 'meanRating' ? i + 1 : `${(i / 5) * 20}+`}</li>
-              </Fragment>
-            ))}
-          </ul>
-          <p className="text-center">No emoji = no ratings</p>
-        </div>
+        <button
+          type="button"
+          disabled={!graph.redoable}
+          onClick={() => graph.redo()}
+          className="enabled:interactive flex items-center space-x-1 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <span>
+            Redo
+          </span>
+          <FaRedo />
+        </button>
       </div>
     </div>
-  ) : null;
+  );
+}
+
+function Button({
+  title, onClick, children,
+}: PropsWithChildren<{
+  title: string;
+  onClick: any;
+}>) {
+  return (
+    <button
+      type="button"
+      title={title}
+      className="interactive flex items-center space-x-1"
+      onClick={onClick}
+    >
+      <span className="whitespace-nowrap">
+        {title}
+      </span>
+      {children}
+    </button>
+  );
 }
 
 function MenuRadio<T extends string>({
