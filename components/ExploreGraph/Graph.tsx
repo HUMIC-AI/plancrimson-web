@@ -515,7 +515,7 @@ export class Graph {
         .call(this.addCircle.bind(this))
         .call(this.addNodeEventListeners.bind(this)));
 
-    // for Daniel
+    // for Daniel <3
     this.defs = this.defs
       .data(this.link.data(), getLinkId)
       .join((enter) => enter.append('linearGradient')
@@ -1288,6 +1288,10 @@ export class Graph {
     t.on('end.info', () => {
       const [, [link]] = this.addNewNeighbours(n, 2, false, [{ x: -5, y: 0 }, { x: 0, y: 5 }]);
 
+      this.focusCourse(n.id, 'soft-hover');
+      // this.reactShowLeftSidebar(true);
+      this.reactShowRightSidebar(true);
+
       // pause simulation while info label is open
       this.sim.tick(10).stop();
       this.ticked();
@@ -1305,9 +1309,6 @@ export class Graph {
         const [transition] = this.transitionRadius(trigger.node()!, Graph.getRadius(n), { emojiOnly: true, updateForce: true });
         transition.on('end.info', () => {
           // wait to avoid double click trigger
-          this.focusCourse(n.id, 'soft-hover');
-          // this.reactShowLeftSidebar(true);
-          this.reactShowRightSidebar(true);
           this.node.call(this.addNodeEventListeners.bind(this));
           this.setPhase('ready');
         });
