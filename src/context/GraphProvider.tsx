@@ -273,7 +273,7 @@ function getVictoryContents(goBack: () => void, setVictory: (victory: boolean) =
           hints.
         </p>
 
-        <div className="flex justify-evenly">
+        <div className="flex justify-around">
           <button
             type="button"
             className="button secondary"
