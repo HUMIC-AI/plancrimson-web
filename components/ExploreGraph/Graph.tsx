@@ -1222,7 +1222,7 @@ export class Graph {
       .attr('pointer-events', 'none')
       .attr('transform', `translate(${x}, ${y})`)
       .attr('fill', 'rgb(var(--color-primary))')
-      .attr('font-size', r / 8);
+      .attr('font-size', r / 6);
 
     group
       .append('text')
@@ -1275,7 +1275,7 @@ export class Graph {
       .append('text')
       .attr('x', 0)
       .attr('y', (link.target.y > y ? -1 : +1) * (r + r / 4))
-      .attr('font-size', 20)
+      .attr('font-size', r / 3)
       .text('Click to explore');
 
     return group;
