@@ -5,9 +5,9 @@ import { FaEdit } from 'react-icons/fa';
 import type { UserProfile, WithId } from '@/src/types';
 import { ErrorMessage } from '../Layout/ErrorMessage';
 
-type Props = { userId: string; pageProfile: WithId<UserProfile>; };
+type BioSectionProps = { userId: string; pageProfile: WithId<UserProfile>; };
 
-export function BioSection({ userId, pageProfile }: Props) {
+export function BioSection({ userId, pageProfile }: BioSectionProps) {
   const [editing, setEditing] = useState(false);
 
   return (

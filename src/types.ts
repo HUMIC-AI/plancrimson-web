@@ -112,6 +112,8 @@ export interface GameRecord {
   userId: string;
   sourceId: string;
   targetId: string;
+  sourceName: string;
+  targetName: string;
   milliseconds: number;
   maxCourses: number;
   difficulty: number;

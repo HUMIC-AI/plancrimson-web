@@ -12,6 +12,7 @@ export type FriendStatus = 'loading' | 'self' | 'none' | 'friends' | 'pending-in
 
 // get the profile of the user with the given username
 export function useProfile(username: string, userId: string) {
+  // runtime check
   if (!userId) {
     throw new Error('userId is required');
   }

@@ -5,6 +5,7 @@ import { connectInfiniteHits } from 'react-instantsearch-dom';
 import type { InfiniteHitsProvided } from 'react-instantsearch-core';
 import { NextRouter, useRouter } from 'next/router';
 import { Timestamp, addDoc } from 'firebase/firestore';
+import Link from 'next/link';
 import {
   Explanation, Graph, GraphPhase, GraphTool, RatingField,
 } from '../../components/ExploreGraph/Graph';
@@ -205,6 +206,8 @@ function useGraphState({
       milliseconds: Date.now() - graph.startTime,
       sourceId: graph.initial!.id,
       targetId: graph.target!.id,
+      sourceName: graph.initial!.subject + graph.initial!.catalog,
+      targetName: graph.target!.subject + graph.target!.catalog,
       difficulty: graph.difficulty,
       userId,
     }).catch(alertUnexpectedError);
@@ -245,7 +248,7 @@ function getVictoryContents(goBack: () => void, setVictory: (victory: boolean) =
       setVictory(false);
     },
     content: (
-      <div className="flex flex-col space-y-4 p-6">
+      <div className="space-y-4 p-6">
         <p>
           Success! You made your way from
           {' '}
@@ -270,13 +273,22 @@ function getVictoryContents(goBack: () => void, setVictory: (victory: boolean) =
           hints.
         </p>
 
-        <button
-          type="button"
-          className="button secondary mx-auto"
-          onClick={() => router.reload()}
-        >
-          Play again
-        </button>
+        <div className="flex justify-evenly">
+          <button
+            type="button"
+            className="button secondary"
+            onClick={() => router.reload()}
+          >
+            Play again
+          </button>
+
+          <Link
+            href="/explore/leaderboard"
+            className="button secondary"
+          >
+            Leaderboard
+          </Link>
+        </div>
       </div>
     ),
     title: 'You win!',
