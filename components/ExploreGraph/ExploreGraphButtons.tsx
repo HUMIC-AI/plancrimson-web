@@ -1,4 +1,6 @@
-import { Fragment, PropsWithChildren, ReactNode } from 'react';
+import {
+  Fragment, PropsWithChildren, ReactNode, useState,
+} from 'react';
 import { Disclosure, RadioGroup } from '@headlessui/react';
 import {
   FaCheckCircle, FaChevronDown, FaCircle, FaInfoCircle, FaMapMarker, FaRedo, FaSearch, FaSync, FaUndo,
@@ -11,7 +13,8 @@ import { getRandomRatedCourse } from '../../src/utils/utils';
 import { useGraphContext } from '../../src/context/GraphProvider';
 
 export function ExploreGraphButtons() {
-  const { graph, phase, setShowLeftSidebar } = useGraphContext();
+  const { graph, phase } = useGraphContext();
+  const [shortcuts, showShortcuts] = useState(false);
 
   if (!graph) return null;
 
@@ -34,6 +37,7 @@ export function ExploreGraphButtons() {
                 onChange={(m) => graph.setTool(m)}
                 values={Graph.TOOL_MENU}
                 icons={Graph.TOOLS}
+                shortcuts={shortcuts ? Graph.TOOL_SHORTCUTS : undefined}
               />
 
               {!graph.target && (
@@ -42,11 +46,9 @@ export function ExploreGraphButtons() {
                 value={graph.isMatchFilter ? 'Search results' : 'All courses'}
                 onChange={(m) => {
                   graph.setMatchFilter(m === 'Search results');
-                  if (m === 'Search results') {
-                    setShowLeftSidebar(true);
-                  }
                 }}
                 values={['All courses', 'Search results']}
+                shortcuts={shortcuts ? { 'All courses': 'A', 'Search results': 'S' } : undefined}
               />
               )}
 
@@ -55,25 +57,41 @@ export function ExploreGraphButtons() {
                 value={graph.rating === 'meanRating' ? 'Q Rating' : 'Workload'}
                 onChange={(m) => graph.setRatingType(m === 'Q Rating' ? 'meanRating' : 'meanHours')}
                 values={['Q Rating', 'Workload']}
+                shortcuts={shortcuts ? { 'Q Rating': 'Q', Workload: 'W' } : undefined}
               />
+
+              <div className="text-right">
+                <button type="button" className="interactive rounded text-xs" onClick={() => showShortcuts(!shortcuts)}>
+                  {shortcuts ? 'Hide shortcuts' : 'Show shortcuts'}
+                </button>
+              </div>
             </Disclosure.Panel>
 
-            <div className="rounded-lg border border-primary bg-secondary/80 px-1 pb-1">
-              <ul className="grid grid-flow-col grid-rows-[auto_auto] justify-items-center gap-x-2 leading-none">
-                {EMOJI_SCALES[graph.rating].map((emoji, i) => (
-                  <Fragment key={emoji}>
-                    <li className="text-2xl">{emoji}</li>
-                    <li>{graph.rating === 'meanRating' ? i + 1 : `${(i / 5) * 20}+`}</li>
-                  </Fragment>
-                ))}
-              </ul>
-              <p className="text-center">No emoji = no ratings</p>
-            </div>
+
+            <EmojiLegend />
           </div>
         </>
       )}
     </Disclosure>
   ) : null;
+}
+
+function EmojiLegend() {
+  const graph = useGraphContext().graph!;
+
+  return (
+    <div className="rounded-lg border border-primary bg-secondary/80 px-1 pb-1">
+      <ul className="grid grid-flow-col grid-rows-[auto_auto] justify-items-center gap-x-2 leading-none">
+        {EMOJI_SCALES[graph.rating].map((emoji, i) => (
+          <Fragment key={emoji}>
+            <li className="text-2xl">{emoji}</li>
+            <li>{graph.rating === 'meanRating' ? i + 1 : `${(i / 5) * 20}+`}</li>
+          </Fragment>
+        ))}
+      </ul>
+      <p className="text-center">No emoji = no ratings</p>
+    </div>
+  );
 }
 
 function GraphButtons() {
@@ -165,43 +183,54 @@ function Button({
 }
 
 function MenuRadio<T extends string>({
-  label, value, onChange, values, icons,
+  label, value, onChange, values, icons, shortcuts,
 }: {
   label: ReactNode;
   value: T;
   onChange: (value: T) => void;
   values: readonly T[];
+  shortcuts?: Record<T, string>;
   icons?: Record<T, { icon: ReactNode }>;
 }) {
   return (
     <RadioGroup
       value={value}
       onChange={onChange}
-      className="flex flex-col items-end"
+      className="flex flex-col"
     >
-      <RadioGroup.Label className="border-b font-semibold">
+      <RadioGroup.Label className="mb-1 border-b text-right font-semibold">
         {label}
       </RadioGroup.Label>
 
       {values.map((tool) => (
-        <RadioGroup.Option
-          key={tool}
-          value={tool}
-          className={({ checked }) => classNames(
-            'interactive flex items-center rounded',
-            icons && checked && 'ring ring-offset-1',
+        <div key={tool} className="flex items-center justify-end">
+          {shortcuts && (
+          <span className="flex-1">
+            <kbd>
+              {shortcuts[tool]}
+            </kbd>
+          </span>
           )}
-        >
-          {({ checked }) => (
-            <>
-              <span className="mr-1 select-none whitespace-nowrap">
-                {tool}
-              </span>
 
-              {icons ? icons[tool].icon : (checked ? <FaCheckCircle /> : <FaCircle />)}
-            </>
-          )}
-        </RadioGroup.Option>
+          <RadioGroup.Option
+            key={tool}
+            value={tool}
+            className={({ checked }) => classNames(
+              'interactive flex items-center rounded',
+              icons && checked && 'ring ring-offset-1',
+            )}
+          >
+            {({ checked }) => (
+              <>
+                <span className="mr-1 select-none whitespace-nowrap">
+                  {tool}
+                </span>
+
+                {icons ? icons[tool].icon : (checked ? <FaCheckCircle /> : <FaCircle />)}
+              </>
+            )}
+          </RadioGroup.Option>
+        </div>
       ))}
     </RadioGroup>
   );

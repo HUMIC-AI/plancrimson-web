@@ -142,6 +142,16 @@ export class Graph {
 
   public static TOOL_MENU: GraphTool[] = ['Select', 'Move', 'Add similar', 'Add opposite', 'Link', 'Erase'];
 
+  public static TOOL_SHORTCUTS: Record<GraphTool, string> = {
+    Begin: '0', // ignored
+    Select: '1',
+    Move: '2',
+    'Add similar': '3',
+    'Add opposite': '4',
+    Link: '5',
+    Erase: '6',
+  };
+
   public static readonly TOOLS = {
     Begin: {
       name: 'Begin',
@@ -562,7 +572,7 @@ export class Graph {
   /**
    * Remove nodes from the graph.
    */
-  public removeNodes(idsToRemove: string[], updateHistory = true) {
+  public removeNodes(idsToRemove: string[], updateHistory = true, removeConnectedLinks = true) {
     idsToRemove = idsToRemove.filter((id) => this.idInGraph(id));
 
     if (idsToRemove.length === 0) return;
@@ -584,12 +594,15 @@ export class Graph {
         t.on('end.remove', () => d3.select(this).remove());
       });
 
-    // remove links that are no longer connected
-    const links = this.linksTouchingNodes(idsToRemove);
-    this.removeLinks(links.map((l) => ({
-      source: l.source.id,
-      target: l.target.id,
-    })), false);
+    const links: LinkDatum[] = [];
+    if (removeConnectedLinks) {
+      // remove links that are no longer connected
+      links.push(...this.linksTouchingNodes(idsToRemove));
+      this.removeLinks(links.map((l) => ({
+        source: l.source.id,
+        target: l.target.id,
+      })), false);
+    }
 
     if (regular.length > 0) {
       console.debug('removing regular courses', regular.length);
@@ -822,6 +835,7 @@ export class Graph {
 
   public setMatchFilter(checked: boolean) {
     this.matchFilter = checked;
+    if (checked) this.reactShowLeftSidebar(checked);
     this.reactSetMatchFilter(checked);
   }
 
@@ -1161,10 +1175,10 @@ export class Graph {
     this.historyIndex -= 1;
     const { nodes, links, type } = this.history[this.historyIndex];
     if (type === 'add') {
-      this.removeNodes(nodes, false);
+      this.removeNodes(nodes, false, false);
       this.removeLinks(links, false);
     } else {
-      this.appendNodesAndLinks(nodes.map((id) => this.findData(id)!), links, false);
+      this.appendNodesAndLinks(nodes.map((id) => this.toDatum(id, GRAPH_SCHEDULE)!), links, false);
     }
   }
 
@@ -1174,7 +1188,7 @@ export class Graph {
     if (type === 'add') {
       this.appendNodesAndLinks(nodes.map((id) => this.toDatum(id, GRAPH_SCHEDULE)!), links, false);
     } else {
-      this.removeNodes(nodes, false);
+      this.removeNodes(nodes, false, false);
       this.removeLinks(links, false);
     }
     this.historyIndex += 1;
