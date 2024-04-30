@@ -402,13 +402,6 @@ export class Graph {
     window.addEventListener('keydown', (event) => {
       if (this.phase !== 'ready') return;
 
-      // check if event.key is a number from 1 to TOOL_MENU.length
-      const toolIndex = parseInt(event.key, 10) - 1;
-      if (toolIndex >= 0 && toolIndex < Graph.TOOL_MENU.length) {
-        event.preventDefault();
-        this.setTool(Graph.TOOL_MENU[toolIndex]);
-      }
-
       if (event.key === 'z' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         if (event.shiftKey) {
@@ -416,6 +409,17 @@ export class Graph {
         } else {
           this.undo();
         }
+      }
+
+      // only allow tool switching with number keys if no modifier keys are pressed
+      const isBasic = !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey;
+      if (!isBasic) return;
+
+      // check if event.key is a number from 1 to TOOL_MENU.length
+      const toolIndex = parseInt(event.key, 10) - 1;
+      if (toolIndex >= 0 && toolIndex < Graph.TOOL_MENU.length) {
+        event.preventDefault();
+        this.setTool(Graph.TOOL_MENU[toolIndex]);
       }
 
       // on escape key, focus null course
