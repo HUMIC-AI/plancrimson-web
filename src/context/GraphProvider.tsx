@@ -9,7 +9,7 @@ import Link from 'next/link';
 import {
   Explanation, Graph, GraphPhase, GraphTool, RatingField,
 } from '../../components/ExploreGraph/Graph';
-import { ExtendedClass, Subject, getUpcomingSemester } from '../lib';
+import { ExtendedClass, Subject, upcomingSemester } from '../lib';
 import { CourseBrief, useCourseEmbeddingData } from '../../components/ClassesCloudPage/useData';
 import { signInUser } from '../../components/Layout/useSyncAuth';
 import { Auth, Schedules, ClassCache } from '../features';
@@ -155,7 +155,7 @@ function useGraphState({
       ownerUid: 'GRAPH_USER',
       public: false,
       classes: [],
-      ...getUpcomingSemester(),
+      ...upcomingSemester,
     }));
 
     graphRef.current.syncCourses(fixedClasses.length === 0 ? [initial.id] : [], fixedClasses);

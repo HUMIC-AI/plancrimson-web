@@ -5,7 +5,7 @@ import React, {
 import { useRouter } from 'next/router';
 import qs from 'qs';
 import {
-  CURRENT_ARCHIVE_TERMS, CURRENT_COURSES_TERMS, Semester, getTermId, getUpcomingSemester, semesterToTerm,
+  CURRENT_ARCHIVE_TERMS, CURRENT_COURSES_TERMS, Semester, getTermId, semesterToTerm, upcomingSemester,
 } from '@/src/lib';
 import { SearchState } from 'react-instantsearch-core';
 import { getAnalytics, logEvent } from 'firebase/analytics';
@@ -152,5 +152,5 @@ export function useSearchState() {
 }
 
 export function useDefaultSearchState(semester?: Semester | null) {
-  return useMemo(() => getDefaultSearchStateForSemester(semester ?? getUpcomingSemester()), [semester]);
+  return useMemo(() => getDefaultSearchStateForSemester(semester ?? upcomingSemester), [semester]);
 }
